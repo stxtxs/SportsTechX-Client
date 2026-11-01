@@ -59,8 +59,20 @@
 [data-sonner-toast][data-type="success"] [data-icon] { color: #2ac792; }
 [data-sonner-toast][data-type="error"] [data-icon] { color: #ff5c7a; }
 
-/* Close button + the action link, both on the dark surface. */
-[data-sonner-toast] [data-close-button] {
+/* Close button + the action link, both on the dark surface. Sonner hangs the
+   close button half outside the top-left corner, where the card's
+   overflow:hidden (it keeps the status rail inside the rounded corners) cut it
+   off. It sits inside the card instead, on the right, with room kept for it.
+   Scoped under the toaster to outrank sonner's own runtime-injected rule
+   ([data-sonner-toast][data-styled=true] [data-close-button]). */
+[data-sonner-toaster] [data-sonner-toast][data-styled=true]:has([data-close-button]) { padding-right: 44px; }
+[data-sonner-toaster] [data-sonner-toast][data-styled=true] [data-close-button] {
+	left: auto;
+	right: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 22px;
+	height: 22px;
 	background: rgba(255, 255, 255, 0.1);
 	border: 1px solid rgba(255, 255, 255, 0.18);
 	color: #ffffff;

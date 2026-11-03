@@ -29,20 +29,20 @@ export const FTABR26_SOCCERMENT = {
     "We will take SICS Atlas into 10 key markets through our growing agent network, a €10M+ ARR opportunity, while integrating XSEED GPS and third-party wearable data into the platform to drive growth across our product lines. We also expect to close a Series A to accelerate commercial growth and deepen our data and product advantage.",
   images: {
     monitor: {
-      src: asset("atlas-platform"),
-      alt: "SICS Atlas scouting and match-analysis platform across laptop, tablet and mobile",
-      caption: "01 / SICS Atlas · Scouting platform",
+      src: asset("staff-sics-atlas"),
+      alt: "Football performance staff reviewing SICS Atlas data in a video-analysis room",
+      caption: "01 / SICS Atlas · Team analysis",
     },
     gallery: [
       {
-        src: asset("xseed-gps"),
-        alt: "XSEED GPS tracking kit beside a team performance dashboard",
-        caption: "02 / XSEED GPS · Wearable tracking",
+        src: asset("atlas-platform"),
+        alt: "SICS Atlas scouting and match-analysis platform across laptop, tablet and mobile",
+        caption: "02 / SICS Atlas · Scouting platform",
       },
       {
-        src: asset("staff-sics-atlas"),
-        alt: "Football performance staff reviewing SICS Atlas data in a video-analysis room",
-        caption: "03 / SICS Atlas · Team analysis",
+        src: asset("xseed-gps"),
+        alt: "XSEED GPS tracking kit beside a team performance dashboard",
+        caption: "03 / XSEED GPS · Wearable tracking",
       },
     ],
   },

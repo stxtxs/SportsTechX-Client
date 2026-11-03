@@ -5,6 +5,7 @@ import { Ftabr26PartnerHeader } from "./ftabr26-partner-header";
 import "./ftabr26-soccerment-feature.css";
 
 const copyLinks = [
+  ["SICS+", "https://soccerment.com/products/sics-plus"],
   ["SICS Atlas", "https://soccerment.com/products/sics-plus/atlas"],
   ["XSEED GPS", "https://soccerment.com/products/xseed/gps"],
   ["MLS Innovation Lab", "https://soccerment.com/media/newsroom/mls-innovation-lab"],
@@ -12,7 +13,7 @@ const copyLinks = [
 ] as const;
 
 function linkifyCopy(copy: string) {
-  const pattern = new RegExp(`(${copyLinks.map(([label]) => label).join("|")})`, "g");
+  const pattern = new RegExp(`(${copyLinks.map(([label]) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "g");
   return copy.split(pattern).map((part, index) => {
     const link = copyLinks.find(([label]) => label === part);
     return link

@@ -2,20 +2,20 @@
 
 User-facing intelligence platform. Next.js 16 + React 19 + TypeScript + SWR + shadcn/ui + Supabase JS. Talks to the NestJS backend via the `/api/*` rewrite. Runs on port **3000**.
 
-> **The comprehensive multi-repo guide (server + client + admin + git workflow + migrations) lives at [`SportsTechX-Services/SETUP.md`](https://github.com/umananda-sportstechx/SportsTechX-Services/blob/development/SETUP.md).** This file covers just the client-specific bits.
+> **The comprehensive multi-repo guide (server + client + admin + git workflow + migrations) lives at [`SportsTechX-Services/SETUP.md`](https://github.com/stxtxs/SportsTechX-Services/blob/development/SETUP.md).** This file covers just the client-specific bits.
 
 ---
 
 ## Prerequisites
 
 - Node.js 20+ and npm 10+
-- Git, with SSH access to the [`umananda-sportstechx`](https://github.com/umananda-sportstechx) org
+- Git, with SSH access to the [`stxtxs`](https://github.com/stxtxs) repos
 - The backend running locally on `http://localhost:5000` (or a remote `BACKEND_URL`)
 
 ## Clone
 
 ```bash
-git clone git@github-work:umananda-sportstechx/SportsTechX-Client.git client
+git clone git@github-work:stxtxs/SportsTechX-Client.git client
 cd client
 ```
 
@@ -76,7 +76,7 @@ Read [CLAUDE.md](CLAUDE.md) first — it has the routing into all of the above.
 
 ## Git workflow
 
-See [`SportsTechX-Services/SETUP.md` § 9](https://github.com/umananda-sportstechx/SportsTechX-Services/blob/development/SETUP.md#9-git-workflow) for the full picture. TL;DR:
+See [`SportsTechX-Services/SETUP.md` § 9](https://github.com/stxtxs/SportsTechX-Services/blob/development/SETUP.md#9-git-workflow) for the full picture. TL;DR:
 
 1. Branch off `development`:
    ```bash

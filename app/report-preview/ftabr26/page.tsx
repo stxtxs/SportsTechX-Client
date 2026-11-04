@@ -11,8 +11,9 @@ const ReportFTABR26 = dynamic(
 );
 
 /** Only the admin panel may drive this page (and only it may frame it — next.config). */
-const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_URL ?? 'https://admin.sportstechx.com';
-const allowed = (origin: string) => origin === ADMIN_ORIGIN || /^http:\/\/localhost(:\d+)?$/.test(origin);
+const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_URL ?? 'https://www.admin.sportstechx.com';
+// The www host is accepted even if the env var still names the old bare host.
+const allowed = (origin: string) => origin === ADMIN_ORIGIN || origin === 'https://www.admin.sportstechx.com' || /^http:\/\/localhost(:\d+)?$/.test(origin);
 
 /**
  * The admin editor's live preview of the FTABR26 report: the real report

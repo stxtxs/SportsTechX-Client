@@ -36,7 +36,7 @@ const jetbrainsMono = localFont({
 });
 
 /** The public origin. Atlas is the marketing front door for the app. */
-export const SITE_URL = 'https://atlas.sportstechx.com';
+export const SITE_URL = 'https://www.atlas.sportstechx.com';
 
 const TITLE = 'Atlas | Sports Tech Intelligence by SportsTechX';
 const DESCRIPTION =
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     'sports tech', 'sportstech investors', 'sports tech fundraising',
     'sports tech venture capital', 'investor database', 'Atlas', 'SportsTechX',
   ],
-  authors: [{ name: 'SportsTechX', url: 'https://sportstechx.com' }],
+  authors: [{ name: 'SportsTechX', url: 'https://www.sportstechx.com' }],
   creator: 'SportsTechX',
   publisher: 'SportsTechX GmbH',
   category: 'technology',

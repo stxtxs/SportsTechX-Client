@@ -78,7 +78,7 @@ export function MyMarket() {
 			<div className="atlas-kpis">
 				<Kpi label="Total market (TAM)" value={eur(data.tam)} note={sizeNote(data.tam)} />
 				<Kpi label="Addressable market (SAM)" value={eur(data.sam)} note={sizeNote(data.sam)} />
-				<Kpi label="Market growth" value={data.cagr != null ? `${Number(data.cagr).toFixed(1)}% CAGR` : '—'} />
+				<Kpi label="Market growth" value={data.cagr != null ? `${Number(data.cagr).toFixed(1)}%` : '—'} note={data.cagr != null ? 'CAGR' : undefined} />
 				<Kpi label="Competitors tracked" value={String(g?.companies_tracked ?? competitors.length)} />
 				<Kpi label="Total funding raised" value={usd(g?.total_funding_usd)} />
 			</div>

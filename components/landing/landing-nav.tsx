@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { LINKS, MobileMenuButton, useMobileMenu } from '@/components/landing/mobile-menu';
 
 /* TEMPORARY host. The STX site is served from a Vercel preview until it moves
-   back to its own domain — put https://sportstechx.com back here when it does. */
+   back to its own domain — put https://www.sportstechx.com back here when it does. */
 const STX_HOME = 'https://sports-tech-x-landing.vercel.app';
 
 const subscribe = (onChange: () => void) => {

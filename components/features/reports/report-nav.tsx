@@ -42,7 +42,7 @@ export const ReportNav = forwardRef<HTMLElement, Props>(function ReportNav(
 	return (
 		<>
 			<nav ref={navRef} style={{ position: 'fixed', top: 3, left: 0, right: 0, zIndex: 100, padding: isMobile ? '12px 16px' : '16px 40px', display: hidden ? 'none' : 'flex', alignItems: 'center', justifyContent: 'space-between', backdropFilter: 'blur(20px)', background: t.navBg, borderBottom: `1px solid ${t.divider}`, gap: 16, transition: 'transform 0.4s cubic-bezier(0.16,1,0.3,1)', willChange: 'transform' }}>
-				<a href="https://atlas.sportstechx.com" target="_blank" rel="noopener noreferrer" style={{ lineHeight: 0, flexShrink: 0 }}>
+				<a href="https://www.atlas.sportstechx.com" target="_blank" rel="noopener noreferrer" style={{ lineHeight: 0, flexShrink: 0 }}>
 					<img src={isDark ? '/landing/atlas-wordmark-white.svg' : '/landing/atlas-wordmark-dark.svg'} alt="Atlas" style={{ height: isMobile ? 26 : 34, display: 'block' }} />
 				</a>
 				{!isMobile && (

@@ -32,7 +32,7 @@ const nextConfig: NextConfig = {
       source: "/report-preview/:path*",
       headers: [{
         key: "Content-Security-Policy",
-        value: `frame-ancestors 'self' ${process.env.NEXT_PUBLIC_ADMIN_URL ?? "https://admin.sportstechx.com"} http://localhost:*`,
+        value: `frame-ancestors 'self' ${process.env.NEXT_PUBLIC_ADMIN_URL ?? ""} https://www.admin.sportstechx.com http://localhost:*`,
       }],
     }];
   },

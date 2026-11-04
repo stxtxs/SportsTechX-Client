@@ -3833,7 +3833,7 @@ export default function ReportGSTER26({ content, preview = false }: {
             {CLOSING.quote}
           </p>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-            <a href="https://atlas.sportstechx.com" target="_blank" rel="noopener noreferrer" style={{ lineHeight: 0 }}>
+            <a href="https://www.atlas.sportstechx.com" target="_blank" rel="noopener noreferrer" style={{ lineHeight: 0 }}>
               <img src={isDark ? "/landing/atlas-wordmark-white.svg" : "/landing/atlas-wordmark-dark.svg"} alt="Atlas" style={{ height: isMobile ? 26 : 32, opacity: 0.9 }} />
             </a>
             <cite style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: 2, color: BRAND.pink, fontStyle: "normal" }}>

@@ -544,7 +544,8 @@ span.atlas-fbar__pill-main { cursor: default; }
 }
 .atlas .atlas-kpi:first-child { border-left: none; }
 .atlas .atlas-kpi__label { font-family: var(--a-mono); font-size: 11px; font-weight: 400; letter-spacing: 0.05em; text-transform: uppercase; color: var(--a-muted); margin-bottom: 12px; }
-.atlas .atlas-kpi__value { font-family: var(--a-font); font-size: 36px; font-weight: 500; line-height: 1; letter-spacing: 0; color: var(--a-ink); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.atlas .atlas-kpi__value { font-family: var(--a-font); font-size: 36px; font-weight: 500; line-height: 1; letter-spacing: 0; color: var(--a-ink); margin-bottom: 10px; overflow-wrap: anywhere; }
+/* A value too long for its column wraps to a second line; it used to be cut off with an ellipsis ("-19.7% CA..."). */
 .atlas .atlas-kpi__note { font-family: var(--a-body); font-size: 10px; line-height: 14px; min-height: 14px; color: var(--a-muted); }
 /* Value + note sit at the bottom of each column, so numbers line up even when a label wraps. */
 .atlas .atlas-kpi__label + .atlas-kpi__value { margin-top: auto; }

@@ -529,7 +529,7 @@ export default function EcosystemMapSection({
           <div style={{ position: "absolute", top: "-15%", right: "5%", width: "clamp(120px,20vw,220px)", height: "clamp(120px,20vw,220px)", borderRadius: "50%", border: `2px solid rgba(237,26,94,0.2)`, pointerEvents: "none" }} />
           <div style={{ position: "absolute", top: 0, left: "30%", width: 1, height: "140%", background: `linear-gradient(to bottom, transparent 10%, rgba(237,26,94,0.1) 50%, transparent 90%)`, transform: "rotate(15deg)", transformOrigin: "top center", pointerEvents: "none" }} />
           <div style={{ position: "absolute", inset: 0, opacity: isDark ? 0.06 : 0.08, backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "24px 24px", color: "#fff", pointerEvents: "none" }} />
-          <a href="https://atlas.sportstechx.com" target="_blank" rel="noopener noreferrer" style={{ position: "relative", zIndex: 1, flexShrink: 0, lineHeight: 0 }}>
+          <a href="https://www.atlas.sportstechx.com" target="_blank" rel="noopener noreferrer" style={{ position: "relative", zIndex: 1, flexShrink: 0, lineHeight: 0 }}>
             <img src="/landing/atlas-wordmark-white.svg" alt="Atlas" style={{ width: isMobile ? 120 : 160, opacity: 0.9, objectFit: "contain" }} />
           </a>
           <div style={{ position: "relative", zIndex: 1, textAlign: isMobile ? "center" : "left" }}>
@@ -538,7 +538,7 @@ export default function EcosystemMapSection({
               1,000+ investors, accelerators, and innovation programs on Atlas
             </div>
           </div>
-          <a href="https://atlas.sportstechx.com/investors" target="_blank" rel="noopener noreferrer" style={{
+          <a href="https://www.atlas.sportstechx.com/investors" target="_blank" rel="noopener noreferrer" style={{
             position: "relative", zIndex: 1,
             display: "inline-block", fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, letterSpacing: 2,
             color: "#fff", background: BRAND.pink, textDecoration: "none",
@@ -785,7 +785,7 @@ export default function EcosystemMapSection({
                     {filteredEntities.length}/{data[activeTab].filter(e => normalizeContinent(e.continent) === selectedContinent).length} {TAB_LABELS[activeTab].toUpperCase()}
                   </span>
                   <span style={{ color: t.textMuted, fontSize: 10 }}>·</span>
-                  <a href="https://atlas.sportstechx.com/investors" target="_blank" rel="noopener noreferrer" style={{
+                  <a href="https://www.atlas.sportstechx.com/investors" target="_blank" rel="noopener noreferrer" style={{
                     fontFamily: "'DM Mono',monospace", fontSize: 10, color: BRAND.pink, letterSpacing: 0.5,
                     textDecoration: "none", transition: "opacity 0.2s",
                   }}

@@ -34,3 +34,5 @@
 .atlas .ana-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 12px; font-family: var(--a-body); font-size: 11px; color: var(--a-muted); }
 .atlas .ana-legend span { display: inline-flex; align-items: center; gap: 5px; }
 .atlas .ana-pager { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 18px; font-family: var(--a-mono); font-size: 11px; color: var(--a-muted); }
+
+.atlas .ana-subtabs { display: flex; }

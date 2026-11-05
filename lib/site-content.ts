@@ -46,8 +46,8 @@ export async function siteContent(): Promise<SiteSections> {
 	// A failed fetch must NOT read as "no content": that rendered the built-in
 	// default images and the 5-minute page cache then kept that version (seen 5 Nov
 	// 2026 after admin edits + API restarts). Throwing instead makes Next keep
-	// serving the last good page; a build with the API down fails and the previous
-	// deployment stays live. One retry rides out an API restart. A section that is
+	// serving the last good page; at build time it still falls back (builds must not
+	// depend on the API). One retry rides out an API restart. A section that is
 	// genuinely empty still falls back to the defaults (that's an editorial choice).
 	for (let attempt = 1; ; attempt++) {
 		try {
@@ -59,6 +59,9 @@ export async function siteContent(): Promise<SiteSections> {
 			const json = (await res.json()) as { sections?: SiteSections };
 			return json.sections ?? {};
 		} catch (error) {
+			// At build time keep the old fallback: a build must not depend on the API
+			// (local builds have none), and the first background refresh replaces it.
+			if (process.env.NEXT_PHASE === 'phase-production-build') return {};
 			if (attempt >= 2) throw error;
 			await new Promise((r) => setTimeout(r, 1500));
 		}

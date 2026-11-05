@@ -10,7 +10,7 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useUrlSync, useUrlReader } from '@/hooks/use-url-state';
 import { useRoundTypeOptions, useCountryOptions } from '@/hooks/use-catalog-options';
 import { Empty, FilterBar, Loading, Logo, Pager, type FilterDef } from '@/components/atlas';
-import { fmtUsd } from '@/components/features/market/format';
+import { fmtUsd, place } from '@/components/features/market/format';
 import './funding.css';
 
 /**
@@ -97,7 +97,7 @@ export function RecentlyFunded({ companyHref }: { companyHref: (idOrSlug: string
 										<Logo co={{ name: d.company_name, website: d.company_website ?? null, custom_logo_url: d.company_custom_logo_url }} size={32} radius={6} />
 										<span>
 											<Link href={companyHref(d.company_slug ?? d.company_id)} className="atlas-funded__name">{d.company_name}</Link>
-											<span className="atlas-funded__sub">{[d.primary_sector, d.hq_country].filter(Boolean).join(' · ')}</span>
+											{(() => { const sub = [d.primary_sector, place(d.hq_city, d.hq_country)].filter(Boolean).join(' · '); return <span className="atlas-funded__sub" title={sub || undefined}>{sub}</span>; })()}
 										</span>
 									</span>
 									<span role="cell">{fmtDate(d.announced_date)}</span>

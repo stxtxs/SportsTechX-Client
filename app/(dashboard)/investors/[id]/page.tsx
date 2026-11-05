@@ -15,6 +15,7 @@ import { Screen, Card, Badge, Button, Field, Input, Select, Loading, Empty, Logo
 import { DatePicker } from '@/components/atlas/ui/date-picker';
 import { SaveInvestorToWatchlist } from '@/components/raise/save-investor-to-watchlist';
 import { categoryLabel } from '@/components/raise/investors';
+import { place } from '@/components/features/market/format';
 
 /**
  * Atlas Raise — Investor profile (mock-ups 12/13 / canvas isProfileBaseline &
@@ -56,7 +57,7 @@ const STAGES: [string, string][] = [
 	['closed', 'Closed'], ['passed', 'Passed'],
 ];
 const STAGE_LABEL = Object.fromEntries(STAGES);
-const geoOf = (i: Investor) => [i.hq_country, i.hq_region].filter(Boolean)[0] ?? '—';
+const geoOf = (i: Investor) => place(i.hq_city, i.hq_country) || i.hq_region || '—';
 
 export default function InvestorProfilePage() {
 	const id = String(useParams().id);
@@ -77,7 +78,8 @@ export default function InvestorProfilePage() {
 	if (isLoading || !inv) return <Screen><Loading /></Screen>;
 
 	const stages = bundle?.round_types?.map((r) => r.name).join(', ') || 'Not specified';
-	const geoText = bundle?.geo?.map((g) => g.scope_value).join(', ') || [inv.hq_country, inv.hq_region].filter(Boolean).join(', ') || '—';
+	// Thesis geography (where they invest) is separate from HQ (where they sit).
+	const geoText = bundle?.geo?.map((g) => g.scope_value).join(', ') || '';
 
 	return (
 		<Screen>
@@ -112,7 +114,8 @@ export default function InvestorProfilePage() {
 			<div className="atlas-kpis" style={{ marginBottom: 24 }}>
 				<Tile label="Stages" value={stages} />
 				<Tile label="Typical cheque size" value="Not confirmed" muted />
-				<Tile label="Geography" value={geoText} />
+				<Tile label="HQ" value={place(inv.hq_city, inv.hq_country) || '—'} muted={!inv.hq_country && !inv.hq_city} />
+				<Tile label="Investment geography" value={geoText || 'Not specified'} muted={!geoText} />
 				<Tile label="Website" value={inv.website ? <a href={/^https?:\/\//i.test(inv.website) ? inv.website : `https://${inv.website}`} target="_blank" rel="noreferrer" style={{ color: 'var(--a-ink)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Visit</a> : '—'} />
 			</div>
 

@@ -22,7 +22,14 @@ interface Grouping { label: string; deal_count: number; total_amount: number }
 interface RoundupStats {
 	total_amount: number; count: number; largest_amount: number; largest_company: string | null;
 	prev_total_amount: number; prev_count: number;
+	disclosed_count: number; avg_amount: number;
+	/** Month-over-month % (server applies the IH rule for an empty previous month). */
+	change: { total_amount: number; avg_amount: number; count: number };
 }
+/** Rows with no sector / business model / country — drawn in neutral grey. */
+const UNCLASSIFIED = 'Unclassified';
+const UNCLASSIFIED_COLOR = '#C9CDD5';
+const TABLE_LIMIT = 200;
 interface NewsItem {
 	id: string; section: string; category: string | null; headline: string;
 	body: string | null; org: string | null; geo: string | null; source_url: string | null;
@@ -57,7 +64,8 @@ const YEARS: [string, string][] = (() => {
  */
 export function MarketRoundup() {
 	const [mode, setMode] = useState<Mode>('funding');
-	const [metric, setMetric] = useState<Metric>('amount');
+	// `null` = auto: Amount, unless the month has no disclosed value at all.
+	const [metricPick, setMetric] = useState<Metric | null>(null);
 	const [perspective, setPerspective] = useState<Perspective>('acquiree');
 	const [sectorView, setSectorView] = useState<SectorView>('sector');
 	const [breakdown, setBreakdown] = useState<{ title: string; rows: Grouping[] } | null>(null);
@@ -81,19 +89,21 @@ export function MarketRoundup() {
 	const end = `${year}-${pad(month)}-${pad(new Date(Date.UTC(year, month, 0)).getUTCDate())}`;
 	// Largest deals this month — deals for funding, acquisitions for M&A. Held
 	// until the month is known, and only the active market's list is fetched.
-	const deals = useSWR<{ data: Deal[] }>(shown && mode === 'funding' ? qk.deals.list({ from: start, to: end, sort: '-amount_usd', limit: 50 }) : null);
-	const acqs = useSWR<{ data: AcqRow[] }>(shown && mode === 'ma' ? qk.acquisitions.list({ from: start, to: end, sort: '-amount_usd', limit: 50 }) : null);
+	const deals = useSWR<{ data: Deal[]; total?: number }>(shown && mode === 'funding' ? qk.deals.list({ from: start, to: end, sort: '-amount_usd', limit: TABLE_LIMIT }) : null);
+	const acqs = useSWR<{ data: AcqRow[]; total?: number }>(shown && mode === 'ma' ? qk.acquisitions.list({ from: start, to: end, sort: '-amount_usd', limit: TABLE_LIMIT }) : null);
+	const list = mode === 'funding' ? deals.data : acqs.data;
 
 	const monthName = MONTHS.find(([v]) => v === String(month))?.[1] ?? '';
 	const s = roundup.data?.stats;
 	const total = s?.total_amount ?? 0;
 	const count = s?.count ?? 0;
-	const avg = count > 0 ? total / count : 0;
+	const avg = s?.avg_amount ?? 0; // disclosed rounds only (IH semantics)
+	const metric: Metric = metricPick ?? (s && s.total_amount === 0 ? 'count' : 'amount');
 
 	const summary = useMemo(() => {
 		if (roundup.data?.edition?.summary) return roundup.data.edition.summary;
 		if (!s) return '';
-		const noun = mode === 'ma' ? 'acquisition' : 'disclosed deal';
+		const noun = mode === 'ma' ? 'acquisition' : 'funding round';
 		const lead = s.largest_company && s.largest_amount > 0
 			? `, led by ${s.largest_company}'s ${fmtUsd(s.largest_amount)} ${mode === 'ma' ? 'deal' : 'round'}`
 			: '';
@@ -104,14 +114,25 @@ export function MarketRoundup() {
 		const d = roundup.data;
 		if (!d) return [] as { title: string; total: string; unit: string; segments: PieSegment[]; rows: Grouping[]; zero: boolean }[];
 		const val = (x: Grouping) => (metric === 'amount' ? x.total_amount : x.deal_count);
+		const fmtV = (n: number) => (metric === 'amount' ? fmtUsd(n) : fmtCount(n));
+		// The server never drops rows (missing values → 'Unclassified'), so the
+		// centre is the stat tile itself and the slices add up to it.
+		const centre = metric === 'amount' ? d.stats.total_amount : d.stats.count;
 		const mk = (title: string, g: Grouping[]) => {
-			// Donut shows the top slices; the full list (up to 25) is in the breakdown
-			// dialog. Centre value is the grand total across every row.
-			const segments: PieSegment[] = g.slice(0, 8).map((x, i) => ({ name: x.label, v: val(x), color: paletteAt(i), label: metric === 'amount' ? fmtUsd(x.total_amount) : fmtCount(x.deal_count) }));
-			const sum = g.reduce((a, x) => a + val(x), 0);
+			// Top 7 slices + everything else folded into "Others", so the ring is the
+			// whole month; the breakdown dialog lists every group.
+			const sorted = [...g].sort((a, b) => val(b) - val(a));
+			const top = sorted.length > 8 ? sorted.slice(0, 7) : sorted;
+			const rest = sorted.slice(top.length).reduce((a, x) => a + val(x), 0);
+			let ci = 0;
+			const segments: PieSegment[] = top.map((x) => ({
+				name: x.label, v: val(x), label: fmtV(val(x)),
+				color: x.label === UNCLASSIFIED ? UNCLASSIFIED_COLOR : paletteAt(ci++),
+			}));
+			if (rest > 0) segments.push({ name: 'Others', v: rest, label: fmtV(rest), color: paletteAt(ci) });
 			// Deals exist but none disclosed a value (common for M&A): every slice is
 			// $0, which PieDonut draws as an empty ring — flag it for an empty state.
-			return { title, total: metric === 'amount' ? fmtUsd(sum) : fmtCount(sum), unit: metric === 'amount' ? 'total' : 'deals', segments, rows: g, zero: segments.length > 0 && sum === 0 };
+			return { title, total: fmtV(centre), unit: metric === 'amount' ? 'total' : 'deals', segments, rows: sorted, zero: g.length > 0 && centre === 0 };
 		};
 		const sectorG = sectorView === 'sector' ? d.by_sector : (d.by_sub_sector ?? d.by_sector);
 		return [
@@ -167,9 +188,9 @@ export function MarketRoundup() {
 				<>
 					{/* KPIs */}
 					<div className="atlas-kpis atlas-kpis--pink">
-						<Kpi k={mode === 'ma' ? 'M&A value' : 'Capital raised'} v={fmtUsd(total)} delta={deltaPct(total, s?.prev_total_amount)} />
-						<Kpi k="Avg deal size" v={fmtUsd(avg)} note="this month" />
-						<Kpi k={mode === 'ma' ? 'Acquisitions' : 'Disclosed deals'} v={fmtCount(count)} delta={deltaAbs(count, s?.prev_count)} />
+						<Kpi k={mode === 'ma' ? 'M&A value' : 'Capital raised'} v={fmtUsd(total)} delta={deltaPct(s?.change?.total_amount)} />
+						<Kpi k="Avg deal size" v={fmtUsd(avg)} delta={deltaPct(s?.change?.avg_amount)} note="disclosed rounds" />
+						<Kpi k="Deals" v={fmtCount(count)} delta={deltaPct(s?.change?.count)} note={s ? `${fmtCount(s.disclosed_count)} disclosed` : undefined} />
 					</div>
 
 					{/* Summary */}
@@ -220,11 +241,14 @@ export function MarketRoundup() {
 					<Card style={{ padding: '0 23px' }}>
 						<div className="atlas-section-head" style={{ padding: '16px 0 14px', alignItems: 'center' }}>
 							<div className="atlas-section-title" style={{ fontSize: 16 }}>{mode === 'ma' ? 'Acquisitions this month' : 'Funding rounds this month'}</div>
-							<span className="atlas-section-aside">All disclosed {mode === 'ma' ? 'acquisitions' : 'rounds'} for {monthName} {year}, sorted by {mode === 'ma' ? 'value' : 'amount'}</span>
+							<span className="atlas-section-aside">
+								All {mode === 'ma' ? 'acquisitions' : 'rounds'} for {monthName} {year}, sorted by {mode === 'ma' ? 'value' : 'amount'}
+								{list && list.data.length > 0 && ` · Showing ${fmtCount(list.data.length)} of ${fmtCount(list.total ?? list.data.length)}`}
+							</span>
 						</div>
 						{mode === 'funding' ? (
 							deals.isLoading ? <Loading /> : (deals.data?.data.length ?? 0) === 0
-								? <div style={{ fontSize: 13, color: 'var(--a-faint)', padding: '8px 0 16px' }}>No disclosed deals recorded for {monthName} {year}.</div>
+								? <div style={{ fontSize: 13, color: 'var(--a-faint)', padding: '8px 0 16px' }}>No funding rounds recorded for {monthName} {year}.</div>
 								: (
 									<div className="atlas-table">
 										<div className="atlas-table__head">
@@ -240,7 +264,7 @@ export function MarketRoundup() {
 												<span className="atlas-table__name">{d.company_id ? <Link href={companyHref(d.company_slug ?? d.company_id)} className="atlas-ellipsis" style={{ fontFamily: 'var(--a-font)', fontWeight: 700, fontSize: 15 }}>{d.company_name ?? '—'}</Link> : <span className="atlas-ellipsis" style={{ fontFamily: 'var(--a-font)', fontWeight: 700, fontSize: 15 }}>{d.company_name ?? '—'}</span>}</span>
 												<span className="atlas-table__col hide-sm" style={{ width: 150 }}>{[d.hq_city, d.hq_country].filter(Boolean).join(', ') || '—'}</span>
 												<span className="atlas-table__col hide-sm" style={{ width: 150 }}>{d.round_type_name ?? '—'}</span>
-												<span className="atlas-table__amount" style={{ width: 90 }}>{fmtUsd(d.amount_usd == null ? null : Number(d.amount_usd))}</span>
+												<span className="atlas-table__amount" style={{ width: 90 }}>{Number(d.amount_usd ?? 0) > 0 ? fmtUsd(Number(d.amount_usd)) : 'Undisclosed'}</span>
 											</div>
 										))}
 									</div>
@@ -332,18 +356,14 @@ function Kpi({ k, v, delta, note }: { k: string; v: string; delta?: { text: stri
 		<div className="atlas-kpi">
 			<div className="atlas-kpi__label">{k}</div>
 			<div className="atlas-kpi__value">{v}</div>
-			{delta ? <div className={`atlas-kpi__note ${delta.dir ?? ''}`}>{delta.text} vs prev. month</div> : <div className="atlas-kpi__note">{note}</div>}
+			{delta && <div className={`atlas-kpi__note ${delta.dir ?? ''}`}>{delta.text} vs prev month</div>}
+			{note && <div className="atlas-kpi__note">{note}</div>}
 		</div>
 	);
 }
 
-function deltaPct(cur?: number, prev?: number): { text: string; dir: 'up' | 'down' | null } | null {
-	if (cur == null || prev == null || prev === 0) return null;
-	const pct = ((cur - prev) / prev) * 100;
-	return { text: `${pct >= 0 ? '+' : ''}${pct.toFixed(0)}%`, dir: pct > 0 ? 'up' : pct < 0 ? 'down' : null };
-}
-function deltaAbs(cur?: number, prev?: number): { text: string; dir: 'up' | 'down' | null } | null {
-	if (cur == null || prev == null) return null;
-	const d = cur - prev;
-	return { text: `${d >= 0 ? '+' : ''}${d}`, dir: d > 0 ? 'up' : d < 0 ? 'down' : null };
+/** Server-computed month-over-month % → "+12.3%" (one decimal, IH style). */
+function deltaPct(pct?: number): { text: string; dir: 'up' | 'down' | null } | null {
+	if (pct == null || !Number.isFinite(pct)) return null;
+	return { text: `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`, dir: pct > 0 ? 'up' : pct < 0 ? 'down' : null };
 }

@@ -201,6 +201,13 @@ export const qk = {
     topAcquirers: (period: 'ytd' | '12m' | 'all' = 'ytd', limit = 10) => ['/api/analytics/top-acquirers', { period, limit }] as const,
     bizModel: (period: 'ytd' | '12m' | 'all' = 'ytd') => ['/api/analytics/business-model-breakdown', { period }] as const,
     maTypeBreakdown: (period: 'ytd' | '12m' | 'all' = 'ytd') => ['/api/analytics/ma-type-breakdown', { period }] as const,
+    // Analytics page tabs (ports of the Intelligence Hub deep-dives).
+    hub: {
+      overview: () => ['/api/analytics/hub/overview'] as const,
+      funding: (params: Record<string, string | number | boolean | undefined>) => ['/api/analytics/hub/funding', params] as const,
+      ma: (params: Record<string, string | number | boolean | undefined>) => ['/api/analytics/hub/ma', params] as const,
+      investors: (params: Record<string, string | number | boolean | undefined>) => ['/api/analytics/hub/investors', params] as const,
+    },
   },
 
   // ── Market Monthly Roundup (editorial + live deal aggregates) ───────────

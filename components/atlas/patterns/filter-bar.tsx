@@ -32,7 +32,8 @@ type MenuState = null | { at: 'add' | 'sort' | string; view: 'root' | string };
 const SEARCHABLE_OPTIONS = 10;
 
 export function FilterBar({ search, groups, sort, canClear, onClear, count, actions }: {
-	search: { value: string; onChange: (v: string) => void; placeholder: string };
+	/** Omit for a filters-only bar (no search box). */
+	search?: { value: string; onChange: (v: string) => void; placeholder: string };
 	groups: FilterGroup[];
 	sort?: { value: string; options: [string, string][]; onChange: (v: string) => void };
 	canClear?: boolean;
@@ -49,7 +50,7 @@ export function FilterBar({ search, groups, sort, canClear, onClear, count, acti
 
 	// Every catalog search flows through here, so this is the one place that
 	// feeds searches into the behavioural personalization profile.
-	useSearchSignal(search.value);
+	useSearchSignal(search?.value);
 
 	const closeMenu = useCallback(() => setMenu(null), []);
 	useDismiss(rootRef, !!menu, closeMenu);
@@ -61,7 +62,7 @@ export function FilterBar({ search, groups, sort, canClear, onClear, count, acti
 
 	return (
 		<div className="atlas-fbar" ref={rootRef}>
-			<div className="atlas-fbar__search">
+			{search && <div className="atlas-fbar__search">
 				<Search size={13} aria-hidden="true" />
 				<input
 					className="atlas-input atlas-input--search"
@@ -70,7 +71,7 @@ export function FilterBar({ search, groups, sort, canClear, onClear, count, acti
 					onChange={(e) => search.onChange(e.target.value)}
 					aria-label={search.placeholder}
 				/>
-			</div>
+			</div>}
 
 			{applied.map((f) => (
 				<div className="atlas-fbar__anchor" key={f.key}>

@@ -19,6 +19,7 @@ import { useUserProfile, getUserType } from '@/hooks/use-user-profile';
 import { useUrlSync, useUrlReader } from '@/hooks/use-url-state';
 import { SaveInvestorToWatchlist } from './save-investor-to-watchlist';
 import { hrefOf } from '@/lib/routes';
+import { place } from '@/components/features/market/format';
 
 /**
  * Raise investor views, shared by Discover → Recommended (/raise/discover/recommended)
@@ -42,7 +43,7 @@ interface RoundRef { id: string; name: string; slug: string }
  */
 type InvestorCardData = {
 	id: string; name: string; website: string | null; description: string | null;
-	category: string | null; logo_url?: string | null; hq_country?: string | null;
+	category: string | null; logo_url?: string | null; hq_country?: string | null; hq_city?: string | null;
 };
 
 const PAGE_SIZE = 24;
@@ -58,6 +59,8 @@ const SORT_OPTIONS: [string, string][] = [['-deals', 'Most deals'], ['-created_a
 /** Most active investors first — 'Newest' led with freshly added firms that have no deals yet. */
 const DEFAULT_SORT = '-deals';
 const DASH = <span className="atlas-dash">—</span>;
+/** HQ as "City, Country" (country canonicalised). */
+const invPlace = (inv: { hq_city?: string | null; hq_country?: string | null }) => place(inv.hq_city, inv.hq_country ? canonicalCountry(inv.hq_country) : null);
 
 /** Which investors are already in one of the founder's watchlists.
  *  The watchlist (raise pipeline) is a Raise-only feature — the endpoint is
@@ -318,7 +321,7 @@ function AllInvestorsTab({ inPipeline, canWatchlist }: { inPipeline: Set<string>
 						<div className="atlas-table__head">
 							<span className="atlas-table__name">Investor</span>
 							<span className="atlas-table__col hide-sm" style={{ width: 110 }}>Type</span>
-							<span className="atlas-table__col hide-sm" style={{ width: 110 }}>Location</span>
+							<span className="atlas-table__col hide-sm" style={{ width: 150 }}>Location</span>
 							<span className="atlas-table__col hide-sm hide-md" style={{ width: 60 }}>Deals</span>
 							<span className="atlas-table__col hide-sm hide-md" style={{ width: 84 }}>Launched</span>
 							<span className="atlas-table__col hide-sm" style={{ width: 72 }}>Status</span>
@@ -337,7 +340,7 @@ function AllInvestorsTab({ inPipeline, canWatchlist }: { inPipeline: Set<string>
 									</div>
 								</div>
 								<span className="atlas-table__col hide-sm" style={{ width: 110 }}>{categoryLabel(inv.category) ?? DASH}</span>
-								<span className="atlas-table__col hide-sm" style={{ width: 110 }}>{inv.hq_country ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Flag cc={inv.hq_country} size={11} />{canonicalCountry(inv.hq_country)}</span> : DASH}</span>
+								<span className="atlas-table__col hide-sm" style={{ width: 150 }} title={invPlace(inv) || undefined}>{inv.hq_country ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, maxWidth: '100%' }}><Flag cc={inv.hq_country} size={11} /><span className="atlas-ellipsis">{invPlace(inv)}</span></span> : DASH}</span>
 								<span className="atlas-table__col hide-sm hide-md" style={{ width: 60, fontWeight: inv.deals_count ? 600 : 400, color: inv.deals_count ? 'var(--a-ink)' : undefined }}>{inv.deals_count || DASH}</span>
 								<span className="atlas-table__col hide-sm hide-md" style={{ width: 84 }}>{inv.year_launched ?? DASH}</span>
 								<span className="atlas-table__col hide-sm" style={{ width: 72 }}>{inv.actively_investing ? <span className="atlas-chip-sm">ACTIVE</span> : DASH}</span>
@@ -373,7 +376,7 @@ function InvestorCard({ inv, added, reasons, onDismiss, canAdd = true }: { inv: 
 					{inv.category && <div className="atlas-entity-card__eyebrow">{categoryLabel(inv.category)}</div>}
 					<Link href={`${hrefOf('investors')}/${inv.id}`} className="atlas-entity-card__name" style={{ textDecoration: 'none', color: 'inherit' }}>{inv.name}</Link>
 					{inv.hq_country && (
-						<div className="atlas-entity-card__meta"><Flag cc={inv.hq_country} size={11} /><span>{canonicalCountry(inv.hq_country)}</span></div>
+						<div className="atlas-entity-card__meta"><Flag cc={inv.hq_country} size={11} /><span>{invPlace(inv)}</span></div>
 					)}
 				</div>
 			</div>

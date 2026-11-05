@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { qk } from '@/lib/query-keys';
-import { Card, Loading, Badge, Seg, Tabs } from '@/components/atlas';
+import { Card, Loading, Badge, Seg } from '@/components/atlas';
 import { Combobox } from '@/components/atlas/ui/combobox';
 import { MONTHS } from '@/lib/catalog-options';
 import { PieCard } from './roundup/pie-card';
@@ -90,7 +90,7 @@ export function MarketRoundup() {
 			{/* IH filter row: Funding / M&A, month, year, M&A perspective. */}
 			<Card style={{ padding: '14px 24px' }}>
 				<div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-					<Tabs<RoundupMode> value={mode} onChange={setMode} tabs={[{ key: 'funding', label: 'Funding' }, { key: 'ma', label: 'M&A' }]} />
+					<Seg<RoundupMode> ariaLabel="Funding or M&A" value={mode} onChange={setMode} options={[{ key: 'funding', label: 'Funding' }, { key: 'ma', label: 'M&A' }]} />
 					<Combobox className="atlas-select atlas-select--pill" ariaLabel="Month" value={String(month)} onChange={(v) => setSel({ year, month: Number(v) })} style={{ width: 150 }} options={MONTHS} />
 					<Combobox className="atlas-select atlas-select--pill" ariaLabel="Year" value={String(year)} onChange={(v) => setSel({ year: Number(v), month })} style={{ width: 110 }} options={YEARS} />
 					{mode === 'ma' && <Seg<Perspective> ariaLabel="Perspective" value={perspective} onChange={setPerspective} options={[{ key: 'acquiree', label: 'Acquiree' }, { key: 'acquirer', label: 'Acquirer' }]} />}

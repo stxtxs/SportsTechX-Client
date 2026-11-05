@@ -1,0 +1,36 @@
+/* Analytics page (market-analysis.tsx + ./*-tab.tsx). Everything else is
+   design-system pieces: atlas-kpis, atlas-chart-card, atlas-table, hb-row. */
+
+.atlas .ana { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; }
+.atlas .ana-head-tools,
+.atlas .ana-sec-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.atlas .ana-sec-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.atlas .ana-row-title { font-family: var(--a-font); font-size: 15px; font-weight: 700; color: var(--a-ink); margin-bottom: -10px; }
+.atlas .ana-empty { font-family: var(--a-body); font-size: 13px; color: var(--a-faint); text-align: center; padding: 32px 0; }
+.atlas .ana-foot { font-family: var(--a-body); font-size: 12px; color: var(--a-faint); }
+
+.atlas .ana-framework-link { display: inline-block; margin-top: 14px; font-family: var(--a-body); font-size: 11px; color: var(--a-accent, var(--a-chart-dot)); text-decoration: none; }
+.atlas .ana-framework-link:hover { text-decoration: underline; }
+
+.atlas .ana-region { margin-bottom: 20px; }
+.atlas .ana-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 24px; }
+.atlas .ana-subhead { font-family: var(--a-font); font-size: 14px; font-weight: 700; color: var(--a-ink); margin-bottom: 10px; }
+
+/* Ranked tables inside a card body: no full-bleed, compact rows. */
+.atlas .ana-table { margin: 0; }
+.atlas .ana-table .atlas-table__head,
+.atlas .ana-table .atlas-table__row { padding: 10px 4px; gap: 14px; }
+.atlas .ana-table .atlas-table__rank { width: 32px; height: 32px; font-size: 13px; }
+.atlas .ana-table .atlas-table__name { gap: 8px; font-family: var(--a-body); font-size: 13px; color: var(--a-ink); }
+.atlas .ana-count { width: 56px; text-align: right; }
+.atlas .ana-loc { width: 140px; display: inline-flex; align-items: center; gap: 4px; }
+.atlas .ana-latest { width: 180px; }
+.atlas .ana-date { width: 80px; }
+.atlas .ana-co-line { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.atlas .ana-co-name { font-family: var(--a-font); font-weight: 700; font-size: 14px; color: var(--a-ink); }
+.atlas .ana-co-link { color: inherit; text-decoration: none; min-width: 0; }
+.atlas .ana-co-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.atlas .ana-co-desc { font-family: var(--a-body); font-size: 10px; color: var(--a-muted); margin-top: 2px; max-width: 320px; }
+.atlas .ana-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 12px; font-family: var(--a-body); font-size: 11px; color: var(--a-muted); }
+.atlas .ana-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.atlas .ana-pager { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 18px; font-family: var(--a-mono); font-size: 11px; color: var(--a-muted); }

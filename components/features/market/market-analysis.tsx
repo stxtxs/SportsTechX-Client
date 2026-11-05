@@ -44,7 +44,7 @@ export function MarketAnalysis() {
 			{tab === 'funding' && <FundingTab />}
 			{tab === 'ma' && <MaTab />}
 			{tab === 'investors' && <InvestorsTab />}
-			<div className="ana-foot">Figures cover disclosed deals only. Source: SportsTechX research.</div>
+			<div className="ana-foot">Amounts are disclosed values; deal counts include rounds with undisclosed amounts. Source: SportsTechX research.</div>
 		</div>
 	);
 }

@@ -37,6 +37,10 @@ export function InvestorsTab() {
 	const base = useSWR<Investors>(key('10y'));
 	// A picked year already narrows the whole tab, so the list uses the base window.
 	const list = useSWR<Investors>(key(year ? '10y' : listRange));
+	// The year picker's own options come from the tab WITHOUT the picked year, or
+	// choosing one would leave only that year to choose from. Same key as `base`
+	// when no year is picked, so it costs no extra request.
+	const allYears = useSWR<Investors>(qk.analytics.hub.investors({ window: '10y', ...asParams({ ...filters, dealYear: '' }) }));
 
 	const opts = useHubOptions();
 	const setAndReset = (f: FilterState) => { setFilters(f); setPage(0); };
@@ -58,7 +62,7 @@ export function InvestorsTab() {
 
 	const yearly = base.data?.yearly ?? [];
 	const chart = useMemo(() => byWindow(yearly, summaryRange).map((r) => ({ year: r.year, amt: r.total_usd, deals: r.investors })), [yearly, summaryRange]);
-	const yearOptions = useMemo(() => [...new Set(yearly.map((r) => r.year))].sort((a, b) => b - a).map((y) => [String(y), String(y)] as [string, string]), [yearly]);
+	const yearOptions = useMemo(() => [...new Set((allYears.data?.yearly ?? []).map((r) => r.year))].sort((a, b) => b - a).map((y) => [String(y), String(y)] as [string, string]), [allYears.data]);
 
 	const rows = list.data?.top ?? [];
 	const pages = Math.ceil(rows.length / PAGE);

@@ -1,6 +1,6 @@
 'use client';
 
-import { Tabs } from '@/components/atlas';
+import { Seg } from '@/components/atlas';
 import { useUrlReader, useUrlSync } from '@/hooks/use-url-state';
 import { useState } from 'react';
 import { OverviewTab } from './analytics/overview-tab';
@@ -30,12 +30,16 @@ export function MarketAnalysis() {
 		// minmax(0, 1fr): an implicit `auto` track grows to its widest child's
 		// min-content, which pushed the whole page wider than a phone.
 		<div className="ana">
-			<Tabs<Tab> value={tab} onChange={setTab} tabs={[
-				{ key: 'overview', label: 'Overview' },
-				{ key: 'funding', label: 'Funding' },
-				{ key: 'ma', label: 'M&A' },
-				{ key: 'investors', label: 'Investors' },
-			]} />
+			{/* A capsule, not a second underline tab row: it sits under the page's
+			    Intelligence tabs and must read as a level below them. */}
+			<div className="ana-subtabs">
+				<Seg<Tab> ariaLabel="Analytics section" value={tab} onChange={setTab} options={[
+					{ key: 'overview', label: 'Overview' },
+					{ key: 'funding', label: 'Funding' },
+					{ key: 'ma', label: 'M&A' },
+					{ key: 'investors', label: 'Investors' },
+				]} />
+			</div>
 			{tab === 'overview' && <OverviewTab />}
 			{tab === 'funding' && <FundingTab />}
 			{tab === 'ma' && <MaTab />}

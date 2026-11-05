@@ -11,7 +11,7 @@ const QUICK: [string, string][] = [
 ];
 
 const SPORTSTECHX: [string, string][] = [
-	['About us', 'https://sports-tech-x-landing.vercel.app/about'],
+	['About us', 'https://www.sportstechx.com/about'],
 	['Book a demo', 'https://cal.com/khyati/sportstechx'],
 	['Contact', 'mailto:hello@sportstechx.com'],
 ];

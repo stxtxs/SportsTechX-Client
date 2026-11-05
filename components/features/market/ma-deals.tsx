@@ -10,8 +10,8 @@ import { useSectorTierData, useCountryOptions, useSportOptions, useLocationFacet
 import { useFeatureAccess } from '@/contexts/feature-access-context';
 
 import { BUSINESS_MODELS, MONTHS, SINCE_YEARS, canonicalCountry } from '@/lib/catalog-options';
-import { Empty, FilterBar, Loading, Logo, Flag, Pager, type FilterDef, lockedFiltersNote } from '@/components/atlas';
-import { fmtUsd } from '@/components/features/market/format';
+import { Empty, FilterBar, Loading, Logo, Flag, Pager, Stat, type FilterDef, lockedFiltersNote, BAR_ACCENT } from '@/components/atlas';
+import { fmtUsd, fmtCount, place } from '@/components/features/market/format';
 import { companyHref } from '@/lib/routes';
 import { MaDealPanel } from '@/components/features/market/ma-deal-panel';
 import { useUrlSync, useUrlReader, useUrlModal, isUuid } from '@/hooks/use-url-state';
@@ -199,6 +199,7 @@ export function MaDeals() {
 
 	return (
 		<>
+			<MaStatsStrip />
 			<FilterBar
 				search={{ value: q, onChange: (v) => { setQ(v); reset(); }, placeholder: 'Search by company or acquirer…' }}
 				groups={[
@@ -229,7 +230,7 @@ export function MaDeals() {
 					<div className="atlas-table__head">
 						<span className="atlas-table__name">Company</span>
 						<span className="atlas-table__col hide-sm" style={{ width: 150 }}>Sector</span>
-						<span className="atlas-table__col hide-sm" style={{ width: 130 }}>Location</span>
+						<span className="atlas-table__col hide-sm" style={{ width: 150 }}>Location</span>
 						<span className="atlas-table__col hide-sm" style={{ width: 200 }}>Acquirer</span>
 						<span className="atlas-table__col hide-sm" style={{ width: 90 }}>Announced</span>
 						<span className="atlas-table__col" style={{ width: 100, textAlign: 'right' }}>Value</span>
@@ -252,8 +253,10 @@ export function MaDeals() {
 									</div>
 								</div>
 								<span className="atlas-table__col hide-sm atlas-ellipsis" style={{ width: 150 }}>{d.primary_sector ?? '—'}</span>
-								<span className="atlas-table__col hide-sm" style={{ width: 130, display: 'flex', alignItems: 'center', gap: 6 }}>
-									{d.hq_country ? <><Flag cc={d.hq_country} size={11} /><span className="atlas-ellipsis">{canonicalCountry(d.hq_country)}</span></> : '—'}
+								<span className="atlas-table__col hide-sm" style={{ width: 150, display: 'flex', alignItems: 'center', gap: 6 }}>
+									{d.hq_country || d.hq_city
+										? <>{d.hq_country && <Flag cc={d.hq_country} size={11} />}<span className="atlas-ellipsis">{place(d.hq_city, d.hq_country ? canonicalCountry(d.hq_country) : null)}</span></>
+										: '—'}
 								</span>
 								<span className="atlas-table__col hide-sm" style={{ width: 200, display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
 									{d.acquirer_name ? <>
@@ -274,5 +277,50 @@ export function MaDeals() {
 			<Pager page={page} totalPages={res.data?.totalPages ?? 1} onPage={setPage} />
 			<MaDealPanel deal={selected} onClose={() => setDealId(null)} />
 		</>
+	);
+}
+
+interface MaStats { count: number; total_value: number; disclosed_count: number; disclosed_pct: number }
+interface MaQuarter { year: number; quarter: number; quarter_label: string; total_amount: number; deal_count: number }
+const SPARK_QUARTERS = 12;
+
+/**
+ * All-time M&A headline numbers above the list (the list itself only said
+ * "N deals"): count, disclosed value, how much of it is disclosed, and deals
+ * per quarter for the last 12 quarters. Not tied to the list filters.
+ */
+function MaStatsStrip() {
+	const stats = useSWR<MaStats>(qk.analytics.maStats('all'));
+	const now = new Date();
+	const curY = now.getUTCFullYear(), curQ = Math.floor(now.getUTCMonth() / 3) + 1;
+	const quarterly = useSWR<MaQuarter[]>(qk.analytics.maQuarterly({ from: curY - 3, to: curY }));
+	// The last 12 quarters ending with the current one, empty quarters as 0.
+	const quarters = useMemo(() => {
+		const got = new Map((quarterly.data ?? []).map((r) => [`${r.year}-${r.quarter}`, r.deal_count]));
+		return Array.from({ length: SPARK_QUARTERS }, (_, i) => {
+			const idx = curY * 4 + (curQ - 1) - (SPARK_QUARTERS - 1 - i);
+			const y = Math.floor(idx / 4), q = (idx % 4) + 1;
+			return { label: `Q${q} ${y}`, n: got.get(`${y}-${q}`) ?? 0 };
+		});
+	}, [quarterly.data, curY, curQ]);
+	const s = stats.data;
+	const max = Math.max(1, ...quarters.map((x) => x.n));
+
+	return (
+		<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 170px), 1fr))', gap: 12, marginBottom: 20 }}>
+			<Stat label="M&A deals (all time)" value={s ? fmtCount(s.count) : '—'} />
+			<Stat label="Disclosed value" value={s ? fmtUsd(s.total_value) : '—'} />
+			<Stat label="Value disclosed" value={s ? <>{s.disclosed_pct}%<span style={{ fontSize: 11, color: 'var(--a-muted)', marginLeft: 8 }}>{fmtCount(s.disclosed_count)} of {fmtCount(s.count)}</span></> : '—'} />
+			<Stat label="Deals per quarter" value={
+				<svg viewBox={`0 0 ${SPARK_QUARTERS * 10} 30`} preserveAspectRatio="none" role="img"
+					aria-label={`Deals per quarter, ${quarters[0]?.label} to ${quarters[quarters.length - 1]?.label}`}
+					style={{ display: 'block', width: '100%', height: 30 }}>
+					{quarters.map((x, i) => {
+						const h = Math.max(x.n ? 2 : 0.5, (x.n / max) * 30);
+						return <rect key={x.label} x={i * 10 + 1.5} y={30 - h} width={7} height={h} rx={1} fill={BAR_ACCENT} opacity={i === quarters.length - 1 ? 0.5 : 1}><title>{`${x.label}: ${x.n} deal${x.n === 1 ? '' : 's'}${i === quarters.length - 1 ? ' (so far)' : ''}`}</title></rect>;
+					})}
+				</svg>
+			} />
+		</div>
 	);
 }

@@ -49,7 +49,7 @@ export function FundingRoundsTable({ year, month }: { year: number; month: numbe
 					<Head cols={['Location', 'Round']} />
 					{data.map((d, i) => (
 						<Row key={d.id} i={i} href={d.company_id ? companyHref(d.company_slug ?? d.company_id) : null}
-							amount={d.amount_usd != null ? fmtM(Number(d.amount_usd)) : 'Undisclosed'}>
+							amount={Number(d.amount_usd) > 0 ? fmtM(Number(d.amount_usd)) : 'Undisclosed'}>
 							<Party name={d.company_name} website={d.company_website} logo={d.company_custom_logo_url} />
 							<Col><Place city={d.hq_city} country={d.hq_country} /></Col>
 							<Col>{d.round_type_name || '-'}</Col>

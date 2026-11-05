@@ -43,15 +43,24 @@ export async function siteContent(): Promise<SiteSections> {
 	// it, and the site looks like a CMS nobody has filled in yet.
 	const base = process.env.BACKEND_URL;
 	if (!base) return {};
-	try {
-		const res = await fetch(`${base}/api/public/site-content?site=${SITE}`, {
+	// A failed fetch must NOT read as "no content": that rendered the built-in
+	// default images and the 5-minute page cache then kept that version (seen 5 Nov
+	// 2026 after admin edits + API restarts). Throwing instead makes Next keep
+	// serving the last good page; a build with the API down fails and the previous
+	// deployment stays live. One retry rides out an API restart. A section that is
+	// genuinely empty still falls back to the defaults (that's an editorial choice).
+	for (let attempt = 1; ; attempt++) {
+		try {
+			const res = await fetch(`${base}/api/public/site-content?site=${SITE}`, {
 			next: { revalidate: REVALIDATE_SEC },
 			signal: AbortSignal.timeout(8000),
 		});
-		if (!res.ok) return {};
-		const json = (await res.json()) as { sections?: SiteSections };
-		return json.sections ?? {};
-	} catch {
-		return {};
+			if (!res.ok) throw new Error(`site-content (atlas) responded ${res.status}`);
+			const json = (await res.json()) as { sections?: SiteSections };
+			return json.sections ?? {};
+		} catch (error) {
+			if (attempt >= 2) throw error;
+			await new Promise((r) => setTimeout(r, 1500));
+		}
 	}
 }

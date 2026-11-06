@@ -19,7 +19,7 @@ export function ThesisMatchCard() {
 	return (
 		<section className="atlas-card atlas-co__side scout-match">
 			<h2 className="atlas-co__h">Scout · Thesis match</h2>
-			<p className="atlas-co__sub">Atlas ranks companies, signals and Deal Flow against this thesis. A match score for this company specifically isn’t shown here yet.</p>
+			<p className="atlas-co__sub">Atlas ranks companies against this thesis. A match score for this company specifically isn’t shown here yet.</p>
 			<div className="scout-tags">{thesisTags(thesis).map((t) => <span key={t} className="scout-tag">{t}</span>)}</div>
 			<Link href={hrefOf('thesis')} className="scout-link">Edit thesis</Link>
 		</section>

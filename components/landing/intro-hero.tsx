@@ -1,38 +1,32 @@
+'use client';
+
 /* eslint-disable @next/next/no-img-element */
+import { ATLAS_LINKS, SOLUTIONS, selectSolution } from '@/components/landing/atlas-solutions';
+
+/** Hero counters. The first three follow sportstechx.com. */
+const STATS: [string, string][] = [
+	['10,000+', 'Companies Tracked'],
+	['2,500+', 'Investors Mapped'],
+	['$130B+', 'Deal Flow Tracked'],
+	['8,000+', 'Deals Tracked'],
+];
 
 /**
- * Intro Hero — a 1:1 rebuild of the Figma frame `6018:2804` (1512×1007, #060a17).
+ * Intro hero, compact (about half its old height).
  *
- * Background layers, painted bottom → top exactly as Figma stacks them:
- *   1. Gradient Overlay  — radial pink wash (spans the hero, see landing.css)
- *   2. Vector            — the concentric ring outlines (pink #F32163 @ .32,
- *                          gradient-faded transparent→pink toward lower-right)
- *   3. Ellipse 2         — radial pink circle, 1571², centre (-146.5, 1357.5)
- *   4. Ellipse 3         — linear dark circle, same box, on top
+ * The background is the original Figma composition, unchanged: the pink wash,
+ * the concentric rings and the two ellipses, positioned in % of `.lp-hero-bg`.
+ * Do not substitute CSS shapes for these assets.
  *
- * The offsets below are the Figma node values, not approximations: 1571/1512 =
- * 103.902% wide, 1571/1007 = 156.008% tall, and the rings node is 1701 wide =
- * 112.5%. Every child is positioned in % of `.lp-hero-bg`, the design frame at
- * its true scale, so the composition holds at any viewport.
- *
- * Do not substitute CSS shapes for these assets — they ARE the design's
- * artwork, so drawing them at these coordinates reproduces it exactly.
+ * Content: the gradient wordmark, a byline, three headline lines (each opens
+ * its solution's card; the full stop takes that solution's colour),
+ * two CTAs and a counter row.
  */
 export function IntroHero() {
 	return (
-		<header className="lp-hero lp-hero--intro" id="top">
-			{/* The pink wash spans the whole hero, NOT the stage. Once the stage is
-			    centred it no longer reaches the viewport's left edge, and a wash
-			    clipped to the stage box ended on a hard vertical seam. */}
+		<header className="lp-hero lp-hero--intro lp-hero--compact" id="top">
 			<div className="lp-hero-grad" aria-hidden />
 			<div className="lp-hero-bg" aria-hidden>
-				{/* Vector — concentric rings. The asset's viewBox is pre-cropped to the
-				    window the design shows (user space 1853,469 → 3554,1476), so this
-				    is a normal 1701×1007 image rather than the 12.6-megapixel full
-				    drawing, which Chrome refuses to rasterise inside the page. */}
-				{/* Geometry in CSS, not inline: the rings need reframing on a phone
-				    and an inline style cannot be overridden by a media query. The
-				    desktop values are unchanged — see .lp-hero-rings. */}
 				<img className="lp-hero-orb lp-hero-rings" src="/landing/hero-rings.svg" alt="" />
 				{/* Ellipse 2 — radial pink */}
 				<img className="lp-hero-orb" src="/landing/hero-ellipse-1.svg" alt=""
@@ -42,15 +36,34 @@ export function IntroHero() {
 					style={{ left: '-61.640%', top: '56.802%', width: '103.902%', height: '156.008%', transform: 'rotate(144.3deg)' }} />
 			</div>
 
-			<div className="lp-hero-inner">
-				<div className="lp-hero-texts">
-					<img className="lp-hero-wordmark" src="/landing/atlas-wordmark.svg" alt="Atlas" />
-					<h1 className="lp-display lp-hero-headline">Your insider guide to<br />sports tech &amp; venture</h1>
-				</div>
+			<div className="lp-hero-inner lp-hero-inner--compact">
+				<img className="lp-hero-wordmark lp-hero-wordmark--compact" src="/landing/atlas-wordmark.svg" alt="Atlas" />
+				<p className="lp-hero-byline">Your insider guide to sports tech &amp; venture</p>
+
+				<h1 className="lp-display lp-hero-lines">
+					{SOLUTIONS.map((s) => (
+						<a key={s.id} className="lp-hero-line" href="#solutions" onClick={(e) => selectSolution(s.id, e)}>
+							{s.heroLine}
+							<span style={{ color: s.colour }}>.</span>
+						</a>
+					))}
+				</h1>
+
 				<div className="lp-hero-ctas">
-					<a className="lp-btn lp-btn--pink" href="https://cal.com/khyati/sportstechx" target="_blank" rel="noreferrer">Book a demo</a>
-					<a className="lp-btn lp-btn--outline" href="#how-to-join">Explore products</a>
+					<a className="lp-btn lp-btn--pink" href="#solutions">Explore solutions</a>
+					<a className="lp-btn lp-btn--outline" href={ATLAS_LINKS.bookDemo} target="_blank" rel="noreferrer">
+						Book a demo
+					</a>
 				</div>
+
+				<dl className="lp-hero-stats">
+					{STATS.map(([value, label]) => (
+						<div key={label} className="lp-hero-stat">
+							<dt>{label}</dt>
+							<dd>{value}</dd>
+						</div>
+					))}
+				</dl>
 			</div>
 		</header>
 	);

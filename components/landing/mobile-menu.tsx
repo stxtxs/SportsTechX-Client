@@ -25,9 +25,8 @@ import Link from 'next/link';
 /* Root-relative on purpose: a bare '#explore' resolves to /terms-of-service#explore
    on a sub-route and scrolls nowhere. Shared by the nav and the drawer. */
 export const LINKS: [string, string][] = [
-	['EXPLORE', '/#explore'],
-	['RAISE', '/#dash-raise'],
-	['SCOUT', '/#dash-scout'],
+	['SOLUTIONS', '/#solutions'],
+	['PRICING', '/#pricing'],
 	['FAQ', '/#faq'],
 ];
 

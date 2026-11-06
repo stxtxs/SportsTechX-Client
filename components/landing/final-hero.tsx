@@ -1,33 +1,29 @@
-/* eslint-disable @next/next/no-img-element */
+'use client';
+
+import type { CSSProperties } from 'react';
+import { SOLUTIONS, selectSolution } from '@/components/landing/atlas-solutions';
 
 /**
- * Final Hero — Figma frame `9014:864` (1512×689). Same layer stack as the intro
- * hero, using that frame's own coordinates: BG Detail at (129, -479) 3162×3118
- * and both circles at (577, 268) 1571², i.e. the glow sits off the bottom-right.
+ * Closing CTA: one button per solution. Each opens that solution's card in
+ * the Solutions section.
  */
 export function FinalHero() {
 	return (
-		<section className="lp-hero lp-hero--final" id="apply">
-			<div className="lp-hero-bg lp-hero-bg--final" aria-hidden>
-				<div className="lp-hero-grad lp-hero-grad--final" />
-				{/* Same cropped ring art, mirrored so the arcs sweep up from the
-				    bottom-right where this frame's glow sits. */}
-				<img className="lp-hero-orb" src="/landing/hero-rings.svg" alt=""
-					style={{ left: 0, top: 0, width: '112.500%', height: '100%', transform: 'scaleX(-1)' }} />
-				<img className="lp-hero-orb" src="/landing/hero-ellipse-1.svg" alt=""
-					style={{ left: '38.161%', top: '38.897%', width: '103.902%', height: '228.012%' }} />
-				<img className="lp-hero-orb" src="/landing/hero-ellipse-2.svg" alt=""
-					style={{ left: '38.161%', top: '38.897%', width: '103.902%', height: '228.012%' }} />
-			</div>
-
-			<div className="lp-hero-inner">
-				<div className="lp-hero-texts">
-					<img className="lp-hero-wordmark lp-hero-wordmark--sm" src="/landing/atlas-wordmark.svg" alt="Atlas" />
-					<h2 className="lp-display lp-hero-headline">Built for sports tech&rsquo;s most advanced operators</h2>
-				</div>
-				<p className="lp-hero-sub">Explore the market, prepare your next round or find investment opportunities. See how Atlas supports your goals.</p>
-				<div className="lp-hero-ctas">
-					<a className="lp-btn lp-btn--ui lp-btn--pink" href="https://cal.com/khyati/sportstechx" target="_blank" rel="noreferrer">Book a demo</a>
+		<section className="lp-closing" id="start">
+			<div className="lp-inner">
+				<h2 className="lp-display lp-closing-title">Where do you want to start?</h2>
+				<div className="lp-closing-ctas">
+					{SOLUTIONS.map((s) => (
+						<a
+							key={s.id}
+							className="lp-closing-btn"
+							href="#solutions"
+							style={{ '--sol-fill': s.fill } as CSSProperties}
+							onClick={(e) => selectSolution(s.id, e)}
+						>
+							{s.closingCta}
+						</a>
+					))}
 				</div>
 			</div>
 		</section>

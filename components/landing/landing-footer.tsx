@@ -9,9 +9,9 @@ import { SOLUTIONS, selectSolution, solutionHref } from '@/components/landing/at
 
 /* The rest of the SportsTechX family, as in the sportstechx.com footer. */
 const SPORTSTECHX: [string, string][] = [
-	['SportsTechX.com', 'https://www.sportstechx.com'],
+	['SportsTechX', 'https://www.sportstechx.com'],
 	['Playmakers', 'https://www.playmakers.sportstechx.com'],
-	['Boardroom', 'https://www.sportstechx.com/#solutions'],
+	['Boardroom', 'https://www.sportstechx.com/#boardroom'],
 	['Media', 'https://www.sportstechx.com/#media'],
 	['About', 'https://www.sportstechx.com/about'],
 ];

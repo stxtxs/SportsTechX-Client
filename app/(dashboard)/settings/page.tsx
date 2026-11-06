@@ -10,7 +10,6 @@ import { refreshRaise } from '@/lib/invalidate';
 import { openRaiseSetup } from '@/lib/setup-events';
 import { Screen, PageHead, Card, Button, Loading } from '@/components/atlas';
 import { AccountTabs } from '@/components/features/account/account-tabs';
-import { DealflowOptIn } from '@/components/raise/dealflow-opt-in';
 
 /**
  * Atlas Raise — Company & Raise settings. A READ-ONLY summary of the raise
@@ -107,8 +106,12 @@ export default function RaiseSettingsPage() {
 				)}
 
 				{/* Operational — not part of the setup wizard, so they stay as live controls. */}
+				{/* Coming soon, like Deal Flow → From the Circle. Restore
+				    <DealflowOptIn /> (components/raise/dealflow-opt-in) when it launches. */}
 				<Section title="Investor Circle">
-					<DealflowOptIn />
+					<div style={{ fontSize: 12, lineHeight: 1.55, color: 'var(--a-muted)' }}>
+						Coming soon. You&apos;ll be able to share your round with vetted investors in the Investor Circle.
+					</div>
 				</Section>
 
 				{!needsSetup && (

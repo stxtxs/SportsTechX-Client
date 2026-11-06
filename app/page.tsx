@@ -1,7 +1,9 @@
 import { lpDisplay, lpMono, lpSerif } from './fonts';
 import { LandingNav } from '@/components/landing/landing-nav';
 import { IntroHero } from '@/components/landing/intro-hero';
-import { TrustedBy } from '@/components/landing/trusted-by';
+// Trusted by is hidden for now (6 Nov 2026). To bring it back, restore this
+// import and the <TrustedBy /> line in the page below.
+// import { TrustedBy } from '@/components/landing/trusted-by';
 import { Solutions } from '@/components/landing/solutions';
 import { Pricing } from '@/components/landing/pricing';
 import { Faq } from '@/components/landing/faq';
@@ -39,7 +41,7 @@ export default async function LandingPage() {
 				<MobileMenuShell nav={<LandingNav />}>
 					<main>
 						<IntroHero />
-						<TrustedBy items={cms.gallery} />
+						{/* Hidden for now: <TrustedBy items={cms.gallery} /> */}
 						<Solutions
 							shots={{ explore: cms.dashboard, raise: cms.dashboard_raise, scout: cms.dashboard_scout }}
 							experts={cms.team}

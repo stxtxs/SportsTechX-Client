@@ -31,7 +31,7 @@ export interface LegalDoc {
 export const termsOfService: LegalDoc = {
 	title: 'Terms of Service',
 	subtitle: 'SportsTechX Intelligence Hub',
-	updated: 'December 2025',
+	updated: 'November 2026',
 	sections: [
 		{
 			level: 2,
@@ -138,7 +138,8 @@ export const termsOfService: LegalDoc = {
 					items: [
 						{ text: 'You may cancel your subscription at any time through your account settings or by contacting support' },
 						{ text: 'Upon cancellation, you will retain access until the end of your current billing period' },
-						{ text: 'No refunds will be provided for partial subscription periods, except as required by law or at our sole discretion' },
+						{ text: '30-day money-back guarantee (Atlas Raise): if you are not satisfied with Atlas Raise, you may request a full refund within 30 days of your first Atlas Raise payment by emailing hello@sportstechx.com. The refund is made to your original payment method and your Atlas Raise access ends when it is issued. The guarantee applies once per customer, to the first payment only; it does not cover renewals or Atlas Scout' },
+						{ text: 'Apart from the Atlas Raise money-back guarantee above, no refunds will be provided for partial subscription periods, except as required by law or at our sole discretion' },
 						{ text: 'If you cancel during a free trial, your access will end immediately and you will not be charged' },
 					],
 				},
@@ -425,7 +426,7 @@ export const termsOfService: LegalDoc = {
 				{ kind: 'p', text: 'If you have any questions about these Terms, please contact us at:' },
 				{ kind: 'p', label: 'Email:', text: 'hello@sportstechx.com' },
 				{ kind: 'p', label: 'Address:', text: 'SportsTechX GmbH, Liebigstraße 35, 10247 Berlin, Germany' },
-				{ kind: 'p', text: 'Last updated: December 2025' },
+				{ kind: 'p', text: 'Last updated: November 2026' },
 			],
 		},
 	],

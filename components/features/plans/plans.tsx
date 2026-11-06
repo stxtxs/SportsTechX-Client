@@ -122,8 +122,11 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 	/**
 	 * Cancel at the end of the billing period. The plan stays active — full
 	 * access — until then; it simply won't renew, and the user moves to Explore
-	 * when it ends. No refund, and no immediate cancellation (that's a sales
-	 * conversation). Until it ends they keep the tier and can't start another.
+	 * when it ends. No automatic refund and no immediate cancellation (that's a
+	 * sales conversation). Atlas Raise carries a 30-day money-back guarantee on
+	 * the first payment (Terms, Cancellation & Refunds), claimed by email, so a
+	 * Raise subscriber is told how. Until it ends they keep the tier and can't
+	 * start another.
 	 */
 	const fmtDay = (iso: string | null) =>
 		iso ? new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) : null;
@@ -133,11 +136,14 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 			const res = await apiRequest('POST', '/api/billing/cancel?preview=1');
 			const { access_until } = (await res.json()) as { access_until: string | null };
 			const until = fmtDay(access_until);
+			const refund = current === 'raise'
+				? 'Within 30 days of your first Atlas Raise payment? Email hello@sportstechx.com for a full refund under our 30-day money-back guarantee.'
+				: 'No refund is issued.';
 			const ok = await confirm({
 				title: 'Cancel your plan?',
 				description: until
-					? `Your plan stays active with full access until ${until}. It won't renew — you'll move to Atlas Explore then. No refund is issued, and you can't start a different plan until it ends. To cancel sooner, contact the SportsTechX team.`
-					: `Your plan won't renew and you'll move to Atlas Explore at the end of the current billing period. No refund is issued. To cancel sooner, contact the SportsTechX team.`,
+					? `Your plan stays active with full access until ${until}. It won't renew — you'll move to Atlas Explore then, and you can't start a different plan until it ends. ${refund} To cancel sooner, contact the SportsTechX team.`
+					: `Your plan won't renew and you'll move to Atlas Explore at the end of the current billing period. ${refund} To cancel sooner, contact the SportsTechX team.`,
 				confirmLabel: 'Cancel at period end',
 				destructive: true,
 			});

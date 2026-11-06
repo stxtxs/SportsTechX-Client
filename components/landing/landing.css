@@ -409,7 +409,10 @@ body:has(.lp) {
 /* About half the old full-screen hero: content-height, not 100svh. The
    background stage keeps its own 100svh box anchored to the bottom, so the
    sphere and rings still sit where the design puts them. */
-.lp-hero--compact { min-height: 0; display: block; }
+/* Fills the first screen, content centred; grows past it when the content is
+   taller (short laptops, phones). `min-height: 0` here left the next section
+   showing under the hero on load. */
+.lp-hero--compact { min-height: 100vh; min-height: 100svh; display: flex; align-items: center; }
 /* Sized so the counter row lands above the fold on a laptop: the headline
    scales with the viewport height as well as its width. */
 .lp .lp-hero-inner--compact { max-width: 1180px; padding: 120px 24px 0; gap: 0; }
@@ -419,8 +422,6 @@ body:has(.lp) {
 .lp-hero-line { display: block; color: #fff; text-decoration: none; transition: opacity 0.15s ease; }
 .lp-hero-lines:hover .lp-hero-line:not(:hover) { opacity: 0.6; }
 .lp-hero--compact .lp-hero-ctas { margin-top: 32px; gap: 14px; padding: 0; }
-.lp-hero--compact .lp-btn--outline { background: #3b435e; border-color: #3b435e; }
-.lp-hero--compact .lp-btn--outline:hover { background: #4a5372; }
 
 /* Counter row: value above label, divided by hairlines. In the markup the
    label (dt) comes first, as a description list requires; order flips it. */

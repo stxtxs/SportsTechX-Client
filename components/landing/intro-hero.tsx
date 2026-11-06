@@ -1,7 +1,7 @@
 'use client';
 
 /* eslint-disable @next/next/no-img-element */
-import { ATLAS_LINKS, SOLUTIONS, selectSolution, solutionHref } from '@/components/landing/atlas-solutions';
+import { SOLUTIONS, selectSolution, solutionHref } from '@/components/landing/atlas-solutions';
 
 /** Hero counters. The first three follow sportstechx.com. */
 const STATS: [string, string][] = [
@@ -20,7 +20,7 @@ const STATS: [string, string][] = [
  *
  * Content: the gradient wordmark, a byline, three headline lines (each opens
  * its solution's card; the full stop takes that solution's colour),
- * two CTAs and a counter row.
+ * one CTA and a counter row. Fills the first screen (see .lp-hero--compact).
  */
 export function IntroHero() {
 	return (
@@ -51,9 +51,6 @@ export function IntroHero() {
 
 				<div className="lp-hero-ctas">
 					<a className="lp-btn lp-btn--pink" href="#solutions">Explore solutions</a>
-					<a className="lp-btn lp-btn--outline" href={ATLAS_LINKS.bookDemo} target="_blank" rel="noreferrer">
-						Book a demo
-					</a>
 				</div>
 
 				<dl className="lp-hero-stats">

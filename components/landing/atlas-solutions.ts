@@ -230,18 +230,26 @@ export const SOLUTIONS: Solution[] = [
 
 export const SOLUTION_EVENT = 'atlas:solution';
 
+/** A product's link: `/#explore`, `/#raise`, `/#scout`. The URL alone picks the
+ *  card, so it works from any page and when shared; no stored state. */
+export const solutionHref = (id: SolutionId) => `/#${id}`;
+
+/** The product named by a URL hash (`#raise`), if any. */
+export const solutionFromHash = (hash: string): SolutionId | undefined =>
+	SOLUTIONS.find((s) => `#${s.id}` === hash)?.id;
+
 /**
  * Open a solution's card and scroll to it. Use as a link's click handler next
- * to `href="/#solutions"`: on the landing page it takes over (a link to the
- * hash already in the URL would not scroll again); on any other page, where
- * the section is absent, the link navigates as normal.
+ * to `href={solutionHref(id)}`: on the landing page it takes over (a link to
+ * the hash already in the URL would not scroll again); on any other page, where
+ * the section is absent, the link navigates and the hash opens the card.
  */
 export function selectSolution(id: SolutionId, e?: { preventDefault(): void }) {
 	window.dispatchEvent(new CustomEvent<SolutionId>(SOLUTION_EVENT, { detail: id }));
 	const section = document.getElementById('solutions');
 	if (!section) return;
 	e?.preventDefault();
-	history.replaceState(null, '', '#solutions');
+	history.replaceState(null, '', `#${id}`);
 	const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 	section.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
 }

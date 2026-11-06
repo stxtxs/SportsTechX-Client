@@ -46,7 +46,7 @@ export const PRODUCT: Record<Exclude<Tier, 'explore'>, {
 		blurb: 'Atlas Scout helps investors see what is raising in sports tech, screen it against their own thesis, and track the companies worth following — deal flow, verified raises and deck screening in one place.',
 		points: [
 			['Matched to your thesis', 'Companies scored against the sectors, stages, geographies and cheque size you invest in.'],
-			['Verified raises', 'Live rounds confirmed by SportsTechX, including opportunities shared by the Investor Circle.'],
+			['Verified raises (coming soon)', 'Live rounds confirmed by SportsTechX, including opportunities shared by the Investor Circle.'],
 			['Deck screening', 'Upload a deck and get a structured read: strengths, diligence flags and gaps to probe.'],
 		],
 	},

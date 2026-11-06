@@ -3,7 +3,7 @@
 import { useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { MobileMenuButton, useMobileMenu } from '@/components/landing/mobile-menu';
-import { ATLAS_LINKS, SOLUTIONS, selectSolution } from '@/components/landing/atlas-solutions';
+import { ATLAS_LINKS, SOLUTIONS, selectSolution, solutionHref } from '@/components/landing/atlas-solutions';
 
 const subscribe = (onChange: () => void) => {
 	window.addEventListener('scroll', onChange, { passive: true });
@@ -114,7 +114,7 @@ export function LandingNav() {
 									<Link
 										key={s.id}
 										className="lp-nav-menu-item"
-										href="/#solutions"
+										href={solutionHref(s.id)}
 										tabIndex={menu ? 0 : -1}
 										onClick={(e) => {
 											selectSolution(s.id, e);

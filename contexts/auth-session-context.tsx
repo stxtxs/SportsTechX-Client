@@ -6,6 +6,7 @@ import { getSupabaseBrowser } from '@/lib/supabase/client';
 import { enableQueryPolling, clearAuthCache } from '@/lib/query-client';
 import { sessionRefreshLock } from '@/lib/session-refresh-lock';
 import { logoutState } from '@/lib/logout-state';
+import { clearAuthCookies as clearAuthCookiesNow } from '@/lib/supabase/clear-auth-cookies';
 import { isPublicPath } from '@/lib/public-paths';
 import type { User } from '@supabase/supabase-js';
 
@@ -47,19 +48,7 @@ export function AuthSessionProvider({ children }: { children: React.ReactNode })
 	 * refresh token is missing the call returns `{error: AuthSessionMissingError}`
 	 * but the rejected cookies sit there forever).
 	 */
-	const clearAuthCookies = useCallback(() => {
-		if (typeof document === 'undefined') return;
-		const hostname = window.location.hostname;
-		for (const raw of document.cookie.split(';')) {
-			const name = raw.split('=')[0]?.trim();
-			if (!name?.startsWith('sb-')) continue;
-			// Try several path/domain combos so the right cookie definitely
-			// drops regardless of how it was set.
-			document.cookie = `${name}=; Max-Age=0; path=/;`;
-			document.cookie = `${name}=; Max-Age=0; path=/; domain=${hostname};`;
-			document.cookie = `${name}=; Max-Age=0; path=/; domain=.${hostname};`;
-		}
-	}, []);
+	const clearAuthCookies = useCallback(() => clearAuthCookiesNow(), []);
 
 	const handleSessionExpired = useCallback(() => {
 		if (logoutState.isLoggingOut()) return;

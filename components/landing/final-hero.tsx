@@ -1,7 +1,7 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import { SOLUTIONS, selectSolution } from '@/components/landing/atlas-solutions';
+import { SOLUTIONS, selectSolution, solutionHref } from '@/components/landing/atlas-solutions';
 
 /**
  * Closing CTA: one button per solution. Each opens that solution's card in
@@ -17,7 +17,7 @@ export function FinalHero() {
 						<a
 							key={s.id}
 							className="lp-closing-btn"
-							href="#solutions"
+							href={solutionHref(s.id)}
 							style={{ '--sol-fill': s.fill } as CSSProperties}
 							onClick={(e) => selectSolution(s.id, e)}
 						>

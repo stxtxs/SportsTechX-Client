@@ -1,7 +1,7 @@
 'use client';
 
 /* eslint-disable @next/next/no-img-element */
-import { ATLAS_LINKS, SOLUTIONS, selectSolution } from '@/components/landing/atlas-solutions';
+import { ATLAS_LINKS, SOLUTIONS, selectSolution, solutionHref } from '@/components/landing/atlas-solutions';
 
 /** Hero counters. The first three follow sportstechx.com. */
 const STATS: [string, string][] = [
@@ -42,7 +42,7 @@ export function IntroHero() {
 
 				<h1 className="lp-display lp-hero-lines">
 					{SOLUTIONS.map((s) => (
-						<a key={s.id} className="lp-hero-line" href="#solutions" onClick={(e) => selectSolution(s.id, e)}>
+						<a key={s.id} className="lp-hero-line" href={solutionHref(s.id)} onClick={(e) => selectSolution(s.id, e)}>
 							{s.heroLine}
 							<span style={{ color: s.colour }}>.</span>
 						</a>

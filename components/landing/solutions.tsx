@@ -6,6 +6,7 @@ import type { SiteItem } from '@/lib/site-content';
 import {
 	SOLUTIONS,
 	SOLUTION_EVENT,
+	solutionFromHash,
 	TESTIMONIALS_ENABLED,
 	type Solution,
 	type SolutionId,
@@ -74,8 +75,21 @@ export function Solutions({
 			const id = (e as CustomEvent<SolutionId>).detail;
 			if (SOLUTIONS.some((s) => s.id === id)) setActive(id);
 		};
+		/* `/#raise` etc. (from another page, or a shared link) opens that card
+		   and brings the section into view; there is no element with that id. */
+		const fromHash = () => {
+			const id = solutionFromHash(window.location.hash);
+			if (!id) return;
+			setActive(id);
+			document.getElementById('solutions')?.scrollIntoView();
+		};
+		fromHash();
 		window.addEventListener(SOLUTION_EVENT, onPick);
-		return () => window.removeEventListener(SOLUTION_EVENT, onPick);
+		window.addEventListener('hashchange', fromHash);
+		return () => {
+			window.removeEventListener(SOLUTION_EVENT, onPick);
+			window.removeEventListener('hashchange', fromHash);
+		};
 	}, []);
 
 	return (

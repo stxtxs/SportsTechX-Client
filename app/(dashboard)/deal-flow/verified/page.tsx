@@ -1,14 +1,8 @@
 'use client';
 
-import { Screen, SectionHeader } from '@/components/atlas';
-import { DealFlow } from '@/components/scout/deal-flow';
+import { DealFlowSoon } from '@/components/scout/deal-flow-soon';
 
-/** Deal Flow → Verified Raises. */
+/** Deal Flow → Verified Raises — "Coming soon" while Deal Flow is held back (see DealFlowSoon). */
 export default function Page() {
-	return (
-		<Screen>
-			<SectionHeader />
-			<DealFlow tab="verified" />
-		</Screen>
-	);
+	return <DealFlowSoon />;
 }

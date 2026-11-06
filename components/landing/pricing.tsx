@@ -67,7 +67,7 @@ const PLANS: Plan[] = [
 		credits: '5,000',
 		creditsUnit: 'credits / month',
 		creditsNote: 'Reloaded to your account each month',
-		ticks: [EVERYTHING_IN_EXPLORE, FULL_ACCESS, 'Matched to Your Thesis', 'Verified Raises', 'Deck Screening'],
+		ticks: [EVERYTHING_IN_EXPLORE, FULL_ACCESS, 'Matched to Your Thesis', 'Verified Raises (coming soon)', 'Deck Screening'],
 		cta: { label: 'Get Atlas Scout', href: ATLAS_LINKS.scoutCheckout },
 		extra: { label: 'Or book a demo →', href: ATLAS_LINKS.bookDemo },
 	},

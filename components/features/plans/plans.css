@@ -79,6 +79,7 @@
 	text-transform: uppercase; color: var(--a-faint);
 }
 .atlas .plans-credits-hint {
-	margin: 18px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--a-muted); text-align: center;
+	/* Bottom margin: the comparison table follows directly, and sat flush. */
+	margin: 18px 0 28px; font-size: 12.5px; line-height: 1.5; color: var(--a-muted); text-align: center;
 }
 .atlas .plans-credits-hint a { color: var(--a-navy); text-decoration: underline; text-underline-offset: 2px; }

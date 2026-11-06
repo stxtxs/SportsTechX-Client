@@ -86,7 +86,9 @@ export function DealFlow({ tab = 'all' }: { tab?: DealTab }) {
 
 	const showFeatured = tab === 'all' || tab === 'featured';
 	const showVerified = tab === 'all' || tab === 'verified';
-	const showCircle = tab === 'all' || tab === 'circle';
+	// The Investor Circle is "Coming soon" (app/(dashboard)/deal-flow/circle):
+	// All leaves it out. Restore `tab === 'all' ||` when it launches.
+	const showCircle = tab === 'circle';
 
 	// Nothing live is not the same as nothing to show: a member may have a draft
 	// or a returned submission, which is the whole point of `MySubmissions`. So
@@ -111,7 +113,7 @@ export function DealFlow({ tab = 'all' }: { tab?: DealTab }) {
 			{nothingLive && (tab === 'all' || tab === 'featured') && (
 				<Empty>
 					{tab === 'featured'
-						? 'No featured deal at the moment. Check the Verified Raises and Circle tabs.'
+						? 'No featured deal at the moment. Check the Verified Raises tab.'
 						: 'No live opportunities yet. We list a raise here once SportsTechX has checked it.'}
 				</Empty>
 			)}

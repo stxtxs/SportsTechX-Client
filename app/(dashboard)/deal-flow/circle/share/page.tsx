@@ -1,16 +1,22 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
-import { Screen } from '@/components/atlas';
-import { ShareDeal } from '@/components/scout/share-deal';
+import { Users } from 'lucide-react';
+import { Empty, Screen } from '@/components/atlas';
 
 /**
- * From the Circle → Share a deal.
- *
- * `?draft=<id>` reopens an existing submission — a draft, or one the review
- * team returned with changes requested. Without it the wizard starts blank.
+ * From the Circle → Share a deal, held back with the rest of the Investor
+ * Circle (see ../page.tsx). To bring it back, render
+ * `<ShareDeal resumeId={useSearchParams().get('draft') ?? undefined} />` from
+ * '@/components/scout/share-deal' (`?draft=<id>` reopens a submission).
  */
 export default function ScoutShareDealPage() {
-	const draft = useSearchParams().get('draft');
-	return <Screen><ShareDeal resumeId={draft ?? undefined} /></Screen>;
+	return (
+		<Screen>
+			<div style={{ minHeight: '50vh', display: 'grid', placeItems: 'center' }}>
+				<Empty icon={<Users size={22} strokeWidth={1.5} aria-hidden="true" />} title="Coming soon">
+					Sharing deals with the Investor Circle is on its way.
+				</Empty>
+			</div>
+		</Screen>
+	);
 }

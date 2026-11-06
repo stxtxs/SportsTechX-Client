@@ -30,7 +30,7 @@ export interface NavWatchlist { id: string; name: string }
  */
 export function navigable(routeId: string, tier: Tier): boolean {
 	const r = ROUTE_BY_ID.get(routeId);
-	if (!r || !forTier(r.path, tier) || forTier(r.placeholder, tier)) return false;
+	if (!r || !forTier(r.path, tier) || forTier(r.placeholder, tier) || r.soon) return false;
 	return access(r.tier, tier, false) === 'allow';
 }
 

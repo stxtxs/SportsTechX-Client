@@ -16,9 +16,9 @@ const SIZER = SOLUTIONS.reduce((a, s) => (s.pill.length > a.length ? s.pill : a)
 
 /* Roles as the dev brief words them; they win over the CMS subtitle, which
    still carries the older team-section titles. */
-const EXPERT_ROLES: Record<string, string> = {
-	'Rohn Malhotra': 'Co-Founder & MD | SportsTechX',
-	'Thomas Preiss': 'Co-Founder | Common Goal & Playmakers',
+const EXPERT_ROLES: Record<string, string[]> = {
+	'Rohn Malhotra': ['Co-Founder & CEO | SportsTechX', 'Investment Director | Match Ventures'],
+	'Thomas Preiss': ['Co-Founder | Common Goal & Playmakers'],
 };
 
 /* Shown until an admin fills Site assets → Atlas → Team / experts. */
@@ -249,7 +249,7 @@ function Experts({ people }: { people: SiteItem[] }) {
 				<p className="lp-sol-aud">Included with Raise</p>
 				<p className="lp-display lp-experts-title">Experts in your corner</p>
 				<p className="lp-experts-text">
-					Quarterly check-ins with SportsTechX leadership to pressure-test your story and sharpen your investor approach.
+					Two check-ins with SportsTechX leadership to pressure-test your story and sharpen your investor approach.
 				</p>
 			</div>
 			<div className="lp-experts-people">
@@ -260,7 +260,9 @@ function Experts({ people }: { people: SiteItem[] }) {
 							<span className="lp-expert-photo" style={{ backgroundImage: p.url ? `url('${p.url}')` : undefined }} />
 							<span>
 								<strong className="lp-expert-name">{name}</strong>
-								<span className="lp-expert-role">{EXPERT_ROLES[name] ?? p.subtitle}</span>
+								{(EXPERT_ROLES[name] ?? (p.subtitle ? [p.subtitle] : [])).map((role) => (
+									<span key={role} className="lp-expert-role">{role}</span>
+								))}
 							</span>
 						</div>
 					);

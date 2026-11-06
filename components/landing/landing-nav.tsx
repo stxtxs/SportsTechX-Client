@@ -97,7 +97,7 @@ export function LandingNav() {
 							onMouseEnter={() => setMenu(true)}
 							onFocus={() => setMenu(true)}
 						>
-							SOLUTIONS <span aria-hidden className="lp-nav-caret">▾</span>
+							SOLUTIONS
 						</Link>
 						<Link className="lp-nav-link" href="/#pricing" onMouseEnter={() => setMenu(false)} onFocus={() => setMenu(false)}>
 							PRICING

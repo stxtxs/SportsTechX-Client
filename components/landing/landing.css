@@ -165,7 +165,9 @@ body:has(.lp) {
 .lp-nav-inner { max-width: var(--lp-shell); margin: 0 auto; padding: 0 var(--lp-pad); display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 
 /* Wordmark with "BY SPORTSTECHX" stacked underneath, left-aligned. */
-.lp-lockup { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-right: auto; }
+/* Centred: the wordmark's slanted A starts inside its box, so a left edge
+   alignment made the line underneath look shifted left. */
+.lp-lockup { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-right: auto; }
 .lp-nav-mark { display: inline-flex; align-items: center; min-height: 32px; text-decoration: none; }
 .lp-nav-mark img { height: 30px; width: auto; }
 /* Padding widens the tap area without moving the text; the negative margin
@@ -195,8 +197,6 @@ body:has(.lp) {
 	transition: color 80ms ease-out;
 }
 .lp-nav-link:hover, .lp-nav-link.is-open, .lp-nav-link:focus-visible { color: var(--lp-pink-2); }
-.lp-nav-caret { font-size: 11px; transition: rotate 0.2s ease; }
-.lp-nav-link.is-open .lp-nav-caret { rotate: 180deg; }
 
 /* The drop-down hangs off the pill's right edge so it never runs off-screen.
    Its top padding bridges the gap, so the pointer can travel to the card. */
@@ -329,7 +329,10 @@ body:has(.lp) {
 
 /* Auto-scrolling partner rails. Each card is preceded by a hairline, with 37px
    either side of it on desktop. */
-.lp-carousel { position: relative; max-width: var(--lp-shell); margin: 0 auto; padding: 0 var(--lp-pad); }
+/* width: 100% matters: inside the flex column of rows, `margin: 0 auto` turns
+   off stretching, so the rail sized itself to its own cards, measured that as
+   the screen width and flipped between drifting and still on every pass. */
+.lp-carousel { position: relative; width: 100%; max-width: var(--lp-shell); margin: 0 auto; padding: 0 var(--lp-pad); }
 .lp-carousel-viewport { overflow: hidden; }
 /* Pure-CSS marquee: the track holds the list twice, so translating it by
    exactly -50% lands on an identical frame and the loop is seamless. */
@@ -505,7 +508,7 @@ body:has(.lp) {
 .lp-expert { display: flex; align-items: center; gap: 12px; }
 .lp-expert-photo { flex: none; width: 52px; height: 52px; border-radius: 50%; background: rgba(255, 255, 255, 0.2) center / cover no-repeat; }
 .lp-expert-name { display: block; font-family: var(--lp-sans); font-weight: 500; font-size: 17px; }
-.lp-expert-role { font-family: var(--lp-mono), monospace; font-size: 12px; color: rgba(255, 255, 255, 0.75); }
+.lp-expert-role { display: block; font-family: var(--lp-mono), monospace; font-size: 12px; line-height: 1.5; color: rgba(255, 255, 255, 0.75); }
 
 /* Testimonials (off for the relaunch): the sportstechx.com card format. */
 .lp-sol-testi { border-top: 1px solid rgba(255, 255, 255, 0.15); padding: 32px 44px 44px; }
@@ -539,7 +542,9 @@ body:has(.lp) {
 .lp-plan-ticks li { display: flex; gap: 12px; align-items: flex-start; }
 /* Green ticks on every plan, as on the previous pricing page. */
 .lp-plan-ticks svg { flex: none; margin-top: 2px; color: #1f9e6e; }
-.lp-plan-foot { margin-top: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+/* Same height on every card (button plus one line under it, reserved even on
+   Explore), pinned to the bottom, so the three buttons sit on one line. */
+.lp-plan-foot { margin-top: auto; padding-top: 16px; min-height: 108px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .lp-plan-cta {
 	display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px;
 	border: 1.5px solid #c9ccd6; border-radius: 999px; background: #fff; color: #0a0a0a;

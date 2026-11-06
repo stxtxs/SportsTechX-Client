@@ -141,7 +141,7 @@ export const SOLUTIONS: Solution[] = [
 		intro: 'Find the right investors, benchmark your company and sharpen your pitch with the SportsTechX intelligence layer.',
 		ctas: [
 			{ label: 'Try Atlas Raise', href: ATLAS_LINKS.founderSandbox, external: true },
-			{ label: 'Buy Raise', href: ATLAS_LINKS.raiseCheckout },
+			{ label: 'Sign up', href: ATLAS_LINKS.signup },
 		],
 		note: '30-day money-back guarantee',
 		experts: true,

@@ -19,7 +19,7 @@ const STATS: [string, string][] = [
  * Do not substitute CSS shapes for these assets.
  *
  * Content: the gradient wordmark, a byline, three headline lines (each opens
- * its solution's card; the full stop takes that solution's colour), a subline,
+ * its solution's card; the full stop takes that solution's colour),
  * two CTAs and a counter row.
  */
 export function IntroHero() {
@@ -48,11 +48,6 @@ export function IntroHero() {
 						</a>
 					))}
 				</h1>
-
-				<p className="lp-hero-subline">
-					The sports tech intelligence platform from SportsTechX. Free to explore. Built to help founders raise and
-					investors find the next deal.
-				</p>
 
 				<div className="lp-hero-ctas">
 					<a className="lp-btn lp-btn--pink" href="#solutions">Explore solutions</a>

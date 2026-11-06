@@ -168,13 +168,14 @@ body:has(.lp) {
 /* Centred: the wordmark's slanted A starts inside its box, so a left edge
    alignment made the line underneath look shifted left. */
 .lp-lockup { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-right: auto; }
+/* Same spacing and size as the Playmakers lockup (15/17px, 6/8px gap). */
 .lp-nav-mark { display: inline-flex; align-items: center; min-height: 32px; text-decoration: none; }
 .lp-nav-mark img { height: 30px; width: auto; }
 /* Padding widens the tap area without moving the text; the negative margin
    gives the space back so the lockup stays tight. */
 .lp-lockup-by {
 	margin: -6px 0; padding: 6px 0;
-	font-family: var(--lp-display-stack); font-size: 14px; line-height: 1; letter-spacing: 0.12em;
+	font-family: var(--lp-display-stack); font-size: 15px; line-height: 1; letter-spacing: 0.12em;
 	color: rgba(255, 255, 255, 0.6); text-decoration: none;
 	transition: color 0.2s ease-out;
 }
@@ -250,6 +251,8 @@ body:has(.lp) {
 @media (min-width: 1025px) {
 	.lp-nav { translate: 0 24px; }
 	.lp-nav-mark img { height: 36px; }
+	.lp-lockup { gap: 8px; }
+	.lp-lockup-by { font-size: 17px; }
 }
 
 /* ── Hero (Intro + Final share .lp-hero) ───────────────────────────────── */
@@ -384,13 +387,14 @@ body:has(.lp) {
    background stage keeps its own 100svh box anchored to the bottom, so the
    sphere and rings still sit where the design puts them. */
 .lp-hero--compact { min-height: 0; display: block; }
-.lp .lp-hero-inner--compact { max-width: 1180px; padding: 132px 24px 0; gap: 0; }
+/* Sized so the counter row lands above the fold on a laptop: the headline
+   scales with the viewport height as well as its width. */
+.lp .lp-hero-inner--compact { max-width: 1180px; padding: 120px 24px 0; gap: 0; }
 .lp-hero-wordmark--compact { width: 200px; max-width: 56%; }
 .lp-hero-byline { margin: 18px 0 0; font-family: var(--lp-mono), monospace; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); }
-.lp-hero-lines { margin-top: 22px; font-size: clamp(44px, 6.4vw, 92px); line-height: 1; letter-spacing: 0.08em; }
+.lp-hero-lines { margin-top: 22px; font-size: clamp(44px, min(6.4vw, 9.6svh), 92px); line-height: 1; letter-spacing: 0.08em; }
 .lp-hero-line { display: block; color: #fff; text-decoration: none; transition: opacity 0.15s ease; }
 .lp-hero-lines:hover .lp-hero-line:not(:hover) { opacity: 0.6; }
-.lp-hero-subline { margin: 26px auto 0; max-width: 620px; font-family: var(--lp-sans); font-size: 21px; font-weight: 500; line-height: 1.5; color: rgba(255, 255, 255, 0.8); }
 .lp-hero--compact .lp-hero-ctas { margin-top: 32px; gap: 14px; padding: 0; }
 .lp-hero--compact .lp-btn--outline { background: #3b435e; border-color: #3b435e; }
 .lp-hero--compact .lp-btn--outline:hover { background: #4a5372; }
@@ -398,7 +402,7 @@ body:has(.lp) {
 /* Counter row: value above label, divided by hairlines. In the markup the
    label (dt) comes first, as a description list requires; order flips it. */
 .lp-hero-stats {
-	list-style: none; width: 100%; margin: 64px 0 0; padding: 32px 0 40px;
+	list-style: none; width: 100%; margin: 48px 0 0; padding: 28px 0 36px;
 	display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
 	border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
@@ -622,7 +626,11 @@ a.lp-plan-extra:hover { text-decoration: underline; }
 	background-position: 58.6% -23px, 80.3% -23px;
 	background-repeat: no-repeat;
 }
-.lp-footer-wordmark { width: 135px; margin-bottom: 24px; } /* design Vector 135x49 */
+/* The header's lockup, in footer ink: BY SPORTSTECHX centred under the mark. */
+.lp-footer-lockup { display: inline-flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 24px; }
+.lp-footer-wordmark { width: 135px; } /* design Vector 135x49 */
+.lp-footer-by { margin: -6px 0; padding: 6px 0; font-family: var(--lp-display-stack); font-size: 17px; line-height: 1; letter-spacing: 0.12em; color: rgba(9, 21, 57, 0.6); text-decoration: none; transition: color 0.2s ease-out; }
+.lp-footer-by:hover, .lp-footer-by:focus-visible { color: #ed1a5e; }
 .lp-footer-desc { font-family: var(--lp-serif); color: var(--lp-ink-navy); font-size: 22px; line-height: 32px; max-width: 451px; margin-bottom: 28px; }
 .lp-footer-meta { display: grid; gap: 12px; }
 .lp-footer-meta div { display: flex; align-items: center; gap: 12px; font-family: var(--lp-serif); color: var(--lp-ink-navy); font-size: 17px; line-height: 36px; }
@@ -802,7 +810,6 @@ a.lp-plan-extra:hover { text-decoration: underline; }
 	.lp-hero-wordmark--compact { width: 150px; }
 	.lp-hero-byline { font-size: 11px; letter-spacing: 0.12em; }
 	.lp-hero-lines { font-size: 44px; letter-spacing: 0.05em; }
-	.lp-hero-subline { font-size: 17px; }
 	.lp-hero--compact .lp-hero-ctas { flex-direction: column; align-items: stretch; width: 100%; max-width: 320px; margin-left: auto; margin-right: auto; }
 	.lp-hero-stats { margin-top: 44px; padding: 20px 0 28px; }
 	.lp-hero-stat { padding: 6px 14px; }

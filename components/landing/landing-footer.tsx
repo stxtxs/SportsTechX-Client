@@ -36,11 +36,15 @@ export function LandingFooter() {
 						<div>
 							{/* Dark-ink wordmark — the stock file is a white→pink gradient
 							    and would vanish on the light footer. */}
-							{/* eslint-disable-next-line @next/next/no-img-element */}
-							<img className="lp-footer-wordmark" src="/landing/atlas-wordmark-dark.svg" alt="Atlas" />
+							<div className="lp-footer-lockup">
+								{/* eslint-disable-next-line @next/next/no-img-element */}
+								<img className="lp-footer-wordmark" src="/landing/atlas-wordmark-dark.svg" alt="Atlas" />
+								<a className="lp-footer-by" href="https://www.sportstechx.com" target="_blank" rel="noreferrer">
+									BY SPORTSTECHX ↗
+								</a>
+							</div>
 							<p className="lp-footer-desc">Your insider guide to sports tech &amp; venture. A SportsTechX product.</p>
 							<div className="lp-footer-meta">
-								<div><Mail size={16} /> hello@sportstechx.com</div>
 								<div><MapPin size={16} /> Berlin, Germany</div>
 							</div>
 						</div>

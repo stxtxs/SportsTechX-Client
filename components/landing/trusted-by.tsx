@@ -8,10 +8,8 @@ import type { SiteItem } from '@/lib/site-content';
 
 /**
  * Trusted by, in the sportstechx.com format: a left-aligned Bebas title over an
- * uppercase subtitle, then two rows of partner cards drifting in opposite
- * directions, with a hairline before every card and a soft fade at each edge.
- * Below four partners the second row would just repeat the first, so only one
- * row shows.
+ * uppercase subtitle, then one row of partner cards drifting left to right,
+ * with a hairline before every card and a soft fade at each edge.
  *
  * Each row is a pure-CSS marquee (translateX 0 → -50% on a track that renders
  * the list twice). The arrows shift the animation's phase via a negative
@@ -54,13 +52,6 @@ const DEFAULT_STRIDE = 285;
 /** ≈50px per second, the rate all three sites run at. */
 const SPEED = 50;
 
-/** The second row is the same people rotated by half, so it reads as a different rail. */
-function rotate(cards: Card[]): Card[] | null {
-	if (cards.length < 4) return null;
-	const half = Math.floor(cards.length / 2);
-	return [...cards.slice(half), ...cards.slice(0, half)];
-}
-
 export function TrustedBy({ items }: { items?: SiteItem[] }) {
 	const usingCms = Boolean(items?.length);
 	const partners: Card[] = items?.length
@@ -73,7 +64,6 @@ export function TrustedBy({ items }: { items?: SiteItem[] }) {
 			logoText: '',
 		}))
 		: PLACEHOLDER_PARTNERS;
-	const second = rotate(partners);
 
 	return (
 		<section className="lp-cream lp-trusted" id="trusted">
@@ -85,8 +75,7 @@ export function TrustedBy({ items }: { items?: SiteItem[] }) {
 			</div>
 
 			<div className="lp-trusted-rows">
-				<Rail cards={partners} direction="ltr" alwaysLoop={!usingCms} label="Trusted by, row 1" />
-				{second && <Rail cards={second} direction="rtl" alwaysLoop={!usingCms} label="Trusted by, row 2" />}
+				<Rail cards={partners} direction="ltr" alwaysLoop={!usingCms} label="Trusted by" />
 			</div>
 		</section>
 	);

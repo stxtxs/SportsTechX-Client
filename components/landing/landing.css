@@ -162,7 +162,13 @@ body:has(.lp) {
 	-webkit-backdrop-filter: blur(11.6px);
 	backdrop-filter: blur(11.6px);
 }
-.lp-nav-inner { max-width: var(--lp-shell); margin: 0 auto; padding: 0 var(--lp-pad); display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+/* The header uses sportstechx.com's own page width and gutter (not this
+   page's --lp-shell), so the three sites' bars line up exactly. */
+.lp-nav-inner {
+	--nav-gutter: clamp(20px, 4.06px + 3.964vw, 64px);
+	width: 100%; max-width: calc(min(90vw, 1600px) + 2 * var(--nav-gutter)); margin: 0 auto; padding: 0 var(--nav-gutter);
+	display: flex; align-items: center; justify-content: space-between; gap: 24px;
+}
 
 /* Wordmark with "BY SPORTSTECHX" stacked underneath, left-aligned. */
 /* Centred: the wordmark's slanted A starts inside its box, so a left edge
@@ -181,10 +187,14 @@ body:has(.lp) {
 }
 .lp-lockup-by:hover, .lp-lockup-by:focus-visible { color: #ed1a5e; }
 
-.lp-nav-right { display: flex; align-items: center; gap: 24px; }
+/* Pill and LOG IN sized as on sportstechx.com: 50px tall, 1.5px borders, 20px
+   inside the pill, 16/36px between links, 15px inside the button, 20px apart.
+   Nav type is New Frank Medium 13/14/16px at 1024/1280/1512, tracked 10%,
+   nudged down 1.8px so the caps sit optically centred. */
+.lp-nav-right { display: flex; align-items: center; gap: 20px; }
 .lp-nav-links {
 	position: relative;
-	display: inline-flex; align-items: center; height: 50px; gap: 36px; padding: 0 35px;
+	display: inline-flex; align-items: center; height: 50px; gap: 16px; padding: 0 20px;
 	border: 1.5px solid #fff; border-radius: 999px;
 	background: rgba(255, 255, 255, 0.1);
 	box-shadow: 0 0 39.4px rgba(0, 0, 0, 0.08);
@@ -192,8 +202,9 @@ body:has(.lp) {
 	backdrop-filter: blur(4px);
 }
 .lp-nav-link {
+	position: relative; top: 1.8px;
 	display: inline-flex; align-items: center; gap: 6px;
-	font-family: var(--lp-sans); font-weight: 500; font-size: 16px; letter-spacing: 0.1em; text-transform: uppercase;
+	font-family: var(--lp-sans); font-weight: 500; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase;
 	color: #fff; text-decoration: none;
 	transition: color 80ms ease-out;
 }
@@ -220,12 +231,12 @@ body:has(.lp) {
 
 /* LOG IN: the sportstechx.com CTA capsule. Fills and grows a touch on hover. */
 .lp-nav-login {
-	display: inline-grid; place-items: center; height: 50px; padding: 0 30px;
+	display: inline-grid; place-items: center; height: 50px; padding: 3.6px 15px 0;
 	border: 1.5px solid var(--lp-pink); border-radius: 999px;
 	background: rgba(243, 33, 99, 0.05);
 	-webkit-backdrop-filter: blur(28px);
 	backdrop-filter: blur(28px);
-	font-family: var(--lp-sans); font-weight: 500; font-size: 16px; letter-spacing: 0.1em;
+	font-family: var(--lp-sans); font-weight: 500; font-size: 13px; letter-spacing: 0.1em;
 	color: var(--lp-pink-2); text-decoration: none;
 	transition: background-color 0.2s ease-out, color 0.2s ease-out, scale 0.2s ease-out;
 }
@@ -250,9 +261,20 @@ body:has(.lp) {
 
 @media (min-width: 1025px) {
 	.lp-nav { translate: 0 24px; }
+	/* Top-aligned, so the pills sit where sportstechx.com's do; the 36px
+	   wordmark is nudged 7px down to centre on the 50px pills, with BY
+	   SPORTSTECHX hanging below. */
+	.lp-nav-inner { align-items: flex-start; }
 	.lp-nav-mark img { height: 36px; }
-	.lp-lockup { gap: 8px; }
+	.lp-lockup { gap: 8px; margin-top: 7px; }
 	.lp-lockup-by { font-size: 17px; }
+}
+@media (min-width: 1280px) {
+	.lp-nav-links { gap: 36px; }
+	.lp-nav-link, .lp-nav-login { font-size: 14px; }
+}
+@media (min-width: 1512px) {
+	.lp-nav-link, .lp-nav-login { font-size: 16px; }
 }
 
 /* ── Hero (Intro + Final share .lp-hero) ───────────────────────────────── */

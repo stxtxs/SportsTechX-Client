@@ -22,10 +22,10 @@ import './tier-gate.css';
  * upgrade cards and the billing page — rather than invented for this screen.
  */
 
-/** Where "Talk to the team" goes — the public landing's join section, as the
- *  sidebar upgrade cards already use. (`/subscriptions`, which every legacy
- *  upsell pointed at, has never been a route.) */
-const LANDING = '/#how-to-join';
+/** Where "Talk to the team" goes — the public landing's pricing section.
+ *  (`/subscriptions`, which every legacy upsell pointed at, has never been a
+ *  route; `#how-to-join` went with the landing redesign.) */
+const LANDING = '/#pricing';
 
 export const PRODUCT: Record<Exclude<Tier, 'explore'>, {
 	name: string;

@@ -138,7 +138,8 @@ function Rail({
 	const duration = copyW / SPEED;
 	// One arrow press is always one card, however often the list was repeated.
 	const step = (stride / copyW) * duration;
-	// Arrows move the cards the way they point, whichever way the row drifts.
+	// shift(1) slides the cards left, shift(-1) right, whichever way the row
+	// drifts; each arrow passes the one matching the way it points.
 	const sign = direction === 'ltr' ? -1 : 1;
 	/**
 	 * One card per press, sliding rather than jumping, as on Playmakers: the
@@ -166,7 +167,7 @@ function Rail({
 	return (
 		<div className="lp-carousel" role="region" aria-label={label}>
 			{looping && (
-				<button className="lp-carousel-arrow lp-carousel-arrow--prev" aria-label="Previous partners" onClick={() => shift(-1)}>
+				<button className="lp-carousel-arrow lp-carousel-arrow--prev" aria-label="Move partners left" onClick={() => shift(1)}>
 					<ChevronLeft size={30} strokeWidth={1.5} />
 				</button>
 			)}
@@ -195,7 +196,7 @@ function Rail({
 			</div>
 
 			{looping && (
-				<button className="lp-carousel-arrow lp-carousel-arrow--next" aria-label="Next partners" onClick={() => shift(1)}>
+				<button className="lp-carousel-arrow lp-carousel-arrow--next" aria-label="Move partners right" onClick={() => shift(-1)}>
 					<ChevronRight size={30} strokeWidth={1.5} />
 				</button>
 			)}

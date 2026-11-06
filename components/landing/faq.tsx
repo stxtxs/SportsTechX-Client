@@ -9,7 +9,7 @@ const FAQS: [string, string][] = [
 	['Is Explore really free?', 'Yes. You get all 30+ SportsTechX reports, the SportsTech Framework, our newsletter and events, plus limited access to our lists of companies, investors and innovation programs.'],
 	['How does Raise analyse my pitch deck?', 'Upload your deck to identify strengths, gaps and likely investor concerns.'],
 	['How does Scout personalise recommendations?', 'Set your stage, geography, sector, sport, cheque size and business model, plus any exclusions.'],
-	['How much does Atlas cost?', 'Explore is free. Raise is €600 for 6 months. Scout is €2,500 per year.'],
+	['How much does Atlas cost?', 'Explore is free. Raise is €720 for 6 months. Scout is €2,500 per year.'],
 ];
 
 export function Faq() {

@@ -406,13 +406,9 @@ body:has(.lp) {
 .lp-section-title { margin-top: 10px; font-size: clamp(36px, 3.6vw, 52px); line-height: 1; color: var(--lp-navy); }
 
 /* ── Compact intro hero ────────────────────────────────────────────────── */
-/* About half the old full-screen hero: content-height, not 100svh. The
-   background stage keeps its own 100svh box anchored to the bottom, so the
-   sphere and rings still sit where the design puts them. */
-/* Fills the first screen, content centred; grows past it when the content is
-   taller (short laptops, phones). `min-height: 0` here left the next section
-   showing under the hero on load. */
-.lp-hero--compact { min-height: 100vh; min-height: 100svh; display: flex; align-items: center; }
+/* Fills the first screen via .lp-hero--intro (min-height 100svh, content
+   centred) and grows past it when the content is taller. Do not reset that
+   min-height here: it left the next section showing under the hero on load. */
 /* Sized so the counter row lands above the fold on a laptop: the headline
    scales with the viewport height as well as its width. */
 .lp .lp-hero-inner--compact { max-width: 1180px; padding: 120px 24px 0; gap: 0; }

@@ -30,7 +30,7 @@ export interface LegalDoc {
 
 export const termsOfService: LegalDoc = {
 	title: 'Terms of Service',
-	subtitle: 'SportsTechX Intelligence Hub',
+	subtitle: 'SportsTechX Atlas',
 	updated: 'November 2026',
 	sections: [
 		{
@@ -463,7 +463,7 @@ export const privacyPolicy: LegalDoc = {
 					kind: 'list',
 					items: [
 						{ text: 'The SportsTechX website and intelligence platform' },
-						{ text: 'The Playmakers private network for sports tech founders, including:Member applications and onboardingMember profiles and directory servicesCore group advisory sessionsMember events and programmingCommunity platforms (WhatsApp, online discussion boards)Curated introduction servicesSportsTechX Intelligence Hub access' },
+						{ text: 'The Playmakers private network for sports tech founders, including:Member applications and onboardingMember profiles and directory servicesCore group advisory sessionsMember events and programmingCommunity platforms (WhatsApp, online discussion boards)Curated introduction servicesSportsTechX Atlas access' },
 						{ text: 'Research studies and benchmark surveys conducted by SportsTechX, including the Sports Tech VC Deal Sourcing Benchmark Study 2026' },
 					],
 				},
@@ -476,7 +476,7 @@ export const privacyPolicy: LegalDoc = {
 						{ text: 'Member events and programming' },
 						{ text: 'Community platforms (WhatsApp, online discussion boards)' },
 						{ text: 'Curated introduction services' },
-						{ text: 'SportsTechX Intelligence Hub access' },
+						{ text: 'SportsTechX Atlas access' },
 					],
 				},
 			],
@@ -607,7 +607,7 @@ export const privacyPolicy: LegalDoc = {
 					items: [
 						{ text: 'Delivering your personalised sourcing snapshot' },
 						{ text: 'Providing access to the full benchmark report ahead of public release' },
-						{ text: 'Providing your complimentary 30-day Pro access to the SportsTechX Intelligence Hub' },
+						{ text: 'Providing your complimentary 30-day Pro access to the SportsTechX Atlas' },
 						{ text: 'Following up with you in connection with your participation and to share information about SportsTechX research, services, and initiatives that may be relevant to your fund\'s investment practice and deal sourcing capabilities' },
 					],
 				},
@@ -641,7 +641,7 @@ export const privacyPolicy: LegalDoc = {
 						{ text: 'Facilitate core group sessions with professional coaches/facilitators' },
 						{ text: 'Provide access to member events, programming, and community platforms' },
 						{ text: 'Facilitate curated introductions to other members, investors, and industry contacts' },
-						{ text: 'Grant access to the SportsTechX Intelligence Hub' },
+						{ text: 'Grant access to the SportsTechX Atlas' },
 						{ text: 'Communicate with you about your membership, including updates, events, and administrative matters' },
 					],
 				},

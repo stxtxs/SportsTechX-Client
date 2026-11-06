@@ -607,7 +607,7 @@ export const privacyPolicy: LegalDoc = {
 					items: [
 						{ text: 'Delivering your personalised sourcing snapshot' },
 						{ text: 'Providing access to the full benchmark report ahead of public release' },
-						{ text: 'Providing your complimentary 30-day Pro access to SportsTechX Atlas' },
+						{ text: 'Providing your complimentary 30-day Atlas Raise access' },
 						{ text: 'Following up with you in connection with your participation and to share information about SportsTechX research, services, and initiatives that may be relevant to your fund\'s investment practice and deal sourcing capabilities' },
 					],
 				},

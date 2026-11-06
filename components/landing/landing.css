@@ -364,10 +364,11 @@ body:has(.lp) {
 .lp-carousel-marquee { display: flex; width: max-content; animation-name: lp-marquee; animation-timing-function: linear; animation-iteration-count: infinite; will-change: transform; }
 .lp-carousel-marquee.is-ltr { animation-direction: reverse; }
 @keyframes lp-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-/* Cards already fit the rail: no loop, no copies, left-aligned as on the homepage. */
+/* Only 1–2 uploaded cards: no loop, no copies, left-aligned as on the homepage. */
 .lp-carousel-marquee.is-static { animation: none; width: 100%; justify-content: flex-start; }
 .lp-carousel:hover .lp-carousel-marquee { animation-play-state: paused; }
-@media (prefers-reduced-motion: reduce) { .lp-carousel-marquee { animation: none; } }
+/* No drift means the arrows (which shift the drift's phase) would do nothing. */
+@media (prefers-reduced-motion: reduce) { .lp-carousel-marquee { animation: none; } .lp-carousel-arrow { display: none; } }
 .lp-partner { flex: 0 0 auto; width: 170px; padding: 0 6px; position: relative; }
 .lp-partner-photo { position: relative; height: 175px; border-radius: 7px; overflow: hidden; }
 /* Bottom scrim, #454545 transparent to #232529, so the white marks read. */

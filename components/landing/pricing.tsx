@@ -38,7 +38,7 @@ const PLANS: Plan[] = [
 		ticks: [
 			'30+ Industry Reports',
 			'Weekly Newsletter',
-			'Deal Flow Dashboard',
+			'Market Analysis Dashboard',
 			'Monthly Investment Roundup incl. Archive',
 			'Events Directory',
 			'Limited Access to 13k+ Companies, Programs & Investors',
@@ -49,7 +49,7 @@ const PLANS: Plan[] = [
 		id: 'raise',
 		audience: 'For founders',
 		pitch: 'Investor intelligence and tools to support your fundraising journey.',
-		price: '€720',
+		price: '€600',
 		period: 'Per 6 months',
 		credits: '2,000',
 		creditsUnit: 'credits / month',
@@ -85,11 +85,11 @@ const FEATURES: [string, boolean][] = [
 	['SportsTechX framework', true],
 	['Newsletter archive', true],
 	['Analytics dashboards', false],
-	['CSV export', false],
+	['CSV export', true],
 	['Developer API', false],
-	['AI research assistant', false],
-	['Saved searches', false],
-	['Watchlists', false],
+	['AI research assistant', true],
+	['Saved searches', true],
+	['Watchlists', true],
 	['Personalised recommendations', false],
 	['Advanced filters', false],
 	['Company contacts', false],
@@ -117,7 +117,7 @@ export function Pricing() {
 							>
 								<div>
 									<p className="lp-plan-aud">{p.audience}</p>
-									<span className="lp-plan-brand" aria-label={`Atlas ${s.name}`}>
+									<span className="lp-plan-brand" role="img" aria-label={`Atlas ${s.name}`}>
 										<img src="/landing/atlas-wordmark-dark.svg" alt="" />
 										<em>{s.name}</em>
 									</span>
@@ -170,7 +170,7 @@ export function Pricing() {
 						type="button"
 						className="lp-compare-toggle"
 						aria-expanded={compare}
-						aria-controls="lp-compare-table"
+						aria-controls={compare ? 'lp-compare-table' : undefined}
 						onClick={() => setCompare((v) => !v)}
 					>
 						<span>
@@ -201,9 +201,9 @@ export function Pricing() {
 											{[inExplore, true, true].map((on, i) => (
 												<td key={i}>
 													{on ? (
-														<span aria-label="Included">✓</span>
+														<span role="img" aria-label="Included">✓</span>
 													) : (
-														<span aria-label="Not included" className="is-off">
+														<span role="img" aria-label="Not included" className="is-off">
 															—
 														</span>
 													)}

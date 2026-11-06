@@ -17,8 +17,8 @@ export const ATLAS_LINKS = {
 	bookDemo: 'https://cal.com/khyati/sportstechx',
 	signup: '/signup', // TBC: Explore sign-up
 	login: '/login',
-	founderSandbox: 'https://sandbox.sportstechx.com/founders', // TBC
-	investorSandbox: 'https://sandbox.sportstechx.com/investors', // TBC
+	founderSandbox: 'https://www.sandbox.sportstechx.com/preview/raise',
+	investorSandbox: 'https://www.sandbox.sportstechx.com/preview/scout',
 	raiseCheckout: '/plans', // TBC: Raise checkout
 	scoutCheckout: '/plans', // TBC: Scout checkout
 	stxHome: 'https://www.sportstechx.com',

@@ -1,7 +1,7 @@
 'use client';
 
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { SiteItem } from '@/lib/site-content';
 import {
 	SOLUTIONS,
@@ -187,6 +187,13 @@ function SolutionCard({
  */
 function StepDeck({ solution: s, shots }: { solution: Solution; shots?: SiteItem[] }) {
 	const [open, setOpen] = useState(0);
+	/* The clicked tab unmounts, which would drop focus to <body>; hand it to the
+	   panel that replaced it. Only after a click, never on page load. */
+	const panel = useRef<HTMLDivElement>(null);
+	const clicked = useRef(false);
+	useEffect(() => {
+		if (clicked.current) panel.current?.focus();
+	}, [open]);
 	return (
 		<div className="lp-steps">
 			{s.steps.map((step, i) => {
@@ -202,7 +209,10 @@ function StepDeck({ solution: s, shots }: { solution: Solution; shots?: SiteItem
 							className="lp-step-tab"
 							aria-expanded={false}
 							aria-label={`Step ${i + 1}: ${step.label}`}
-							onClick={() => setOpen(i)}
+							onClick={() => {
+								clicked.current = true;
+								setOpen(i);
+							}}
 						>
 							<span className="lp-step-num">{num}</span>
 							<span className="lp-step-tab-label">{step.label}</span>
@@ -210,7 +220,7 @@ function StepDeck({ solution: s, shots }: { solution: Solution; shots?: SiteItem
 					);
 				}
 				return (
-					<div key={step.label} className="lp-step-open" aria-expanded>
+					<div key={step.label} className="lp-step-open" ref={panel} tabIndex={-1}>
 						<div className="lp-step-text">
 							<span className="lp-step-num">
 								{num} · {step.label}

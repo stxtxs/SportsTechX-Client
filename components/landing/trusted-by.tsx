@@ -54,6 +54,8 @@ const DEFAULT_STRIDE = 285;
 const GLIDE_MS = 450;
 /** ≈50px per second, the rate all three sites run at. */
 const SPEED = 50;
+/** Product rule: 3+ uploaded cards always drift, at every width; 1–2 stay still. */
+const MIN_LOOP_CARDS = 3;
 
 export function TrustedBy({ items }: { items?: SiteItem[] }) {
 	const usingCms = Boolean(items?.length);
@@ -101,10 +103,10 @@ function Rail({
 	const glide = useRef(0);
 	useEffect(() => () => cancelAnimationFrame(glide.current), []);
 
-	/* Whether the cards already fill the rail decides everything below, and only
-	   the browser knows it. Starts at 0 so the server and the first client render
-	   agree (no hydration mismatch). The stride is measured too, since the card
-	   size changes with the viewport. */
+	/* The rail width decides how often the list repeats, and only the browser
+	   knows it. Starts at 0 so the server and the first client render agree (no
+	   hydration mismatch). The stride is measured too, since the card size
+	   changes with the viewport. */
 	const viewport = useRef<HTMLDivElement | null>(null);
 	const track = useRef<HTMLDivElement | null>(null);
 	const [railW, setRailW] = useState(0);
@@ -123,12 +125,8 @@ function Rail({
 		return () => ro.disconnect();
 	}, []);
 
-	/* A short list of uploaded cards should not scroll: everything is already
-	   visible. "Fits" means room for another whole card, not just a squeeze. */
 	const naturalW = partners.length * stride;
-	const measured = railW > 0;
-	const fits = measured && railW - naturalW >= stride;
-	const looping = alwaysLoop || (measured && !fits);
+	const looping = alwaysLoop || partners.length >= MIN_LOOP_CARDS;
 
 	/* The marquee wraps by exactly one copy, so that copy has to be at least as
 	   wide as the rail or the rail runs out of cards and snaps; repeat until it is. */

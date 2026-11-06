@@ -68,7 +68,8 @@ export interface RouteDef {
 	icon: string;
 	/** Built to the design, no backend yet — shows a "Not connected" pill. */
 	placeholder?: PerTier<boolean>;
-	/** Supported by `pickActive`; no route uses it today. */
+	/** Greyed in the sidebar with a SOON pill, not a link; never offered by chat
+	 *  or the command palette. Deal Flow uses it while it is "Coming soon". */
 	soon?: boolean;
 	isDefault?: boolean;
 }
@@ -190,10 +191,12 @@ export const ROUTES: RouteDef[] = [
 	{ id: 'guide', icon: 'nav-onboarding', name: 'Fundraising Guide', path: '/resources', tier: 'raise' },
 
 	// ── Scout ───────────────────────────────────────────────────────────────
-	{ id: 'deal-flow', icon: 'nav-dealflow', name: 'All', path: '/deal-flow', tier: 'scout' },
-	{ id: 'deal-flow-featured', icon: 'nav-recommended', name: 'Featured', path: '/deal-flow/featured', tier: 'scout' },
-	{ id: 'deal-flow-verified', icon: 'nav-dealflow', name: 'Verified Raises', path: '/deal-flow/verified', tier: 'scout' },
-	{ id: 'deal-flow-circle', icon: 'nav-circle', name: 'From the Circle', path: '/deal-flow/circle', tier: 'scout' },
+	// Deal Flow is "Coming soon" (components/scout/deal-flow-soon.tsx): drop
+	// `soon: true` from these four when it launches.
+	{ id: 'deal-flow', icon: 'nav-dealflow', name: 'All', path: '/deal-flow', tier: 'scout', soon: true },
+	{ id: 'deal-flow-featured', icon: 'nav-recommended', name: 'Featured', path: '/deal-flow/featured', tier: 'scout', soon: true },
+	{ id: 'deal-flow-verified', icon: 'nav-dealflow', name: 'Verified Raises', path: '/deal-flow/verified', tier: 'scout', soon: true },
+	{ id: 'deal-flow-circle', icon: 'nav-circle', name: 'From the Circle', path: '/deal-flow/circle', tier: 'scout', soon: true },
 	{ id: 'thesis', icon: 'nav-thesis', name: 'Thesis Settings', path: '/thesis', tier: 'scout' },
 ];
 

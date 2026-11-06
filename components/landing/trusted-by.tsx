@@ -8,7 +8,8 @@ import type { SiteItem } from '@/lib/site-content';
 
 /**
  * Trusted by, in the sportstechx.com format: a left-aligned Bebas title over an
- * uppercase subtitle, then one row of partner cards drifting left to right,
+ * uppercase subtitle, then one row of partner cards drifting right to left
+ * (as on Playmakers),
  * with a hairline before every card and a soft fade at each edge.
  *
  * Each row is a pure-CSS marquee (translateX 0 → -50% on a track that renders
@@ -49,6 +50,8 @@ const PLACEHOLDER_PARTNERS: Card[] = TONES.map((tone, i) => ({
 
 /** Desktop stride (card 210 + hairline + 2 × 37 gap); replaced by a measurement. */
 const DEFAULT_STRIDE = 285;
+/** How long an arrow press takes to slide one card. */
+const GLIDE_MS = 450;
 /** ≈50px per second, the rate all three sites run at. */
 const SPEED = 50;
 
@@ -75,7 +78,7 @@ export function TrustedBy({ items }: { items?: SiteItem[] }) {
 			</div>
 
 			<div className="lp-trusted-rows">
-				<Rail cards={partners} direction="ltr" alwaysLoop={!usingCms} label="Trusted by" />
+				<Rail cards={partners} direction="rtl" alwaysLoop={!usingCms} label="Trusted by" />
 			</div>
 		</section>
 	);
@@ -94,6 +97,9 @@ function Rail({
 	label: string;
 }) {
 	const [phase, setPhase] = useState(0); // seconds into the loop
+	const phaseRef = useRef(0);
+	const glide = useRef(0);
+	useEffect(() => () => cancelAnimationFrame(glide.current), []);
 
 	/* Whether the cards already fill the rail decides everything below, and only
 	   the browser knows it. Starts at 0 so the server and the first client render
@@ -134,7 +140,26 @@ function Rail({
 	const step = (stride / copyW) * duration;
 	// Arrows move the cards the way they point, whichever way the row drifts.
 	const sign = direction === 'ltr' ? -1 : 1;
-	const shift = (dir: number) => setPhase((p) => (p + sign * dir * step + duration) % duration);
+	/**
+	 * One card per press, sliding rather than jumping, as on Playmakers: the
+	 * phase eases to its new value over GLIDE_MS instead of being set in one go.
+	 * Wrapping past the end of the loop is invisible (the frames are identical).
+	 */
+	const shift = (dir: number) => {
+		cancelAnimationFrame(glide.current);
+		const from = phaseRef.current;
+		const to = from + sign * dir * step;
+		const t0 = performance.now();
+		const frame = (now: number) => {
+			const k = Math.min(1, (now - t0) / GLIDE_MS);
+			const eased = 1 - (1 - k) ** 3;
+			const next = (((from + (to - from) * eased) % duration) + duration) % duration;
+			phaseRef.current = next;
+			setPhase(next);
+			if (k < 1) glide.current = requestAnimationFrame(frame);
+		};
+		glide.current = requestAnimationFrame(frame);
+	};
 
 	const cards = looping ? [...copy, ...copy] : partners;
 

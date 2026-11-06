@@ -8,7 +8,7 @@ import { qk } from '@/lib/query-keys';
 import { apiRequest } from '@/lib/query-client';
 import { refreshRaise } from '@/lib/invalidate';
 import { openRaiseSetup } from '@/lib/setup-events';
-import { Screen, PageHead, Card, Button, Loading } from '@/components/atlas';
+import { Screen, PageHead, Card, Button, Loading, Badge } from '@/components/atlas';
 import { AccountTabs } from '@/components/features/account/account-tabs';
 
 /**
@@ -110,7 +110,8 @@ export default function RaiseSettingsPage() {
 				    <DealflowOptIn /> (components/raise/dealflow-opt-in) when it launches. */}
 				<Section title="Investor Circle">
 					<div style={{ fontSize: 12, lineHeight: 1.55, color: 'var(--a-muted)' }}>
-						Coming soon. You&apos;ll be able to share your round with vetted investors in the Investor Circle.
+						<Badge tone="navy">Coming soon</Badge>{' '}
+						Share your round with vetted investors in the Investor Circle.
 					</div>
 				</Section>
 

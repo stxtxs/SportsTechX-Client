@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowUpRight, Mail, MapPin } from 'lucide-react';
-import { SOLUTIONS, selectSolution } from '@/components/landing/atlas-solutions';
+import { SOLUTIONS, selectSolution, solutionHref } from '@/components/landing/atlas-solutions';
 
 /* Root-relative so the anchors also work from the legal pages. Each product
    link opens its own card in the Solutions section. */
@@ -52,7 +52,7 @@ export function LandingFooter() {
 							<div className="lp-footer-h">Solutions</div>
 							<nav className="lp-footer-links">
 								{SOLUTIONS.map((s) => (
-									<Link key={s.id} href="/#solutions" onClick={(e) => selectSolution(s.id, e)}>
+									<Link key={s.id} href={solutionHref(s.id)} onClick={(e) => selectSolution(s.id, e)}>
 										Atlas {s.name.charAt(0)}{s.name.slice(1).toLowerCase()}
 									</Link>
 								))}

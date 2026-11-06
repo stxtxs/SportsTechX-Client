@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import useSWR from 'swr';
-import { BadgeCheck, Bookmark, CalendarDays, Layers, Sparkles, Target } from 'lucide-react';
+import { BadgeCheck, Bookmark, CalendarDays, Sparkles, Target } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { AgentComposer, FeedCard, H1, Loading, SectionHead } from '@/components/atlas';
 import { useUserProfile } from '@/hooks/use-user-profile';
@@ -133,12 +133,8 @@ export function ScoutHome() {
 						body="Funding, deals and news across sports tech for the month."
 						href={hrefOf('roundup')}
 					/>
-					<FeedCard
-						tag="Deal Flow" icon={Layers}
-						title="Live raises from the Circle"
-						body="Featured deals and verified raises, ranked by thesis fit."
-						href={hrefOf('deal-flow')}
-					/>
+					{/* The Deal Flow card is held back while Deal Flow is "Coming soon"
+					    (components/scout/deal-flow-soon.tsx). */}
 				</div>
 			</section>
 		</div>

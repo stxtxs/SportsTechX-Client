@@ -49,7 +49,7 @@ const PLANS: Plan[] = [
 		id: 'raise',
 		audience: 'For founders',
 		pitch: 'Investor intelligence and tools to support your fundraising journey.',
-		price: '€600',
+		price: '€720',
 		period: 'Per 6 months',
 		credits: '2,000',
 		creditsUnit: 'credits / month',

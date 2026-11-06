@@ -119,6 +119,8 @@ export function RaiseHome() {
 	const hour = new Date().getHours();
 	const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 	const showRound = !data.needs_setup && !!data.raise;
+	// The Investor Circle is "Coming soon", so its opt-in nudge is held back.
+	const attention = data.attention.filter((a) => a.id !== 'dealflow');
 
 	return (
 		<div className="raise-home">
@@ -132,10 +134,10 @@ export function RaiseHome() {
 
 			<section className="raise-attn">
 				<SectionHead title="What needs your attention" />
-				{(showRound || data.attention.length > 0) && (
+				{(showRound || attention.length > 0) && (
 					<div className="atlas-feed-grid">
 						{showRound && <RoundCard r={data.raise!} />}
-						{data.attention.map((a) => {
+						{attention.map((a) => {
 							const t = ATTENTION_TAG[a.id] ?? DEFAULT_TAG;
 							return (
 								<FeedCard
@@ -159,7 +161,7 @@ export function RaiseHome() {
 						})}
 					</div>
 				)}
-				{data.attention.length === 0 && <div className="raise-attn-empty">You’re all caught up. Keep your watchlist moving.</div>}
+				{attention.length === 0 && <div className="raise-attn-empty">You’re all caught up. Keep your watchlist moving.</div>}
 			</section>
 		</div>
 	);

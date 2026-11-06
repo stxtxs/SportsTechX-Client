@@ -38,7 +38,7 @@ const PLANS: Plan[] = [
 		ticks: [
 			'30+ Industry Reports',
 			'Weekly Newsletter',
-			'Market Analysis Dashboard',
+			'Market Overview Dashboard',
 			'Monthly Investment Roundup incl. Archive',
 			'Events Directory',
 			'Limited Access to 13k+ Companies, Programs & Investors',
@@ -61,7 +61,7 @@ const PLANS: Plan[] = [
 	{
 		id: 'scout',
 		audience: 'For investors & accelerators',
-		pitch: 'Live fundraising opportunities and intelligence to support due diligence.',
+		pitch: 'Intelligence to support due diligence, with live fundraising opportunities coming soon.',
 		price: '€2,500',
 		period: 'Per year',
 		credits: '5,000',

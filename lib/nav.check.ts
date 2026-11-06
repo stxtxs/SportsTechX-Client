@@ -288,8 +288,8 @@ check(access('scout', 'raise', false) === 'hidden', 'raise user is not shown Sco
 	// flag that dropped it is gone).
 	check(navigable('deck', 'scout') && navigable('deck', 'raise'),
 		'navigable: Deck Screener is offerable now that investor mode is wired');
-	check(navigable('deal-flow', 'scout') && navigable('deal-flow-circle', 'scout'),
-		'navigable: Deal Flow is offerable now that it is wired');
+	check(!navigable('deal-flow', 'scout') && !navigable('deal-flow-circle', 'scout'),
+		'navigable: Deal Flow is not offered while it is "Coming soon" (soon: true)');
 	check(!navigable('no-such-route', 'scout'), 'navigable: an unknown route id is dropped');
 }
 

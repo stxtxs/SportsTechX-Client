@@ -10,26 +10,22 @@ import localFont from 'next/font/local';
  * repo, so builds never touch the network. CSS variable names must match
  * landing.css. Weights for the variable faces are given as ranges.
  */
+/* Headlines: Bebas Neue, as on sportstechx.com and Playmakers. */
 export const lpDisplay = localFont({
-	src: './fonts/anton.woff2',
+	src: './fonts/bebas-neue-400.woff2',
 	weight: '400',
 	variable: '--lp-display',
 	display: 'swap',
 });
 
+/* Labels, pills and buttons: Commit Mono, as on sportstechx.com. */
 export const lpMono = localFont({
 	src: [
-		{ path: './fonts/space-mono-400.woff2', weight: '400', style: 'normal' },
-		{ path: './fonts/space-mono-700.woff2', weight: '700', style: 'normal' },
+		{ path: './fonts/commit-mono-400.woff2', weight: '400', style: 'normal' },
+		{ path: './fonts/commit-mono-500.woff2', weight: '500', style: 'normal' },
+		{ path: './fonts/commit-mono-700.woff2', weight: '700', style: 'normal' },
 	],
 	variable: '--lp-mono',
-	display: 'swap',
-});
-
-export const lpMonoCta = localFont({
-	src: './fonts/azeret-mono.woff2',
-	weight: '100 900',
-	variable: '--lp-mono-cta',
 	display: 'swap',
 });
 

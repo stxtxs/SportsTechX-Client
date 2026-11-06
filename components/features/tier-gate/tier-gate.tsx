@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Lock } from 'lucide-react';
 import type { Tier } from '@/lib/access';
 import { PLANS_PATH } from '@/lib/routes';
+import { ATLAS_LINKS } from '@/components/landing/atlas-solutions';
 import './tier-gate.css';
 
 /**
@@ -21,11 +22,6 @@ import './tier-gate.css';
  * Copy is assembled from strings that were already approved — the sidebar
  * upgrade cards and the billing page — rather than invented for this screen.
  */
-
-/** Where "Talk to the team" goes — the public landing's join section, as the
- *  sidebar upgrade cards already use. (`/subscriptions`, which every legacy
- *  upsell pointed at, has never been a route.) */
-const LANDING = '/#how-to-join';
 
 export const PRODUCT: Record<Exclude<Tier, 'explore'>, {
 	name: string;
@@ -74,7 +70,8 @@ export function TierGate({ tier, feature }: {
 				<p className="tier-gate__body">{p.blurb}</p>
 				<div className="tier-gate__cta">
 					<Link href={PLANS_PATH} className="atlas-btn atlas-btn--primary">Get {p.name}</Link>
-					<Link href={LANDING} className="atlas-btn atlas-btn--outline">Talk to the team</Link>
+					{/* The same booking link as the landing's "Book a demo". */}
+					<a href={ATLAS_LINKS.bookDemo} target="_blank" rel="noreferrer" className="atlas-btn atlas-btn--outline">Talk to the team</a>
 				</div>
 			</section>
 			<section className="atlas-card tier-gate__about">

@@ -1,25 +1,15 @@
 /* Atlas landing page — self-contained marketing styles, scoped to `.lp`.
    Fixed theme (own palette), independent of the app tokens and the light/dark
-   toggle.
+   toggle. Also imported by the legal pages and the public reports' footer.
 
-   Fonts: headings use the design's licensed Zuume, self-hosted from public/fonts
-   via the @font-face set below; --lp-display (Anton, next/font) is only a
-   fallback now. Eyebrows / nav / buttons use Azeret Mono (--lp-mono, exact from
-   the design); body reuses Inter. */
-
-/* Zuume (licensed, supplied by the project). Only the weights actually used get
-   downloaded — the design's headline is Zuume Regular (400). */
-@font-face { font-family: "Zuume"; src: url("/fonts/Zuume-Light.ttf") format("truetype"); font-weight: 300; font-style: normal; font-display: swap; }
-@font-face { font-family: "Zuume"; src: url("/fonts/Zuume-Regular.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "Zuume"; src: url("/fonts/Zuume-Medium.ttf") format("truetype"); font-weight: 500; font-style: normal; font-display: swap; }
-@font-face { font-family: "Zuume"; src: url("/fonts/Zuume-SemiBold.ttf") format("truetype"); font-weight: 600; font-style: normal; font-display: swap; }
-@font-face { font-family: "Zuume"; src: url("/fonts/Zuume-Bold.ttf") format("truetype"); font-weight: 700; font-style: normal; font-display: swap; }
-@font-face { font-family: "Zuume"; src: url("/fonts/Zuume-ExtraBold.ttf") format("truetype"); font-weight: 800; font-style: normal; font-display: swap; }
-@font-face { font-family: "Zuume"; src: url("/fonts/Zuume-Black.ttf") format("truetype"); font-weight: 900; font-style: normal; font-display: swap; }
+   Type follows sportstechx.com: Bebas Neue headlines (--lp-display) and Commit
+   Mono labels and buttons (--lp-mono), both self-hosted via app/fonts.ts, and
+   New Frank for body copy (Adobe kit jyx6vei, loaded by the root layout). */
 
 .lp {
-	/* Single source of truth for the display stack (Zuume → free fallback). */
-	--lp-display-stack: "Zuume", var(--lp-display), "Arial Narrow", sans-serif;
+	/* Single source of truth for the display stack. */
+	--lp-display-stack: var(--lp-display), "Bebas Neue", "Arial Narrow", sans-serif;
+	--lp-navy: #091539;
 	--lp-dark: #060a17;
 	--lp-dark-2: #0a0e1a;
 	--lp-panel: #11141f;
@@ -40,22 +30,14 @@
 	--lp-on-dark-soft: rgba(255, 255, 255, 0.66);
 	--lp-border-dark: rgba(255, 255, 255, 0.1);
 	--lp-border-cream: rgba(20, 18, 26, 0.12);
-	--lp-body: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-
-	/* Kepler Std is the design's editorial serif (38 nodes). It is NOT in Adobe
-	   kit jyx6vei yet — an unmatched family just falls through, so the Newsreader
-	   fallback holds until the designer adds it, then it swaps in with no code
-	   change. */
-	--lp-serif: "kepler-std-display", "kepler-std", var(--lp-serif-fb), Georgia, serif;
-	--lp-serif-cond: "kepler-std-condensed-subhead", var(--lp-serif-fb), Georgia, serif;
-	/* Space Grotesk (nav, final-hero CTA, copyright) comes from the root layout. */
-	--lp-ui: var(--font-space-grotesk), system-ui, sans-serif;
-
-	/* The sportstechx.com body face, and the one the product section now uses
-	   instead of the serif. It is already on this page: app/layout.tsx loads
-	   Adobe kit jyx6vei for it, so this adds no request. The kit ships 400/500/
-	   700 only — there is no light cut, so ask for 400 rather than 300. */
-	--lp-sans: "new-frank", var(--lp-body);
+	/* New Frank everywhere the design used Inter, Kepler or Space Grotesk. The
+	   kit ships 400/500/700 only. */
+	--lp-sans: "new-frank", var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	--lp-body: var(--lp-sans);
+	--lp-serif: var(--lp-sans);
+	--lp-serif-cond: var(--lp-sans);
+	--lp-ui: var(--lp-sans);
+	--lp-mono-cta: var(--lp-mono);
 
 	/* One fluid width system. The design is a fixed 1512 frame, which left the
 	   content at only ~71% of a 1909 screen; these give ~92% on normal desktops
@@ -102,20 +84,19 @@
 	font-family: var(--lp-display-stack);
 	font-weight: 400;
 	text-transform: uppercase;
-	line-height: 1.04; /* design: 81px on 78px */
-	letter-spacing: 0;
+	line-height: 1.04;
+	letter-spacing: 0.08em;
 	margin: 0;
 }
 .lp-btn {
-	/* Intro-hero CTAs are the design's ONLY Azeret Mono. */
-	font-family: var(--lp-mono-cta), monospace;
-	font-size: 18px; /* design: Azeret Mono Medium 18/22, ls 10% */
+	font-family: var(--lp-mono), monospace;
+	font-size: 15px;
 	line-height: 22px;
-	letter-spacing: 1.8px;
+	letter-spacing: 0.1em;
 	text-transform: uppercase;
 	font-weight: 500;
-	height: 54px;
-	padding: 0 28px;
+	height: 52px;
+	padding: 0 30px;
 	border-radius: 99px;
 	display: inline-flex;
 	align-items: center;
@@ -131,13 +112,9 @@
 .lp-btn--pink:hover { filter: brightness(1.06); }
 .lp-btn--outline { background: rgba(0, 0, 0, 0.58); color: #fff; border-color: var(--lp-pink); box-shadow: 2px 8px 20px rgba(9, 21, 57, 0.13); }
 .lp-btn--outline:hover { background: rgba(243, 33, 99, 0.12); }
-/* Nav LOG IN — muted/ghost pink pill (distinct from the bright hero CTAs). */
+/* Drawer LOG IN — muted/ghost pink pill (distinct from the bright hero CTAs). */
 .lp-btn--login { background: rgba(243, 33, 99, 0.16); color: #ffa7c2; border-color: rgba(243, 33, 99, 0.7); }
 .lp-btn--login:hover { background: rgba(243, 33, 99, 0.28); color: #fff; }
-/* Nav LOG IN pill — design: Space Grotesk Medium 16, ls 10%, on a 58px pill. */
-.lp-btn--sm { font-family: var(--lp-ui); height: 50px; font-size: 16px; letter-spacing: 1.6px; padding: 0 22px; }
-/* Final-hero CTA — design: Space Grotesk Medium 21, ls 10%. */
-.lp-btn--ui { font-family: var(--lp-ui); font-size: 21px; line-height: 26px; letter-spacing: 2.1px; height: 62px; padding: 0 34px; }
 
 /* ── Nav ───────────────────────────────────────────────────────────────── */
 /* The app's globals.css sets `html, body { height: 100%; overflow-x: hidden }`,
@@ -165,60 +142,112 @@ body:has(.lp) {
 }
 .lp :where([id]) { scroll-margin-top: 96px; }
 
+/* The bar matches sportstechx.com and Playmakers: it rests 16px down (24 on
+   desktop) and docks into a full-width glass band once the page scrolls. The
+   rest offset rides on `translate`, never `top` (see .lp-nav.is-drawer). */
 .lp-nav {
 	position: fixed; top: 0; left: 0; right: 0; z-index: 40;
-	/* `top` is deliberately absent from this list. While the drawer is out the
-	   bar is anchored by an inline `top: lockedY`, so transitioning it would
-	   send the bar gliding thousands of pixels down the page on open. The dock
-	   only changes padding and background, so nothing is lost by leaving it. */
-	transition: background 0.25s ease, backdrop-filter 0.25s ease, border-color 0.25s ease;
-	border-bottom: 1px solid transparent;
+	translate: 0 16px;
+	transition: translate 0.3s ease, padding 0.3s ease, background-color 0.3s ease, backdrop-filter 0.3s ease;
 }
 /* The drawer's shell is transformed, which makes it the containing block for
-   `fixed` descendants — the bar would otherwise pin to the top of the document
+   `fixed` descendants: the bar would otherwise pin to the top of the document
    and scroll away with the close button. */
 .lp-nav.is-drawer { position: absolute; }
-/* The drawer carries its own LOG IN; two of the same control either side of the
-   slide reads as a duplicate. */
-.lp-nav.is-drawer .lp-btn--login { opacity: 0; pointer-events: none; }
-/* Glass bar once the page moves. One dark translucent treatment reads correctly
-   over the dark hero and over the cream / white sections below. */
+.lp-nav.is-drawer .lp-nav-login { opacity: 0; pointer-events: none; }
 .lp-nav.is-scrolled {
-	/* Dark translucent glass: enough opacity for white nav text to stay legible
-	   over the cream / white sections below, a heavy blur + saturate so it reads
-	   as glass rather than a flat panel, and a soft shadow to lift it off the
-	   content it overlaps. */
-	background: rgba(8, 11, 24, 0.8);
-	-webkit-backdrop-filter: blur(24px) saturate(150%);
-	backdrop-filter: blur(24px) saturate(150%);
-	border-bottom-color: rgba(255, 255, 255, 0.1);
-	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+	translate: 0 0;
+	padding: 12px 0;
+	background-image: linear-gradient(to bottom, rgba(6, 10, 23, 0.82), rgba(6, 10, 23, 0.32));
+	-webkit-backdrop-filter: blur(11.6px);
+	backdrop-filter: blur(11.6px);
 }
-/* Design: nav frame at x=107, y=85 — a wider gutter than the content sections. */
-/* Design puts the nav at 1291 @ x=107 — 26px tighter per side than the
-   content. Normalised to --lp-pad so it lines up with every other section. */
-/* 24/12 rather than 18/10: the three sites share one vertical rhythm, and
-   sportstechx.com sets it (bar 24 from the top at rest, 12 once docked). */
-.lp-nav-inner { max-width: var(--lp-shell); margin: 0 auto; padding: 24px var(--lp-pad); display: flex; align-items: center; justify-content: space-between; gap: 24px; transition: padding 0.25s ease; }
-.lp-nav.is-scrolled .lp-nav-inner { padding-top: 12px; padding-bottom: 12px; }
-/* margin-right:auto, not a wrapper: .lp-nav-inner is space-between and the
-   burger is permanent now, so without this the mark centres itself between
-   the burger and the links. Was in the <=1024 block only. */
-.lp-nav-mark { display: inline-flex; align-items: center; text-decoration: none; margin-right: auto; }
-.lp-nav-mark img { height: 48px; width: auto; }
-/* Links capsule — design: 397x58, 35px side padding, 36px gap, pill radius.
-   The LOG IN pill sits OUTSIDE it, 19px to the right. */
-.lp-nav-links { display: inline-flex; align-items: center; height: 50px; gap: 36px; background: rgba(255, 255, 255, 0.025); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 99px; padding: 0 35px; backdrop-filter: blur(4px); }
-.lp-nav-link { font-family: var(--lp-ui); font-weight: 500; font-size: 16px; letter-spacing: 1.6px; text-transform: uppercase; color: rgba(255, 255, 255, 0.82); text-decoration: none; transition: color 0.12s ease; }
-.lp-nav-link:hover { color: #fff; }
-.lp-nav-right { display: flex; align-items: center; gap: 19px; }
-/* The SportsTechX mark closes the bar. Sized to the LOG IN pill's optical
-   weight rather than its box, so it reads as a mark and not a third button. */
-.lp-nav-stx { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; transition: opacity 0.12s ease, scale 0.16s ease; }
-.lp-nav-stx img { height: 36px; width: auto; }
-.lp-nav-stx:hover { opacity: 0.8; scale: 1.06; }
+/* The header uses sportstechx.com's own page width and gutter (not this
+   page's --lp-shell), so the three sites' bars line up exactly. */
+.lp-nav-inner {
+	--nav-gutter: clamp(20px, 4.06px + 3.964vw, 64px);
+	width: 100%; max-width: calc(min(90vw, 1600px) + 2 * var(--nav-gutter)); margin: 0 auto; padding: 0 var(--nav-gutter);
+	display: flex; align-items: center; justify-content: space-between; gap: 24px;
+}
+
+/* Wordmark with "BY SPORTSTECHX" stacked underneath, left-aligned. */
+/* Centred: the wordmark's slanted A starts inside its box, so a left edge
+   alignment made the line underneath look shifted left. */
+.lp-lockup { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-right: auto; }
+/* Same spacing and size as the Playmakers lockup (15/17px, 6/8px gap). */
+.lp-nav-mark { display: inline-flex; align-items: center; min-height: 32px; text-decoration: none; }
+.lp-nav-mark img { height: 30px; width: auto; }
+/* Padding widens the tap area without moving the text; the negative margin
+   gives the space back so the lockup stays tight. */
+.lp-lockup-by {
+	margin: -6px 0; padding: 6px 0;
+	font-family: var(--lp-display-stack); font-size: 15px; line-height: 1; letter-spacing: 0.12em;
+	color: rgba(255, 255, 255, 0.6); text-decoration: none;
+	transition: color 0.2s ease-out;
+}
+.lp-lockup-by:hover, .lp-lockup-by:focus-visible { color: #ed1a5e; }
+
+/* Pill and LOG IN sized as on sportstechx.com: 50px tall, 1.5px borders, 20px
+   inside the pill, 16/36px between links, 15px inside the button, 20px apart.
+   Nav type is New Frank Medium 13/14/16px at 1024/1280/1512, tracked 10%,
+   nudged down 1.8px so the caps sit optically centred. */
+.lp-nav-right { display: flex; align-items: center; gap: 20px; }
+.lp-nav-links {
+	position: relative;
+	display: inline-flex; align-items: center; height: 50px; gap: 16px; padding: 0 20px;
+	border: 1.5px solid #fff; border-radius: 999px;
+	background: rgba(255, 255, 255, 0.1);
+	box-shadow: 0 0 39.4px rgba(0, 0, 0, 0.08);
+	-webkit-backdrop-filter: blur(4px);
+	backdrop-filter: blur(4px);
+}
+.lp-nav-link {
+	position: relative; top: 1.8px;
+	display: inline-flex; align-items: center; gap: 6px;
+	font-family: var(--lp-sans); font-weight: 500; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase;
+	color: #fff; text-decoration: none;
+	transition: color 80ms ease-out;
+}
+.lp-nav-link:hover, .lp-nav-link.is-open, .lp-nav-link:focus-visible { color: var(--lp-pink-2); }
+
+/* The drop-down hangs off the pill's right edge so it never runs off-screen.
+   Its top padding bridges the gap, so the pointer can travel to the card. */
+.lp-nav-menu {
+	position: absolute; top: 100%; right: -1.5px; padding-top: 12px; z-index: 5;
+	opacity: 0; visibility: hidden; translate: 0 -4px;
+	transition: opacity 0.18s ease, translate 0.18s ease, visibility 0s linear 0.18s;
+}
+.lp-nav-menu.is-open { opacity: 1; visibility: visible; translate: 0 0; transition-delay: 0s; }
+.lp-nav-menu-card {
+	width: 340px; padding: 10px; display: flex; flex-direction: column; gap: 2px;
+	background: #fff; border-radius: 16px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+.lp-nav-menu-item { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 10px; color: var(--lp-navy); text-decoration: none; transition: background-color 0.15s ease; }
+.lp-nav-menu-item:hover, .lp-nav-menu-item:focus-visible { background: #f3f1ec; }
+.lp-nav-menu-aud { font-family: var(--lp-mono), monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #5d6070; }
+.lp-nav-menu-name { font-family: var(--lp-display-stack); font-size: 24px; line-height: 1.1; letter-spacing: 0.06em; text-transform: uppercase; }
+.lp-nav-menu-name em { font-style: normal; }
+.lp-nav-menu-promise { font-family: var(--lp-sans); font-size: 15px; color: #3a4155; }
+
+/* LOG IN: the sportstechx.com CTA capsule. Fills and grows a touch on hover. */
+.lp-nav-login {
+	display: inline-grid; place-items: center; height: 50px; padding: 3.6px 15px 0;
+	border: 1.5px solid var(--lp-pink); border-radius: 999px;
+	background: rgba(243, 33, 99, 0.05);
+	-webkit-backdrop-filter: blur(28px);
+	backdrop-filter: blur(28px);
+	font-family: var(--lp-sans); font-weight: 500; font-size: 13px; letter-spacing: 0.1em;
+	color: var(--lp-pink-2); text-decoration: none;
+	transition: background-color 0.2s ease-out, color 0.2s ease-out, scale 0.2s ease-out;
+}
+.lp-nav-login:hover { background: var(--lp-pink); color: #fff; }
+@media (prefers-reduced-motion: no-preference) {
+	.lp-nav-login:hover { scale: 1.05; }
+	.lp-nav-login:active { scale: 0.95; }
+}
+
 /* The bordered circle the STX and Playmakers bars both use for this control.
-   Only `display` is responsive — see the <=1024 block. */
+   Only `display` is responsive (see the <=1024 block). */
 .lp-nav-toggle {
 	display: none; align-items: center; justify-content: center;
 	width: 44px; height: 44px; border-radius: 999px; cursor: pointer;
@@ -229,6 +258,24 @@ body:has(.lp) {
 	transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 .lp-nav-toggle[aria-expanded='true'] { background: #fff; border-color: #fff; color: var(--lp-dark); }
+
+@media (min-width: 1025px) {
+	.lp-nav { translate: 0 24px; }
+	/* Top-aligned, so the pills sit where sportstechx.com's do; the 36px
+	   wordmark is nudged 7px down to centre on the 50px pills, with BY
+	   SPORTSTECHX hanging below. */
+	.lp-nav-inner { align-items: flex-start; }
+	.lp-nav-mark img { height: 36px; }
+	.lp-lockup { gap: 8px; margin-top: 7px; }
+	.lp-lockup-by { font-size: 17px; }
+}
+@media (min-width: 1280px) {
+	.lp-nav-links { gap: 36px; }
+	.lp-nav-link, .lp-nav-login { font-size: 14px; }
+}
+@media (min-width: 1512px) {
+	.lp-nav-link, .lp-nav-login { font-size: 16px; }
+}
 
 /* ── Hero (Intro + Final share .lp-hero) ───────────────────────────────── */
 .lp-hero { position: relative; background: var(--lp-dark); overflow: hidden; }
@@ -269,8 +316,6 @@ body:has(.lp) {
 	pointer-events: none;
 	z-index: 0;
 }
-/* Final hero keeps its own 1512×689 frame, anchored bottom-right where its glow sits. */
-.lp-hero-bg--final { left: auto; right: 0; width: 1512px; height: 689px; }
 /* `.lp .lp-hero-orb`, not `.lp-hero-orb`: the reset at the top of this file is
    `.lp img { max-width: 100% }` at specificity (0,1,1), which beat a bare
    (0,1,0) `max-width: none` and silently clamped these to 100% of the stage.
@@ -290,321 +335,291 @@ body:has(.lp) {
 	opacity: 0.87;
 	background: radial-gradient(ellipse 88.06% 132.21% at 26.82% 164.05%, rgba(243, 33, 99, 0.55) 0%, rgba(243, 33, 99, 0) 100%);
 }
-.lp-hero-grad--final {
-	background: radial-gradient(ellipse 82% 165% at 90% 152%, rgba(243, 33, 99, 0.5) 0%, rgba(243, 33, 99, 0) 100%);
-}
 
 .lp-hero-inner { position: relative; z-index: 2; width: 100%; max-width: 1128px; margin: 0 auto; padding: 150px 24px 120px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 46px; }
 .lp-hero--intro .lp-hero-inner { padding: 120px 24px; }
-/* design: logo -> headline gap 41, then 46 to the CTAs */
-.lp-hero-texts { display: flex; flex-direction: column; align-items: center; gap: 41px; width: 100%; }
 .lp-hero-wordmark { width: 392px; max-width: 70%; }
-.lp-hero-wordmark--sm { width: 284px; }
-.lp-hero-headline { color: #fff; font-size: clamp(40px, 5.16vw, 78px); max-width: 974px; }
-/* Final hero is its own size in the design: Zuume 62/72, not the intro's 78/81. */
-.lp-hero--final .lp-hero-headline { font-size: clamp(34px, 4.1vw, 62px); line-height: 1.161; }
-/* Design: Kepler Std Display 34/45. */
-.lp-hero-sub { font-family: var(--lp-serif); color: var(--lp-on-dark-soft); font-size: clamp(19px, 2.25vw, 34px); line-height: 1.324; max-width: 760px; margin: 0 auto; }
-/* The closing CTA copy is longer; a wider cap keeps it to two lines, not three. */
-.lp-hero--final .lp-hero-sub { max-width: 960px; }
 .lp-hero-ctas { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; padding: 12px 0; }
 
 /* ── Trusted by ────────────────────────────────────────────────────────── */
 .lp-cream { background: var(--lp-cream); color: var(--lp-ink); }
 .lp-faq.lp-cream { background: var(--lp-faq-bg); }
-/* Requested: this one section is white. Trusted-by above it stays cream, so the
-   edge between them is deliberate. */
-.lp-howjoin.lp-cream { background: #ffffff; }
-.lp-trusted { padding: 96px 0 104px; }
-.lp-trusted-head { text-align: center; margin: 0 auto 52px; }
-/* Matches the product headline (.lp-display .lp-howjoin-title): Zuume 400, same
-   size ramp and ink. */
-.lp-trusted-head h2 { font-family: var(--lp-display-stack); font-weight: 400; text-transform: uppercase; font-size: clamp(40px, 5.69vw, 86px); line-height: 1; margin: 0 0 16px; color: var(--lp-ink-heading); }
-/* Design: Inter Medium 18/31. */
-.lp-trusted-head p { color: var(--lp-ink-soft); font-size: 18px; font-weight: 500; line-height: 31px; margin: 0 auto; max-width: 720px; }
+/* sportstechx.com format: left-aligned Bebas title (72 × 0.72) over an
+   uppercase New Frank subtitle at 70%, then two rails of partner cards. */
+.lp-trusted { padding: clamp(48px, 36.41px + 2.883vw, 80px) 0; }
+.lp-trusted-head { display: flex; flex-direction: column; gap: 10px; }
+.lp-trusted-head h2 { margin: 0; font-family: var(--lp-display-stack); font-weight: 400; text-transform: uppercase; font-size: clamp(35px, 28.3px + 1.557vw, 52px); line-height: 1.1; letter-spacing: 0.1em; color: var(--lp-navy); }
+.lp-trusted-head p { margin: 0; font-family: var(--lp-sans); font-size: clamp(17px, 15.9px + 0.254vw, 20px); font-weight: 500; line-height: 1.5; text-transform: uppercase; color: rgba(9, 21, 57, 0.7); }
+.lp-trusted-rows { margin-top: 21px; display: flex; flex-direction: column; gap: 11px; }
 
-/* Auto-scrolling partner carousel. Design: 210px card on a 286px stride, with a
-   dashed divider sitting in the middle of each 76px gap. */
-.lp-carousel { position: relative; max-width: var(--lp-shell); margin: 0 auto; padding: 0 var(--lp-pad); }
+/* Auto-scrolling partner rails. Each card is preceded by a hairline, with 37px
+   either side of it on desktop. */
+/* width: 100% matters: inside the flex column of rows, `margin: 0 auto` turns
+   off stretching, so the rail sized itself to its own cards, measured that as
+   the screen width and flipped between drifting and still on every pass. */
+.lp-carousel { position: relative; width: 100%; max-width: var(--lp-shell); margin: 0 auto; padding: 0 var(--lp-pad); }
 .lp-carousel-viewport { overflow: hidden; }
 /* Pure-CSS marquee: the track holds the list twice, so translating it by
-   exactly -50% lands on an identical frame and the loop is seamless. Composited
-   by the browser, so unlike a rAF + scrollLeft loop it cannot stall. */
+   exactly -50% lands on an identical frame and the loop is seamless. */
 .lp-carousel-marquee { display: flex; width: max-content; animation-name: lp-marquee; animation-timing-function: linear; animation-iteration-count: infinite; will-change: transform; }
+.lp-carousel-marquee.is-ltr { animation-direction: reverse; }
 @keyframes lp-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-/* Cards already fill the rail: no loop, no copies, just centre them. */
-.lp-carousel-marquee.is-static { animation: none; width: 100%; justify-content: center; }
+/* Only 1–2 uploaded cards: no loop, no copies, left-aligned as on the homepage. */
+.lp-carousel-marquee.is-static { animation: none; width: 100%; justify-content: flex-start; }
 .lp-carousel:hover .lp-carousel-marquee { animation-play-state: paused; }
-@media (prefers-reduced-motion: reduce) { .lp-carousel-marquee { animation: none; } }
-.lp-partner { flex: 0 0 286px; padding: 0 38px; position: relative; }
-.lp-partner::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 1px dashed rgba(20, 18, 26, 0.18); }
-.lp-partner-photo { position: relative; height: 232px; border-radius: 10px; overflow: hidden; }
-/* A flat dim over the whole photo. The marks that sit on these are white,
-   and a light headshot swallows one — the ::after gradient only darkens the
-   bottom strip, which is not enough once a real logo is wider than the
-   wordmark it replaces. Below the logo, which carries z-index: 2. */
-.lp-partner-photo::after { content: ""; position: absolute; inset: auto 0 0 0; height: 72px; background: linear-gradient(to top, rgba(8, 10, 18, 0.9), rgba(8, 10, 18, 0)); }
-.lp-partner-logo { position: absolute; left: 0; right: 0; bottom: 15px; z-index: 2; text-align: center; color: #fff; font-family: var(--lp-display-stack); font-weight: 700; font-size: 25px; letter-spacing: 0.04em; line-height: 1; }
-/* grayscale because the marks have to read as one set. Sourcing B&W files was
-   the standing ask, but uploads arrive in whatever the company publishes —
-   doing it here makes the rule hold regardless. */
-.lp-partner-logo--img { display: block; width: auto; height: auto; max-width: 40%; max-height: 36px; margin: 0 auto; object-fit: contain; filter: grayscale(1); }
-/* Per-run styles (fig --overrides): Zuume Regular 17, then Space Mono 11 ls -3% @70%. */
-.lp-partner-name { margin-top: 16px; text-align: center; font-family: var(--lp-display-stack); font-weight: 400; text-transform: uppercase; font-size: 19px; line-height: 1.2; color: var(--lp-ink); }
-.lp-partner-title { margin-top: 4px; text-align: center; font-family: var(--lp-mono), monospace; font-size: 13px; letter-spacing: -0.03em; line-height: 1.4; color: var(--lp-ink-soft); }
-.lp-carousel-arrow { position: absolute; top: 116px; transform: translateY(-50%); z-index: 3; background: none; border: none; cursor: pointer; color: var(--lp-ink-soft); padding: 6px; line-height: 0; transition: color 0.12s ease; }
+/* No drift means the arrows (which shift the drift's phase) would do nothing. */
+@media (prefers-reduced-motion: reduce) { .lp-carousel-marquee { animation: none; } .lp-carousel-arrow { display: none; } }
+.lp-partner { flex: 0 0 auto; width: 170px; padding: 0 6px; position: relative; }
+.lp-partner-photo { position: relative; height: 175px; border-radius: 7px; overflow: hidden; }
+/* Bottom scrim, #454545 transparent to #232529, so the white marks read. */
+.lp-partner-photo::after { content: ""; position: absolute; inset: auto 0 0 0; height: 55px; background: linear-gradient(to bottom, rgba(69, 69, 69, 0), #232529); }
+.lp-partner-logo { position: absolute; left: 0; right: 0; bottom: 11px; z-index: 2; text-align: center; color: #fff; font-family: var(--lp-sans); font-weight: 700; font-size: 14px; letter-spacing: -0.02em; line-height: 1; }
+.lp-partner-logo--img { display: block; width: auto; height: auto; max-width: 40%; max-height: 26px; margin: 0 auto; object-fit: contain; filter: grayscale(1); }
+.lp-partner-name { margin-top: 6px; text-align: center; font-family: var(--lp-sans); font-weight: 500; font-size: 13px; line-height: 18px; color: var(--lp-ink); }
+.lp-partner-title { text-align: center; font-family: var(--lp-mono), monospace; font-size: 11px; line-height: 16px; color: #828282; }
+@media (min-width: 640px) {
+	.lp-partner { width: 183px; }
+	.lp-partner-photo { height: 191px; }
+}
+@media (min-width: 1025px) {
+	.lp-trusted-rows { margin-top: 86px; gap: 38px; }
+	/* Fade the rail into the band at each edge, as the homepage does. */
+	.lp-carousel-viewport { --edge: 29px; mask-image: linear-gradient(to right, transparent 0, #000 var(--edge), #000 calc(100% - var(--edge)), transparent 100%); }
+	.lp-carousel-marquee { padding: 4px 0; }
+	.lp-partner { width: 246px; padding: 0 37px 0 38px; }
+	.lp-partner::before { content: ""; position: absolute; left: 0; top: 50%; height: 264px; translate: 0 -50%; border-left: 1px solid #b6b6b6; }
+	.lp-partner-photo::after { height: 72px; }
+	.lp-partner-logo { bottom: 15px; font-size: 19px; }
+	.lp-partner-logo--img { max-height: 36px; }
+}
+@media (min-width: 1280px) {
+	.lp-partner { width: 285px; }
+	.lp-partner-photo { height: 232px; }
+}
+.lp-carousel-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 3; background: none; border: none; cursor: pointer; color: var(--lp-ink-soft); padding: 6px; line-height: 0; transition: color 0.12s ease; }
 .lp-carousel-arrow:hover { color: var(--lp-ink); }
 .lp-carousel-arrow--prev { left: max(2px, calc(var(--lp-pad) - 42px)); }
 .lp-carousel-arrow--next { right: max(2px, calc(var(--lp-pad) - 42px)); }
 
-/* ── How to join ───────────────────────────────────────────────────────── */
-.lp-howjoin { padding: 104px 0 112px; }
-.lp-howjoin-grid { display: grid; grid-template-columns: minmax(0, 1fr) 509px; gap: 72px; align-items: center; }
+/* ── Section headings ──────────────────────────────────────────────────── */
+.lp-eyebrow { margin: 0; font-family: var(--lp-mono), monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(0, 0, 0, 0.5); }
+.lp-section-title { margin-top: 10px; font-size: clamp(36px, 3.6vw, 52px); line-height: 1; color: var(--lp-navy); }
 
-/* Eyebrow: serif label followed by a rule running to the column edge. */
-.lp-howjoin-eyebrow { display: flex; align-items: center; gap: 22px; margin-bottom: 26px; }
-/* Design says Kepler Std Light Display 23/5%, but the product section reads as
-   sans now (team feedback "Atlas Page fonts") — and the Kepler the design asked
-   for was never in the kit, so what shipped here was the Newsreader fallback. */
-.lp-howjoin-eyebrow span { font-family: var(--lp-sans); font-weight: 400; font-size: 23px; letter-spacing: 0.05em; color: var(--lp-ink); white-space: nowrap; }
-.lp-howjoin-eyebrow i { flex: 1; height: 1px; background: rgba(20, 18, 26, 0.22); }
+/* ── Compact intro hero ────────────────────────────────────────────────── */
+/* About half the old full-screen hero: content-height, not 100svh. The
+   background stage keeps its own 100svh box anchored to the bottom, so the
+   sphere and rings still sit where the design puts them. */
+.lp-hero--compact { min-height: 0; display: block; }
+/* Sized so the counter row lands above the fold on a laptop: the headline
+   scales with the viewport height as well as its width. */
+.lp .lp-hero-inner--compact { max-width: 1180px; padding: 120px 24px 0; gap: 0; }
+.lp-hero-wordmark--compact { width: 200px; max-width: 56%; }
+.lp-hero-byline { margin: 18px 0 0; font-family: var(--lp-mono), monospace; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); }
+.lp-hero-lines { margin-top: 22px; font-size: clamp(44px, min(6.4vw, 9.6svh), 92px); line-height: 1; letter-spacing: 0.08em; }
+.lp-hero-line { display: block; color: #fff; text-decoration: none; transition: opacity 0.15s ease; }
+.lp-hero-lines:hover .lp-hero-line:not(:hover) { opacity: 0.6; }
+.lp-hero--compact .lp-hero-ctas { margin-top: 32px; gap: 14px; padding: 0; }
+.lp-hero--compact .lp-btn--outline { background: #3b435e; border-color: #3b435e; }
+.lp-hero--compact .lp-btn--outline:hover { background: #4a5372; }
 
-.lp-howjoin-title { font-size: clamp(40px, 5.69vw, 86px); line-height: 1; color: var(--lp-ink-heading); margin-bottom: 26px; }
-/* Sans, per the same note on the eyebrow above. Size and leading are the
-   design's (34/45); only the family changed. */
-.lp-howjoin-desc { font-family: var(--lp-sans); font-size: clamp(19px, 2.25vw, 34px); line-height: 1.324; color: var(--lp-ink); max-width: 560px; margin: 0 0 34px; }
-.lp-howjoin-rule { height: 1px; background: rgba(20, 18, 26, 0.16); margin-top: 46px; }
-.lp-howjoin-cta { margin-top: 36px; align-self: flex-start; }
-
-/* Switcher — one rounded container holding the three tier tags (design). */
-/* nowrap: the pill's 99px radius only reads as a pill on one line, and the
-   three tags shrink (below) rather than breaking to a second row. */
-.lp-howjoin .lp-switcher { display: inline-flex; flex-wrap: nowrap; max-width: 100%; gap: 4px; padding: 6px; border: 1px solid rgba(20, 18, 26, 0.16); border-radius: 99px; background: rgba(255, 255, 255, 0.55); }
-.lp-switcher { display: inline-flex; gap: 8px; flex-wrap: wrap; }
-.lp-switch-tag { display: inline-flex; align-items: center; white-space: nowrap; gap: 10px; padding: 10px 18px; border-radius: 99px; border: none; background: transparent; cursor: pointer; font-family: var(--lp-mono), monospace; font-size: 16px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lp-ink-soft); transition: background 0.12s ease, color 0.12s ease; }
-.lp-switch-tag .dot { width: 11px; height: 11px; border-radius: 3px; flex: none; }
-.lp-howjoin .lp-switch-tag.active { background: var(--lp-ink); color: #fff; }
-
-/* Tier cards — a deck: the active one expands, the others stay as a bar. */
-/* Overlapping deck — each card tucks under the one below it; the active card
-   lifts to the front and expands, so promoting a tier reads as a vertical
-   carousel rather than three separate boxes. */
-.lp-stack { display: flex; flex-direction: column; }
-.lp-tier {
-	position: relative; display: block; width: 100%; text-align: left; border: none;
-	cursor: pointer; color: #fff; border-radius: 20px; padding: 32px 33px; overflow: hidden;
-	font-family: inherit; min-height: 222px; margin-top: -84px;
-	/* One treatment for all three cards — only --tier-accent changes. The white
-	   base is not decoration: the design layers this gradient over an opaque
-	   Card rect, and its 0.88 alpha midpoint needs something behind it. Without
-	   it the card is ~12% transparent and the card it overlaps shows through. */
-	background:
-		radial-gradient(224.5% 196.5% at 158.59% 129.73%,
-			var(--tier-accent) 0%, rgba(17, 19, 33, 0.88) 60%, rgba(17, 19, 33, 1) 100%),
-		#ffffff;
-	box-shadow: 0 16px 34px -18px rgba(0, 0, 0, 0.85);
-	transition: min-height 0.38s cubic-bezier(0.4, 0, 0.2, 1), transform 0.38s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.38s ease;
+/* Counter row: value above label, divided by hairlines. In the markup the
+   label (dt) comes first, as a description list requires; order flips it. */
+.lp-hero-stats {
+	list-style: none; width: 100%; margin: 48px 0 0; padding: 28px 0 36px;
+	display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+	border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
-/* Every card but the last carries a faint white sheen along its bottom edge,
-   where the next card overlaps it (design: white 0 -> .46 alpha @ 20% layer). */
-.lp-stack > .lp-tier:not(:last-child)::after {
-	content: ""; position: absolute; inset: auto 0 0 0; height: 13%; pointer-events: none;
-	background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.092) 100%);
+.lp-hero-stat { display: flex; flex-direction: column; padding: 8px 24px; border-left: 1px solid rgba(255, 255, 255, 0.12); text-align: left; }
+.lp-hero-stat dd { order: -1; margin: 0; font-family: var(--lp-display-stack); font-size: 52px; line-height: 1; letter-spacing: 0.04em; color: #fff; }
+.lp-hero-stat dt { margin-top: 6px; font-family: var(--lp-sans); font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
+
+/* ── Solutions ─────────────────────────────────────────────────────────── */
+.lp-sol { background: #fff; color: var(--lp-navy); padding: 88px 0 96px; }
+.lp-sol-select { margin-top: 32px; display: flex; align-items: flex-start; gap: 16px; }
+.lp-sol-label { font-family: var(--lp-sans); font-weight: 500; font-size: 18px; letter-spacing: 0.06em; line-height: 48px; text-transform: uppercase; color: #363b57; white-space: nowrap; }
+.lp-sol-pills { display: flex; align-items: flex-start; gap: 12px; }
+.lp-sol-opt { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+/* The label and an invisible copy of the longest one share a grid cell, so
+   all three pills are as wide as the widest. */
+.lp-sol-pill {
+	display: inline-grid; place-items: center; min-height: 48px; padding: 0 24px;
+	border: 0; border-radius: 999px; cursor: pointer;
+	background: #3b435e; color: #fff;
+	font-family: var(--lp-mono), monospace; font-size: 14px; letter-spacing: 0.1em; white-space: nowrap;
+	transition: background-color 0.2s ease, box-shadow 0.2s ease, scale 0.2s ease;
 }
-/* Nothing precedes the first card, so it is never pulled up. */
-.lp-stack > .lp-tier:first-child { margin-top: 0; min-height: 138px; }
-/* Layering is set inline by the component (how-to-join.tsx), because it depends
- * on which tier is open, not on DOM order. What CSS has to follow from that is
- * the hidden edge: every card keeps its -84px overlap with the next one, but
- * only the card that is *behind* loses those 84px, and which card that is now
- * flips around the open tier.
- *
- * These rules must stay after :first-child above — same (0,3,0), so order is
- * what lets `above` raise the first card's box. */
+.lp-sol-pill > * { grid-area: 1 / 1; }
+.lp-sol-sizer { visibility: hidden; }
+.lp-sol-pill:hover { background: #4a5372; }
+.lp-sol-pill[aria-pressed='true'] { background: var(--sol-fill); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18); }
+.lp-sol-pill:active { scale: 0.97; }
+.lp-sol-hint { font-family: var(--lp-sans); font-size: 14px; color: #5d6070; text-align: center; }
 
-/* Behind the card before it: top 84 hidden, so content clears it. Design puts
-   the collapsed header at y=112.5. */
-.lp-stack > .lp-tier[data-pos='below'] { padding-top: 116px; }
-/* Above the open card, so it is the one overlapped from below — its bottom 84
-   goes, not its top. The box carries the hidden 84 on top of the 138px collapsed
-   bar, and the padding is the `below` rule's mirror image: a <button> centres its
-   content in the content box, so without the matching padding-bottom the wordmark
-   centres in the whole 222 and its baseline lands flush against the next card. */
-.lp-stack > .lp-tier[data-pos='above'] { min-height: 222px; padding-bottom: 116px; }
-/* ...except the card the OPEN one laps, which it laps by 28 rather than the
-   deck's 84 (see the margin-top below). Sized for 84 it kept 56px too much of
-   itself on screen, so that tier rendered as a taller bar than the other two
-   and pushed the whole deck down. Every box here is `visible + whatever the
-   next card takes`: 138 + 28, and the padding follows it. */
-.lp-stack > .lp-tier[data-pos='above']:has(+ .lp-tier--open) { min-height: 166px; padding-bottom: 60px; }
-
-/* The open card laps the one above by 28, not the deck's 84: at 84 it buried
- * that tier's wordmark by 43px. 28 still laps its top corners over the card
- * above — which is what makes it read as the front of the deck. */
-.lp-stack > .lp-tier.lp-tier--open:not(:first-child) { margin-top: -28px; }
-
-/* 403 is the whole card: nothing laps the open one, since both its neighbours
-   are behind it. (It was 487 = 403 + 84 buried, from when the card above was
-   still painting over its top.) Holding the three cards at `visible + lap`
-   keeps the deck exactly 679px tall whichever tier is open. */
-.lp-stack > .lp-tier.lp-tier--open {
-	min-height: 403px; padding-bottom: 32px; transform: translateY(-2px);
-	/* The taller card carries the design's own glow placement. */
-	background:
-		radial-gradient(208.6% 251.7% at 135.95% 163.4%,
-			var(--tier-accent) 0%, rgba(17, 19, 33, 0.88) 60%, rgba(17, 19, 33, 1) 100%),
-		#ffffff;
-	box-shadow: 0 30px 62px -24px rgba(0, 0, 0, 0.9);
+/* Each card takes its own height: the step decks match (Raise's height suits
+   the screenshots), and Raise alone runs longer for its experts strip. The
+   hidden cards take no space, and the shown one fades in. */
+.lp-sol-stack { margin-top: 20px; }
+.lp-sol-slot { display: none; }
+.lp-sol-slot.is-shown { display: flex; animation: lp-sol-in 0.25s ease; }
+@keyframes lp-sol-in { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
+@media (prefers-reduced-motion: reduce) {
+	.lp-sol-slot.is-shown { animation: none; }
 }
-.lp-tier-brand { display: flex; align-items: flex-start; gap: 10px; }
-.lp-tier-brand img { width: 151px; height: auto; } /* design Vector 151x53 */
-/* Design: Kepler Std Condensed Subhead Italic 21, ls 10%. */
-.lp-tier-brand em { font-family: var(--lp-serif-cond); font-style: italic; font-size: 21px; letter-spacing: 0.1em; line-height: 1; margin-top: 4px; }
-/* Design: wordmark ink ends at y=99, Card Content starts at y=162. */
-.lp-tier-body { display: block; margin-top: 78px; }
-.lp-tier-sub { display: block; font-family: var(--lp-display-stack); font-weight: 400; text-transform: uppercase; font-size: 42px; line-height: 40px; margin-bottom: 22px; }
-/* Design Points: 3 items of 28 on a 53px pitch. */
-.lp-points { display: grid; gap: 25px; }
-/* Design: Kepler Std Light Display 19. */
-.lp-point { display: flex; align-items: center; min-height: 28px; gap: 14px; font-family: var(--lp-sans); font-weight: 400; font-size: 19px; line-height: 1.25; color: rgba(255, 255, 255, 0.92); }
-.lp-point-ico { width: 24px; height: 24px; border-radius: 6px; flex: none; display: inline-flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.16); color: #fff; }
-/* "View the … dashboard" link inside an open tier card — scrolls to that
-   product's screenshot section. Light on the dark card; the arrow nudges on hover. */
-.lp-tier-link {
-	display: inline-flex; align-items: center; gap: 8px; margin-top: 34px;
-	font-family: var(--lp-ui); font-weight: 500; font-size: 15px; letter-spacing: 1.2px;
-	text-transform: uppercase; color: #fff; text-decoration: none; opacity: 0.9;
-	transition: opacity 0.12s ease, gap 0.12s ease;
+
+.lp-sol-card {
+	flex: 1; min-width: 0; border-radius: 20px; overflow: hidden; color: #fff;
+	background: radial-gradient(120% 140% at 100% 100%, var(--sol-tint) 0%, #111321 60%);
+	display: flex; flex-direction: column;
 }
-.lp-tier-link:hover { opacity: 1; gap: 13px; }
-
-/* ── Product gallery ───────────────────────────────────────────────────── */
-/* White section; each block is a dark navy→magenta panel with a white app
-   window that PROTRUDES past the panel's bottom edge — so the panel must not
-   clip overflow, and the block reserves the overhang as padding-bottom. */
-.lp-gallery-wrap { background: #ffffff; color: var(--lp-ink); }
-.lp-gallery-divider { max-width: min(var(--lp-card-max), calc(100% - 2 * var(--lp-pad))); margin: 0 auto; border-top: 1px solid rgba(20, 18, 26, 0.12); }
-.lp-gallery { padding: 110px var(--lp-pad) 400px; }
-.lp-gallery--light { padding: 96px var(--lp-pad) 130px; }
-
-.lp-gallery-panel {
-	max-width: var(--lp-card-max);
-	margin: 0 auto;
-	border-radius: 12px;
-	padding: 96px 63px 0;
-	/* Design samples: TL #20212e, midpoint (TR≈BL) #2e303b, BR corner magenta —
-	   i.e. a plain 135° ramp, not a corner bloom. */
-	background: linear-gradient(135deg, #20212e 0%, #2e303b 50%, #b8375f 100%);
-	color: #fff;
-	/* BFC: without it the mockup’s negative bottom margin collapses through the
-	   panel instead of shortening it, and the overhang disappears. */
-	display: flow-root;
+.lp-sol-head { padding: 44px 44px 0; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 32px; }
+.lp-sol-copy { max-width: 620px; }
+.lp-sol-aud { display: block; margin: 0; font-family: var(--lp-mono), monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
+.lp-sol-brand { margin-top: 16px; display: flex; align-items: flex-start; gap: 10px; }
+.lp-sol-brand img { width: 118px; height: auto; }
+.lp-sol-brand em { margin-top: 4px; font-family: var(--lp-serif); font-style: italic; font-size: 21px; line-height: 21px; letter-spacing: 0.1em; }
+.lp-sol-intro { margin: 16px 0 0; font-family: var(--lp-sans); font-size: 21px; font-weight: 500; line-height: 1.45; color: rgba(255, 255, 255, 0.9); }
+.lp-sol-actions { display: flex; flex-direction: column; align-items: flex-end; }
+.lp-sol-ctas { display: flex; gap: 10px; flex-wrap: wrap; }
+.lp-sol-btn {
+	display: inline-flex; align-items: center; min-height: 48px; padding: 0 24px;
+	border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 999px;
+	font-family: var(--lp-mono), monospace; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase;
+	color: #fff; text-decoration: none;
+	transition: background-color 0.2s ease, border-color 0.2s ease, scale 0.2s ease;
 }
-/* Variant b mirrors variant a: the header sits on the white section and the
-   window overhangs the panel’s TOP edge instead of its bottom. */
-.lp-gallery-panel--bare { padding: 0 63px 62px; margin-top: 163px; }
-/* The headwrap's 62px bottom margin collapses into the panel's 163px top one, so
-   -163 put the window flush under the switcher. -115 leaves a 48px gap. */
-.lp-gallery-panel--bare .lp-mockup { margin-top: -115px; margin-bottom: 0; }
-.lp-gallery-headwrap { max-width: var(--lp-card-max); margin: 0 auto 62px; padding: 0 4px; color: var(--lp-ink); }
+.lp-sol-btn:hover { background: rgba(255, 255, 255, 0.1); border-color: #fff; }
+.lp-sol-btn--primary { background: #fff; border-color: #fff; color: #0a0a0a; }
+.lp-sol-btn--primary:hover { background: #fff; scale: 1.04; }
+.lp-sol-note { margin: 10px 0 0; font-family: var(--lp-mono), monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255, 255, 255, 0.75); }
 
-.lp-gallery-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 48px; flex-wrap: wrap; }
-.lp-gallery-title { font-size: clamp(30px, 3.64vw, 55px); line-height: 1; font-weight: 400; }
-.lp-gallery-title span { color: var(--lp-pink); }
-/* Design: Kepler Std Display 24/31. */
-.lp-gallery-desc { font-family: var(--lp-serif); font-size: clamp(17px, 1.59vw, 24px); line-height: 1.292; max-width: 648px; margin: 16px 0 0; color: rgba(255, 255, 255, 0.78); }
-.lp-gallery-headwrap .lp-gallery-desc { color: var(--lp-ink-soft); }
+/* Step deck: the open step grows, the others collapse into numbered tabs. */
+.lp-steps { padding: 32px 44px 44px; display: flex; gap: 12px; }
+.lp-step-open {
+	flex: 1 1 auto; min-width: 0; min-height: 420px; padding: 32px;
+	display: flex; flex-wrap: wrap; gap: 32px;
+	border-radius: 16px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12);
+	animation: lp-step-in 0.25s ease;
+}
+@keyframes lp-step-in { from { opacity: 0; } to { opacity: 1; } }
+.lp-step-text { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.lp-step-num { font-family: var(--lp-mono), monospace; font-size: 12px; letter-spacing: 0.14em; color: var(--sol-accent); }
+.lp-step-title { font-size: clamp(32px, 3vw, 44px); line-height: 1; letter-spacing: 0.06em; }
+.lp-step-bullets { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; font-family: var(--lp-sans); font-size: 18px; line-height: 1.45; }
+.lp-step-bullets li { display: flex; gap: 12px; align-items: baseline; }
+.lp-step-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--sol-accent); translate: 0 -2px; }
+.lp-step-shot { position: relative; flex: 1.3 1 360px; min-width: 0; min-height: 300px; border-radius: 12px; overflow: hidden; background: #fff; display: flex; }
+/* The CMS screenshots are the old gallery slides: the step's copy on the left,
+   the dashboard in the right ~58%, running off the bottom edge. Show that
+   strip only (172% wide, shifted left by 40% of the image, top kept), since the
+   copy is already in the card. Plain dashboard screenshots would replace this. */
+.lp .lp-step-shot > img { position: absolute; left: -69%; top: 0; width: 172%; max-width: none; height: auto; translate: 0 -4%; }
+.lp-step-shot-fallback { flex: 1; display: grid; place-items: center; }
+.lp-step-shot-fallback img { width: 64px; opacity: 0.2; }
+.lp-step-tab {
+	flex: none; width: 84px; min-height: 420px; padding: 24px 0;
+	display: flex; flex-direction: column; align-items: center; gap: 18px;
+	border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px;
+	background: rgba(255, 255, 255, 0.03); color: #fff; cursor: pointer; font: inherit;
+	transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.lp-step-tab:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.3); }
+.lp-step-tab .lp-step-num { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.5); font-size: 15px; letter-spacing: 0; color: #fff; }
+.lp-step-tab-label { writing-mode: vertical-rl; font-family: var(--lp-mono), monospace; font-size: 13px; letter-spacing: 0.18em; }
 
-/* Segmented switcher — an outer translucent capsule around a bordered group.
-   The group clips to a pill, which is what gives the active segment its
-   rounded-outside / flat-inside edges in the design. */
-.lp-seg { display: inline-flex; padding: 8px; border-radius: 99px; background: rgba(255, 255, 255, 0.09); border: 1px solid rgba(255, 255, 255, 0.14); }
-.lp-seg-group { display: flex; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 99px; overflow: hidden; }
-.lp-seg-btn { min-width: 112px; height: 38px; padding: 0 20px; background: transparent; border: none; border-left: 1px solid rgba(255, 255, 255, 0.3); cursor: pointer; font-family: var(--lp-mono), monospace; font-size: 16px; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.86); transition: background 0.12s ease, color 0.12s ease; }
-.lp-seg-btn:first-child { border-left: none; }
-.lp-seg-btn.active { background: var(--lp-pink); color: #fff; }
-/* Light variant (variant b's header sits on the white section). */
-.lp-gallery-headwrap .lp-seg { background: rgba(20, 18, 26, 0.04); border-color: rgba(20, 18, 26, 0.12); }
-.lp-gallery-headwrap .lp-seg-group { border-color: rgba(20, 18, 26, 0.2); }
-.lp-gallery-headwrap .lp-seg-btn { color: var(--lp-ink); border-left-color: rgba(20, 18, 26, 0.2); }
-.lp-gallery-headwrap .lp-seg-btn:first-child { border-left: none; }
-.lp-gallery-headwrap .lp-seg-btn.active { background: var(--lp-pink); color: #fff; }
+/* Raise only. */
+.lp-experts { border-top: 1px solid rgba(255, 255, 255, 0.15); padding: 32px 44px; display: flex; flex-wrap: wrap; align-items: center; gap: 20px 40px; }
+.lp-experts-intro { flex: 1 1 320px; min-width: 0; }
+.lp-experts-title { margin-top: 8px; font-size: 34px; line-height: 1; letter-spacing: 0.06em; }
+.lp-experts-text { margin: 8px 0 0; font-family: var(--lp-sans); font-size: 18px; line-height: 1.5; color: rgba(255, 255, 255, 0.82); }
+.lp-experts-people { display: flex; gap: 24px; flex-wrap: wrap; }
+.lp-expert { display: flex; align-items: center; gap: 12px; }
+.lp-expert-photo { flex: none; width: 52px; height: 52px; border-radius: 50%; background: rgba(255, 255, 255, 0.2) center / cover no-repeat; }
+.lp-expert-name { display: block; font-family: var(--lp-sans); font-weight: 500; font-size: 17px; }
+.lp-expert-role { display: block; font-family: var(--lp-mono), monospace; font-size: 12px; line-height: 1.5; color: rgba(255, 255, 255, 0.75); }
 
-/* App window. 649px tall, overhanging the panel by 260px. */
-.lp-mockup { position: relative; margin-top: 56px; margin-bottom: -260px; aspect-ratio: 1223 / 649; background: #fff; border-radius: 12px; box-shadow: 0 34px 74px -34px rgba(10, 6, 20, 0.5); overflow: hidden; }
-.lp-mockup-bar { height: 76px; display: flex; align-items: center; justify-content: space-between; padding: 0 38px 0 40px; border-bottom: 1px solid #ededed; }
-.lp-mockup-bar img { height: 34px; width: auto; }
-.lp-mockup-avatar { width: 32px; height: 32px; border-radius: 99px; background: #e6e6e6; }
-.lp-mockup-body { display: grid; gap: 32px; padding: 46px 40px; }
-.lp-sk { width: 194px; height: 10px; border-radius: 5px; background: #ededed; }
-/* An uploaded dashboard screenshot replaces the whole fake window and sizes the
-   card to itself: full width, natural height, nothing cropped. Only the skeleton
-   placeholder keeps the fixed 1223/649 window. Two classes, so it also beats the
-   breakpoints' fixed heights. */
-.lp-mockup.lp-mockup--img { aspect-ratio: auto; height: auto; }
-.lp-mockup-img { display: block; width: 100%; height: auto; }
+/* Testimonials (off for the relaunch): the sportstechx.com card format. */
+.lp-sol-testi { border-top: 1px solid rgba(255, 255, 255, 0.15); padding: 32px 44px 44px; }
+.lp-sol-testi-label { margin: 0 0 16px; font-family: var(--lp-mono), monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
+.lp-sol-testi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.lp-sol-quote { margin: 0; padding: 24px; border-radius: 16px; background: rgba(255, 255, 255, 0.06); display: flex; flex-direction: column; justify-content: space-between; gap: 20px; }
+.lp-sol-quote blockquote { margin: 0; font-family: var(--lp-sans); font-size: 17px; line-height: 1.5; }
+.lp-chip { display: flex; align-items: center; gap: 12px; }
+.lp-chip-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+.lp-chip-name { display: block; font-family: var(--lp-sans); font-weight: 500; font-size: 16px; }
+.lp-chip-role { display: block; font-family: var(--lp-mono), monospace; font-size: 11px; color: rgba(255, 255, 255, 0.7); }
 
-/* ── Testimonials ──────────────────────────────────────────────────────── */
-/* Centred serif label with a long rule running out to either side. */
-.lp-rule-label { display: flex; align-items: center; justify-content: center; gap: 24px; color: var(--lp-ink); }
-/* Design: Kepler Std Light Display 23, ls 5%. */
-.lp-rule-label span { font-family: var(--lp-serif); font-weight: 300; font-size: 23px; letter-spacing: 0.05em; white-space: nowrap; }
-.lp-rule-label i { width: min(348px, 22vw); height: 1px; background: rgba(20, 18, 26, 0.22); }
+/* ── Pricing ───────────────────────────────────────────────────────────── */
+.lp-pricing { background: #fff; color: var(--lp-navy); padding: 88px 0; border-top: 1px solid #ece8df; }
+.lp-plans { margin-top: 32px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.lp-plan { border-radius: 18px; border: 1px solid #e2ded6; background: #fafaf8; padding: 32px; display: flex; flex-direction: column; gap: 20px; transition: translate 0.2s ease, box-shadow 0.2s ease; }
+.lp-plan:hover { translate: 0 -3px; box-shadow: 0 14px 30px rgba(9, 21, 57, 0.08); }
+.lp-plan--featured { border: 1.5px solid #3b435e; }
+.lp-plan-aud { margin: 0; font-family: var(--lp-mono), monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #5d6070; }
+.lp-plan-brand { margin-top: 12px; display: flex; align-items: flex-start; gap: 6px; }
+.lp-plan-brand img { width: 104px; height: auto; margin-top: 4px; }
+.lp-plan-brand em { font-family: var(--lp-serif); font-style: italic; font-size: 22px; line-height: 22px; letter-spacing: 0.1em; color: var(--sol); }
+.lp-plan-price { font-size: 60px; line-height: 1; letter-spacing: 0.02em; }
+.lp-plan-period, .lp-plan-credits-note { margin: 6px 0 0; font-family: var(--lp-mono), monospace; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #5d6070; }
+.lp-plan-credits { border-radius: 12px; border: 1px solid #e2ded6; background: #f3f1ec; padding: 16px 18px; font-family: var(--lp-sans); }
+.lp-plan-credits-n { margin: 0; font-size: 20px; font-weight: 500; }
+.lp-plan-credits-unit { margin: 2px 0 0; font-size: 18px; }
+.lp-plan-credits .lp-plan-credits-note { font-size: 11px; letter-spacing: 0.08em; }
+.lp-plan-pitch { margin: 12px 0 0; font-family: var(--lp-sans); font-size: 18px; line-height: 1.45; color: #2e3447; }
+.lp-plan-ticks { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; font-family: var(--lp-sans); font-size: 17px; line-height: 1.4; color: #2e3447; }
+.lp-plan-ticks li { display: flex; gap: 12px; align-items: flex-start; }
+/* Green ticks on every plan, as on the previous pricing page. */
+.lp-plan-ticks svg { flex: none; margin-top: 2px; color: #1f9e6e; }
+/* Same height on every card (button plus one line under it, reserved even on
+   Explore), pinned to the bottom, so the three buttons sit on one line. */
+.lp-plan-foot { margin-top: auto; padding-top: 16px; min-height: 108px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.lp-plan-cta {
+	display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px;
+	border: 1.5px solid #c9ccd6; border-radius: 999px; background: #fff; color: #0a0a0a;
+	font-family: var(--lp-mono), monospace; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+	transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, scale 0.2s ease;
+}
+.lp-plan-cta:hover { border-color: #0a0a0a; scale: 1.03; }
+.lp-plan-cta.is-primary { background: #0a0a0a; border-color: #0a0a0a; color: #fff; }
+.lp-plan-cta.is-primary:hover { background: var(--sol-fill); border-color: var(--sol-fill); }
+.lp-plan-extra { margin: 0; padding: 8px 0; font-family: var(--lp-mono), monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sol-fill); text-decoration: none; }
+a.lp-plan-extra:hover { text-decoration: underline; }
+.lp-plans-note { margin: 24px 0 0; text-align: center; font-family: var(--lp-sans); font-size: 17px; color: #4a4d5a; }
 
-.lp-testi { position: relative; background: #ffffff; color: var(--lp-ink); padding: 120px var(--lp-pad) 150px; }
-/* Real scroller, so the arrows below have something to scroll. */
-/* No scroll-snap: the testimonials auto-drift (a per-frame scrollLeft write),
-   and snap would keep yanking the track back to a card edge. */
-.lp-testi-track { display: flex; max-width: var(--lp-max); margin: 60px auto 0; overflow-x: auto; scrollbar-width: none; }
-.lp-testi-track::-webkit-scrollbar { display: none; }
-/* Column with the chip pushed to the bottom, so the avatar holds ONE fixed
-   vertical position across cards (equal-height flex items) — a short quote just
-   leaves a gap above the chip instead of floating it up. */
-.lp-quote-wrap { flex: 0 0 50%; margin: 0; padding: 0 40px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
-/* Design: Kepler Std Display 27/37. */
-.lp-quote { font-family: var(--lp-serif); font-size: clamp(18px, 1.5vw, 23px); line-height: 1.45; color: var(--lp-ink); margin: 0 auto; max-width: 560px; }
-.lp-chip { display: inline-flex; align-items: center; gap: 18px; margin-top: 44px; text-align: left; }
-.lp-chip-avatar { width: 69px; height: 69px; border-radius: 99px; flex: none; box-shadow: 0 0 0 7px rgba(20, 18, 26, 0.045); }
-/* Per-run styles (fig --overrides): Zuume Regular 22 + Space Mono 11 ls -3% @70%. */
-.lp-chip-name { display: block; font-family: var(--lp-display-stack); font-weight: 400; text-transform: uppercase; font-size: 22px; line-height: 1.2; letter-spacing: 0.02em; }
-.lp-chip-role { display: block; margin-top: 5px; font-family: var(--lp-mono), monospace; font-size: 11px; letter-spacing: -0.03em; color: var(--lp-ink-soft); }
+.lp-compare { margin-top: 32px; border-radius: 18px; border: 1px solid #e2ded6; background: #fafaf8; overflow: hidden; }
+.lp-compare-toggle { width: 100%; min-height: 72px; padding: 20px 24px; border: 0; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; text-align: left; color: var(--lp-navy); }
+.lp-compare-title { display: block; font-size: 30px; line-height: 1; letter-spacing: 0.06em; }
+.lp-compare-sub { display: block; margin-top: 6px; font-family: var(--lp-sans); font-size: 16px; color: #5d6070; }
+.lp-compare-icon { font-family: var(--lp-mono), monospace; font-size: 24px; }
+.lp-compare-scroll { overflow-x: auto; }
+.lp-compare-table { width: 100%; min-width: 640px; border-collapse: collapse; color: var(--lp-navy); }
+.lp-compare-table tr { border-top: 1px solid #e2ded6; }
+.lp-compare-table thead th { padding: 16px; font-family: var(--lp-mono), monospace; font-size: 12px; letter-spacing: 0.12em; font-weight: 400; color: #5d6070; width: 160px; }
+.lp-compare-table thead th:first-child { width: auto; text-align: left; padding-left: 24px; }
+.lp-compare-table tbody th { padding: 16px 24px; font-family: var(--lp-sans); font-size: 17px; font-weight: 400; text-align: left; }
+.lp-compare-table td { text-align: center; }
+.lp-compare-table .is-off { color: #a3a6b4; }
 
-.lp-testi-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 3; background: none; border: none; cursor: pointer; color: var(--lp-ink-soft); padding: 8px; line-height: 0; transition: color 0.12s ease; }
-.lp-testi-arrow:hover { color: var(--lp-ink); }
-.lp-testi-arrow--prev { left: max(2px, calc(var(--lp-pad) - 42px)); }
-.lp-testi-arrow--next { right: max(2px, calc(var(--lp-pad) - 42px)); }
-
-/* ── Team ──────────────────────────────────────────────────────────────── */
-.lp-team { background: #060a17; color: #fff; position: relative; overflow: hidden; }
-.lp-team-glow { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(60% 80% at 90% 20%, rgba(243, 33, 99, 0.18), transparent 60%); }
-.lp-team-inner { position: relative; z-index: 2; padding: 74px 0 123px; }
-.lp-rule-label--dark { color: rgba(255, 255, 255, 0.72); }
-.lp-rule-label--dark i { background: rgba(255, 255, 255, 0.24); }
-.lp-team-intro { text-align: center; max-width: 940px; margin: 0 auto 42px; }
-.lp-team-intro h2 { font-size: clamp(30px, 3.64vw, 55px); line-height: 1; letter-spacing: 0.05em; margin: 16px 0 24px; }
-/* Design: Kepler Std Display 24/31 @65%. */
-.lp-team-intro p { font-family: var(--lp-serif); color: rgba(255, 255, 255, 0.65); font-size: clamp(17px, 1.59vw, 24px); line-height: 1.292; max-width: 900px; margin: 0 auto; }
-.lp-team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 29px; max-width: var(--lp-card-max); margin: 0 auto; }
-/* Light cards on the dark section: the photo bleeds to the card edges. */
-.lp-member { display: flex; background: #f8f8f8; border: none; border-radius: 8px; padding: 0; overflow: hidden; color: var(--lp-ink); min-height: 248px; aspect-ratio: 674 / 248; }
-.lp-member-photo { flex: 0 0 36.94%; align-self: stretch; /* design 249/674 */ background: linear-gradient(160deg, #b9b2a8, #4c4750); }
-.lp-member-text { flex: 1; min-width: 0; padding: 39px 34px 32px 29px; }
-/* Design: Space Mono 15, ls 10%, #868686. */
-.lp-member-eyebrow { font-family: var(--lp-mono), monospace; font-size: 15px; letter-spacing: 0.1em; text-transform: uppercase; color: #868686; display: flex; align-items: center; gap: 14px; margin-bottom: 26px; }
-.lp-member-eyebrow::after { content: ""; flex: 1; height: 1px; background: rgba(20, 18, 26, 0.18); }
-.lp-member-name { font-family: var(--lp-display-stack); font-weight: 400; text-transform: uppercase; font-size: 36px; line-height: 42px; letter-spacing: 0.01em; margin-bottom: 14px; color: var(--lp-ink); }
-/* Design: Kepler Std Display 17/23 @70%. */
-.lp-member-bio { font-family: var(--lp-serif); color: var(--lp-ink-soft); font-size: 17px; line-height: 23px; }
+/* ── Closing CTA ───────────────────────────────────────────────────────── */
+.lp-closing { background: #181c28; padding: 88px 0; text-align: center; }
+.lp-closing-title { font-size: clamp(36px, 4vw, 56px); line-height: 1; letter-spacing: 0.08em; color: #fff; }
+.lp-closing-ctas { margin-top: 32px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.lp-closing-btn {
+	display: inline-flex; align-items: center; min-height: 52px; padding: 0 26px; border-radius: 999px;
+	background: var(--sol-fill); color: #fff;
+	font-family: var(--lp-mono), monospace; font-size: 15px; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+	transition: filter 0.2s ease, scale 0.2s ease;
+}
+.lp-closing-btn:hover { filter: brightness(1.12); scale: 1.04; }
 
 /* ── FAQ ───────────────────────────────────────────────────────────────── */
 .lp-faq { padding: 96px 0 118px; }
-.lp-faq h2 { font-family: var(--lp-display-stack); font-weight: 400; text-transform: uppercase; text-align: center; font-size: clamp(30px, 3.64vw, 55px); line-height: 1; margin: 0 0 52px; color: var(--lp-ink-heading); }
+.lp-faq h2 { font-family: var(--lp-display-stack); font-weight: 400; text-transform: uppercase; text-align: center; font-size: clamp(32px, 3vw, 44px); line-height: 1; letter-spacing: 0.1em; margin: 0 0 52px; color: var(--lp-ink-heading); }
 /* Narrow centred column with dotted rules, per the design. */
 .lp-faq-list { max-width: 657px; margin: 0 auto; }
 .lp-faq-item { border-bottom: 1px dotted rgba(20, 18, 26, 0.32); }
 .lp-faq-q { width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 17px 0; display: flex; align-items: center; justify-content: space-between; gap: 22px; font-family: var(--lp-serif); font-size: 21px; font-weight: 400; line-height: 28px; color: var(--lp-ink); }
-.lp-faq-icon { flex: none; color: var(--lp-ink-soft); transition: transform 0.2s ease; }
-.lp-faq-item.open .lp-faq-icon { transform: rotate(45deg); }
+.lp-faq-icon { flex: none; width: 20px; text-align: center; font-family: var(--lp-mono), monospace; font-size: 20px; color: var(--lp-ink-soft); }
+
 /* A grid row, not a max-height. `max-height: 260px` was a guess that clips the
    answer mid-sentence as soon as the copy grows, or the viewport narrows enough
    to add a line; 0fr -> 1fr animates the same way with no ceiling. */
@@ -634,18 +649,18 @@ body:has(.lp) {
 	background-position: 58.6% -23px, 80.3% -23px;
 	background-repeat: no-repeat;
 }
-.lp-footer-wordmark { width: 135px; margin-bottom: 24px; } /* design Vector 135x49 */
-/* Design: Kepler Std Display 22/32, navy @70%. */
+/* The header's lockup, in footer ink: BY SPORTSTECHX centred under the mark. */
+.lp-footer-lockup { display: inline-flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 24px; }
+.lp-footer-wordmark { width: 135px; } /* design Vector 135x49 */
+.lp-footer-by { margin: -6px 0; padding: 6px 0; font-family: var(--lp-display-stack); font-size: 17px; line-height: 1; letter-spacing: 0.12em; color: rgba(9, 21, 57, 0.6); text-decoration: none; transition: color 0.2s ease-out; }
+.lp-footer-by:hover, .lp-footer-by:focus-visible { color: #ed1a5e; }
 .lp-footer-desc { font-family: var(--lp-serif); color: var(--lp-ink-navy); font-size: 22px; line-height: 32px; max-width: 451px; margin-bottom: 28px; }
 .lp-footer-meta { display: grid; gap: 12px; }
 .lp-footer-meta div { display: flex; align-items: center; gap: 12px; font-family: var(--lp-serif); color: var(--lp-ink-navy); font-size: 17px; line-height: 36px; }
-/* Design: Zuume Regular 25/32, black — not a mono eyebrow. */
-.lp-footer-h { font-family: var(--lp-display-stack); font-weight: 400; font-size: 25px; line-height: 32px; letter-spacing: 0; text-transform: uppercase; color: #000; margin-bottom: 22px; }
+.lp-footer-h { font-family: var(--lp-display-stack); font-weight: 400; font-size: 25px; line-height: 32px; letter-spacing: 0.1em; text-transform: uppercase; color: #000; margin-bottom: 22px; }
 .lp-footer-links { display: grid; gap: 0; } /* design link pitch is 31px */
 .lp-footer-links a { font-family: var(--lp-serif); color: var(--lp-ink-navy); font-size: 19px; line-height: 31px; text-decoration: none; display: inline-flex; align-items: center; gap: 11px; transition: color 0.12s ease; }
 .lp-footer-links a:hover { color: var(--lp-ink); }
-/* Design: copyright is Space Grotesk Regular 13/32; the right-hand line is
-   Space Mono Regular 13. Both navy @70%. */
 .lp-footer-bottom { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 71px; padding-top: 22px; border-top: 2px solid rgba(186, 186, 186, 0.5); font-family: var(--lp-ui); color: var(--lp-ink-navy); font-size: 13px; line-height: 32px; letter-spacing: 0; }
 .lp-footer-bottom > :last-child { font-family: var(--lp-mono), monospace; }
 
@@ -764,14 +779,6 @@ body:has(.lp) {
 }
 @media (max-width: 1100px) {
 	.lp { --lp-pad: 40px; }
-	/* Once the grid collapses to one column the deck would stretch; the cards
-	   are a fixed 509 design artefact. */
-	.lp-stack { max-width: 509px; }
-	.lp-howjoin-grid { grid-template-columns: 1fr; }
-	.lp-quote-wrap { flex: 0 0 100%; }
-	.lp-team-grid { grid-template-columns: 1fr; max-width: none; }
-	/* One column: the card is far wider than tall, so the ratio would clip text. */
-	.lp-member { aspect-ratio: auto; }
 	.lp-footer-cols { grid-template-columns: 1fr 1fr; background-image: none; gap: 44px; }
 	/* The two vertical rules are background gradients on the grid and go with it.
 	   A rule above each link column replaces them, which is how the sibling
@@ -781,206 +788,91 @@ body:has(.lp) {
 	.lp-footer-desc { font-size: 19px; line-height: 29px; }
 	.lp-footer-h { font-size: 22px; line-height: 28px; }
 	.lp-footer-links a { font-size: 17px; line-height: 29px; }
-	/* Scaled, not stretched: the glow sits at 38.161% of a 1512-wide stage, so a
-	   fixed frame anchored right put it ~577px off-screen on a phone. Both axes
-	   move together to keep the ellipses circular. */
-	.lp-hero-bg--final { width: 100vw; height: calc(100vw * 689 / 1512); }
-	.lp-gallery { padding: 80px var(--lp-pad) 240px; }
-	.lp-gallery-panel { padding: 56px 36px 0; }
-	/* aspect-ratio must be released with the height, or width becomes the
-	   derived dimension (460 x 1223/649 = 867px) and overflows the panel. */
-	.lp-mockup { height: 460px; aspect-ratio: auto; margin-bottom: -170px; }
-	.lp-gallery-panel--bare { margin-top: 110px; padding-bottom: 44px; }
-	.lp-gallery-panel--bare .lp-mockup { margin-top: -70px; margin-bottom: 0; }
-}
-/* The links capsule is ~400px intrinsic; with the 56px mark and the LOG IN pill
-   the bar measures ~666px, so it clears 768 by barely 100px and one copy change
-   would break iPad portrait. Hand over to the drawer at 1024 instead, which is
-   also where both sibling sites switch.
 
-   Ordered deliberately: after the 1100 band, before the 760 one. */
+	.lp-hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 24px; }
+	.lp-plans { grid-template-columns: minmax(0, 1fr); max-width: 560px; margin-left: auto; margin-right: auto; }
+
+	/* Pills wrap under the label; each takes a third of the row. */
+	.lp-sol-select { flex-direction: column; gap: 8px; }
+	.lp-sol-label { line-height: 1.2; }
+	.lp-sol-pills { width: 100%; }
+	.lp-sol-opt { flex: 1 1 0; min-width: 0; }
+	.lp-sol-pill { width: 100%; padding: 0 12px; white-space: normal; text-align: center; }
+	.lp-sol-sizer { display: none; }
+}
+/* The links capsule plus the LOG IN pill need ~640px beside the lockup; hand
+   over to the drawer at 1024, where both sibling sites switch too. */
 @media (max-width: 1024px) {
 	.lp-nav-links { display: none; }
-	.lp-nav-mark img { height: 32px; }
-	/* The burger is the phone's menu; above 1024 the links are in the bar. */
 	.lp-nav-toggle { display: inline-flex; }
-	/* The CTA is desktop-only, as on sportstechx.com — the drawer carries it on
-	   a phone, and three controls plus a wordmark do not fit a 390 bar. */
-	.lp-nav-right .lp-btn--login { display: none; }
-	/* The button carried no width/height/padding, so the tap target was the
-	   26px glyph. */
-	/* 12, not 18: the toggle's 44px tap box now sets the bar's height, and the
-	   desktop padding on top of it built an 81px band across a phone. */
-	.lp-nav-inner { gap: 14px; padding-top: 12px; padding-bottom: 12px; }
+	/* Desktop-only, as on sportstechx.com: the drawer carries it on a phone. */
+	.lp-nav-right .lp-nav-login { display: none; }
+	.lp-nav-inner { gap: 14px; }
+	.lp-lockup { margin-right: auto; }
 }
 @media (max-width: 760px) {
 	.lp { --lp-pad: 22px; }
 
-	/* E3: the buttons had no mobile size at all. "APPLY FOR MEMBERSHIP" at 21px
-	   with 2.1px tracking and 68px of padding measures ~370px against the 342px
-	   a 390 screen leaves, and with white-space:nowrap inside a clipping parent
-	   it was simply cut off at both ends. */
-	.lp-btn { font-size: 15px; letter-spacing: 1.5px; height: 48px; padding: 0 20px; }
-	.lp-btn--sm { font-size: 14px; letter-spacing: 1.4px; height: 42px; padding: 0 16px; }
-	.lp-btn--ui { font-size: 16px; line-height: 20px; letter-spacing: 1.6px; height: 52px; padding: 0 22px; }
-
-	/* E6: the headings that never got a clamp. */
-	.lp-member-name { font-size: 28px; line-height: 34px; }
-	.lp-member-bio { font-size: 16px; line-height: 23px; }
+	.lp-btn { font-size: 14px; letter-spacing: 1.4px; height: 48px; padding: 0 20px; }
 	.lp-faq-q { font-size: 18px; line-height: 25px; gap: 14px; }
 	.lp-faq-a { font-size: 16px; line-height: 25px; }
-	.lp-trusted-head p { font-size: 16px; line-height: 27px; }
-	.lp-partner-name { font-size: 18px; }
-
-	/* E7: both of these are `white-space: nowrap` and only fit today because the
-	   rule element beside them collapses to zero width. One longer string and
-	   they overflow, so let them wrap and step the size down. */
-	.lp-howjoin-eyebrow span, .lp-rule-label span { white-space: normal; font-size: 17px; }
-	/* Specificity raised to match `.lp-hero--intro .lp-hero-inner` (0,2,0).
-	   As a bare `.lp-hero-inner` this rule was (0,1,0) and lost — media queries
-	   add no specificity — so the whole mobile hero padding shipped to nobody.
-	   The final hero's inline style was removed for the same reason. */
-	/* Symmetric: the intro hero centres this box in 100svh, so unequal top and
-	   bottom padding puts the content off-centre by half the difference. */
-	.lp-hero .lp-hero-inner { padding: 84px 20px; gap: 28px; }
-	/* Both CTAs to one width, so the pair reads as a block instead of two
-	   ragged pills. */
-	.lp-hero-ctas .lp-btn { min-width: 215px; }
 
 	/* Reframe the stage. Keyed to viewport HEIGHT it is 1267px wide on a 390
-	   phone, left-anchored with 69% overflowing — so the sphere's right limb
-	   (x=796) is always off-screen and all you ever see is its dark interior,
-	   which against #060a17 is indistinguishable from nothing. Keyed to WIDTH
-	   instead, the framing is constant across phone sizes and the limb lands on
-	   screen as a horizon across the lower third.
-	   The 1.50149 ratio is preserved exactly — see the LOAD-BEARING note on
-	   .lp-hero-bg; break it and the sphere draws twice. */
+	   phone, left-anchored with 69% overflowing, so the sphere's limb is always
+	   off-screen. Keyed to WIDTH the framing holds across phone sizes.
+	   The 1.50149 ratio is preserved exactly (see the LOAD-BEARING note on
+	   .lp-hero-bg; break it and the sphere draws twice). */
 	.lp-hero--intro .lp-hero-bg {
 		width: calc(100vw * 2.1);
 		height: calc(100vw * 2.1 / 1.50149);
 	}
-
-	/* The ring strokes run transparent -> pink left to right (the gradient fades
-	   in at user-space x=2493 and is only solid past 3554, the viewBox's right
-	   edge). At the desktop framing a phone sees the leftmost 380 of 921px —
-	   i.e. the invisible end — which is why the orbits simply were not there.
-	   Shifting left and widening brings the solid arcs across the frame. */
+	/* The ring strokes fade in from the left; shift and widen so the solid
+	   arcs cross a phone's frame. */
 	.lp-hero--intro .lp-hero-rings { left: -90%; width: 160%; filter: brightness(1.55); }
+	.lp .lp-hero-inner--compact { padding: 104px 20px 0; }
+	.lp-hero-wordmark--compact { width: 150px; }
+	.lp-hero-byline { font-size: 11px; letter-spacing: 0.12em; }
+	.lp-hero-lines { font-size: 44px; letter-spacing: 0.05em; }
+	.lp-hero--compact .lp-hero-ctas { flex-direction: column; align-items: stretch; width: 100%; max-width: 320px; margin-left: auto; margin-right: auto; }
+	.lp-hero-stats { margin-top: 44px; padding: 20px 0 28px; }
+	.lp-hero-stat { padding: 6px 14px; }
+	.lp-hero-stat dd { font-size: 36px; }
+	.lp-hero-stat dt { font-size: 12px; }
 
-	/* dvh, not svh. `100svh` is the viewport with the browser's toolbars SHOWN;
-	   once they collapse the visible area grows but the hero does not, so content
-	   centred inside it sits above the real centre by half the difference. dvh
-	   tracks the current viewport, so the centring holds in both states. This is
-	   invisible in headless Chrome, which has no collapsing chrome — it only
-	   shows up on a real phone. */
-	.lp-hero--intro { min-height: 100svh; min-height: 100dvh; }
-	.lp-hero-texts { gap: 20px; }
-	.lp-hero-ctas { gap: 12px; padding: 4px 0; }
-	.lp-hero-wordmark, .lp-hero-wordmark--sm { width: 200px; max-width: 62%; }
-
-	/* Every clamp() on this page pins to its MIN below ~700px — the vw term
-	   never engages on a phone, so these mins ARE the mobile type scale, and
-	   they were all desktop numbers. */
-	.lp-hero-headline { font-size: 30px; }
-	.lp-hero--final .lp-hero-headline { font-size: 26px; }
-	.lp-hero-sub { font-size: 17px; }
-	.lp-trusted-head h2, .lp-gallery-title, .lp-team-intro h2 { font-size: 24px; }
-	/* Trusted by tracks the product headline's size on mobile too. */
-	.lp-trusted-head h2 { font-size: 30px; }
-	.lp-howjoin-title { font-size: 30px; }
-	.lp-howjoin-desc, .lp-team-intro p, .lp-gallery-desc { font-size: 17px; }
-
-	/* Section rhythm: none of these verticals was ever reduced. */
-	.lp-trusted { padding: 56px 0 64px; }
-	.lp-trusted-head { margin-bottom: 32px; }
-	.lp-howjoin { padding: 56px 0 64px; }
-	.lp-testi { padding: 64px var(--lp-pad) 72px; }
-	.lp-team-inner { padding: 48px 0 64px; }
 	.lp-faq { padding: 56px 0 72px; }
 	.lp-faq h2 { margin-bottom: 32px; }
+	.lp-sol, .lp-pricing, .lp-closing { padding: 56px 0 64px; }
 
-	/* The chip had no mobile rule at all: a 69px avatar with a 7px ring is 83px
-	   of an 86%-wide (335px) card. */
-	.lp-chip { gap: 12px; margin-top: 24px; }
-	.lp-chip-avatar { width: 48px; height: 48px; box-shadow: 0 0 0 4px rgba(20, 18, 26, 0.045); }
-	.lp-chip-name { font-size: 18px; }
-	/* True bleed. `0 8px` left the rail 14px wider than every other section —
-	   neither inset nor full-bleed, which just reads as a misalignment. */
-	.lp-carousel { padding: 0; }
-	.lp-carousel-arrow { display: none; }
+	/* Pills stack full width; the hint sits under each. */
+	.lp-sol-pills { flex-direction: column; align-items: stretch; gap: 12px; }
+	.lp-sol-opt { gap: 4px; }
+	.lp-sol-hint { font-size: 13px; }
 
-	.lp-partner-logo { font-size: 20px; }
-	.lp-partner-logo--img { max-height: 28px; }
-	.lp-member { flex-direction: column; }
-	/* `flex: 0 0 auto` matters as much as the height. The base rule is
-	   `flex: 0 0 36.94%`, sized for a ROW; left in place once the card became a
-	   column that basis resolves against the card's HEIGHT — 36.94% of the
-	   248px min-height = 92px — and the text then overflowed the 248 box and was
-	   silently cut by the card's overflow:hidden. Measured: bio clipped 58px. */
-	.lp-member-photo { flex: 0 0 auto; width: 100%; height: 240px; align-self: auto; }
-	.lp-member-text { padding: 26px 22px 30px; }
-	/* One full quote per screen. An earlier version held the card back to 86%
-	   so the next one peeked, as a stand-in for the hidden arrows — but with no
-	   `gap` on the track the two quotes touched, and the peek was rejected on
-	   sight. Discoverability is deliberately traded away here: swipe is the only
-	   way through, and that is the call. */
-	.lp-testi-arrow { display: none; }
-	.lp-testi-track {
-		/* The track has no gap at any width, so without this the cards butt up
-		   against each other mid-swipe. */
-		gap: var(--lp-pad);
-		margin-left: calc(var(--lp-pad) * -1);
-		margin-right: calc(var(--lp-pad) * -1);
-		padding-left: var(--lp-pad);
-		padding-right: var(--lp-pad);
-		/* snap-start aligns to the scroll port, not the padding box, so without
-		   this every quote parks one gutter to the left of where it was padded. */
-		scroll-padding-left: var(--lp-pad);
-		/* A bled swipe rail sitting at scrollLeft 0 otherwise hands the gesture
-		   to the browser's back-navigation. */
-		overscroll-behavior-x: contain;
-		margin-top: 40px;
-	}
-	.lp-quote-wrap { flex: 0 0 100%; padding: 0; }
-	.lp-rule-label i { width: auto; flex: 1 1 0; min-width: 0; }
-	.lp-rule-label { gap: 14px; }
+
+	.lp-sol-head { padding: 28px 20px 0; }
+	.lp-sol-intro { font-size: 18px; }
+	.lp-sol-actions { align-items: flex-start; }
+	/* The deck becomes a stack: tabs turn horizontal, above and below. */
+	.lp-steps { flex-direction: column; padding: 24px 20px 28px; }
+	.lp-step-open { flex-direction: column; flex-wrap: nowrap; min-height: 0; padding: 20px; gap: 20px; }
+	.lp-step-text { flex: none; }
+	.lp-step-shot { flex: none; width: 100%; height: 220px; min-height: 0; }
+	.lp-step-tab { width: 100%; min-height: 0; flex-direction: row; padding: 12px 16px; gap: 14px; }
+	.lp-step-tab .lp-step-num { width: 36px; height: 36px; font-size: 13px; }
+	.lp-step-tab-label { writing-mode: horizontal-tb; }
+	.lp-experts, .lp-sol-testi { padding: 24px 20px; }
+	.lp-experts-title { font-size: 28px; }
+
+	.lp-plan { padding: 24px; }
+	.lp-plan-price { font-size: 52px; }
+	.lp-closing-btn { width: 100%; max-width: 320px; justify-content: center; }
+
 	.lp-footer-cols { grid-template-columns: 1fr; gap: 32px; }
 	.lp-footer-desc { font-size: 17px; line-height: 26px; }
 	.lp-footer-h { font-size: 20px; line-height: 26px; }
 	.lp-footer-links a { font-size: 16px; line-height: 28px; }
-	/* The spacer column would otherwise take a whole row once stacked. */
-	.lp-footer-cols > :nth-child(2) { display: none; }
-	.lp-gallery { padding: 56px var(--lp-pad) 150px; }
-	.lp-gallery-panel { padding: 40px 20px 0; border-radius: 10px; }
-	.lp-mockup { height: 320px; aspect-ratio: auto; margin-top: 32px; margin-bottom: -110px; }
-	.lp-gallery--light { padding: 56px var(--lp-pad) 70px; }
-	.lp-gallery-panel--bare { margin-top: 70px; padding: 0 20px 28px; }
-	.lp-gallery-panel--bare .lp-mockup { margin-top: -46px; margin-bottom: 0; }
-	.lp-mockup-bar { height: 56px; padding: 0 18px; }
-	/* 8 skeleton rows is the CONNECT tab's count and it did not fit: 8 x (10 +
-	   20 gap) + 52 padding = 292px inside a 264px box, silently cut by the
-	   mockup's overflow:hidden. Tightening the rows fits it at 174px without
-	   making the row count responsive. */
-	.lp-mockup-body { padding: 20px 16px; gap: 14px; }
-	.lp-sk { height: 8px; }
-	.lp-seg-btn { font-size: 13px; }
-	.lp-seg-btn { min-width: 0; padding: 0 14px; }
-
-	/* Tier deck: scale the overlap and the collapsed heights down with the card.
-	   Both --open rules need min-height: 0 or the open card cannot shrink. */
-	.lp-tier { min-height: 176px; margin-top: -64px; padding: 24px 22px; }
-	.lp-stack > .lp-tier:first-child { min-height: 112px; }
-	.lp-stack > .lp-tier[data-pos='below'] { padding-top: 92px; }
-	.lp-stack > .lp-tier[data-pos='above'] { min-height: 176px; padding-bottom: 88px; }
-	.lp-stack > .lp-tier[data-pos='above']:has(+ .lp-tier--open) { min-height: 134px; padding-bottom: 46px; }
-	.lp-stack > .lp-tier.lp-tier--open { min-height: 0; }
-	/* Same reasoning as the desktop rule; the base overlap here is -64. */
-	.lp-stack > .lp-tier.lp-tier--open:not(:first-child) { margin-top: -22px; }
-	.lp-tier-brand img { width: 118px; }
-	.lp-tier-body { margin-top: 44px; }
-	.lp-tier-sub { font-size: 32px; line-height: 32px; margin-bottom: 16px; }
-	.lp-points { gap: 16px; }
-	.lp-howjoin-grid { gap: 44px; }
+	.lp-carousel { padding: 0; }
+	.lp-carousel-arrow { display: none; }
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────────────────── */
@@ -1008,19 +900,19 @@ html:has(.lp)::-webkit-scrollbar-thumb:hover {
 }
 
 /* ---- Long-form pages (terms, privacy) ---------------------------------
-   White ground like the testimonials and footer sections, Kepler for the
-   prose and Zuume for the headings - the landing page's own editorial voice.
+   White ground like the footer, New Frank for the prose and Bebas Neue for
+   the headings.
    The column is capped at a reading measure: --lp-max is 2200px, a poster
    width. Top padding clears the fixed nav. */
 /* The nav is drawn for the dark hero - a white mark, white links. A long-form
    page has a white ground, so it wears the scrolled glass from the start
    instead of only after a scroll, or the whole bar is white on white. */
 .lp-solid-nav .lp-nav {
-	background: rgba(8, 11, 24, 0.8);
-	-webkit-backdrop-filter: blur(24px) saturate(150%);
-	backdrop-filter: blur(24px) saturate(150%);
-	border-bottom-color: rgba(255, 255, 255, 0.1);
-	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+	translate: 0 0;
+	padding: 12px 0;
+	background-image: linear-gradient(to bottom, rgba(6, 10, 23, 0.92), rgba(6, 10, 23, 0.78));
+	-webkit-backdrop-filter: blur(11.6px);
+	backdrop-filter: blur(11.6px);
 }
 
 .lp-legal { background: #ffffff; color: var(--lp-ink); padding: 168px var(--lp-pad) 140px; }
@@ -1047,16 +939,4 @@ html:has(.lp)::-webkit-scrollbar-thumb:hover {
 	.lp-legal-body { margin-top: 44px; gap: 34px; }
 	.lp-legal h2 { font-size: 23px; }
 	.lp-legal p, .lp-legal li { font-size: 17px; }
-}
-
-/* ── Tier switcher on a narrow phone ──────────────────────────────────────
- * At the desktop size the capsule measures 376px, so it cannot fit a 375 or 320
- * viewport once the page gutter is off, and it was wrapping to two rows inside
- * a 99px radius. Everything scales down instead: 12px type, tighter padding and
- * a smaller dot bring it to roughly 250px, which clears 320.
- * ========================================================================= */
-@media (max-width: 480px) {
-	.lp-howjoin .lp-switcher { gap: 2px; padding: 4px; }
-	.lp-switch-tag { font-size: 12px; padding: 8px 11px; gap: 7px; letter-spacing: 0.04em; }
-	.lp-switch-tag .dot { width: 9px; height: 9px; border-radius: 2px; }
 }

@@ -90,7 +90,7 @@ export const SOLUTIONS: Solution[] = [
 		heroLine: 'Map the market',
 		closingCta: 'Explore for free',
 		intro: 'Map the sports tech market, research companies and investors, and access industry reports, programs and events.',
-		ctas: [{ label: 'Start free', href: ATLAS_LINKS.signup }],
+		ctas: [{ label: 'Sign up for free', href: ATLAS_LINKS.signup }],
 		steps: [
 			{
 				label: 'MAP',

@@ -49,9 +49,8 @@ export type SolutionShots = Partial<Record<SolutionId, SiteItem[]>>;
  * Solutions: one platform, three ways in.
  *
  * "I WANT TO" plus three pills picks a solution; the matching card shows below.
- * All three cards sit in one grid cell and stretch to fill it, so the section
- * is always as tall as the tallest card and switching never moves the page.
- * The hidden ones are inert and out of the reading order.
+ * Each card takes its own height (the step decks all match; Raise runs longer
+ * for its experts strip). The hidden ones are not displayed and are inert.
  *
  * Anything else on the page (header drop-down, hero lines, closing CTA,
  * footer) opens a card by dispatching `atlas:solution`.

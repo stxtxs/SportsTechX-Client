@@ -2,55 +2,72 @@
 
 /* eslint-disable @next/next/no-img-element */
 import { useState, type CSSProperties } from 'react';
+import { Check } from 'lucide-react';
 import { ATLAS_LINKS, SOLUTIONS, type SolutionId } from '@/components/landing/atlas-solutions';
 
 type Plan = {
 	id: SolutionId;
+	/** Small label above the lockup, as on the Solutions cards. */
+	audience: string;
+	/** One line under the lockup. */
+	pitch: string;
 	price: string;
 	period: string;
 	credits: string;
 	creditsUnit: string;
 	creditsNote: string;
-	pitch: string;
 	ticks: string[];
 	cta: { label: string; href: string; primary?: boolean };
 	/** Raise: guarantee line. Scout: secondary demo link. */
 	extra?: { label: string; href?: string };
 };
 
+const EVERYTHING_IN_EXPLORE = 'Everything in Explore';
+const FULL_ACCESS = 'Full Access to 13k+ Companies, Programs & Investors';
+
 const PLANS: Plan[] = [
 	{
 		id: 'explore',
+		audience: 'For everyone',
+		pitch: 'Insights and resources to explore the sports tech ecosystem.',
 		price: '€0',
 		period: 'Free forever',
 		credits: '300',
 		creditsUnit: 'welcome credits',
 		creditsNote: 'One-time on sign-up · Top up anytime',
-		pitch: 'Understand and explore the sports tech market.',
-		ticks: [],
-		cta: { label: 'Start free', href: ATLAS_LINKS.signup },
+		ticks: [
+			'30+ Industry Reports',
+			'Weekly Newsletter',
+			'Deal Flow Dashboard',
+			'Monthly Investment Roundup incl. Archive',
+			'Events Directory',
+			'Limited Access to 13k+ Companies, Programs & Investors',
+		],
+		cta: { label: 'Sign up for free', href: ATLAS_LINKS.signup },
 	},
 	{
 		id: 'raise',
+		audience: 'For founders',
+		pitch: 'Investor intelligence and tools to support your fundraising journey.',
 		price: '€720',
 		period: 'Per 6 months',
 		credits: '2,000',
 		creditsUnit: 'credits / month',
 		creditsNote: 'Reloaded to your account each month',
-		pitch: 'Investor targeting for founders raising capital.',
-		ticks: ['Active investors', 'Screen by thesis', 'Deal history'],
+		ticks: [EVERYTHING_IN_EXPLORE, FULL_ACCESS, 'Active Investors', 'Screen by Thesis', 'Deal History'],
 		cta: { label: 'Get Atlas Raise', href: ATLAS_LINKS.raiseCheckout, primary: true },
 		extra: { label: '30-day money-back guarantee' },
 	},
 	{
 		id: 'scout',
+		audience: 'For investors & accelerators',
+		pitch: 'Live fundraising opportunities and intelligence to support due diligence.',
 		price: '€2,500',
 		period: 'Per year',
 		credits: '5,000',
 		creditsUnit: 'credits / month',
 		creditsNote: 'Reloaded to your account each month',
-		pitch: 'Deal flow and screening for investors.',
-		ticks: ['Matched to your thesis', 'Verified raises', 'Deck screening'],
+		ticks: [EVERYTHING_IN_EXPLORE, FULL_ACCESS, 'Matched to Your Thesis', 'Verified Raises', 'Deck Screening'],
 		cta: { label: 'Get Atlas Scout', href: ATLAS_LINKS.scoutCheckout },
 		extra: { label: 'Or book a demo →', href: ATLAS_LINKS.bookDemo },
 	},
@@ -98,10 +115,14 @@ export function Pricing() {
 								className={`lp-plan${p.cta.primary ? ' lp-plan--featured' : ''}`}
 								style={{ '--sol': s.colour, '--sol-fill': s.fill } as CSSProperties}
 							>
-								<span className="lp-plan-brand" aria-label={`Atlas ${s.name}`}>
-									<img src="/landing/atlas-wordmark-dark.svg" alt="" />
-									<em>{s.name}</em>
-								</span>
+								<div>
+									<p className="lp-plan-aud">{p.audience}</p>
+									<span className="lp-plan-brand" aria-label={`Atlas ${s.name}`}>
+										<img src="/landing/atlas-wordmark-dark.svg" alt="" />
+										<em>{s.name}</em>
+									</span>
+									<p className="lp-plan-pitch">{p.pitch}</p>
+								</div>
 								<div>
 									<p className="lp-display lp-plan-price">{p.price}</p>
 									<p className="lp-plan-period">{p.period}</p>
@@ -111,12 +132,11 @@ export function Pricing() {
 									<p className="lp-plan-credits-unit">{p.creditsUnit}</p>
 									<p className="lp-plan-credits-note">{p.creditsNote}</p>
 								</div>
-								<p className="lp-plan-pitch">{p.pitch}</p>
 								{p.ticks.length > 0 && (
 									<ul className="lp-plan-ticks">
 										{p.ticks.map((t) => (
 											<li key={t}>
-												<span aria-hidden>✓</span>
+												<Check aria-hidden size={18} strokeWidth={2.25} />
 												{t}
 											</li>
 										))}

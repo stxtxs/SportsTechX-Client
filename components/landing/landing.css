@@ -319,42 +319,55 @@ body:has(.lp) {
 /* ── Trusted by ────────────────────────────────────────────────────────── */
 .lp-cream { background: var(--lp-cream); color: var(--lp-ink); }
 .lp-faq.lp-cream { background: var(--lp-faq-bg); }
-/* Requested: this one section is white. Trusted-by above it stays cream, so the
-   edge between them is deliberate. */
-.lp-trusted { padding: 96px 0 104px; }
-.lp-trusted-head { text-align: center; margin: 0 auto 52px; }
-.lp-trusted-head h2 { font-family: var(--lp-display-stack); font-weight: 400; text-transform: uppercase; font-size: clamp(40px, 5.69vw, 86px); line-height: 1; letter-spacing: 0.1em; margin: 0 0 16px; color: var(--lp-ink-heading); }
-.lp-trusted-head p { color: var(--lp-ink-soft); font-size: 18px; font-weight: 500; line-height: 31px; margin: 0 auto; max-width: 720px; }
+/* sportstechx.com format: left-aligned Bebas title (72 × 0.72) over an
+   uppercase New Frank subtitle at 70%, then two rails of partner cards. */
+.lp-trusted { padding: clamp(48px, 36.41px + 2.883vw, 80px) 0; }
+.lp-trusted-head { display: flex; flex-direction: column; gap: 10px; }
+.lp-trusted-head h2 { margin: 0; font-family: var(--lp-display-stack); font-weight: 400; text-transform: uppercase; font-size: clamp(35px, 28.3px + 1.557vw, 52px); line-height: 1.1; letter-spacing: 0.1em; color: var(--lp-navy); }
+.lp-trusted-head p { margin: 0; font-family: var(--lp-sans); font-size: clamp(17px, 15.9px + 0.254vw, 20px); font-weight: 500; line-height: 1.5; text-transform: uppercase; color: rgba(9, 21, 57, 0.7); }
+.lp-trusted-rows { margin-top: 21px; display: flex; flex-direction: column; gap: 11px; }
 
-/* Auto-scrolling partner carousel. Design: 210px card on a 286px stride, with a
-   dashed divider sitting in the middle of each 76px gap. */
+/* Auto-scrolling partner rails. Each card is preceded by a hairline, with 37px
+   either side of it on desktop. */
 .lp-carousel { position: relative; max-width: var(--lp-shell); margin: 0 auto; padding: 0 var(--lp-pad); }
 .lp-carousel-viewport { overflow: hidden; }
 /* Pure-CSS marquee: the track holds the list twice, so translating it by
-   exactly -50% lands on an identical frame and the loop is seamless. Composited
-   by the browser, so unlike a rAF + scrollLeft loop it cannot stall. */
+   exactly -50% lands on an identical frame and the loop is seamless. */
 .lp-carousel-marquee { display: flex; width: max-content; animation-name: lp-marquee; animation-timing-function: linear; animation-iteration-count: infinite; will-change: transform; }
+.lp-carousel-marquee.is-ltr { animation-direction: reverse; }
 @keyframes lp-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-/* Cards already fill the rail: no loop, no copies, just centre them. */
-.lp-carousel-marquee.is-static { animation: none; width: 100%; justify-content: center; }
+/* Cards already fit the rail: no loop, no copies, left-aligned as on the homepage. */
+.lp-carousel-marquee.is-static { animation: none; width: 100%; justify-content: flex-start; }
 .lp-carousel:hover .lp-carousel-marquee { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) { .lp-carousel-marquee { animation: none; } }
-.lp-partner { flex: 0 0 286px; padding: 0 38px; position: relative; }
-.lp-partner::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 1px dashed rgba(20, 18, 26, 0.18); }
-.lp-partner-photo { position: relative; height: 232px; border-radius: 10px; overflow: hidden; }
-/* A flat dim over the whole photo. The marks that sit on these are white,
-   and a light headshot swallows one — the ::after gradient only darkens the
-   bottom strip, which is not enough once a real logo is wider than the
-   wordmark it replaces. Below the logo, which carries z-index: 2. */
-.lp-partner-photo::after { content: ""; position: absolute; inset: auto 0 0 0; height: 72px; background: linear-gradient(to top, rgba(8, 10, 18, 0.9), rgba(8, 10, 18, 0)); }
-.lp-partner-logo { position: absolute; left: 0; right: 0; bottom: 15px; z-index: 2; text-align: center; color: #fff; font-family: var(--lp-display-stack); font-weight: 700; font-size: 25px; letter-spacing: 0.04em; line-height: 1; }
-/* grayscale because the marks have to read as one set. Sourcing B&W files was
-   the standing ask, but uploads arrive in whatever the company publishes —
-   doing it here makes the rule hold regardless. */
-.lp-partner-logo--img { display: block; width: auto; height: auto; max-width: 40%; max-height: 36px; margin: 0 auto; object-fit: contain; filter: grayscale(1); }
-.lp-partner-name { margin-top: 16px; text-align: center; font-family: var(--lp-display-stack); font-weight: 400; text-transform: uppercase; font-size: 19px; line-height: 1.2; letter-spacing: 0.06em; color: var(--lp-ink); }
-.lp-partner-title { margin-top: 4px; text-align: center; font-family: var(--lp-mono), monospace; font-size: 13px; letter-spacing: 0; line-height: 1.4; color: var(--lp-ink-soft); }
-.lp-carousel-arrow { position: absolute; top: 116px; transform: translateY(-50%); z-index: 3; background: none; border: none; cursor: pointer; color: var(--lp-ink-soft); padding: 6px; line-height: 0; transition: color 0.12s ease; }
+.lp-partner { flex: 0 0 auto; width: 170px; padding: 0 6px; position: relative; }
+.lp-partner-photo { position: relative; height: 175px; border-radius: 7px; overflow: hidden; }
+/* Bottom scrim, #454545 transparent to #232529, so the white marks read. */
+.lp-partner-photo::after { content: ""; position: absolute; inset: auto 0 0 0; height: 55px; background: linear-gradient(to bottom, rgba(69, 69, 69, 0), #232529); }
+.lp-partner-logo { position: absolute; left: 0; right: 0; bottom: 11px; z-index: 2; text-align: center; color: #fff; font-family: var(--lp-sans); font-weight: 700; font-size: 14px; letter-spacing: -0.02em; line-height: 1; }
+.lp-partner-logo--img { display: block; width: auto; height: auto; max-width: 40%; max-height: 26px; margin: 0 auto; object-fit: contain; filter: grayscale(1); }
+.lp-partner-name { margin-top: 6px; text-align: center; font-family: var(--lp-sans); font-weight: 500; font-size: 13px; line-height: 18px; color: var(--lp-ink); }
+.lp-partner-title { text-align: center; font-family: var(--lp-mono), monospace; font-size: 11px; line-height: 16px; color: #828282; }
+@media (min-width: 640px) {
+	.lp-partner { width: 183px; }
+	.lp-partner-photo { height: 191px; }
+}
+@media (min-width: 1025px) {
+	.lp-trusted-rows { margin-top: 86px; gap: 38px; }
+	/* Fade the rail into the band at each edge, as the homepage does. */
+	.lp-carousel-viewport { --edge: 29px; mask-image: linear-gradient(to right, transparent 0, #000 var(--edge), #000 calc(100% - var(--edge)), transparent 100%); }
+	.lp-carousel-marquee { padding: 4px 0; }
+	.lp-partner { width: 246px; padding: 0 37px 0 38px; }
+	.lp-partner::before { content: ""; position: absolute; left: 0; top: 50%; height: 264px; translate: 0 -50%; border-left: 1px solid #b6b6b6; }
+	.lp-partner-photo::after { height: 72px; }
+	.lp-partner-logo { bottom: 15px; font-size: 19px; }
+	.lp-partner-logo--img { max-height: 36px; }
+}
+@media (min-width: 1280px) {
+	.lp-partner { width: 285px; }
+	.lp-partner-photo { height: 232px; }
+}
+.lp-carousel-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 3; background: none; border: none; cursor: pointer; color: var(--lp-ink-soft); padding: 6px; line-height: 0; transition: color 0.12s ease; }
 .lp-carousel-arrow:hover { color: var(--lp-ink); }
 .lp-carousel-arrow--prev { left: max(2px, calc(var(--lp-pad) - 42px)); }
 .lp-carousel-arrow--next { right: max(2px, calc(var(--lp-pad) - 42px)); }
@@ -412,13 +425,15 @@ body:has(.lp) {
 .lp-sol-pill:active { scale: 0.97; }
 .lp-sol-hint { font-family: var(--lp-sans); font-size: 14px; color: #5d6070; text-align: center; }
 
-/* All three cards share one grid cell, so the stack is always as tall as the
-   tallest card and switching never moves the page. */
-.lp-sol-stack { margin-top: 20px; display: grid; grid-template-columns: minmax(0, 1fr); }
-.lp-sol-slot { grid-area: 1 / 1; display: flex; opacity: 0; translate: 0 6px; visibility: hidden; transition: opacity 0.25s ease, translate 0.25s ease, visibility 0s linear 0.25s; }
-.lp-sol-slot.is-shown { opacity: 1; translate: 0 0; visibility: visible; transition-delay: 0s; }
+/* Each card takes its own height: the step decks match (Raise's height suits
+   the screenshots), and Raise alone runs longer for its experts strip. The
+   hidden cards take no space, and the shown one fades in. */
+.lp-sol-stack { margin-top: 20px; }
+.lp-sol-slot { display: none; }
+.lp-sol-slot.is-shown { display: flex; animation: lp-sol-in 0.25s ease; }
+@keyframes lp-sol-in { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
 @media (prefers-reduced-motion: reduce) {
-	.lp-sol-slot { transition: none; translate: none; }
+	.lp-sol-slot.is-shown { animation: none; }
 }
 
 .lp-sol-card {
@@ -448,8 +463,7 @@ body:has(.lp) {
 .lp-sol-note { margin: 10px 0 0; font-family: var(--lp-mono), monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255, 255, 255, 0.75); }
 
 /* Step deck: the open step grows, the others collapse into numbered tabs. */
-/* flex: 1 so a shorter card (no experts strip) grows its deck, not a gap. */
-.lp-steps { flex: 1; padding: 32px 44px 44px; display: flex; gap: 12px; }
+.lp-steps { padding: 32px 44px 44px; display: flex; gap: 12px; }
 .lp-step-open {
 	flex: 1 1 auto; min-width: 0; min-height: 420px; padding: 32px;
 	display: flex; flex-wrap: wrap; gap: 32px;
@@ -464,10 +478,11 @@ body:has(.lp) {
 .lp-step-bullets li { display: flex; gap: 12px; align-items: baseline; }
 .lp-step-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--sol-accent); translate: 0 -2px; }
 .lp-step-shot { position: relative; flex: 1.3 1 360px; min-width: 0; min-height: 300px; border-radius: 12px; overflow: hidden; background: #fff; display: flex; }
-/* The CMS screenshots are the old gallery slides: the step's copy on the left
-   half, the dashboard on the right. Show only the dashboard half, since the
-   copy is already in the card. A plain screenshot crops the same way. */
-.lp .lp-step-shot > img { position: absolute; right: -4%; top: 50%; width: 196%; max-width: none; height: auto; translate: 0 -42%; }
+/* The CMS screenshots are the old gallery slides: the step's copy on the left,
+   the dashboard in the right ~58%, running off the bottom edge. Show that
+   strip only (172% wide, shifted left by 40% of the image, top kept), since the
+   copy is already in the card. Plain dashboard screenshots would replace this. */
+.lp .lp-step-shot > img { position: absolute; left: -69%; top: 0; width: 172%; max-width: none; height: auto; translate: 0 -4%; }
 .lp-step-shot-fallback { flex: 1; display: grid; place-items: center; }
 .lp-step-shot-fallback img { width: 64px; opacity: 0.2; }
 .lp-step-tab {
@@ -509,8 +524,9 @@ body:has(.lp) {
 .lp-plan { border-radius: 18px; border: 1px solid #e2ded6; background: #fafaf8; padding: 32px; display: flex; flex-direction: column; gap: 20px; transition: translate 0.2s ease, box-shadow 0.2s ease; }
 .lp-plan:hover { translate: 0 -3px; box-shadow: 0 14px 30px rgba(9, 21, 57, 0.08); }
 .lp-plan--featured { border: 1.5px solid #3b435e; }
-.lp-plan-brand { display: flex; align-items: flex-start; gap: 6px; height: 56px; }
-.lp-plan-brand img { width: 104px; height: auto; margin-top: 14px; }
+.lp-plan-aud { margin: 0; font-family: var(--lp-mono), monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #5d6070; }
+.lp-plan-brand { margin-top: 12px; display: flex; align-items: flex-start; gap: 6px; }
+.lp-plan-brand img { width: 104px; height: auto; margin-top: 4px; }
 .lp-plan-brand em { font-family: var(--lp-serif); font-style: italic; font-size: 22px; line-height: 22px; letter-spacing: 0.1em; color: var(--sol); }
 .lp-plan-price { font-size: 60px; line-height: 1; letter-spacing: 0.02em; }
 .lp-plan-period, .lp-plan-credits-note { margin: 6px 0 0; font-family: var(--lp-mono), monospace; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #5d6070; }
@@ -518,10 +534,11 @@ body:has(.lp) {
 .lp-plan-credits-n { margin: 0; font-size: 20px; font-weight: 500; }
 .lp-plan-credits-unit { margin: 2px 0 0; font-size: 18px; }
 .lp-plan-credits .lp-plan-credits-note { font-size: 11px; letter-spacing: 0.08em; }
-.lp-plan-pitch { margin: 0; font-family: var(--lp-sans); font-size: 18px; line-height: 1.45; color: #2e3447; }
-.lp-plan-ticks { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; font-family: var(--lp-sans); font-size: 17px; color: #2e3447; }
-.lp-plan-ticks li { display: flex; gap: 10px; align-items: baseline; }
-.lp-plan-ticks span { color: var(--sol-fill); }
+.lp-plan-pitch { margin: 12px 0 0; font-family: var(--lp-sans); font-size: 18px; line-height: 1.45; color: #2e3447; }
+.lp-plan-ticks { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; font-family: var(--lp-sans); font-size: 17px; line-height: 1.4; color: #2e3447; }
+.lp-plan-ticks li { display: flex; gap: 12px; align-items: flex-start; }
+/* Green ticks on every plan, as on the previous pricing page. */
+.lp-plan-ticks svg { flex: none; margin-top: 2px; color: #1f9e6e; }
 .lp-plan-foot { margin-top: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .lp-plan-cta {
 	display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px;
@@ -763,8 +780,6 @@ a.lp-plan-extra:hover { text-decoration: underline; }
 	.lp-btn { font-size: 14px; letter-spacing: 1.4px; height: 48px; padding: 0 20px; }
 	.lp-faq-q { font-size: 18px; line-height: 25px; gap: 14px; }
 	.lp-faq-a { font-size: 16px; line-height: 25px; }
-	.lp-trusted-head p { font-size: 16px; line-height: 27px; }
-	.lp-partner-name { font-size: 18px; }
 
 	/* Reframe the stage. Keyed to viewport HEIGHT it is 1267px wide on a 390
 	   phone, left-anchored with 69% overflowing, so the sphere's limb is always
@@ -789,9 +804,6 @@ a.lp-plan-extra:hover { text-decoration: underline; }
 	.lp-hero-stat dd { font-size: 36px; }
 	.lp-hero-stat dt { font-size: 12px; }
 
-	.lp-trusted-head h2 { font-size: 30px; }
-	.lp-trusted { padding: 56px 0 64px; }
-	.lp-trusted-head { margin-bottom: 32px; }
 	.lp-faq { padding: 56px 0 72px; }
 	.lp-faq h2 { margin-bottom: 32px; }
 	.lp-sol, .lp-pricing, .lp-closing { padding: 56px 0 64px; }
@@ -801,10 +813,6 @@ a.lp-plan-extra:hover { text-decoration: underline; }
 	.lp-sol-opt { gap: 4px; }
 	.lp-sol-hint { font-size: 13px; }
 
-	/* One column: matching heights would open a tall gap inside the shorter
-	   cards, so each card takes its own height and fades in on its own. */
-	.lp-sol-slot:not(.is-shown) { display: none; }
-	.lp-sol-slot.is-shown { animation: lp-step-in 0.25s ease; }
 
 	.lp-sol-head { padding: 28px 20px 0; }
 	.lp-sol-intro { font-size: 18px; }
@@ -830,8 +838,6 @@ a.lp-plan-extra:hover { text-decoration: underline; }
 	.lp-footer-links a { font-size: 16px; line-height: 28px; }
 	.lp-carousel { padding: 0; }
 	.lp-carousel-arrow { display: none; }
-	.lp-partner-logo { font-size: 20px; }
-	.lp-partner-logo--img { max-height: 28px; }
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────────────────── */

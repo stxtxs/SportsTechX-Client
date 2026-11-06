@@ -108,7 +108,10 @@ export function Solutions({
 									className="lp-sol-pill"
 									aria-pressed={active === s.id}
 									style={{ '--sol-fill': s.fill } as CSSProperties}
-									onClick={() => setActive(s.id)}
+									onClick={() => {
+										setActive(s.id);
+										history.replaceState(null, '', `#${s.id}`);
+									}}
 								>
 									{/* The visible label and an invisible copy of the longest
 									    one share a cell, so every pill holds one width. */}

@@ -22,6 +22,11 @@ if (!BACKEND_URL) {
 }
 
 const nextConfig: NextConfig = {
+  // Only NEXT_PUBLIC_* reaches the browser; the PostHog key is stored on Vercel
+  // as NEXT_POSTHOG_KEY. It is a public project token (phc_…), not a secret.
+  env: {
+    NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY || process.env.NEXT_POSTHOG_KEY,
+  },
   // Dev only: let Cloudflare quick-tunnel links (cloudflared) load dev assets/HMR.
   allowedDevOrigins: ['*.trycloudflare.com'],
   // The onboarding page is gone; confirmation emails already sent still carry

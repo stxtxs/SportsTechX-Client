@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 	// One page-view call for the whole signed-in product. Every /app route
 	// renders inside this shell, so this is the single place that covers them
 	// without 39 per-page calls to keep in sync. No-ops until
-	// NEXT_PUBLIC_MIXPANEL_TOKEN is set.
+	// NEXT_PUBLIC_POSTHOG_KEY is set.
 	useEffect(() => { trackPage(pathname); }, [pathname]);
 	const { ready, tier, nav, homePath, accountPath } = useNav();
 	// Server pushes (claim verified, plan changed, notifications) → fresh screens.

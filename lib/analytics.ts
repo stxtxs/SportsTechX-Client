@@ -4,7 +4,8 @@ import type { PostHog } from 'posthog-js';
 
 /**
  * PostHog (EU Cloud) wrapper. Initialised at app boot from the providers tree
- * once NEXT_PUBLIC_POSTHOG_KEY is set; a no-op otherwise, so dev environments
+ * once NEXT_PUBLIC_POSTHOG_KEY is set (next.config maps Vercel's
+ * NEXT_POSTHOG_KEY onto it); a no-op otherwise, so dev environments
  * without the key don't send anything.
  *
  * Consent, without a banner: an anonymous visitor is tracked in MEMORY only
@@ -15,8 +16,8 @@ import type { PostHog } from 'posthog-js';
  * Free tier: no card on the PostHog org = hard caps, never a bill. Kept lean:
  * person profiles for identified users only, no page-leave events, no surveys.
  *
- * Call `track(Events.x, …)` directly. Wired today: page views (app shell),
- * sign in, sign out, company opened, checkout started, plus PostHog's
+ * Call `track(Events.x, …)` directly. Wired today: page views (automatic, every
+ * route), sign in, sign out, company opened, checkout started, plus PostHog's
  * autocapture of clicks. `Events` lists the agreed names for the rest.
  */
 
@@ -44,7 +45,8 @@ export function initAnalytics(): void {
 					ui_host: 'https://eu.posthog.com',
 					persistence: signedIn() ? 'localStorage+cookie' : 'memory',
 					person_profiles: 'identified_only',
-					capture_pageview: false, // the app shell sends $pageview per route
+					// Every route, public pages included (client-side navigations too).
+					capture_pageview: 'history_change',
 					capture_pageleave: false,
 					disable_surveys: true,
 					// Replay is for signed-in users only: started in identify().
@@ -86,16 +88,10 @@ export function track(event: string, props?: Record<string, unknown>): void {
 	withPh((p) => p.capture(event, props));
 }
 
-export function trackPage(path: string, title?: string): void {
-	if (!initialized) return;
-	withPh((p) => p.capture('$pageview', { $current_url: window.location.href, path, title }));
-}
-
 /** Canonical event names so we don't typo at call sites. */
 export const Events = {
 	signedIn: 'signed_in',
 	signedOut: 'signed_out',
-	pageViewed: 'page_viewed',
 	companySearched: 'company_searched',
 	companyOpened: 'company_opened',
 	dealOpened: 'deal_opened',

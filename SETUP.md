@@ -32,7 +32,7 @@ BACKEND_URL=http://localhost:5000
 Optional (only set if you're working on the related feature):
 
 ```bash
-NEXT_PUBLIC_POSTHOG_KEY=
+NEXT_POSTHOG_KEY=
 NEXT_PUBLIC_INTERCOM_APP_ID=
 NEXT_PUBLIC_SENTRY_DSN=
 ```

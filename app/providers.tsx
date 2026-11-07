@@ -34,8 +34,8 @@ function AppInit() {
   useEffect(() => {
     if (sessionValid && profile?.id) {
       identify(profile.id, {
-        $email: profile.email ?? undefined,
-        $name: profile.display_name ?? undefined,
+        email: profile.email ?? undefined,
+        name: profile.display_name ?? undefined,
         tier: profile.user_type ?? 'explore',
       });
     } else if (!sessionValid) {

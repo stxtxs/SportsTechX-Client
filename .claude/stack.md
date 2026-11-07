@@ -17,7 +17,7 @@ One-page table. Versions track `package.json` at the time of writing; check ther
 | Validation | zod | ^4 | shared with the backend's DTO style |
 | Auth | @supabase/supabase-js + @supabase/ssr | ^2 / ^0.10 | SDK in [lib/supabase/client.ts](../lib/supabase/client.ts); cookie-bridging in [lib/supabase/server.ts](../lib/supabase/server.ts) |
 | Realtime / SSE | — | — | not used from client yet; backend exposes `/api/events` |
-| Analytics | mixpanel-browser | ^2 | identify on sign-in, reset on sign-out — see [lib/analytics.ts](../lib/analytics.ts) |
+| Analytics | posthog-js (EU) | ^1 | memory-only until sign-in; identify + masked replay on sign-in, reset on sign-out — see [lib/analytics.ts](../lib/analytics.ts) |
 | Support widget | Intercom (via HMAC hash from backend) | — | `GET /api/integrations/intercom/hash` then bootstrap the widget |
 | Toasts | sonner | ^2 | mounted in [app/providers.tsx](../app/providers.tsx); `richColors`, top-right |
 | Tooltips | @radix-ui/react-tooltip + shadcn wrapper | — | global provider, `delayDuration: 300` |

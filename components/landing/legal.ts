@@ -507,7 +507,7 @@ export const privacyPolicy: LegalDoc = {
 			level: 3,
 			heading: 'Website Analytics',
 			blocks: [
-				{ kind: 'p', text: 'We use Google Analytics to analyze website usage. This service uses cookies to collect anonymous information about how visitors use our site. The information generated about your use of the website is transmitted to and stored by Google on servers in the United States.' },
+				{ kind: 'p', text: 'We use PostHog (hosted in the European Union, Frankfurt) to understand how the platform is used. For visitors who are not signed in, usage is measured without cookies or other storage on your device. Once you sign in, PostHog stores an identifier in a cookie and local storage so we can link your usage to your account, and may record your sessions to help us improve the product; text you type into forms is masked and never recorded.' },
 			],
 		},
 		{
@@ -736,7 +736,7 @@ export const privacyPolicy: LegalDoc = {
 					items: [
 						{ text: 'Payment processors (Stripe) for membership fee transactions' },
 						{ text: 'Database and hosting providers (Supabase)' },
-						{ text: 'Analytics services (Google Analytics, Mixpanel)' },
+						{ text: 'Product analytics (PostHog, EU-hosted)' },
 						{ text: 'Customer support platforms (Intercom)' },
 						{ text: 'Customer relationship management (Attio)' },
 						{ text: 'Company logo enrichment (Clearbit)' },

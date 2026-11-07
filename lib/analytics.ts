@@ -1,51 +1,58 @@
 'use client';
 
-import type mixpanelType from 'mixpanel-browser';
+import type { PostHog } from 'posthog-js';
 
-type MP = typeof mixpanelType;
+/**
+ * PostHog (EU Cloud) wrapper. Initialised at app boot from the providers tree
+ * once NEXT_PUBLIC_POSTHOG_KEY is set; a no-op otherwise, so dev environments
+ * without the key don't send anything.
+ *
+ * Consent, without a banner: an anonymous visitor is tracked in MEMORY only
+ * (no cookie, no localStorage, nothing survives the tab). Once signed in (the
+ * user accepted the Terms and Privacy Policy) tracking persists and session
+ * replay starts, with every input masked. Sign-out resets back to memory.
+ *
+ * Free tier: no card on the PostHog org = hard caps, never a bill. Kept lean:
+ * person profiles for identified users only, no page-leave events, no surveys.
+ *
+ * Call `track(Events.x, …)` directly. Wired today: page views (app shell),
+ * sign in, sign out, company opened, checkout started, plus PostHog's
+ * autocapture of clicks. `Events` lists the agreed names for the rest.
+ */
 
 let initialized = false;
 let userId: string | null = null;
-let mp: MP | null = null;
+let ph: PostHog | null = null;
 // Calls made before the SDK has loaded, replayed in order once it has.
-const queue: ((m: MP) => void)[] = [];
-const withMp = (fn: (m: MP) => void) => { if (mp) fn(mp); else if (initialized) queue.push(fn); };
+const queue: ((p: PostHog) => void)[] = [];
+const withPh = (fn: (p: PostHog) => void) => { if (ph) fn(ph); else if (initialized) queue.push(fn); };
 
-/**
- * Mixpanel wrapper. Initialised at app boot from the providers tree once the
- * NEXT_PUBLIC_MIXPANEL_TOKEN env var is present; no-op otherwise so dev
- * environments without analytics keys don't error out.
- *
- * Call `track(Events.x, …)` directly. An earlier version of this comment
- * claimed coverage of "35+ events" and told callers to use a `useTrack()` hook
- * — there were no events wired at all and no such hook has ever existed, so
- * anyone checking whether analytics worked stopped reading here and concluded
- * it did.
- *
- * Currently wired, enough to see the activation funnel: page views (one call in
- * the /app layout), sign in, sign out, company opened, checkout started.
- * `Events` lists the rest as named, agreed slots — adding one is a `track`
- * call, not a decision.
- */
+/** A Supabase session cookie: this browser belongs to a signed-in user. */
+const signedIn = () => /(?:^|;\s*)sb-[^=]+-auth-token/.test(document.cookie);
+
 export function initAnalytics(): void {
 	if (initialized) return;
-	const token = process.env.NEXT_PUBLIC_MIXPANEL_TOKEN;
-	if (!token) return;
+	const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+	if (!key) return;
 	initialized = true;
-	// Off the critical path. The SDK was imported eagerly and, with its bundled
-	// session recorder, was the largest chunk every page shipped (~400 KB) —
-	// before anything rendered. It now loads once the browser is idle, and only
-	// the recorder-free core build: session replay was never turned on.
+	// Off the critical path: the SDK loads once the browser is idle.
 	const load = () => {
-		import('mixpanel-browser/dist/mixpanel-core.cjs.js')
-			.then(({ default: m }) => {
-				m.init(token, {
-					debug: process.env.NODE_ENV !== 'production',
-					track_pageview: false,
-					persistence: 'localStorage',
+		import('posthog-js')
+			.then(({ default: p }) => {
+				p.init(key, {
+					api_host: 'https://eu.i.posthog.com',
+					ui_host: 'https://eu.posthog.com',
+					persistence: signedIn() ? 'localStorage+cookie' : 'memory',
+					person_profiles: 'identified_only',
+					capture_pageview: false, // the app shell sends $pageview per route
+					capture_pageleave: false,
+					disable_surveys: true,
+					// Replay is for signed-in users only: started in identify().
+					disable_session_recording: true,
+					session_recording: { maskAllInputs: true },
 				});
-				mp = m;
-				queue.splice(0).forEach((fn) => fn(m));
+				ph = p;
+				queue.splice(0).forEach((fn) => fn(p));
 			})
 			.catch(() => { /* analytics is best-effort; a blocked script must not break the app */ });
 	};
@@ -57,22 +64,31 @@ export function identify(profileId: string, traits?: Record<string, unknown>): v
 	if (!initialized) return;
 	if (userId === profileId) return;
 	userId = profileId;
-	withMp((m) => { m.identify(profileId); if (traits) m.people.set(traits); });
+	withPh((p) => {
+		p.set_config({ persistence: 'localStorage+cookie' });
+		p.identify(profileId, traits);
+		p.startSessionRecording();
+	});
 }
 
 export function reset(): void {
-	if (!initialized) return;
+	if (!initialized || userId === null) return;
 	userId = null;
-	withMp((m) => m.reset());
+	withPh((p) => {
+		p.stopSessionRecording();
+		p.reset();
+		p.set_config({ persistence: 'memory' });
+	});
 }
 
 export function track(event: string, props?: Record<string, unknown>): void {
 	if (!initialized) return;
-	withMp((m) => m.track(event, props));
+	withPh((p) => p.capture(event, props));
 }
 
 export function trackPage(path: string, title?: string): void {
-	track('page_viewed', { path, title });
+	if (!initialized) return;
+	withPh((p) => p.capture('$pageview', { $current_url: window.location.href, path, title }));
 }
 
 /** Canonical event names so we don't typo at call sites. */

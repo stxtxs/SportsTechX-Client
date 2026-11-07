@@ -5,7 +5,7 @@ import { getSupabaseBrowser } from '@/lib/supabase/client';
 import { clearAuthCookies } from '@/lib/supabase/clear-auth-cookies';
 import { logoutState } from '@/lib/logout-state';
 import { disableQueryPolling } from '@/lib/query-client';
-import { track, Events } from '@/lib/analytics';
+import { track, reset as resetAnalytics, Events } from '@/lib/analytics';
 
 /** Longest we wait on Supabase's server-side sign-out before leaving anyway. */
 const SIGN_OUT_WAIT_MS = 3000;
@@ -41,6 +41,7 @@ export function useLogout(): { logout: () => Promise<void>; signingOut: boolean 
 			logoutState.startLogout();
 			disableQueryPolling();
 			track(Events.signedOut);
+			resetAnalytics(); // drop the persisted analytics id before leaving
 			await Promise.race([
 				getSupabaseBrowser().auth.signOut().catch(() => undefined),
 				new Promise((resolve) => setTimeout(resolve, SIGN_OUT_WAIT_MS)),

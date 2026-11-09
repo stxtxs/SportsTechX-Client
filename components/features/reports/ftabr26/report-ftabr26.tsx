@@ -46,6 +46,7 @@ import { Ftabr26McoPanel } from "./components/ftabr26-mco-panel";
 import { Ftabr26PersonDrawer } from "./components/ftabr26-person-drawer";
 import { Ftabr26SoccermentFeature } from "./components/ftabr26-soccerment-feature";
 import { Ftabr26PartnerHeader } from "./components/ftabr26-partner-header";
+import { FTABR26_PART_ORDER } from "./content-defaults";
 
 /* The ecosystem map pulls in d3 and the world topojson, neither of which any
    other section needs — it loads when the reader gets there. */
@@ -974,153 +975,10 @@ export default function ReportFTABR26({ content, preview = false }: {
     if (target) lenisRef.current?.scrollTo(target as HTMLElement, { offset: -72, duration: 1.6, easing: (x: number) => Math.min(1, 1.001 - Math.pow(2, -10 * x)) });
   };
 
-  return (
-    <div ref={reportContainerRef} style={{ background: t.bg, color: t.text, fontFamily: "'Open Sans','system-ui',sans-serif", overflowX: "hidden", minHeight: "100vh", transition: "background 0.35s, color 0.35s" }}>
-      {/* ── READING PROGRESS ────────────────────────────────────────────── */}
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 3, zIndex: 101, background: "transparent", display: (authGateActive || isPdf) ? "none" : "block" }}>
-        <div ref={progressBarRef} style={{ height: "100%", background: BRAND.pink, transform: "scaleX(0)", transformOrigin: "left center" }} />
-      </div>
-
-      {/* ── NAV (shared with every custom report — only the section links differ) ── */}
-      <ReportNav ref={navRef}
-        items={NAV_ITEMS} activeIndex={activeDot} isDark={isDark} isMobile={isMobile} hidden={authGateActive || isPdf} theme={t}
-        pdf={{ url: FTABR26_PDF_URL, file: "FTABR26.pdf" }}
-        mobileOpen={mobileMenuOpen} onToggleMobile={() => setMobileMenuOpen(o => !o)} onToggleDark={() => setIsDark((d: boolean) => !d)}
-        onNavigate={(href, label, mobile) => jumpTo(href, label, mobile)}
-        onDownload={(mobile) => { trackFT("nav_click", { section: "pdf_download", mobile }); if (mobile) setMobileMenuOpen(false); }}
-      />
-
-      {/* ── HERO ────────────────────────────────────────────────────────── */}
-      <section id="stx-hero" style={{ minHeight: isPdf ? "auto" : "100vh", height: isPdf ? "auto" : (isMobile ? "100svh" : "100vh"), position: "relative", display: "flex", alignItems: "center", overflow: "hidden", background: isDark ? "#0c0f1a" : BRAND.darkTitle, margin: 0, padding: isPdf ? "60px 0" : 0, width: "100%" }}>
-        <ParticleCanvas dark={isDark} />
-        <div style={{ position: "absolute", inset: 0, background: isDark ? "radial-gradient(ellipse at 25% 50%,transparent 0%,rgba(12,15,26,0.6) 100%)" : "radial-gradient(ellipse at 25% 50%,transparent 0%,rgba(45,59,73,0.5) 100%)" }} />
-        <div style={{ position: "absolute", top: 0, left: "38%", width: 2, height: "140%", background: "linear-gradient(to bottom, transparent 10%, rgba(237,26,94,0.15) 50%, transparent 90%)", transform: "rotate(15deg)", transformOrigin: "top center", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", top: 0, left: "42%", width: 1, height: "140%", background: "linear-gradient(to bottom, transparent 15%, rgba(237,26,94,0.08) 50%, transparent 85%)", transform: "rotate(12deg)", transformOrigin: "top center", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", inset: 0, opacity: isDark ? 0.06 : 0.08, backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "32px 32px", color: "#fff", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", top: "20%", right: "10%", width: "50%", height: "60%", background: "radial-gradient(ellipse, rgba(237,26,94,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
-
-        {/* Pitch markings — the football signature, drawn in pitch green */}
-        <svg aria-hidden viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice"
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
-          <g fill="none" stroke={PITCH_LIGHT} strokeWidth="2" opacity="0.28">
-            <line x1="600" y1="-40" x2="600" y2="840" />
-            <circle cx="600" cy="400" r="150" />
-            <rect x="-180" y="230" width="330" height="340" />
-            <rect x="-180" y="320" width="150" height="160" />
-            <rect x="1050" y="230" width="330" height="340" />
-            <rect x="1230" y="320" width="150" height="160" />
-          </g>
-          <circle cx="600" cy="400" r="6" fill={PITCH_LIGHT} opacity="0.4" />
-        </svg>
-
-        <div ref={heroContentRef} style={{
-          position: "relative", zIndex: 2, width: "100%", maxWidth: 1360, margin: "0 auto",
-          padding: isMobile ? "0px 20px" : "120px 48px 80px",
-          display: "flex", alignItems: isMobile ? "center" : "flex-start", justifyContent: isMobile ? "center" : undefined, gap: isMobile ? 0 : 64,
-          flexDirection: isMobile ? "column" : "row", willChange: "transform",
-        }}>
-          <div style={{ flex: isMobile ? "none" : "1 1 auto", maxWidth: isMobile ? "100%" : "50%" }}>
-            <h1 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? "clamp(56px,15vw,88px)" : "clamp(64px,7vw,118px)", lineHeight: 0.92, letterSpacing: -1, margin: 0 }}>
-              <span style={{ display: "block", background: `linear-gradient(135deg,${BRAND.pink},#ff6b9d)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                FOOTBALL
-              </span>
-              <span style={{ display: "block", background: "linear-gradient(135deg,#fff 0%,rgba(255,255,255,0.7) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                TECH &amp; BUSINESS
-              </span>
-              <span style={{ display: "block", background: "linear-gradient(135deg,#fff 0%,rgba(255,255,255,0.7) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                REPORT{" "}
-                <span style={{ background: `linear-gradient(135deg,${BRAND.pink},#ff6b9d)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>2026</span>
-              </span>
-            </h1>
-            <div style={{ display: "flex", gap: 6, marginTop: 24 }}>
-              <div style={{ width: 48, height: 3, background: `linear-gradient(to right,${BRAND.pink},#ff6b9d)`, borderRadius: 2 }} />
-              <div style={{ width: 24, height: 3, background: PITCH_LIGHT, borderRadius: 2 }} />
-            </div>
-            <p style={{ fontSize: isMobile ? 12 : 13, fontWeight: 500, lineHeight: 1.7, color: "rgba(255,255,255,0.85)", marginTop: 16, maxWidth: 560 }}>
-              {FTABR26_HERO.standfirst}
-            </p>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 28, marginTop: 28, flexWrap: "wrap" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "rgba(190,208,227,0.45)", letterSpacing: 2, textTransform: "uppercase" }}>Presented by</span>
-                <img src="/landing/atlas-wordmark-white.svg" alt="SportsTechX" style={{ height: 33, opacity: 0.9 }} />
-              </div>
-              <div style={{ width: 1, alignSelf: "stretch", background: "rgba(190,208,227,0.2)" }} />
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "rgba(190,208,227,0.45)", letterSpacing: 2, textTransform: "uppercase" }}>{FTABR26_HERO.edition}</span>
-                <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 26, color: "#fff", letterSpacing: 1, lineHeight: 1.2 }}>{FTABR26_HERO.hashtag}</span>
-              </div>
-            </div>
-          </div>
-
-          {!isMobile && <div style={{ flex: "0 1 580px", display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12, minWidth: 0 }}>
-            {facts.summary.map((card, i) => (
-              <div key={i} style={{
-                padding: "26px 24px 22px", borderRadius: 12,
-                background: isDark ? t.bgCard : "#fff",
-                border: isDark ? `1px solid ${t.border}` : "none",
-                borderTop: `3px solid ${PITCH}`,
-                position: "relative", overflow: "hidden",
-                boxShadow: isDark ? "0 4px 24px rgba(0,0,0,0.4)" : "0 4px 24px rgba(0,0,0,0.2)",
-              }}>
-                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(36px,3.5vw,50px)", color: BRAND.pink, lineHeight: 1 }}>{card.num}</div>
-                <div style={{ marginTop: 10, fontSize: 13, fontWeight: 600, color: isDark ? t.titleColor : BRAND.black, lineHeight: 1.4 }}>{card.label}</div>
-                {card.subtitle && <div style={{ marginTop: 6, fontSize: 11, color: isDark ? t.textMuted : BRAND.slate, lineHeight: 1.5 }}>{card.subtitle}</div>}
-              </div>
-            ))}
-          </div>}
-        </div>
-      </section>
-
-      {/* ── Mobile Summary Cards (separate section, horizontal rows) ────── */}
-      {isMobile && (
-        <section style={{ minHeight: "100svh", display: "flex", alignItems: "center", justifyContent: "center", background: isDark ? "#0c0f1a" : BRAND.darkTitle, padding: "40px 16px", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", inset: 0, opacity: isDark ? 0.04 : 0.06, backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "32px 32px", color: "#fff", pointerEvents: "none" }} />
-          <div style={{ position: "relative", zIndex: 1, width: "100%", height: "calc(100svh - 140px)", display: "flex", flexDirection: "column", gap: 10 }}>
-            {facts.summary.map((card, i) => (
-              <div key={i} style={{
-                padding: "20px 18px", borderRadius: 10,
-                background: isDark ? t.bgCard : "#fff",
-                border: isDark ? `1px solid ${t.border}` : "none",
-                borderLeft: `3px solid ${PITCH}`,
-                position: "relative", overflow: "hidden",
-                boxShadow: isDark ? "0 4px 24px rgba(0,0,0,0.4)" : "0 4px 24px rgba(0,0,0,0.2)",
-                display: "flex", alignItems: "center", gap: 14,
-                flex: 1, minHeight: 0,
-              }}>
-                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 24, color: BRAND.pink, lineHeight: 1, flexShrink: 0, minWidth: 62 }}>{card.num}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: isDark ? t.titleColor : BRAND.black, lineHeight: 1.4 }}>{card.label}</div>
-                  {card.subtitle && <div style={{ fontSize: 10, color: isDark ? t.textMuted : BRAND.slate, lineHeight: 1.4, marginTop: 2 }}>{card.subtitle}</div>}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <div ref={skewWrapRef} style={{ willChange: "transform", transformOrigin: "center top", position: "relative", zIndex: 1 }}>
-
-      {/* ── ABOUT / EXECUTIVE SUMMARY ───────────────────────────────────── */}
-      {SHOW_EXEC_SUMMARY && (<>
-      <div id="facts" style={{ background: t.bgSec, padding: isMobile ? "48px 0" : "88px 0" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "0 16px" : "0 40px" }}>
-          <div className="stx-reveal">
-            {sectionLabel("Executive Summary")}
-            {sectionTitle("THE NUMBERS THAT\nMATTER")}
-            <p style={{ fontSize: 15, color: t.text, lineHeight: 1.9, margin: "24px 0 0" }}>{FTABR26_ABOUT}</p>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: isMobile ? 14 : 20, marginTop: 48 }}>
-            {facts.summary.map((s, i) => (
-              <StatCard key={i} num={s.num} label={s.label} subtitle={s.subtitle} t={t}
-                icon={(["funding", "fans", "globe", "trending", "initiative", "ball"] as const)[i % 6]} />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {pitchDivider}
-      </>)}
-
+  // Page parts the admin can reorder (content.partOrder); each renders exactly as
+  // before, with the divider drawn between parts (so any order keeps one between each).
+  const PARTS: Record<string, React.ReactNode> = {
+    trends: (<>
       {/* ── INSIGHTS: TOP TRENDS + FEATURE PANELS ───────────────────────── */}
       <div id="trends" style={{ background: t.bg, padding: isMobile ? "48px 0" : "88px 0", position: "relative", overflow: "hidden" }}>
         {/* Centre circle, cropped off the right edge — Business article only */}
@@ -1224,9 +1082,8 @@ export default function ReportFTABR26({ content, preview = false }: {
           )}
         </div>
       </div>
-
-      {pitchDivider}
-
+    </>),
+    featured: (<>
       {/* ── FEATURED COMPANY: PLAYERMAKER (mirrors the NGSC panel in GSTER26) ── */}
       <div style={{ background: t.bg, padding: isMobile ? "32px 0" : "56px 0" }}>
       <div style={{ background: `linear-gradient(135deg, transparent, ${FEAT_COL}, ${FEAT_COL}88, ${FEAT_COL}, transparent)`, padding: 2, margin: isMobile ? "0 8px" : "0 20px", borderRadius: 20 }}>
@@ -1306,9 +1163,8 @@ export default function ReportFTABR26({ content, preview = false }: {
       </div>
       </div>
       </div>
-
-      {pitchDivider}
-
+    </>),
+    innovators: (<>
       {/* ── INNOVATORS + PLAYMAKERS ─────────────────────────────────────── */}
       <div id="innovators" style={{ background: t.bg, padding: isMobile ? "48px 0" : "88px 0" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "0 16px" : "0 40px" }}>
@@ -1360,9 +1216,8 @@ export default function ReportFTABR26({ content, preview = false }: {
           </Ftabr26PersonDrawer>
         );
       })()}
-
-      {pitchDivider}
-
+    </>),
+    startups: (<>
       {/* ── STARTUPS TO WATCH ───────────────────────────────────────────── */}
       <div id="ecosystem" style={{ background: t.bgSec, padding: isMobile ? "48px 0" : "88px 0" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "0 16px" : "0 40px" }}>
@@ -1436,9 +1291,8 @@ export default function ReportFTABR26({ content, preview = false }: {
           })()}
         </div>
       </div>
-
-      {pitchDivider}
-
+    </>),
+    ecomap: (<>
       {/* ── ECOSYSTEM: INITIATIVES AND ACCELERATORS ────────────────────── */}
       <div id="ecomap" style={{ background: t.bg, padding: isMobile ? "48px 0" : "88px 0" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "0 16px" : "0 40px" }}>
@@ -1558,20 +1412,16 @@ export default function ReportFTABR26({ content, preview = false }: {
           })()}
         </div>
       </div>
-
-      {pitchDivider}
-
+    </>),
+    soccerment: (<>
       {/* Soccerment follows Ecosystem independently of legacy spotlight flags. */}
       <section id="soccerment" aria-label="Partner feature: Soccerment" style={{ background: t.bg, padding: isMobile ? "32px 0" : "56px 0" }}>
         <div style={{ margin: isMobile ? "0 8px" : "0 20px" }}>
           <Ftabr26SoccermentFeature data={FTABR26_SOCCERMENT} print={isPdf} />
         </div>
       </section>
-
-      {pitchDivider}
-
-      {SHOW_PARTNERS && (
-        <>
+    </>),
+    partners: SHOW_PARTNERS ? (<>
           {/* ── PARTNER SPOTLIGHTS ──────────────────────────────────────────── */}
           <div style={{ background: t.bgSec, padding: isMobile ? "48px 0" : "88px 0" }}>
             <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "0 16px" : "0 40px" }}>
@@ -1619,11 +1469,8 @@ export default function ReportFTABR26({ content, preview = false }: {
               </div>
             </div>
           </div>
-
-          {pitchDivider}
-        </>
-      )}
-
+    </>) : null,
+    data: (<>
       {/* ── DATA IN FULL ────────────────────────────────────────────────── */}
       <div id="dealflow" style={{ background: t.bg, padding: isMobile ? "48px 0" : "88px 0" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "0 16px" : "0 40px" }}>
@@ -1919,6 +1766,158 @@ export default function ReportFTABR26({ content, preview = false }: {
           </div>
         </div>
       </div>
+    </>),
+  };
+  const partOrder = [...new Set([...(Array.isArray(ov?.partOrder) ? (ov.partOrder as string[]) : []), ...FTABR26_PART_ORDER, "partners"])].filter((id) => PARTS[id] != null);
+
+  return (
+    <div ref={reportContainerRef} style={{ background: t.bg, color: t.text, fontFamily: "'Open Sans','system-ui',sans-serif", overflowX: "hidden", minHeight: "100vh", transition: "background 0.35s, color 0.35s" }}>
+      {/* ── READING PROGRESS ────────────────────────────────────────────── */}
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 3, zIndex: 101, background: "transparent", display: (authGateActive || isPdf) ? "none" : "block" }}>
+        <div ref={progressBarRef} style={{ height: "100%", background: BRAND.pink, transform: "scaleX(0)", transformOrigin: "left center" }} />
+      </div>
+
+      {/* ── NAV (shared with every custom report — only the section links differ) ── */}
+      <ReportNav ref={navRef}
+        items={NAV_ITEMS} activeIndex={activeDot} isDark={isDark} isMobile={isMobile} hidden={authGateActive || isPdf} theme={t}
+        pdf={{ url: FTABR26_PDF_URL, file: "FTABR26.pdf" }}
+        mobileOpen={mobileMenuOpen} onToggleMobile={() => setMobileMenuOpen(o => !o)} onToggleDark={() => setIsDark((d: boolean) => !d)}
+        onNavigate={(href, label, mobile) => jumpTo(href, label, mobile)}
+        onDownload={(mobile) => { trackFT("nav_click", { section: "pdf_download", mobile }); if (mobile) setMobileMenuOpen(false); }}
+      />
+
+      {/* ── HERO ────────────────────────────────────────────────────────── */}
+      <section id="stx-hero" style={{ minHeight: isPdf ? "auto" : "100vh", height: isPdf ? "auto" : (isMobile ? "100svh" : "100vh"), position: "relative", display: "flex", alignItems: "center", overflow: "hidden", background: isDark ? "#0c0f1a" : BRAND.darkTitle, margin: 0, padding: isPdf ? "60px 0" : 0, width: "100%" }}>
+        <ParticleCanvas dark={isDark} />
+        <div style={{ position: "absolute", inset: 0, background: isDark ? "radial-gradient(ellipse at 25% 50%,transparent 0%,rgba(12,15,26,0.6) 100%)" : "radial-gradient(ellipse at 25% 50%,transparent 0%,rgba(45,59,73,0.5) 100%)" }} />
+        <div style={{ position: "absolute", top: 0, left: "38%", width: 2, height: "140%", background: "linear-gradient(to bottom, transparent 10%, rgba(237,26,94,0.15) 50%, transparent 90%)", transform: "rotate(15deg)", transformOrigin: "top center", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: 0, left: "42%", width: 1, height: "140%", background: "linear-gradient(to bottom, transparent 15%, rgba(237,26,94,0.08) 50%, transparent 85%)", transform: "rotate(12deg)", transformOrigin: "top center", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", inset: 0, opacity: isDark ? 0.06 : 0.08, backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "32px 32px", color: "#fff", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "20%", right: "10%", width: "50%", height: "60%", background: "radial-gradient(ellipse, rgba(237,26,94,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+        {/* Pitch markings — the football signature, drawn in pitch green */}
+        <svg aria-hidden viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice"
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
+          <g fill="none" stroke={PITCH_LIGHT} strokeWidth="2" opacity="0.28">
+            <line x1="600" y1="-40" x2="600" y2="840" />
+            <circle cx="600" cy="400" r="150" />
+            <rect x="-180" y="230" width="330" height="340" />
+            <rect x="-180" y="320" width="150" height="160" />
+            <rect x="1050" y="230" width="330" height="340" />
+            <rect x="1230" y="320" width="150" height="160" />
+          </g>
+          <circle cx="600" cy="400" r="6" fill={PITCH_LIGHT} opacity="0.4" />
+        </svg>
+
+        <div ref={heroContentRef} style={{
+          position: "relative", zIndex: 2, width: "100%", maxWidth: 1360, margin: "0 auto",
+          padding: isMobile ? "0px 20px" : "120px 48px 80px",
+          display: "flex", alignItems: isMobile ? "center" : "flex-start", justifyContent: isMobile ? "center" : undefined, gap: isMobile ? 0 : 64,
+          flexDirection: isMobile ? "column" : "row", willChange: "transform",
+        }}>
+          <div style={{ flex: isMobile ? "none" : "1 1 auto", maxWidth: isMobile ? "100%" : "50%" }}>
+            <h1 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? "clamp(56px,15vw,88px)" : "clamp(64px,7vw,118px)", lineHeight: 0.92, letterSpacing: -1, margin: 0 }}>
+              <span style={{ display: "block", background: `linear-gradient(135deg,${BRAND.pink},#ff6b9d)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                FOOTBALL
+              </span>
+              <span style={{ display: "block", background: "linear-gradient(135deg,#fff 0%,rgba(255,255,255,0.7) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                TECH &amp; BUSINESS
+              </span>
+              <span style={{ display: "block", background: "linear-gradient(135deg,#fff 0%,rgba(255,255,255,0.7) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                REPORT{" "}
+                <span style={{ background: `linear-gradient(135deg,${BRAND.pink},#ff6b9d)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>2026</span>
+              </span>
+            </h1>
+            <div style={{ display: "flex", gap: 6, marginTop: 24 }}>
+              <div style={{ width: 48, height: 3, background: `linear-gradient(to right,${BRAND.pink},#ff6b9d)`, borderRadius: 2 }} />
+              <div style={{ width: 24, height: 3, background: PITCH_LIGHT, borderRadius: 2 }} />
+            </div>
+            <p style={{ fontSize: isMobile ? 12 : 13, fontWeight: 500, lineHeight: 1.7, color: "rgba(255,255,255,0.85)", marginTop: 16, maxWidth: 560 }}>
+              {FTABR26_HERO.standfirst}
+            </p>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 28, marginTop: 28, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "rgba(190,208,227,0.45)", letterSpacing: 2, textTransform: "uppercase" }}>Presented by</span>
+                <img src="/landing/atlas-wordmark-white.svg" alt="SportsTechX" style={{ height: 33, opacity: 0.9 }} />
+              </div>
+              <div style={{ width: 1, alignSelf: "stretch", background: "rgba(190,208,227,0.2)" }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "rgba(190,208,227,0.45)", letterSpacing: 2, textTransform: "uppercase" }}>{FTABR26_HERO.edition}</span>
+                <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 26, color: "#fff", letterSpacing: 1, lineHeight: 1.2 }}>{FTABR26_HERO.hashtag}</span>
+              </div>
+            </div>
+          </div>
+
+          {!isMobile && <div style={{ flex: "0 1 580px", display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12, minWidth: 0 }}>
+            {facts.summary.map((card, i) => (
+              <div key={i} style={{
+                padding: "26px 24px 22px", borderRadius: 12,
+                background: isDark ? t.bgCard : "#fff",
+                border: isDark ? `1px solid ${t.border}` : "none",
+                borderTop: `3px solid ${PITCH}`,
+                position: "relative", overflow: "hidden",
+                boxShadow: isDark ? "0 4px 24px rgba(0,0,0,0.4)" : "0 4px 24px rgba(0,0,0,0.2)",
+              }}>
+                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(36px,3.5vw,50px)", color: BRAND.pink, lineHeight: 1 }}>{card.num}</div>
+                <div style={{ marginTop: 10, fontSize: 13, fontWeight: 600, color: isDark ? t.titleColor : BRAND.black, lineHeight: 1.4 }}>{card.label}</div>
+                {card.subtitle && <div style={{ marginTop: 6, fontSize: 11, color: isDark ? t.textMuted : BRAND.slate, lineHeight: 1.5 }}>{card.subtitle}</div>}
+              </div>
+            ))}
+          </div>}
+        </div>
+      </section>
+
+      {/* ── Mobile Summary Cards (separate section, horizontal rows) ────── */}
+      {isMobile && (
+        <section style={{ minHeight: "100svh", display: "flex", alignItems: "center", justifyContent: "center", background: isDark ? "#0c0f1a" : BRAND.darkTitle, padding: "40px 16px", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", inset: 0, opacity: isDark ? 0.04 : 0.06, backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "32px 32px", color: "#fff", pointerEvents: "none" }} />
+          <div style={{ position: "relative", zIndex: 1, width: "100%", height: "calc(100svh - 140px)", display: "flex", flexDirection: "column", gap: 10 }}>
+            {facts.summary.map((card, i) => (
+              <div key={i} style={{
+                padding: "20px 18px", borderRadius: 10,
+                background: isDark ? t.bgCard : "#fff",
+                border: isDark ? `1px solid ${t.border}` : "none",
+                borderLeft: `3px solid ${PITCH}`,
+                position: "relative", overflow: "hidden",
+                boxShadow: isDark ? "0 4px 24px rgba(0,0,0,0.4)" : "0 4px 24px rgba(0,0,0,0.2)",
+                display: "flex", alignItems: "center", gap: 14,
+                flex: 1, minHeight: 0,
+              }}>
+                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 24, color: BRAND.pink, lineHeight: 1, flexShrink: 0, minWidth: 62 }}>{card.num}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: isDark ? t.titleColor : BRAND.black, lineHeight: 1.4 }}>{card.label}</div>
+                  {card.subtitle && <div style={{ fontSize: 10, color: isDark ? t.textMuted : BRAND.slate, lineHeight: 1.4, marginTop: 2 }}>{card.subtitle}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div ref={skewWrapRef} style={{ willChange: "transform", transformOrigin: "center top", position: "relative", zIndex: 1 }}>
+
+      {/* ── ABOUT / EXECUTIVE SUMMARY ───────────────────────────────────── */}
+      {SHOW_EXEC_SUMMARY && (<>
+      <div id="facts" style={{ background: t.bgSec, padding: isMobile ? "48px 0" : "88px 0" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "0 16px" : "0 40px" }}>
+          <div className="stx-reveal">
+            {sectionLabel("Executive Summary")}
+            {sectionTitle("THE NUMBERS THAT\nMATTER")}
+            <p style={{ fontSize: 15, color: t.text, lineHeight: 1.9, margin: "24px 0 0" }}>{FTABR26_ABOUT}</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: isMobile ? 14 : 20, marginTop: 48 }}>
+            {facts.summary.map((s, i) => (
+              <StatCard key={i} num={s.num} label={s.label} subtitle={s.subtitle} t={t}
+                icon={(["funding", "fans", "globe", "trending", "initiative", "ball"] as const)[i % 6]} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {pitchDivider}
+      </>)}
+
+      {partOrder.map((id, i) => <React.Fragment key={id}>{i > 0 && pitchDivider}{PARTS[id]}</React.Fragment>)}
 
       {/* ── FOOTER (the exact Atlas landing footer) ─────────────────────── */}
       <div className="lp"><LandingFooter /></div>

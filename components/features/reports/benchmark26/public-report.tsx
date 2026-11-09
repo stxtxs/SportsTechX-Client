@@ -17,10 +17,11 @@
    the copy in data/public-report.json.
    --------------------------------------------------------------------------- */
 
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { Fragment, type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useReveal } from "./use-reveal";
 import reportJson from "./data/public-report.json";
+import { BENCHMARK26_PART_ORDER } from "./content-defaults";
 import { ReportNav } from "../report-nav";
 import { DARK as NAV_DARK, LIGHT as NAV_LIGHT } from "../ftabr26/lib/report-theme";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -78,6 +79,8 @@ export interface PublicReportData {
     blocks: { title: string; body: string }[];
     note: { title: string; body: string };
   };
+  /** Page order of the blocks (the admin's Page order); defaults to the published order. */
+  partOrder?: string[];
 }
 
 /* JSON imports widen string literals (chart `type`) to string, so the bundled
@@ -124,16 +127,13 @@ const ACCENT: Record<string, string> = {
   method: "data notes",
 };
 
-/* The four sections that carry findings are numbered, as a fund snapshot's
-   sections are; the opening and the method notes frame them and are not. The
-   rail uses the same numbers, and leaves the framing rows blank. */
-const SECTION_NO: Record<string, string> = {
-  "deal-sourcing-reality": "01",
-  "sourcing-process": "02",
-  "outbound-and-tools": "03",
-  closing: "04",
-};
+/* The sections that carry findings are numbered (01–04 in the published order),
+   as a fund snapshot's sections are; the opening and the method notes frame
+   them and are not. Numbers follow the page order, so a reordered page still
+   reads 01, 02, 03… The rail uses the same numbers and leaves framing rows blank. */
+const UNNUMBERED = new Set(["why-now", "method"]);
 
+/* Header link labels, in the published order. */
 const NAV: NavSection[] = [
   { id: "why-now", n: "", title: "Why now" },
   { id: "deal-sourcing-reality", n: "01", title: "Deal sources" },
@@ -169,12 +169,13 @@ const share = (v: number, max: number) => (max > 0 ? Math.max((v / max) * 100, v
 
 function PubSection({
   id, heading, subtitle, intro, children,
-}: { id: string; heading: string; subtitle: string; intro: string; children: ReactNode }) {
+  no,
+}: { id: string; heading: string; subtitle: string; intro: string; children: ReactNode; no?: string }) {
   return (
     <section className="pub-section" id={id} aria-labelledby={`${id}-title`}>
       {/* Number (findings sections only), heading, and the rule under both. */}
       <div className="pub-head">
-        {SECTION_NO[id] && <span className="pub-no">{SECTION_NO[id]}</span>}
+        {no && <span className="pub-no">{no}</span>}
         <h2 className="pub-h2" id={`${id}-title`}><Accented text={heading} tail={ACCENT[id]} /></h2>
       </div>
       <p className="pub-sub">{subtitle}</p>
@@ -412,6 +413,20 @@ function ChartFor({ chart, meta }: { chart: Chart; meta: PublicReportData["meta"
 
 export default function PublicReport({ data = REPORT }: { data?: PublicReportData }) {
   const { meta, intro, sections, closing, methodology } = data;
+  /* Page order: the saved one, then anything it doesn't name, in the published order. */
+  const orderKey = JSON.stringify(data.partOrder ?? null);
+  const { order, nav, no } = useMemo(() => {
+    const known = new Set(["why-now", "closing", "method", ...sections.map((s) => s.id)]);
+    const order = [...new Set([...(data.partOrder ?? []), ...BENCHMARK26_PART_ORDER, ...sections.map((s) => s.id)])].filter((id) => known.has(id));
+    const numbered = order.filter((id) => !UNNUMBERED.has(id));
+    const no = (id: string) => (numbered.includes(id) ? String(numbered.indexOf(id) + 1).padStart(2, "0") : "");
+    const nav: NavSection[] = order.map((id) => ({
+      id, n: no(id),
+      title: NAV.find((n) => n.id === id)?.title ?? sections.find((s) => s.id === id)?.heading ?? id,
+    }));
+    return { order, nav, no };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderKey, sections]);
   const { dark, toggle } = useReportTheme();
   const pdfName = `SportsTechX — ${meta.title}.pdf`;
   const [menuOpen, setMenuOpen] = useState(false);
@@ -431,7 +446,7 @@ export default function PublicReport({ data = REPORT }: { data?: PublicReportDat
       raf = 0;
       const line = window.innerHeight * 0.3;
       let idx = 0;
-      NAV.forEach((n, i) => { const el = document.getElementById(n.id); if (el && el.getBoundingClientRect().top <= line) idx = i + 1; });
+      nav.forEach((n, i) => { const el = document.getElementById(n.id); if (el && el.getBoundingClientRect().top <= line) idx = i + 1; });
       setActive(idx);
     };
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
@@ -439,8 +454,64 @@ export default function PublicReport({ data = REPORT }: { data?: PublicReportDat
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); if (raf) cancelAnimationFrame(raf); };
-  }, []);
+  }, [nav]);
   const site = closing.cta.url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+  /* Each block by id, rendered in page order (the published order unless the admin reordered it). */
+  const PARTS: Record<string, ReactNode> = {
+    "why-now": (
+        <PubSection id="why-now" no={no("why-now")} heading={intro.heading} subtitle={intro.subtitle} intro={intro.body[0]}>
+          {intro.body.slice(1).map((p, i) => <p className="lead pub-lead" key={i}>{p}</p>)}
+          <figure className="pub-logos">
+            <img
+              src={contributorsUrl}
+              alt={`Logos of the ${intro.contributors.named} funds named as founding contributors`}
+              width={1600}
+              height={608}
+              loading="lazy"
+            />
+          </figure>
+        </PubSection>
+    ),
+    ...Object.fromEntries(sections.map((s) => [s.id, (
+          <PubSection key={s.id} id={s.id} no={no(s.id)} heading={s.heading} subtitle={s.subtitle} intro={s.intro}>
+            <Stats items={s.stats} />
+            {s.charts.map((c) => <ChartCard chart={c} key={c.id}><ChartFor chart={c} meta={meta} /></ChartCard>)}
+            <Takeaways items={s.takeaways} />
+          </PubSection>
+    )])),
+    closing: (
+        <PubSection id="closing" no={no("closing")} heading={closing.heading} subtitle={closing.subtitle} intro={closing.intro}>
+          <ol className="pub-points">
+            {closing.points.map((p, i) => (
+              <li key={p.title}>
+                <span className="pub-point-n" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+                <div>
+                  <h3 className="pub-h3">{p.title}</h3>
+                  <p>{p.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </PubSection>
+    ),
+    method: (
+        <CollapsibleSection id="method" heading={methodology.heading} subtitle={methodology.subtitle} intro={methodology.intro}>
+          <div className="pub-method">
+            {methodology.blocks.map((b) => (
+              <div key={b.title}>
+                <h3 className="pub-h3">{b.title}</h3>
+                <p>{b.body}</p>
+              </div>
+            ))}
+          </div>
+          <div className="pub-card pub-note">
+            <h3 className="pub-h3">{methodology.note.title}</h3>
+            <p>{methodology.note.body}</p>
+          </div>
+        </CollapsibleSection>
+    ),
+  };
 
   return (
     <div className={`stx-report${dark ? " dark" : ""}`}>
@@ -462,7 +533,7 @@ export default function PublicReport({ data = REPORT }: { data?: PublicReportDat
 
       {/* The header every web report shares; only the section links are this report's. */}
       <ReportNav
-        items={NAV.map((n) => ({ href: `#${n.id}`, label: n.title }))}
+        items={nav.map((n) => ({ href: `#${n.id}`, label: n.title }))}
         activeIndex={active} isDark={dark} isMobile={isMobile} theme={dark ? NAV_DARK : NAV_LIGHT}
         pdf={{ url: pdfUrl, file: pdfName }}
         mobileOpen={menuOpen} onToggleMobile={() => setMenuOpen((o) => !o)} onToggleDark={toggle}
@@ -474,55 +545,7 @@ export default function PublicReport({ data = REPORT }: { data?: PublicReportDat
       />
 
       <main className="wrap">
-        <PubSection id="why-now" heading={intro.heading} subtitle={intro.subtitle} intro={intro.body[0]}>
-          {intro.body.slice(1).map((p, i) => <p className="lead pub-lead" key={i}>{p}</p>)}
-          <figure className="pub-logos">
-            <img
-              src={contributorsUrl}
-              alt={`Logos of the ${intro.contributors.named} funds named as founding contributors`}
-              width={1600}
-              height={608}
-              loading="lazy"
-            />
-          </figure>
-        </PubSection>
-
-        {sections.map((s) => (
-          <PubSection key={s.id} id={s.id} heading={s.heading} subtitle={s.subtitle} intro={s.intro}>
-            <Stats items={s.stats} />
-            {s.charts.map((c) => <ChartCard chart={c} key={c.id}><ChartFor chart={c} meta={meta} /></ChartCard>)}
-            <Takeaways items={s.takeaways} />
-          </PubSection>
-        ))}
-
-        <PubSection id="closing" heading={closing.heading} subtitle={closing.subtitle} intro={closing.intro}>
-          <ol className="pub-points">
-            {closing.points.map((p, i) => (
-              <li key={p.title}>
-                <span className="pub-point-n" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
-                <div>
-                  <h3 className="pub-h3">{p.title}</h3>
-                  <p>{p.body}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </PubSection>
-
-        <CollapsibleSection id="method" heading={methodology.heading} subtitle={methodology.subtitle} intro={methodology.intro}>
-          <div className="pub-method">
-            {methodology.blocks.map((b) => (
-              <div key={b.title}>
-                <h3 className="pub-h3">{b.title}</h3>
-                <p>{b.body}</p>
-              </div>
-            ))}
-          </div>
-          <div className="pub-card pub-note">
-            <h3 className="pub-h3">{methodology.note.title}</h3>
-            <p>{methodology.note.body}</p>
-          </div>
-        </CollapsibleSection>
+        {order.map((id) => <Fragment key={id}>{PARTS[id]}</Fragment>)}
       </main>
 
       {/* The benchmark viewer's footer, part for part: a card with the call to

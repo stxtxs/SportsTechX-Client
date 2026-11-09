@@ -183,7 +183,7 @@ export const ROUTES: RouteDef[] = [
 	// No tier: every plan gets the assistant, bounded by credits rather than by a
 	// locked door (see chat.controller.ts). Still unlisted in NAV_LAYOUT — it is
 	// reached from the home composer and the FAB.
-	{ id: 'chat', icon: 'nav-chat', name: 'Chat', path: '/chat' },
+	{ id: 'chat', icon: 'nav-chat', name: 'Ask Atlas', path: '/chat' },
 	{ id: 'strategy', icon: 'nav-onboarding', name: 'Strategy', path: '/strategy', tier: 'raise' },
 	// Guides, templates and checklists across Prepare → Connect → Close (content in
 	// raise_resources, edited in admin). Back with real content after the October

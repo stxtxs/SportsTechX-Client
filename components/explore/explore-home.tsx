@@ -15,7 +15,7 @@ import { hrefOf } from '@/lib/routes';
 
 /**
  * Explore Home (Claude Design "Home"): greeting, interests count, a search bar
- * (searches the live company database) and "What needs your attention". Every
+ * (searches the live company database) and "Latest from Atlas". Every
  * card is live; "For you" reads the interests saved via `/api/explore/interests`.
  */
 const fmt = (d: string) => new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
@@ -43,6 +43,16 @@ function forYouLink(v: Interests, sectors: SectorRef[], picked: string[]): { tit
 	return { title: 'Browse the company database', href: COMPANIES };
 }
 
+/**
+ * A first name fit for a greeting, or null. Profiles often carry the email
+ * handle as their display name ("rohn.malhotra+121"), which reads as raw data
+ * in a greeting, so only a word made of letters counts.
+ */
+function firstNameOf(name: string | null | undefined): string | null {
+	const word = (name ?? '').trim().split(/\s+/)[0] ?? '';
+	return /^\p{L}[\p{L}'’-]*$/u.test(word) ? word : null;
+}
+
 export function ExploreHome() {
 	const router = useRouter();
 	const { data: profile } = useUserProfile();
@@ -65,7 +75,7 @@ export function ExploreHome() {
 	const reports = useSWR<Page<ReportListItem>>(qk.reports.list({ limit: 100 }));
 	const latestReport = [...(reports.data?.data ?? [])]
 		.sort((a, b) => (b.report_year ?? 0) - (a.report_year ?? 0) || (b.report_month ?? 0) - (a.report_month ?? 0))[0];
-	const first = (profile?.display_name ?? profile?.full_name ?? '').split(' ')[0] || 'there';
+	const first = firstNameOf(profile?.full_name) ?? firstNameOf(profile?.display_name);
 	const hour = new Date().getHours();
 	const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 	const lastMonth = new Date(new Date().getFullYear(), new Date().getMonth() - 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
@@ -79,27 +89,35 @@ export function ExploreHome() {
 		const t = text.trim();
 		if (t) router.push(`${hrefOf('chat')}?q=${encodeURIComponent(t)}`);
 	};
+	// One line beside the label. Sized for the collapsed sidebar, where the row is
+	// widest; with the sidebar open at a 1280px window there is room for about 38
+	// characters in the third, so keep it short enough to hold one line there too.
 	const suggestions = [
-		'Who is funding fan engagement right now?',
-		'Summarise last month’s funding rounds',
-		'Which sports tech events are coming up?',
-		'How is the sports tech market structured?',
+		'Summarise last month’s deal flow',
+		'What sports tech events are coming up?',
+		'What’s trending in sports tech?',
 	];
 
 	return (
 		<div className="explore-home">
 			<section>
-				<H1>{greeting}, {first}</H1>
+				<H1>{first ? `${greeting}, ${first}` : `${greeting}.`}</H1>
 				<div className="explore-home__sub">
 					<span>Here&apos;s what has changed across the sports-tech market.</span>
-					<Link href={hrefOf('interests')} className="explore-home__interests"><SlidersHorizontal size={12} aria-hidden="true" />Interests <b>{picked.length}</b></Link>
+					{/* With none picked, an invitation rather than a black "0". */}
+					<Link href={hrefOf('interests')} className="explore-home__interests">
+						<SlidersHorizontal size={12} aria-hidden="true" />
+						{picked.length > 0 ? <>Interests <b>{picked.length}</b></> : 'Set your interests'}
+					</Link>
 				</div>
 				<div className="explore-home__search">
 					<AgentComposer
 						value={q}
 						onChange={setQ}
 						onSubmit={() => goChat(q)}
-						placeholder="Ask about companies, funding, events and categories"
+						placeholderLead="Ask Atlas"
+						placeholder="about companies, funding, events and categories"
+						compact
 						suggestions={suggestions}
 						onSuggestion={goChat}
 					/>
@@ -107,7 +125,7 @@ export function ExploreHome() {
 			</section>
 
 			<section className="explore-home__attn">
-				<SectionHead title="What needs your attention" meta="Based on your interests · updated today" />
+				<SectionHead title="Latest from Atlas" meta={picked.length > 0 ? 'Based on your interests · updated today' : 'Updated today'} />
 				<div className="atlas-feed-grid">
 					{latestNews && (
 						<FeedCard tag="Newsletter" icon={Newspaper} title={latestNews.title} body={`${fmt(latestNews.pubDate)} · ${latestNews.description}`} href={hrefOf('newsletter')} actionLabel="Read" />

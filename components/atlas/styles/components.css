@@ -582,15 +582,19 @@ span.atlas-fbar__pill-main { cursor: default; }
 .atlas .atlas-view-toggle__btn.active { background: var(--a-inset); color: var(--a-ink); }
 
 /* ── Wordmark ─────────────────────────────────────────────────────────────*/
-.atlas-logo { position: relative; display: inline-flex; align-items: flex-end; color: var(--a-ink); line-height: 0; }
-.atlas-logo svg { display: block; width: auto; }
-.atlas-logo__product {
-  position: absolute; left: 69%; top: -11px;
-  font-family: 'Kepler Std', Georgia, 'Times New Roman', serif; font-style: italic;
-  font-size: 14px; line-height: 1; letter-spacing: 0.1em; text-transform: uppercase;
-  color: #4580EC; white-space: nowrap;
+/* Wordmark + product tag, as the landing page's solution cards: the tag sits to
+   the right, top-aligned, New Frank italic at ~54% of the wordmark height. */
+.atlas-logo {
+  display: inline-flex; align-items: flex-start; gap: calc(var(--atlas-logo-h, 31px) * 0.25);
+  color: var(--a-ink); line-height: 0;
 }
-[data-theme="dark"] .atlas .atlas-logo__product { color: #7FA8F5; }
+.atlas-logo svg { display: block; width: auto; flex-shrink: 0; }
+.atlas-logo__product {
+  margin-top: calc(var(--atlas-logo-h, 31px) * 0.07);
+  font-family: "new-frank", var(--a-font); font-style: italic; font-weight: 400;
+  font-size: calc(var(--atlas-logo-h, 31px) * 0.54); line-height: 1; letter-spacing: 0.1em;
+  text-transform: uppercase; white-space: nowrap;
+}
 
 /* Full-screen loading (auth check, then the tier). Same page colour as the app. */
 .atlas.auth-placeholder {
@@ -639,17 +643,24 @@ span.atlas-fbar__pill-main { cursor: default; }
 .atlas-feed-card__action {
   display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
   height: 28px; padding: 0 12px 0 14px; border-radius: var(--a-radius-pill);
-  background: var(--a-primary); color: var(--a-primary-ink); border: 0;
+  /* Quiet at rest: the whole card is the link, so the pill is a label, not a
+     shout. It fills ink when its card is hovered (as the sidebar fit box does),
+     which shows which card is about to open. */
+  background: color-mix(in srgb, var(--a-ink) 5%, transparent); color: var(--a-muted);
+  border: 0; box-shadow: inset 0 0 0 1px var(--a-border-strong);
   font-family: var(--a-mono); font-size: 10.5px; line-height: 1; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; white-space: nowrap;
   /* Also rendered as a <button> when the card opens a modal instead of
      navigating — a button needs the pointer and inherits none of the above. */
   cursor: pointer;
-  transition: opacity 0.15s, transform 0.15s;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
 }
 /* Hover feedback hangs off the card. No transform on the pill itself: a
    transformed element becomes the containing block for its ::after, which would
    shrink the card-wide hit area back to the pill. */
-.atlas-feed-card:hover .atlas-feed-card__action { opacity: 0.88; }
+.atlas-feed-card:hover .atlas-feed-card__action,
+.atlas-feed-card:has(.atlas-feed-card__action:focus-visible) .atlas-feed-card__action {
+  background: var(--a-primary); color: var(--a-primary-ink); box-shadow: inset 0 0 0 1px var(--a-primary);
+}
 .atlas-feed-card__action::after { content: ''; position: absolute; inset: 0; border-radius: var(--a-radius); }
 .atlas-feed-card__action:focus-visible { outline: none; }
 .atlas-feed-card__action svg { flex-shrink: 0; }
@@ -712,8 +723,9 @@ h1 .atlas-soon--inline, h2 .atlas-soon--inline, .atlas-h1 .atlas-soon--inline, .
 }
 [data-theme="dark"] .atlas .atlas-composer-box { background: var(--a-surface); }
 .atlas-composer-box:focus-within {
-	border-color: var(--a-ink);
-	box-shadow: 0 0 0 3px color-mix(in srgb, var(--a-ink) 8%, transparent);
+	/* Brand accent: the product colour (set by AtlasShell), ink elsewhere. */
+	border-color: var(--atlas-product, var(--a-ink));
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--atlas-product, var(--a-ink)) 12%, transparent);
 }
 .atlas-composer-input {
 	width: 100%; resize: none; border: none; outline: none; background: transparent;
@@ -722,10 +734,21 @@ h1 .atlas-soon--inline, h2 .atlas-soon--inline, .atlas-h1 .atlas-soon--inline, .
 }
 .atlas-composer-input::placeholder { color: color-mix(in srgb, var(--a-ink) 55%, transparent); }
 .atlas-composer-row { display: flex; align-items: flex-start; gap: 12px; }
+.atlas-composer-field { position: relative; flex: 1; min-width: 0; display: flex; }
+/* Drawn placeholder with a highlighted lead (AgentComposer `placeholderLead`):
+   same type and colour as ::placeholder, the lead in ink. */
+.atlas-composer-ph {
+	position: absolute; top: 0; left: 2px; right: 2px; pointer-events: none;
+	font-family: var(--a-body); font-size: 14px; line-height: 1.6;
+	color: color-mix(in srgb, var(--a-ink) 55%, transparent);
+}
+.atlas-composer-ph b { font-weight: 600; color: var(--a-ink); }
+/* Home's shorter box: about one line of room instead of two. */
+.atlas-composer--compact .atlas-composer-input { min-height: 34px; }
 .atlas-composer-row .atlas-composer-glyph { margin-top: 1px; }
 .atlas-composer-actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 .atlas-composer-badge { margin-right: auto; display: inline-flex; }
-.atlas-composer-glyph { color: var(--a-ink); flex-shrink: 0; }
+.atlas-composer-glyph { color: var(--atlas-product, var(--a-ink)); flex-shrink: 0; }
 .atlas-composer-send {
 	/* A circle, matching the co-pilot drawer's send button. */
 	width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
@@ -745,10 +768,12 @@ h1 .atlas-soon--inline, h2 .atlas-soon--inline, .atlas-h1 .atlas-soon--inline, .
 	font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
 	color: var(--a-faint); margin-right: 6px;
 }
+/* Questions read as questions: sentence case in the body font, on a rounded
+   pill like the page's other controls. */
 .atlas-composer-chip {
-	display: inline-flex; align-items: center; gap: 7px; height: 30px;
-	font-family: var(--a-mono); font-size: 10.5px; line-height: 1; letter-spacing: 0.05em; text-transform: uppercase;
-	padding: 0 12px; border-radius: var(--a-radius-tag); cursor: pointer;
+	display: inline-flex; align-items: center; gap: 7px; height: 32px;
+	font-family: var(--a-body); font-size: 13px; line-height: 1;
+	padding: 0 14px; border-radius: var(--a-radius-pill); cursor: pointer;
 	border: 0; box-shadow: inset 0 0 0 1px var(--a-border);
 	background: color-mix(in srgb, var(--a-ink) 3%, transparent); color: var(--a-ink);
 	white-space: nowrap; max-width: 100%;

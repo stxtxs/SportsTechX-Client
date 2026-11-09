@@ -82,7 +82,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
 		const extra: PageHit[] = [
 			{ label: 'Account', href: accountPath, group: 'Account', icon: 'nav-thesis' },
 			{ label: 'Get verified', href: hrefOf('verify'), group: 'Account', icon: 'nav-onboarding' },
-			{ label: 'Chat', href: hrefOf('chat'), group: 'Pages', icon: 'nav-watchlist' },
+			{ label: 'Ask Atlas', href: hrefOf('chat'), group: 'Pages', icon: 'nav-watchlist' },
 		];
 		if (tier === 'raise') extra.push({ label: 'Raise settings', href: hrefOf('raise-settings'), group: 'Account', icon: 'nav-thesis' });
 		if (tier === 'scout') extra.push({ label: 'Thesis settings', href: hrefOf('thesis'), group: 'Account', icon: 'nav-thesis' });

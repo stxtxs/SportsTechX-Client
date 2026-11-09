@@ -10,7 +10,7 @@ import { RailAccount } from './rail-account';
 // Raise-only, so a static import here shipped the co-pilot to Explore and
 // Scout users who can never open it.
 const RaiseChat = dynamic(() => import('@/components/raise/chat/raise-chat').then((m) => m.RaiseChat), { ssr: false });
-import { UpgradeCards } from '@/components/explore/upgrade-cards';
+import { FitBox } from '@/components/explore/fit-box';
 import { EXPLORE_COLOR } from '@/components/explore/shell-config';
 import { SCOUT_COLOR } from '@/components/scout/shell-config';
 import { useNav } from '@/hooks/use-nav';
@@ -74,17 +74,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 				topbar={<Navbar />}
 				// Avatar, name and log out, pinned to the foot of the rail.
 				railAccount={<RailAccount accountPath={accountPath} />}
-				// Explore's sidebar carries the Raise / Scout upgrade cards. Held back
+				// Explore's sidebar carries the Raise / Scout fit box. Held back
 				// until the tier is actually known — `getUserType(undefined)` is
 				// 'explore', so without this a paying user is shown an upgrade pitch
 				// for a beat on every cold load.
-				railExtra={ready && tier === 'explore' ? <UpgradeCards /> : undefined}
+				railExtra={ready && tier === 'explore' ? <FitBox /> : undefined}
 				// The co-pilot FAB, on every tier. It used to be hidden from Explore
 				// because the API refused them; now credits are the only limit, so a
 				// free user gets the assistant too and is told when they run out. The
 				// full chat page is itself the co-pilot, so don't stack a drawer on
-				// top of it there.
-				overlay={!pathname.startsWith(hrefOf('chat')) ? <RaiseChat /> : undefined}
+				// top of it there — nor on Home, whose own composer already asks
+				// Atlas (the button only covered the feed cards there).
+				overlay={!pathname.startsWith(hrefOf('chat')) && pathname !== homePath ? <RaiseChat /> : undefined}
 			>
 				<RouteGate>{children}</RouteGate>
 			</AtlasShell>

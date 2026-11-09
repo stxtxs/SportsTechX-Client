@@ -52,7 +52,8 @@ function NavbarInner({ tier, nav, homePath, accountPath }: {
 	return (
 		<header className="atlas-navbar">
 			<div className="atlas-navbar__left">
-				<nav className="atlas-crumbs" aria-label="Breadcrumb">
+				{/* On Home a lone "HOME" crumb only repeats the sidebar. */}
+				{pathname !== homePath && <nav className="atlas-crumbs" aria-label="Breadcrumb">
 					<Link href={homePath} className="atlas-crumb">Home</Link>
 					{crumbs.map((c) => (
 						<span key={c.label} className="atlas-crumb-wrap">
@@ -62,7 +63,7 @@ function NavbarInner({ tier, nav, homePath, accountPath }: {
 								: <span className="atlas-crumb is-plain">{c.label}</span>}
 						</span>
 					))}
-				</nav>
+				</nav>}
 			</div>
 
 			<div className="atlas-navbar__right">

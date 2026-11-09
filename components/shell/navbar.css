@@ -60,11 +60,15 @@
 /* ── Avatar + account menu ─────────────────────────────────────────────────*/
 .atlas .atlas-avatar {
 	display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0;
-	/* Square with soft corners, matching the sidebar account avatar. */
-	padding: 0; border: none; border-radius: 7px; overflow: hidden; cursor: pointer;
-	background: var(--a-primary); color: var(--a-primary-ink);
+	/* Round and quiet, like the theme and bell buttons beside it: the solid
+	   black square was the heaviest thing on the page. */
+	padding: 0; border: none; border-radius: 50%; overflow: hidden; cursor: pointer;
+	background: color-mix(in srgb, var(--a-ink) 6%, var(--a-page)); color: var(--a-ink);
+	box-shadow: inset 0 0 0 1px var(--a-border-strong);
 	font-family: var(--a-mono); font-size: 12px; letter-spacing: 0.06em;
+	transition: background 0.12s;
 }
+.atlas .atlas-avatar:hover { background: color-mix(in srgb, var(--a-ink) 10%, var(--a-page)); }
 .atlas .atlas-avatar__img { width: 100%; height: 100%; object-fit: cover; }
 .atlas .atlas-account-menu { z-index: 50; min-width: min(92vw, 230px); }
 .atlas .atlas-account-menu .atlas-menu__item { text-decoration: none; }

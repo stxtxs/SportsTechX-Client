@@ -34,7 +34,7 @@ const EXPECTED: Record<Tier, Shape> = {
 		// Pitch Deck is a paid feature (Raise/Scout) and resolves to `upsell` for
 		// Explore, like Investors — shown in the nav (buildNav keeps everything
 		// `!== 'hidden'`) so the page can sell it; clicking it hits the TierGate.
-		top: ['Home', 'Chat', 'Interests', 'Pitch Deck'],
+		top: ['Home', 'Ask Atlas', 'Interests', 'Pitch Deck'],
 		sections: [
 			['Intelligence', ['Framework', 'Reports', 'Newsletter']],
 			['Market', ['Analysis', 'Monthly Roundup', 'Companies', 'Events', 'Programs', 'Investors']],
@@ -42,7 +42,7 @@ const EXPECTED: Record<Tier, Shape> = {
 		bottom: [],
 	},
 	raise: {
-		top: ['Home', 'Chat'],
+		top: ['Home', 'Ask Atlas'],
 		sections: [
 			['Raise', ['Pitch Deck', 'Investors', 'Programs']],
 			['Discover', ['Companies', 'Recommended', 'Signals']],
@@ -56,7 +56,7 @@ const EXPECTED: Record<Tier, Shape> = {
 		// "All watchlists" lives inside Discover (Scout has no pipeline, so a
 		// standalone one-item Watchlists section looked orphaned). Saved lists
 		// splice in before it — covered by the splice test below.
-		top: ['Home', 'Chat'],
+		top: ['Home', 'Ask Atlas'],
 		sections: [
 			['Discover', ['Companies', 'Recommended', 'Signals', 'All watchlists']],
 			['Ecosystem', ['Investors', 'Programs']],

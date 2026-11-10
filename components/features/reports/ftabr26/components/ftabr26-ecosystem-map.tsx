@@ -53,11 +53,13 @@ type EcoLists = {
 };
 
 export default function Ftabr26EcosystemMap({
-  t, isDark, isMobile = false, eco, selected, onSelect,
+  t, isDark, isMobile = false, eco, selected, onSelect, print = false,
 }: {
   t: Theme;
   isDark: boolean;
   isMobile?: boolean;
+  /** PDF: no click prompts (there is nothing to click on paper) */
+  print?: boolean;
   /** The same rows the tables below list, so the tallies always agree. */
   eco: EcoLists;
   selected: Ftabr26ContinentId | null;
@@ -160,9 +162,11 @@ export default function Ftabr26EcosystemMap({
             </span>
           </div>
         ))}
+        {!print && (
         <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted, letterSpacing: 1 }}>
           {selected ? "Selected. The tables below show this region." : "Select a continent to filter the tables below."}
         </span>
+        )}
       </div>
 
       {/* ── MAP ── */}
@@ -276,7 +280,7 @@ export default function Ftabr26EcosystemMap({
           border: `1px solid ${BRAND.pink}30`, borderRadius: 8,
           padding: isMobile ? "12px 14px" : "16px 20px",
           backdropFilter: "blur(8px)", zIndex: 10, maxWidth: isMobile ? 130 : 170,
-          opacity: !isMobile && mapReady && !selected && !hovered ? 1 : 0,
+          opacity: !print && !isMobile && mapReady && !selected && !hovered ? 1 : 0,
           pointerEvents: "none", transition: "opacity 0.3s ease",
         }}>
           <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 14 : 16, color: t.titleColor, lineHeight: 1.2, marginBottom: 6 }}>

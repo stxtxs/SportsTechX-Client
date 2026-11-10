@@ -617,9 +617,9 @@ export const FTABR26_WORLDCUP = {
     sublabel: "Bank of America's estimate; half of the $40.0B generated globally",
   },
   stats: [
-    { value: "99.7%",  label: "Stadium occupancy",                            sublabel: "6.81M fans across 104 matches" },
-    { value: "14.04M", label: "Average US viewers per match",                 sublabel: "Up 116.0% on Fox and 143.0% on Telemundo vs 2022" },
-    { value: "13M GB", label: "Data across tournament and broadcast networks", sublabel: "Through the quarter-finals; over 161,000 km of fibre deployed" },
+    { value: "99.7%",  label: "Stadium occupancy",                            sublabel: "6.8M fans across 104 matches" },
+    { value: "14.0M",  label: "Average US viewers per match",                 sublabel: "Up 116.0% on Fox and 143.0% on Telemundo vs 2022" },
+    { value: "13 PB",  label: "Data across tournament and broadcast networks", sublabel: "Through the quarter-finals; over 161,000 km of fibre deployed" },
   ],
   techHeading: "Tech @ FIFA World Cup 26",
   tech: FTABR26_WORLDCUP_TECH,
@@ -647,7 +647,7 @@ export const FTABR26_FEATURED = {
       { src: "/reports/ftabr26/featured/playermaker-action.webp", alt: "Player wearing Playermaker sensors striking a football on grass", position: "center 55%" },
     ],
   },
-  aboutLabel: "What Playermaker Solves",
+  aboutLabel: "The problem & solution",
   about: [
     "We all move from our feet, yet nobody ever taught us how to walk, run or cut. Playermaker is claiming the foot wearable opportunity.",
     "Its foot-worn motion tracking, proven with the world's best footballers, coaches any athlete, at any level, in any sport, to stop guessing and start knowing: developing talent and finding the small adjustments that unlock their best.",
@@ -820,3 +820,23 @@ export const FTABR26_IMPRINT = {
   contact: "www.sportstechx.com / hello@sportstechx.com",
   note: "The content in this report is for general information purposes only and can change at any time. SportsTechX cannot guarantee the ultimate accuracy or completeness of the data.",
 } as const;
+
+
+/* ── Team credits and imprint (closes the page, after Methodology) ─────────
+   Wording reused from the Football Tech Report 2025. The team list is TBC for
+   this edition: the thank-you block stays hidden until it has names. */
+export const FTABR26_CREDITS = {
+  thanksTitle: "Thank you!",
+  thanks:
+    "We would like to thank our fantastic team for the work that's gone into this report. Without their initiative, innovation and hard work this wouldn't have been possible. A great team is greater than the sum of its parts. These are the people that make us a great team.",
+  /** TBC: names and roles for this edition, e.g. { name: "…", role: "Research" } */
+  team: [] as { name: string; role: string }[],
+  imprint: {
+    author: "Rohn Malhotra",
+    company: "SportsTechX GmbH, Berlin",
+    contact: "hello@sportstechx.com",
+    website: "www.sportstechx.com",
+  },
+  contentNote:
+    "The content in this report is for general information purposes only and can change at any time. SportsTechX cannot guarantee the ultimate accuracy or completeness of the data.",
+};

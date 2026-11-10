@@ -10,13 +10,15 @@ export const FTABR26_SOCCERMENT = {
   headline: "Building the Intelligence Layer of Football",
   logo: asset("logo"),
   founder: { name: "Aldo Comi", role: "CEO, Soccerment", photo: asset("aldo-comi-ceo") },
+  /** Headline quote shown above the CEO. TBC from Soccerment; hidden while empty. */
+  quote: "",
   problemLabel: "The problem & solution",
   about: [
     "Football clubs buy event data, video, GPS tracking and scouting software from different vendors, at prices only elite clubs afford, and analysts still turn it all into decisions by hand.",
     "Soccerment combines proprietary data, video and GPS wearables in one AI-native software suite, SICS+, where AI agents augment analysts’ work: more depth, less time, and a fraction of incumbents’ costs.",
   ],
   metrics: [
-    { value: "95%", label: "Retention across 350+ contracts with clubs, agencies and federations in 50+ countries" },
+    { value: "95.0%", label: "Retention across 350+ contracts with clubs, agencies and federations in 50+ countries" },
   ],
   achievementsLabel: "Achievements",
   achievements: [

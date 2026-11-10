@@ -22,7 +22,7 @@ import {
   type LeaderRow, type CompanyRow, type YearRow,
 } from "./data/ftabr26-facts-data";
 import {
-  FTABR26_HERO as FTABR26_HERO_DEFAULT, FTABR26_ABOUT as FTABR26_ABOUT_DEFAULT,
+  FTABR26_HERO as FTABR26_HERO_DEFAULT, FTABR26_ABOUT as FTABR26_ABOUT_DEFAULT, FTABR26_CREDITS as FTABR26_CREDITS_DEFAULT,
   FTABR26_INSIGHTS as FTABR26_INSIGHTS_DEFAULT, FTABR26_CREATOR_DEALS as FTABR26_CREATOR_DEALS_DEFAULT, type InsightArticle,
   FTABR26_WOMENS_MCO_GROUPS as FTABR26_WOMENS_MCO_GROUPS_DEFAULT, FTABR26_WORLDCUP as FTABR26_WORLDCUP_DEFAULT,
   FTABR26_WORLDCUP_TECH_CATEGORIES as FTABR26_WORLDCUP_TECH_CATEGORIES_DEFAULT, type WorldCupTech,
@@ -47,6 +47,7 @@ import { Ftabr26PersonDrawer } from "./components/ftabr26-person-drawer";
 import { Ftabr26SoccermentFeature } from "./components/ftabr26-soccerment-feature";
 import { Ftabr26PartnerHeader } from "./components/ftabr26-partner-header";
 import { FTABR26_PART_ORDER } from "./content-defaults";
+import { Ftabr26AtlasCta, ATLAS_CTAS } from "./components/ftabr26-atlas-cta";
 
 /* The ecosystem map pulls in d3 and the world topojson, neither of which any
    other section needs — it loads when the reader gets there. */
@@ -84,6 +85,20 @@ const SHOW_PARTNERS = false;
 const PITCH       = BRAND.green;
 const PITCH_LIGHT = BRAND.greenLight;
 const PITCH_TINT  = "rgba(56,117,83,0.08)";
+/* Cover: deep pitch green with 7 vertical mowed bands and tone-on-tone lines */
+const COVER_BG      = "#1C332B";
+const COVER_STRIPE  = "#213A31";
+const COVER_LINES   = "#3A5C4F";
+const COVER_STRIPES = `repeating-linear-gradient(90deg, ${COVER_BG} 0, ${COVER_BG} 14.2857%, ${COVER_STRIPE} 14.2857%, ${COVER_STRIPE} 28.5714%)`;
+/* Innovators: one neutral ring for everyone; the region is shown as text */
+const INNOVATOR_RING = BRAND.slate;
+const ATLAS_FRAMEWORK_URL = "https://www.atlas.sportstechx.com/framework";
+/* "13 Nov 2026" from an ISO date; falls back to the raw value. */
+const formatEventDate = (iso?: string | null) => {
+  if (!iso) return "TBC";
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+};
 /* Featured company panel takes the company's own brand colour */
 const FEAT_COL    = FTABR26_FEATURED_DEFAULT.brandColor;
 const featLabel: React.CSSProperties = { fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 3, color: FEAT_COL, textTransform: "uppercase", margin: "0 0 8px" };
@@ -412,6 +427,44 @@ const NAV_ITEMS: { href: string; label: string }[] = [
    to bring the section — and the divider that follows it — back. */
 const SHOW_EXEC_SUMMARY = false;
 
+/* Tab bar without a native scrollbar. When the tabs overflow (mobile), soft
+   left/right arrows appear on the side that has more to show. */
+function TabStrip({ t, style, wrapStyle, children }: { t: any; style?: React.CSSProperties; wrapStyle?: React.CSSProperties; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [edge, setEdge] = useState({ left: false, right: false });
+  const update = () => {
+    const el = ref.current; if (!el) return;
+    const left = el.scrollLeft > 2, right = el.scrollLeft + el.clientWidth < el.scrollWidth - 2;
+    setEdge(e => (e.left === left && e.right === right ? e : { left, right }));
+  };
+  useEffect(() => {
+    update();
+    const el = ref.current;
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null;
+    if (el && ro) ro.observe(el);
+    window.addEventListener("resize", update);
+    return () => { ro?.disconnect(); window.removeEventListener("resize", update); };
+  }, []);
+  const arrow = (dir: -1 | 1) => (
+    <button type="button" aria-label={dir < 0 ? "Scroll tabs left" : "Scroll tabs right"}
+      onClick={() => ref.current?.scrollBy({ left: dir * 220, behavior: "smooth" })}
+      style={{ position: "absolute", top: 0, bottom: 2, [dir < 0 ? "left" : "right"]: 0, width: 36, zIndex: 2, border: "none", cursor: "pointer",
+        color: t.textMuted, fontSize: 22, lineHeight: 1, padding: 0,
+        background: `linear-gradient(${dir < 0 ? 90 : 270}deg, ${t.bg} 55%, transparent)` }}>
+      {dir < 0 ? "‹" : "›"}
+    </button>
+  );
+  return (
+    <div style={{ position: "relative", ...wrapStyle }}>
+      {edge.left && arrow(-1)}
+      <div ref={ref} onScroll={update} className="ft26-tabstrip" style={{ ...style, overflowX: "auto", overflowY: "hidden", scrollbarWidth: "none" }}>
+        {children}
+      </div>
+      {edge.right && arrow(1)}
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════════════════ */
 /* MAIN REPORT                                                             */
 /* ═══════════════════════════════════════════════════════════════════════ */
@@ -445,6 +498,7 @@ export default function ReportFTABR26({ content, preview = false }: {
   const FTABR26_STARTUPS_NOTE = pick("startupsNote", FTABR26_STARTUPS_NOTE_DEFAULT);
   const FTABR26_PARTNERS = pick("partners", FTABR26_PARTNERS_DEFAULT);
   const FTABR26_METHODOLOGY = pick("methodology", FTABR26_METHODOLOGY_DEFAULT);
+  const FTABR26_CREDITS = pick("credits", FTABR26_CREDITS_DEFAULT);
   const FTABR26_FEATURED = pick("featured", FTABR26_FEATURED_DEFAULT);
   const FTABR26_INNOVATORS = pick("innovators", FTABR26_INNOVATORS_DEFAULT);
   const FTABR26_PLAYMAKER_COMPANIES = pick("playmakerCompanies", FTABR26_PLAYMAKER_COMPANIES_DEFAULT);
@@ -791,8 +845,10 @@ export default function ReportFTABR26({ content, preview = false }: {
       {text}
     </p>
   );
+  /* Titles run the full text width and wrap only when they run out of room;
+     the "\n" in older title strings is treated as a space. */
   const sectionTitle = (text: string, size = "clamp(42px,6vw,88px)") => (
-    <h2 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: size, lineHeight: 0.92, color: titleCol, whiteSpace: "pre-line" }}>{text}</h2>
+    <h2 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: size, lineHeight: 0.92, color: titleCol, width: "100%", maxWidth: "100%" }}>{text.replace(/\s*\n\s*/g, " ")}</h2>
   );
   const blockHeader = (text: string, size = "clamp(26px,3vw,40px)") => (
     <h3 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: size, lineHeight: 0.92, color: titleCol, margin: 0 }}>{text}</h3>
@@ -926,8 +982,8 @@ export default function ReportFTABR26({ content, preview = false }: {
   );
 
   /* One roster tile — ringed photo, name, company. Both rosters share it. */
-  const rosterTile = ({ id, name, company, photoUrl, ring, isSelected, onClick }: {
-    id: string; name: string; company: string; photoUrl?: string;
+  const rosterTile = ({ id, name, company, photoUrl, ring, region, isSelected, onClick }: {
+    id: string; name: string; company: string; photoUrl?: string; region?: string;
     ring: string; isSelected: boolean; onClick: () => void;
   }) => (
     <button key={id} id={id} type="button" className="stx-reveal" onClick={onClick}
@@ -944,13 +1000,17 @@ export default function ReportFTABR26({ content, preview = false }: {
         size={isMobile ? 80 : 108} ringWidth={3} ringGap={3} glow />
       <div>
         <p style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 13 : 15, color: t.text, lineHeight: 1.1, margin: "0 0 3px", letterSpacing: 0.4 }}>{name}</p>
-        <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 1, color: ring, lineHeight: 1.3, textTransform: "uppercase", margin: 0 }}>{company}</p>
+        <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 1, color: t.textMuted, lineHeight: 1.3, textTransform: "uppercase", margin: 0 }}>{company}</p>
+        {region && <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 8.5, letterSpacing: 1.2, color: t.textMuted, opacity: 0.75, lineHeight: 1.3, textTransform: "uppercase", margin: "3px 0 0" }}>{region}</p>}
       </div>
     </button>
   );
 
+  /* Table header: same small grey mono caps as the chart captions, 1px rule under it */
+  const TABLE_HEAD: React.CSSProperties = { background: "transparent", borderBottom: `1px solid ${t.border}`, fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase" };
+
   const noteText = (text: string) => (
-    <p style={{ fontSize: 14, color: t.textMuted, lineHeight: 1.8, margin: "16px 0 40px" }}>{text}</p>
+    <p style={{ fontSize: 15, color: t.text, lineHeight: 1.9, margin: "16px 0 40px" }}>{text}</p>
   );
 
   /* Derived chart inputs */
@@ -995,7 +1055,7 @@ export default function ReportFTABR26({ content, preview = false }: {
           </div>
 
           {/* Tab switcher: three theme articles, then the bonus World Cup recap */}
-          <div style={{ display: "flex", flexWrap: "nowrap", marginTop: 40, marginBottom: 32, borderBottom: `2px solid ${t.border}`, overflowX: "auto" }}>
+          <TabStrip t={t} wrapStyle={{ marginTop: 40, marginBottom: 32 }} style={{ display: "flex", flexWrap: "nowrap", borderBottom: `2px solid ${t.border}` }}>
             {INSIGHT_TABS.map(tab => {
               const active = insightsTab === tab.key;
               return (
@@ -1008,7 +1068,7 @@ export default function ReportFTABR26({ content, preview = false }: {
                 </button>
               );
             })}
-          </div>
+          </TabStrip>
 
           {FTABR26_INSIGHTS.filter(a => isPdf || a.key === insightsTab).map(insightArticle)}
 
@@ -1179,13 +1239,12 @@ export default function ReportFTABR26({ content, preview = false }: {
             </p>
           </div>
 
-          {rosterLegend(CONTINENT_COLOR)}
 
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(6,1fr)", gap: isMobile ? 24 : 36, marginTop: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(6,1fr)", gap: isMobile ? 24 : 36, marginTop: isMobile ? 28 : 40 }}>
             {FTABR26_INNOVATORS.map(p => rosterTile({
               id: `ftabr26-inn-${p.id}`,
               name: p.name, company: p.company, photoUrl: p.photoUrl,
-              ring: CONTINENT_COLOR[p.continent] || BRAND.pink,
+              ring: INNOVATOR_RING, region: p.continent,
               isSelected: selectedInnovator?.id === p.id,
               onClick: () => setSelectedInnovator(selectedInnovator?.id === p.id ? null : p),
             }))}
@@ -1196,7 +1255,7 @@ export default function ReportFTABR26({ content, preview = false }: {
       {/* Innovator drawer — the two interview answers */}
       {selectedInnovator && (() => {
         const p = selectedInnovator;
-        const accent = CONTINENT_COLOR[p.continent] || BRAND.pink;
+        const accent = INNOVATOR_RING;
         const answers = ([["qTech", p.qTech], ["qUnderserved", p.qUnderserved]] as const)
           .filter(([, a]) => a.trim().length > 0);
         return (
@@ -1248,7 +1307,8 @@ export default function ReportFTABR26({ content, preview = false }: {
                 {watchStartups.map(c => {
                   /* Unmapped sectors get the brand pink rather than a bucket
                      they were never assigned to. */
-                  const sectorColor = c.sector ? SECTOR_COLOR[c.sector] : BRAND.pink;
+                  /* Sector colour only for mapped sectors; unmapped cards stay neutral (pink is not a category). */
+                  const sectorColor = c.sector ? SECTOR_COLOR[c.sector] : t.border;
                   const logoUrl = startupLogoUrl(c);
                   const href = ecoHref(c.website);
                   return (
@@ -1261,7 +1321,7 @@ export default function ReportFTABR26({ content, preview = false }: {
                       onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = `0 12px 40px ${isDark ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.1)"}, 0 0 0 1px ${sectorColor}33`; }}
                       onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
                     >
-                      <div style={{ height: 3, background: `linear-gradient(90deg, ${sectorColor}, ${sectorColor}44)` }} />
+                      <div style={{ height: 3, background: sectorColor }} />
                       <div style={{ padding: isMobile ? "18px 16px 20px" : "22px 24px 24px", display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                           <div style={{
@@ -1279,7 +1339,11 @@ export default function ReportFTABR26({ content, preview = false }: {
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <span style={{ fontSize: 16, fontWeight: 700, color: t.text, fontFamily: "'Open Sans',sans-serif", display: "block" }}>{c.name}</span>
-                            <span style={{ fontSize: 11, color: t.textMuted, fontFamily: "'DM Mono',monospace" }}>{getCountryFlag(c.country ?? "")} {c.country}</span>
+                            {c.country && (
+                              <span style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2, fontSize: 11, color: t.textMuted, fontFamily: "'DM Mono',monospace" }}>
+                                {getCountryFlag(c.country)}<span>{c.country}</span>
+                              </span>
+                            )}
                           </div>
                         </div>
                         {c.description && (
@@ -1323,7 +1387,7 @@ export default function ReportFTABR26({ content, preview = false }: {
             />
           </Suspense>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 40, marginBottom: 28, borderBottom: `2px solid ${t.border}`, overflowX: "auto" }}>
+          <TabStrip t={t} wrapStyle={{ marginTop: 40, marginBottom: 28 }} style={{ display: "flex", alignItems: "center", gap: 12, borderBottom: `2px solid ${t.border}` }}>
             {([
               ["initiatives",  `Initiatives (${ecoShown.initiatives.length})`],
               ["accelerators", `Accelerators (${ecoShown.programs.length})`],
@@ -1345,7 +1409,7 @@ export default function ReportFTABR26({ content, preview = false }: {
                 {ecoRegion} <span style={{ fontSize: 12, lineHeight: 1 }}>✕</span>
               </button>
             )}
-          </div>
+          </TabStrip>
 
           {(() => {
             const rows: Ftabr26EcosystemEntry[] = ecoTab === "initiatives"
@@ -1356,7 +1420,7 @@ export default function ReportFTABR26({ content, preview = false }: {
               : "44px 1fr 240px";
             return (
               <div className="stx-reveal" style={{ border: `1px solid ${t.border}`, overflow: "hidden", borderRadius: 8 }}>
-                <div style={{ display: "grid", gridTemplateColumns: cols, gap: "0 12px", padding: "12px 20px", background: isDark ? "rgba(56,117,83,0.45)" : PITCH, fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: BRAND.white, textTransform: "uppercase" }}>
+                <div style={{ display: "grid", gridTemplateColumns: cols, gap: "0 12px", padding: "12px 20px", ...TABLE_HEAD }}>
                   <span />
                   <span>{ecoTab === "initiatives" ? "Initiative" : "Program"}</span>
                   {!isMobile && <span>City</span>}
@@ -1378,7 +1442,7 @@ export default function ReportFTABR26({ content, preview = false }: {
                   );
                   const nameStyle: React.CSSProperties = { color: t.text, textDecoration: "none", borderBottom: href ? `1px solid ${BRAND.pink}44` : "none" };
                   return (
-                    <div key={`${r.name}-${r.rank}`} style={{ display: "grid", gridTemplateColumns: cols, gap: "0 12px", padding: "10px 20px", alignItems: "center", background: i % 2 ? t.tableRowAlt : "transparent", borderTop: `1px solid ${t.border}` }}>
+                    <div key={`${r.name}-${r.rank}`} style={{ display: "grid", gridTemplateColumns: cols, gap: "0 12px", padding: "12px 20px", alignItems: "center", background: "transparent", borderTop: `1px solid ${t.border}` }}>
                       {/* Logo — the master tables store no logo, so it is
                           resolved from the website and falls back to a
                           monogram when the lookup misses. */}
@@ -1413,8 +1477,35 @@ export default function ReportFTABR26({ content, preview = false }: {
               </div>
             );
           })()}
+
+          {/* Upcoming events: shown once the Ecosystem part's Events rows hold
+              future-dated entries (admin → Ecosystem → Events). */}
+          {eco.events.length > 0 && (
+            <div className="stx-reveal" style={{ marginTop: 56 }}>
+              {blockHeader("UPCOMING EVENTS", "clamp(22px,2.4vw,32px)")}
+              <div style={{ marginTop: 20, border: `1px solid ${t.border}`, borderRadius: 8, overflow: "hidden" }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 84px" : "1fr 140px 220px", gap: "0 12px", padding: "12px 20px", ...TABLE_HEAD }}>
+                  <span>Event</span><span style={{ textAlign: isMobile ? "right" : "left" }}>Date</span>{!isMobile && <span>City</span>}
+                </div>
+                {eco.events.map(ev => {
+                  const href = ecoHref(ev.website);
+                  return (
+                    <div key={`${ev.name}-${ev.startDate}`} style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 84px" : "1fr 140px 220px", gap: "0 12px", padding: "12px 20px", alignItems: "center", borderTop: `1px solid ${t.border}` }}>
+                      <span style={{ fontSize: 13.5, fontWeight: 600, color: t.text }}>
+                        {href ? <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: t.text, textDecoration: "none", borderBottom: `1px solid ${BRAND.pink}44` }}>{ev.name}</a> : ev.name}
+                        {isMobile && ev.city && <span style={{ display: "block", fontFamily: "'DM Mono',monospace", fontSize: 10.5, color: t.textMuted, fontWeight: 400, marginTop: 2 }}>{ev.city}</span>}
+                      </span>
+                      <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11.5, color: t.textMuted, textAlign: isMobile ? "right" : "left" }}>{formatEventDate(ev.startDate)}</span>
+                      {!isMobile && <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11.5, color: t.textMuted }}>{[ev.city, ev.country].filter(Boolean).join(", ")}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+      <Ftabr26AtlasCta {...ATLAS_CTAS.scout} isMobile={isMobile} />
     </>),
     soccerment: (<>
       {/* Soccerment follows Ecosystem independently of legacy spotlight flags. */}
@@ -1489,7 +1580,7 @@ export default function ReportFTABR26({ content, preview = false }: {
           </div>
 
           {/* Tab switcher */}
-          <div style={{ display: "flex", marginTop: 40, marginBottom: 32, borderBottom: `2px solid ${t.border}`, overflowX: "auto" }}>
+          <TabStrip t={t} wrapStyle={{ marginTop: 40, marginBottom: 32 }} style={{ display: "flex", borderBottom: `2px solid ${t.border}` }}>
             {([["investment", "Investment"], ["leaderboards", "Leaderboards"]] as const).map(([key, label]) => {
               const active = dataTab === key;
               return (
@@ -1499,7 +1590,7 @@ export default function ReportFTABR26({ content, preview = false }: {
                 </button>
               );
             })}
-          </div>
+          </TabStrip>
 
           {/* ══════════ INVESTMENT TAB ══════════ */}
           {(isPdf || dataTab === "investment") && (
@@ -1538,7 +1629,7 @@ export default function ReportFTABR26({ content, preview = false }: {
               {/* Rounds table */}
               <div className="stx-reveal" style={{ marginTop: 28, border: `1px solid ${t.border}`, borderRadius: 8, overflow: "auto" }}>
                 <div style={{ minWidth: 520 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: `160px repeat(${facts.byYear.length},1fr)`, padding: "12px 16px", background: isDark ? "rgba(56,117,83,0.45)" : PITCH, fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 1.6, color: BRAND.white, textTransform: "uppercase" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: `160px repeat(${facts.byYear.length},1fr)`, padding: "12px 20px", ...TABLE_HEAD }}>
                     <span>Number of rounds</span>
                     {facts.byYear.map(r => <span key={r.year} style={{ textAlign: "right" }}>{r.year}</span>)}
                   </div>
@@ -1547,7 +1638,7 @@ export default function ReportFTABR26({ content, preview = false }: {
                     ["Football also", (r: YearRow) => r.roundsAlso],
                     ["Total",         (r: YearRow) => r.roundsOnly + r.roundsAlso],
                   ] as const).map(([label, pick], i) => (
-                    <div key={label} style={{ display: "grid", gridTemplateColumns: `160px repeat(${facts.byYear.length},1fr)`, padding: "12px 16px", borderTop: `1px solid ${t.border}`, background: i % 2 ? t.tableRowAlt : "transparent" }}>
+                    <div key={label} style={{ display: "grid", gridTemplateColumns: `160px repeat(${facts.byYear.length},1fr)`, padding: "12px 20px", borderTop: `1px solid ${t.border}`, background: "transparent" }}>
                       <span style={{ fontSize: 12.5, fontWeight: label === "Total" ? 700 : 500, color: t.text }}>{label}</span>
                       {facts.byYear.map(r => (
                         <span key={r.year} style={{ textAlign: "right", fontFamily: "'DM Mono',monospace", fontSize: 12, color: label === "Total" ? BRAND.pink : t.textMuted, fontWeight: label === "Total" ? 700 : 400 }}>{pick(r)}</span>
@@ -1590,6 +1681,13 @@ export default function ReportFTABR26({ content, preview = false }: {
               {/* Sector split */}
               <div className="stx-reveal" style={{ marginTop: 72 }}>
                 {blockHeader("SECTOR-WISE FUNDING")}
+                <p style={{ fontSize: 15, color: t.text, lineHeight: 1.9, margin: "16px 0 0" }}>
+                  We group every startup by who it serves: <strong>Athlete Tech</strong>, <strong>Fan Tech</strong> and <strong>Executive Tech</strong>.{" "}
+                  <a href={ATLAS_FRAMEWORK_URL} target="_blank" rel="noopener noreferrer"
+                    style={{ color: BRAND.pink, textDecoration: "none", borderBottom: `1px solid ${BRAND.pink}55`, whiteSpace: "nowrap" }}>
+                    See the full SportsTech framework in Atlas ↗
+                  </a>
+                </p>
                 {noteText(dealflowCopy.sector)}
                 {noteText(dealflowCopy.sectorMix)}
               </div>
@@ -1680,7 +1778,7 @@ export default function ReportFTABR26({ content, preview = false }: {
                   return (
                     <div key={title} className="stx-reveal" style={isMobile ? undefined : { display: "grid", gridRow: "span 3", gridTemplateRows: "subgrid", rowGap: 0 }}>
                       {blockHeader(title, "clamp(22px,2.4vw,32px)")}
-                      <p style={{ fontSize: 13, color: t.textMuted, lineHeight: 1.75, margin: "12px 0 24px" }}>{note}</p>
+                      <p style={{ fontSize: 15, color: t.text, lineHeight: 1.9, margin: "12px 0 24px" }}>{note}</p>
                       <div>
                         {top.map(leaderRow)}
                         {rest.length > 0 && (
@@ -1719,14 +1817,14 @@ export default function ReportFTABR26({ content, preview = false }: {
                     then name — the logo is resolved from the company website,
                     so the committed fallback rows fall back to a monogram. */}
                 <div style={{ border: `1px solid ${t.border}`, borderRadius: 8, overflow: "hidden" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "28px 34px 1fr 84px" : "48px 44px 1.1fr 1.5fr 150px 110px", gap: "0 12px", padding: "12px 20px", background: isDark ? "rgba(56,117,83,0.45)" : PITCH, fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: BRAND.white, textTransform: "uppercase" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "28px 34px 1fr 84px" : "48px 44px 1.1fr 1.5fr 150px 110px", gap: "0 12px", padding: "12px 20px", ...TABLE_HEAD }}>
                     <span>#</span><span /><span>Name</span>{!isMobile && <span>Description</span>}{!isMobile && <span>City</span>}
                     <span style={{ textAlign: "right" }}>Funding</span>
                   </div>
                   {companyRows.map((c, i) => {
                     const logoUrl = ecoLogoUrl(c.website);
                     return (
-                      <div key={c.name} style={{ display: "grid", gridTemplateColumns: isMobile ? "28px 34px 1fr 84px" : "48px 44px 1.1fr 1.5fr 150px 110px", gap: "0 12px", padding: "13px 20px", alignItems: "center", background: i % 2 ? t.tableRowAlt : "transparent", borderTop: `1px solid ${t.border}` }}>
+                      <div key={c.name} style={{ display: "grid", gridTemplateColumns: isMobile ? "28px 34px 1fr 84px" : "48px 44px 1.1fr 1.5fr 150px 110px", gap: "0 12px", padding: "12px 20px", alignItems: "center", background: "transparent", borderTop: `1px solid ${t.border}` }}>
                         <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: BRAND.slate }}>{c.rank}</span>
                         <div style={{ width: 30, height: 30, borderRadius: 5, flexShrink: 0, background: isDark ? "rgba(255,255,255,0.08)" : BRAND.white, border: `1px solid ${t.border}`, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
                           {logoUrl && (
@@ -1754,6 +1852,7 @@ export default function ReportFTABR26({ content, preview = false }: {
 
         </div>
       </div>
+      <Ftabr26AtlasCta {...ATLAS_CTAS.generic} isMobile={isMobile} />
     </>),
     methodology: (<>
       {/* ── METHODOLOGY (split out of Data in Full so it can close the page) ── */}
@@ -1773,6 +1872,34 @@ export default function ReportFTABR26({ content, preview = false }: {
               ))}
             </div>
             <a href="/reports/methodology" target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", marginTop: 20, fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 2, color: BRAND.pink, textDecoration: "none", textTransform: "uppercase", borderBottom: `1px solid ${BRAND.pink}55`, paddingBottom: 2 }}>Full methodology ↗</a>
+          </div>
+        </div>
+      </div>
+    </>),
+    credits: (<>
+      {/* ── TEAM CREDITS + IMPRINT ─────────────────────────────────────────── */}
+      <div id="credits" style={{ background: t.bgSec, padding: isMobile ? "40px 0" : "64px 0" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "0 16px" : "0 40px", display: "grid", gridTemplateColumns: isMobile || FTABR26_CREDITS.team.length === 0 ? "1fr" : "1.3fr 1fr", gap: isMobile ? 32 : 56 }}>
+          {FTABR26_CREDITS.team.length > 0 && (
+            <div>
+              {blockHeader(FTABR26_CREDITS.thanksTitle.toUpperCase(), "clamp(22px,2.4vw,32px)")}
+              <p style={{ fontSize: 14, color: t.text, lineHeight: 1.85, margin: "12px 0 20px" }}>{FTABR26_CREDITS.thanks}</p>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(3,1fr)", gap: "14px 20px" }}>
+                {FTABR26_CREDITS.team.map(m => (
+                  <div key={m.name}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: t.text }}>{m.name}</div>
+                    <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9.5, letterSpacing: 1.4, color: t.textMuted, textTransform: "uppercase", marginTop: 2 }}>{m.role}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div>
+            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase", marginBottom: 10 }}>Imprint</div>
+            <p style={{ fontSize: 13, color: t.textMuted, lineHeight: 1.8, margin: 0 }}>
+              Author: {FTABR26_CREDITS.imprint.author} · {FTABR26_CREDITS.imprint.company} · <a href={`mailto:${FTABR26_CREDITS.imprint.contact}`} style={{ color: t.textMuted }}>{FTABR26_CREDITS.imprint.contact}</a> · <a href={`https://${FTABR26_CREDITS.imprint.website}`} target="_blank" rel="noopener noreferrer" style={{ color: t.textMuted }}>{FTABR26_CREDITS.imprint.website}</a>
+            </p>
+            <p style={{ fontSize: 12, color: t.textMuted, lineHeight: 1.75, margin: "10px 0 0", opacity: 0.85 }}>{FTABR26_CREDITS.contentNote}</p>
           </div>
         </div>
       </div>
@@ -1797,9 +1924,9 @@ export default function ReportFTABR26({ content, preview = false }: {
       />
 
       {/* ── HERO ────────────────────────────────────────────────────────── */}
-      <section id="stx-hero" style={{ minHeight: isPdf ? "auto" : "100vh", height: isPdf ? "auto" : (isMobile ? "100svh" : "100vh"), position: "relative", display: "flex", alignItems: "center", overflow: "hidden", background: isDark ? "#0c0f1a" : BRAND.darkTitle, margin: 0, padding: isPdf ? "60px 0" : 0, width: "100%" }}>
+      <section id="stx-hero" style={{ minHeight: isPdf ? "auto" : "100vh", height: isPdf ? "auto" : (isMobile ? "100svh" : "100vh"), position: "relative", display: "flex", alignItems: "center", overflow: "hidden", background: COVER_BG, backgroundImage: COVER_STRIPES, margin: 0, padding: isPdf ? "60px 0" : 0, width: "100%" }}>
         <ParticleCanvas dark={isDark} />
-        <div style={{ position: "absolute", inset: 0, background: isDark ? "radial-gradient(ellipse at 25% 50%,transparent 0%,rgba(12,15,26,0.6) 100%)" : "radial-gradient(ellipse at 25% 50%,transparent 0%,rgba(45,59,73,0.5) 100%)" }} />
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 25% 50%,transparent 0%,rgba(16,32,26,0.45) 100%)" }} />
         <div style={{ position: "absolute", top: 0, left: "38%", width: 2, height: "140%", background: "linear-gradient(to bottom, transparent 10%, rgba(237,26,94,0.15) 50%, transparent 90%)", transform: "rotate(15deg)", transformOrigin: "top center", pointerEvents: "none" }} />
         <div style={{ position: "absolute", top: 0, left: "42%", width: 1, height: "140%", background: "linear-gradient(to bottom, transparent 15%, rgba(237,26,94,0.08) 50%, transparent 85%)", transform: "rotate(12deg)", transformOrigin: "top center", pointerEvents: "none" }} />
         <div style={{ position: "absolute", inset: 0, opacity: isDark ? 0.06 : 0.08, backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "32px 32px", color: "#fff", pointerEvents: "none" }} />
@@ -1808,7 +1935,7 @@ export default function ReportFTABR26({ content, preview = false }: {
         {/* Pitch markings — the football signature, drawn in pitch green */}
         <svg aria-hidden viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice"
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
-          <g fill="none" stroke={PITCH_LIGHT} strokeWidth="2" opacity="0.28">
+          <g fill="none" stroke={COVER_LINES} strokeWidth="2">
             <line x1="600" y1="-40" x2="600" y2="840" />
             <circle cx="600" cy="400" r="150" />
             <rect x="-180" y="230" width="330" height="340" />
@@ -1816,7 +1943,7 @@ export default function ReportFTABR26({ content, preview = false }: {
             <rect x="1050" y="230" width="330" height="340" />
             <rect x="1230" y="320" width="150" height="160" />
           </g>
-          <circle cx="600" cy="400" r="6" fill={PITCH_LIGHT} opacity="0.4" />
+          <circle cx="600" cy="400" r="6" fill={COVER_LINES} />
         </svg>
 
         <div ref={heroContentRef} style={{
@@ -1869,7 +1996,7 @@ export default function ReportFTABR26({ content, preview = false }: {
                 padding: "26px 24px 22px", borderRadius: 12,
                 background: isDark ? t.bgCard : "#fff",
                 border: isDark ? `1px solid ${t.border}` : "none",
-                borderTop: `3px solid ${PITCH}`,
+                borderTop: `3px solid ${BRAND.pink}`,
                 position: "relative", overflow: "hidden",
                 boxShadow: isDark ? "0 4px 24px rgba(0,0,0,0.4)" : "0 4px 24px rgba(0,0,0,0.2)",
               }}>
@@ -1884,7 +2011,7 @@ export default function ReportFTABR26({ content, preview = false }: {
 
       {/* ── Mobile Summary Cards (separate section, horizontal rows) ────── */}
       {isMobile && (
-        <section style={{ minHeight: "100svh", display: "flex", alignItems: "center", justifyContent: "center", background: isDark ? "#0c0f1a" : BRAND.darkTitle, padding: "40px 16px", position: "relative", overflow: "hidden" }}>
+        <section style={{ minHeight: "100svh", display: "flex", alignItems: "center", justifyContent: "center", background: COVER_BG, backgroundImage: COVER_STRIPES, padding: "40px 16px", position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", inset: 0, opacity: isDark ? 0.04 : 0.06, backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "32px 32px", color: "#fff", pointerEvents: "none" }} />
           <div style={{ position: "relative", zIndex: 1, width: "100%", height: "calc(100svh - 140px)", display: "flex", flexDirection: "column", gap: 10 }}>
             {facts.summary.map((card, i) => (
@@ -1892,7 +2019,7 @@ export default function ReportFTABR26({ content, preview = false }: {
                 padding: "20px 18px", borderRadius: 10,
                 background: isDark ? t.bgCard : "#fff",
                 border: isDark ? `1px solid ${t.border}` : "none",
-                borderLeft: `3px solid ${PITCH}`,
+                borderLeft: `3px solid ${BRAND.pink}`,
                 position: "relative", overflow: "hidden",
                 boxShadow: isDark ? "0 4px 24px rgba(0,0,0,0.4)" : "0 4px 24px rgba(0,0,0,0.2)",
                 display: "flex", alignItems: "center", gap: 14,
@@ -1987,6 +2114,7 @@ export default function ReportFTABR26({ content, preview = false }: {
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(237,26,94,0.3); border-radius: 3px; }
         .stx-trend-card { transition: border-color 0.3s, transform 0.3s; }
+        .ft26-tabstrip::-webkit-scrollbar { display: none; }
       `}</style>
 
       {/* ── FTABR26 AUTH GATE ───────────────────────────────────────────── */}

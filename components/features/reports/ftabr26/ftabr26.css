@@ -1,2 +1,25 @@
 /* Fonts for the ported STX FTABR26 report (used via inline fontFamily) — the STX app loaded these globally. */
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Open+Sans:wght@300;400;500;600;700&display=swap');
+
+/* ── Print / Save as PDF (open /reports/ftabr26?pdf=true, then print) ─────────
+   - A4 with no page margins, so the browser leaves out its date/URL header and
+     footer and the dark sections run to the edge.
+   - Backgrounds print even if "Background graphics" is left off in the dialog.
+   - An open accordion's height was measured at screen width; printing reflows the
+     page narrower, so the measured max-height would clip it (the last WC26 card
+     went missing). Open accordions drop the cap when printing.
+   - Cards and table rows don't split across pages. */
+@page ftabr26 { size: A4; margin: 0; }
+@media print {
+  .ft26-root { page: ftabr26; }
+  .ft26-root, .ft26-root * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .ft26-root .ft26-acc-open { max-height: none !important; overflow: visible !important; opacity: 1 !important; }
+  .ft26-root [id^="wc-tech-"],
+  .ft26-root .stx-reveal > div[style*="grid"] > div,
+  .ft26-root a[href][style*="border-radius"],
+  .ft26-root button[aria-haspopup="dialog"] { break-inside: avoid; }
+  .ft26-root h2, .ft26-root h3 { break-after: avoid; }
+}

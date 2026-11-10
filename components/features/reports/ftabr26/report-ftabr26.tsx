@@ -174,7 +174,7 @@ function AccordionBody({ isOpen, windowWidth, children }: { isOpen: boolean; win
     return () => ro.disconnect();
   }, [isOpen]);
   return (
-    <div
+    <div className={isOpen ? "ft26-acc-open" : undefined}
       style={{
         maxHeight: isOpen ? height : 0,
         opacity: isOpen ? 1 : 0,
@@ -1615,6 +1615,7 @@ export default function ReportFTABR26({ content, preview = false }: {
             />
           </Suspense>
 
+          {!isPdf && (
           <TabStrip t={t} wrapStyle={{ marginTop: 40, marginBottom: 28 }} style={{ display: "flex", alignItems: "center", gap: 12, borderBottom: `2px solid ${t.border}` }}>
             {([
               ["initiatives",  `Initiatives (${ecoShown.initiatives.length})`],
@@ -1638,24 +1639,32 @@ export default function ReportFTABR26({ content, preview = false }: {
               </button>
             )}
           </TabStrip>
+          )}
 
-          {(() => {
-            const rows: Ftabr26EcosystemEntry[] = ecoTab === "initiatives"
+          {/* The PDF has nothing to click, so it prints both tables, each under its own heading */}
+          {(isPdf ? (["initiatives", "accelerators"] as const) : [ecoTab]).map(tab => (() => {
+            const rows: Ftabr26EcosystemEntry[] = tab === "initiatives"
               ? ecoShown.initiatives : ecoShown.programs;
             /* Logo, name and city (which carries the country flag). */
             const cols = isMobile
               ? "34px 1fr"
               : "44px 1fr 240px";
             return (
+              <div key={tab} style={{ marginTop: isPdf && tab === "accelerators" ? 40 : 0 }}>
+              {isPdf && (
+                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 24, letterSpacing: 2, color: BRAND.pink, margin: "0 0 16px" }}>
+                  {tab === "initiatives" ? `Initiatives (${ecoShown.initiatives.length})` : `Accelerators (${ecoShown.programs.length})`}
+                </div>
+              )}
               <div className="stx-reveal" style={{ border: `1px solid ${t.border}`, overflow: "hidden", borderRadius: 8 }}>
                 <div style={{ display: "grid", gridTemplateColumns: cols, gap: "0 12px", padding: "12px 20px", ...TABLE_HEAD }}>
                   <span />
-                  <span>{ecoTab === "initiatives" ? "Initiative" : "Program"}</span>
+                  <span>{tab === "initiatives" ? "Initiative" : "Program"}</span>
                   {!isMobile && <span>Location</span>}
                 </div>
                 {rows.length === 0 && (
                   <div style={{ padding: "26px 20px", textAlign: "center", fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: 2, color: t.textMuted, borderTop: `1px solid ${t.border}` }}>
-                    NO {(ecoTab === "accelerators" ? "accelerators" : ecoTab).toUpperCase()}{ecoRegion ? ` IN ${ecoRegion.toUpperCase()}` : ""}
+                    NO {tab.toUpperCase()}{ecoRegion ? ` IN ${ecoRegion.toUpperCase()}` : ""}
                   </div>
                 )}
                 {rows.map((r, i) => {
@@ -1696,8 +1705,9 @@ export default function ReportFTABR26({ content, preview = false }: {
                   );
                 })}
               </div>
+              </div>
             );
-          })()}
+          })())}
 
           {/* Upcoming events: shown once the Ecosystem part's Events rows hold
               future-dated entries (admin → Ecosystem → Events). */}
@@ -1947,6 +1957,7 @@ export default function ReportFTABR26({ content, preview = false }: {
           {/* ══════════ LEADERBOARDS TAB ══════════ */}
           {(isPdf || dataTab === "leaderboards") && (
             <div>
+              {!isPdf && (<>
               {/* Category + window filters, top right; they also set which
                   side the Top Funded Companies table shows. */}
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: isMobile ? "flex-start" : "flex-end", marginBottom: 32 }}>
@@ -1977,14 +1988,32 @@ export default function ReportFTABR26({ content, preview = false }: {
                   })}
                 </div>
               </div>
+              </>)}
 
+              {/* The web shows the category picked above; the PDF prints Football Only and
+                  then Football Also (all-time), each under its own heading. */}
+              {(isPdf ? (["only", "also"] as const) : [leaderCat]).map(cat => {
+                const lk = `${cat}${isPdf || leaderWindow === "allTime" ? "AllTime" : "Recent"}` as
+                  "onlyAllTime" | "onlyRecent" | "alsoAllTime" | "alsoRecent";
+                const countryRows: LeaderRow[] = facts.topCountries[lk];
+                const cityRows: LeaderRow[] = facts.topCities[lk];
+                const companyRows: CompanyRow[] = cat === "only" ? facts.topCompaniesOnly : facts.topCompaniesAlso;
+                const sfx = isPdf && cat === "also" ? "-also" : "";
+                const showNotes = !isPdf || cat === "only";
+                return (
+                <div key={cat}>
+                {isPdf && (
+                  <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 26, letterSpacing: 2, color: BRAND.pink, margin: cat === "only" ? "8px 0 4px" : "48px 0 4px" }}>
+                    {CAT_LABEL[cat]} · {facts.period.label}
+                  </div>
+                )}
               {/* Countries + cities. On desktop each column subgrids the
                   title / note / list rows, so the two charts start on the
                   same line however long either note runs. */}
               <>
                 {([
-                  ["df-countries", "TOP FUNDED COUNTRIES", countryRows, dealflowCopy.countries, dfKeys.countries],
-                  ["df-cities",    "TOP FUNDED CITIES",    cityRows,    dealflowCopy.cities,    dfKeys.cities],
+                  [`df-countries${sfx}`, "TOP FUNDED COUNTRIES", countryRows, dealflowCopy.countries, dfKeys.countries],
+                  [`df-cities${sfx}`,    "TOP FUNDED CITIES",    cityRows,    dealflowCopy.cities,    dfKeys.cities],
                 ] as const).map(([dfId, title, rows, note, keyNum]) => {
                   /* Every bar is scaled against rank 1, so the collapsed rows
                      share the scale of the visible ones. */
@@ -2004,12 +2033,12 @@ export default function ReportFTABR26({ content, preview = false }: {
                           {r.amount > 0 ? fmt(r.amount) : <span style={{ color: t.textMuted, fontWeight: 400 }}>Undisclosed</span>} <span style={{ color: t.textMuted, fontWeight: 400 }}>· {r.rounds} {r.rounds === 1 ? "round" : "rounds"}</span>
                         </span>
                       </div>
-                      <AnimatedBar pct={(r.amount / max) * 100} delay={i * 80} trackColor={t.border} color={leaderCat === "only" ? ONLY_COLOR : ALSO_COLOR} isPdf={isPdf} />
+                      <AnimatedBar pct={(r.amount / max) * 100} delay={i * 80} trackColor={t.border} color={cat === "only" ? ONLY_COLOR : ALSO_COLOR} isPdf={isPdf} />
                     </div>
                   );
                   return dfAccordion(dfId, title, keyNum, (
                     <div>
-                      <p style={{ fontSize: 15, color: t.text, lineHeight: 1.9, margin: "16px 0 24px" }}>{note}</p>
+                      {showNotes && <p style={{ fontSize: 15, color: t.text, lineHeight: 1.9, margin: "16px 0 24px" }}>{note}</p>}
                       <div>
                         {top.map(leaderRow)}
                         {rest.length > 0 && (
@@ -2042,12 +2071,12 @@ export default function ReportFTABR26({ content, preview = false }: {
 
               {/* Companies: all-time only (no 18-month company list exists yet),
                   so the period toggle above doesn't apply and the table says so. */}
-              {dfAccordion("df-companies", "TOP FUNDED COMPANIES", dfKeys.companies, (<>
+              {dfAccordion(`df-companies${sfx}`, "TOP FUNDED COMPANIES", dfKeys.companies, (<>
               <div>
                 <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase", margin: "16px 0 0" }}>
                   {facts.period.label} · All-time ranking
                 </div>
-                {noteText(leaderCat === "only" ? dealflowCopy.companiesOnly : dealflowCopy.companiesAlso)}
+                {noteText(cat === "only" ? dealflowCopy.companiesOnly : dealflowCopy.companiesAlso)}
                 {/* Rank, then a logo column matching the ecosystem tables,
                     then name — the logo is resolved from the company website,
                     so the committed fallback rows fall back to a monogram. */}
@@ -2083,6 +2112,9 @@ export default function ReportFTABR26({ content, preview = false }: {
                 </div>
               </div>
               </>))}
+                </div>
+                );
+              })}
             </div>
           )}
 
@@ -2128,7 +2160,7 @@ export default function ReportFTABR26({ content, preview = false }: {
   const partOrder = [...new Set([...(Array.isArray(ov?.partOrder) ? (ov.partOrder as string[]) : []), ...FTABR26_PART_ORDER, "partners"])].filter((id) => PARTS[id] != null);
 
   return (
-    <div ref={reportContainerRef} style={{ background: t.bg, color: t.text, fontFamily: "'Open Sans','system-ui',sans-serif", overflowX: "hidden", minHeight: "100vh", transition: "background 0.35s, color 0.35s" }}>
+    <div ref={reportContainerRef} className="ft26-root" style={{ background: t.bg, color: t.text, fontFamily: "'Open Sans','system-ui',sans-serif", overflowX: "hidden", minHeight: "100vh", transition: "background 0.35s, color 0.35s" }}>
       {/* ── READING PROGRESS ────────────────────────────────────────────── */}
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 3, zIndex: 101, background: "transparent", display: (authGateActive || isPdf) ? "none" : "block" }}>
         <div ref={progressBarRef} style={{ height: "100%", background: BRAND.pink, transform: "scaleX(0)", transformOrigin: "left center" }} />

@@ -50,7 +50,7 @@ import { Ftabr26PersonDrawer } from "./components/ftabr26-person-drawer";
 import { Ftabr26SoccermentFeature } from "./components/ftabr26-soccerment-feature";
 import { Ftabr26PartnerHeader } from "./components/ftabr26-partner-header";
 import { FTABR26_PART_ORDER } from "./content-defaults";
-import { Ftabr26AtlasCta, ATLAS_CTAS } from "./components/ftabr26-atlas-cta";
+import { Ftabr26AtlasCta, ATLAS_CTAS, withPdfUtm } from "./components/ftabr26-atlas-cta";
 
 /* The ecosystem map pulls in d3 and the world topojson, neither of which any
    other section needs — it loads when the reader gets there. */
@@ -1133,7 +1133,7 @@ export default function ReportFTABR26({ content, preview = false }: {
 
   /* Ecosystem location: [flag] City (same flags as Startups to Watch), or a globe and
      "Global" for a network with no single base. Null when the row has neither. */
-  const ecoLocationNode = (r: { city?: string | null; country?: string | null; continent?: string | null }, fontSize: number) => {
+  const ecoLocationNode = (r: { city?: string | null; country?: string | null; continent?: string | null }, fontSize: number, sep: string = "&") => {
     const isGlobal = /^global$/i.test((r.city ?? "").trim());
     const parts = isGlobal ? [] : ecoLocations({ city: r.city ?? null, country: r.country ?? null, continent: r.continent ?? null })
       .filter(l => l.city || l.country);
@@ -1157,7 +1157,7 @@ export default function ReportFTABR26({ content, preview = false }: {
           <span>Global</span>
         </>) : parts.map((l, i) => (
           <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-            {i > 0 && <span aria-hidden>&amp;</span>}
+            {i > 0 && <span aria-hidden style={{ margin: sep === "&" ? 0 : "0 2px" }}>{sep}</span>}
             {flag(l.country)}
             <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.city ?? l.country}</span>
           </span>
@@ -2166,7 +2166,11 @@ export default function ReportFTABR26({ content, preview = false }: {
      Re-runs as images, fonts and the map load, and right before printing. */
   useEffect(() => {
     if (!isPdf) return;
+    /* The saved PDF takes its Title from the document title */
+    const PDF_TITLE = "Football Tech & Business Report 2026 · SportsTechX";
+    document.title = PDF_TITLE;
     const fitPrintPages = () => {
+      if (document.title !== PDF_TITLE) document.title = PDF_TITLE;
       document.querySelectorAll<HTMLElement>(".ft26-page[data-fit] .ft26-fit").forEach(el => {
         const body = el.parentElement as HTMLElement;
         const cs = getComputedStyle(body);
@@ -2296,7 +2300,7 @@ export default function ReportFTABR26({ content, preview = false }: {
               <span style={{ fontWeight: 700, color: PR.ink, lineHeight: 1.3 }}>
                 {href ? <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "none" }}>{r.name}</a> : r.name}
               </span>
-              <span style={{ justifySelf: "end" }}>{ecoLocationNode(r, 8.5)}</span>
+              <span style={{ justifySelf: "end" }}>{ecoLocationNode(r, 8.5, "·")}</span>
             </div>
           );
         })}
@@ -2360,6 +2364,11 @@ export default function ReportFTABR26({ content, preview = false }: {
           <div style={{ width: 1, height: 44, background: "rgba(190,208,227,0.25)" }} />
           <div>
             <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8.5, letterSpacing: 2, color: "rgba(190,208,227,0.6)", textTransform: "uppercase", marginBottom: 8 }}>{FTABR26_HERO.edition}</div>
+            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, lineHeight: "30px" }}>{FTABR26_HERO.hashtag}</div>
+          </div>
+          <div style={{ width: 1, height: 44, background: "rgba(190,208,227,0.25)" }} />
+          <div>
+            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8.5, letterSpacing: 2, color: "rgba(190,208,227,0.6)", textTransform: "uppercase", marginBottom: 8 }}>Data period</div>
             <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, lineHeight: "30px" }}>{facts.period.label}</div>
           </div>
         </div>
@@ -2374,7 +2383,7 @@ export default function ReportFTABR26({ content, preview = false }: {
       { name: "Playermaker", src: "/reports/ftabr26/featured/playermaker-logo-white.webp", scale: 0.86 },
       { name: "Soccerment",  src: "/reports/ftabr26/featured/soccerment-logo-trim.webp", scale: 1 },
     ];
-    const toc = printPages.map((p, i) => ({ n: i + 1, label: p.contents })).filter(x => x.label);
+    const toc = printPages.map((p, i) => ({ n: i + 1, id: p.id, label: p.contents })).filter(x => x.label);
     return (<>
       {prHead("About this report", "Football Tech & Business Report 2026")}
       {paras.map((p, i) => (
@@ -2388,14 +2397,17 @@ export default function ReportFTABR26({ content, preview = false }: {
           </span>
         ))}
       </div>
-      <div style={{ marginTop: 34 }}>
+      {/* Atlas banner 1: early, where a forwarded PDF first meets Atlas */}
+      <div style={{ marginTop: 18 }}><Ftabr26AtlasCta {...ATLAS_CTAS.pdfExplore} compact /></div>
+      <div style={{ marginTop: 20 }}>
         {prEyebrow("In this report")}
-        <div style={{ ...prCard, marginTop: 12, padding: "6px 18px" }}>
+        <div style={{ ...prCard, marginTop: 10, padding: "2px 18px" }}>
+          {/* Each entry links to its page (internal PDF link) */}
           {toc.map((x, i) => (
-            <div key={x.n} style={{ display: "flex", alignItems: "baseline", gap: 10, padding: "9px 0", borderTop: i ? `1px solid ${PR.border}` : "none" }}>
-              <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 17, color: PR.ink, letterSpacing: 0.4, flex: 1 }}>{x.label}</span>
+            <a key={x.n} href={`#pdf-${x.id}`} style={{ display: "flex", alignItems: "baseline", gap: 10, padding: "6px 0", borderTop: i ? `1px solid ${PR.border}` : "none", textDecoration: "none" }}>
+              <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 16, color: PR.ink, letterSpacing: 0.4, flex: 1 }}>{x.label}</span>
               <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10.5, color: BRAND.pink }}>{String(x.n).padStart(2, "0")}</span>
-            </div>
+            </a>
           ))}
         </div>
       </div>
@@ -2510,7 +2522,7 @@ export default function ReportFTABR26({ content, preview = false }: {
     {prSub("Sector-wise funding", dfKeys.sector)}
     <p style={{ fontSize: 11, lineHeight: 1.65, color: PR.text, margin: "0 0 8px" }}>
       We group every startup by who it serves: <strong>Athlete Tech</strong>, <strong>Fan Tech</strong> and <strong>Executive Tech</strong>.{" "}
-      <a href={ATLAS_FRAMEWORK_URL} target="_blank" rel="noopener noreferrer" style={{ color: BRAND.pink, textDecoration: "none", borderBottom: `1px solid ${BRAND.pink}55` }}>See the full SportsTech framework in Atlas ↗</a>
+      <a href={withPdfUtm(ATLAS_FRAMEWORK_URL)} target="_blank" rel="noopener noreferrer" style={{ color: BRAND.pink, textDecoration: "none", borderBottom: `1px solid ${BRAND.pink}55` }}>See the full SportsTech framework in Atlas ↗</a>
     </p>
     {prText(dealflowCopy.sector)}
     {prText(dealflowCopy.sectorMix)}
@@ -2549,6 +2561,8 @@ export default function ReportFTABR26({ content, preview = false }: {
     {prCompanies("Football Only", facts.topCompaniesOnly)}
     {prText(dealflowCopy.companiesAlso, 10.5)}
     {prCompanies("Football Also", facts.topCompaniesAlso)}
+    {/* Atlas banner 2: founders have just read who raised what */}
+    <div style={{ marginTop: 14 }}><Ftabr26AtlasCta {...ATLAS_CTAS.pdfRaise} compact /></div>
   </>) });
 
   /* 13–14 · Partner features (the web panels, scaled to the page) */
@@ -2614,14 +2628,17 @@ export default function ReportFTABR26({ content, preview = false }: {
         );
       })}
     </div>
+    {/* Atlas banner 3: under the grid, for investors and accelerators */}
+    <div style={{ marginTop: 18 }}><Ftabr26AtlasCta {...ATLAS_CTAS.pdfScout} compact /></div>
   </>) });
 
   /* 17 · Innovators */
   addPage({ id: "innovators", contents: "Innovators", node: () => (<>
     {prHead("Innovators", "The people defining football innovation", <>Our Football Tech Innovators list showcases the leaders driving the ecosystem's growth through transformative initiatives all over the world. Answers are from interviews for our 2025 edition; the full answers are in the online report.</>)}
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
+    {/* Five per row, the last row centred (14 = 5 + 5 + 4) */}
+    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 10 }}>
       {FTABR26_INNOVATORS.map(p => (
-        <div key={p.id} style={{ ...prCard, padding: "16px 12px 14px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10 }}>
+        <div key={p.id} style={{ ...prCard, width: "calc((100% - 40px) / 5)", boxSizing: "border-box", padding: "16px 10px 14px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10 }}>
           <Ftabr26PersonAvatar name={p.name} photoUrl={p.photoUrl} color={INNOVATOR_RING} size={78} ringWidth={2} ringGap={3} />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 16, letterSpacing: 0.4, color: PR.ink, lineHeight: 1.1 }}>{p.name}</div>
@@ -2657,20 +2674,11 @@ export default function ReportFTABR26({ content, preview = false }: {
         {FTABR26_CREDITS.contentNote && <p style={{ fontSize: 9.5, color: PR.muted, margin: "8px 0 0", lineHeight: 1.6 }}>{FTABR26_CREDITS.contentNote}</p>}
       </div>
     </div>
-    <div style={{ marginTop: 26, background: COVER_BG, backgroundImage: COVER_STRIPES, borderRadius: 10, padding: "22px 24px", color: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
-      <div>
-        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2.5, color: "rgba(255,255,255,0.7)", textTransform: "uppercase" }}>{ATLAS_CTAS.generic.eyebrow}</div>
-        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, lineHeight: 1, marginTop: 6 }}>{ATLAS_CTAS.generic.headline}</div>
-        <p style={{ fontSize: 10.5, lineHeight: 1.6, color: "rgba(255,255,255,0.86)", margin: "8px 0 0", maxWidth: 440 }}>{ATLAS_CTAS.generic.body.join(" ")}</p>
-      </div>
-      <a href={ATLAS_CTAS.generic.button.href} target="_blank" rel="noopener noreferrer"
-        style={{ flexShrink: 0, background: BRAND.pink, color: "#fff", textDecoration: "none", fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 1.6, textTransform: "uppercase", padding: "10px 16px", borderRadius: 999 }}>
-        {ATLAS_CTAS.generic.button.label}
-      </a>
-    </div>
+    {/* Atlas banner 4: closing, pointing to all three solutions */}
+    <div style={{ marginTop: 24 }}><Ftabr26AtlasCta {...ATLAS_CTAS.pdfClosing} compact /></div>
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 24 }}>
       <img src="/stx_white_horizontal.png" alt="SportsTechX" style={{ height: 24, filter: "brightness(0)" }} />
-      <a href="https://www.atlas.sportstechx.com/reports/ftabr26" target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'DM Mono',monospace", fontSize: 9.5, letterSpacing: 1.5, color: BRAND.pink, textDecoration: "none" }}>atlas.sportstechx.com/reports/ftabr26</a>
+      <a href={withPdfUtm("https://www.atlas.sportstechx.com/reports/ftabr26")} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'DM Mono',monospace", fontSize: 9.5, letterSpacing: 1.5, color: BRAND.pink, textDecoration: "none" }}>Full interactive report: atlas.sportstechx.com/reports/ftabr26</a>
     </div>
   </>) });
 

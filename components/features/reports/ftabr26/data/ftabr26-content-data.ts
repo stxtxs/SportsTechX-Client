@@ -326,7 +326,7 @@ export const FTABR26_CREATOR_DEALS: { date: string; creator: string; event: stri
   { date: "Aug 26",  creator: "KSI",                         event: "Dagenham & Redbridge",  what: "Streamed a match for the club he co-owns" },
   { date: "Aug 26",  creator: "Men in Blazers",              event: "Tottenham Hotspur",     what: "Carried the club's live feed for a friendly" },
   { date: "Jul 26",  creator: "CazéTV",                      event: "WTA Tour, Brazil",      what: "Bought exclusive Brazilian rights off ESPN" },
-  { date: "Jun 26",  creator: "iShowSpeed",                  event: "FIFA World Cup 2026",   what: "Streamed official match feeds with FIFA, Fox and YouTube" },
+  { date: "Jun 26",  creator: "iShowSpeed",                  event: "FIFA World Cup 26",   what: "Streamed official match feeds with FIFA, Fox and YouTube" },
   { date: "May 26",  creator: "CazéTV",                      event: "LaLiga, Brazil",        what: "Took full live rights, displacing Disney" },
   { date: "Apr 26",  creator: "Enjoy Basketball",            event: "NBA",                   what: "Alternate telecast of a Pistons game on League Pass" },
   { date: "Feb 26",  creator: "ZwebackHD, Box2Box, Bugs",    event: "Bundesliga, Canada",    what: "Creator-led live streams on YouTube and Twitch" },
@@ -540,7 +540,7 @@ export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
   },
   {
     id: "command-centre",
-    title: "Intelligent Command Centre",
+    title: "Intelligent command centre",
     category: "Venue Operations & Security",
     body:
       "A single control room monitored crowd density and security conditions across all 16 venues simultaneously, surfacing developing problems to tournament officials before they reached the concourse.",
@@ -618,7 +618,7 @@ export const FTABR26_WORLDCUP = {
     value: "$20.0B",
     label: "Estimated US economic impact",
     sublabel: "Bank of America estimate; half of the $40B generated globally",
-    source: { label: "Guardian Nigeria", url: "https://guardian.ng/?p=2882638" },
+    source: { label: "American Banker", url: "https://www.americanbanker.com/payments/news/how-the-world-cup-boosted-bofas-payments" },
   },
   stats: [
     { value: "99.7%", label: "Stadium occupancy",

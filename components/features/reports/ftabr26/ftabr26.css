@@ -66,6 +66,17 @@
 /* The app shell makes html/body a 100%-high scroll box; printed, that clips the
    document to its first screen (every page after the cover came out blank). */
 html:has(.ft26-print), body:has(.ft26-print) { height: auto !important; overflow: visible !important; }
+/* Playermaker fills its page like Soccerment does: the panel stretches to the page
+   height and the extra room goes to the image mosaic. Structure (PARTS.featured):
+   outer padding div > gradient frame > #featured > content > [header, story+mosaic, footer row] */
+#pdf-playermaker .ft26-fit { height: 100%; }
+#pdf-playermaker .ft26-fit > div { height: 100%; padding: 34px 0 !important; box-sizing: border-box; }
+#pdf-playermaker .ft26-fit > div > div { height: 100%; box-sizing: border-box; margin: 0 8px !important; }
+#pdf-playermaker #featured { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
+#pdf-playermaker #featured > div { flex: 1 1 auto; width: 100%; display: flex; flex-direction: column; }
+#pdf-playermaker #featured > div > div:nth-child(2) { flex: 1 1 auto; align-items: stretch !important; }
+#pdf-playermaker #featured > div > div:nth-child(2) > div:first-child { justify-content: space-around; }
+#pdf-playermaker #featured > div > div:nth-child(2) > div:nth-child(2) { height: auto !important; min-height: 320px; }
 @media print {
   .ft26-print { background: none; padding: 0; min-height: 0; }
   /* A hair under 297mm so rounding never spills a page onto a blank one */

@@ -4,7 +4,8 @@
    One full-width band in the report style: deep pitch green, white copy,
    a single pink button. Reused for every Atlas call to action in the report,
    so a new one (e.g. a closing CTA above the footer) is one entry in
-   ATLAS_CTAS plus one <Ftabr26AtlasCta /> where it should appear.
+   ATLAS_CTAS plus one <Ftabr26AtlasCta /> where it should appear. One CTA is
+   in use (generic, between Playermaker and Soccerment).
    Copy rule: never "trial", "upgrade" or "plan".
    ──────────────────────────────────────────────────────────────────────── */
 import { BRAND } from "../lib/report-theme";
@@ -30,16 +31,7 @@ export const ATLAS_CTAS = {
     ],
     button: { label: "Find your fit →", href: "https://www.atlas.sportstechx.com/plans" },
   },
-  /* End of the Ecosystem section, after the tables */
-  scout: {
-    id: "atlas-scout-cta",
-    eyebrow: "For scouts, accelerators and investors",
-    headline: "Scouting football startups?",
-    body: [
-      "Atlas Scout tracks the startups these programmes back, and the ones they haven't found yet, with funding, investors and signals in one place.",
-    ],
-    button: { label: "See Atlas Scout →", href: "https://sandbox.sportstechx.com/preview/scout" },
-  },
+
 } satisfies Record<string, Omit<Ftabr26AtlasCtaProps, "isMobile">>;
 
 const CTA_BG = "#1C332B";

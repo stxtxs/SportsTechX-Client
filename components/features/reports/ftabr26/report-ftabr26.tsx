@@ -10,6 +10,9 @@ import { track } from "@/lib/analytics";
 import { ReportNav } from "../report-nav";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import "@/components/landing/landing.css";
+/* Same font set the Atlas site mounts on its .lp wrapper (app/page.tsx), so the
+   shared footer renders exactly as on atlas.sportstechx.com. */
+import { lpDisplay, lpMono, lpSerif } from "@/app/fonts";
 import "./ftabr26.css";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
@@ -95,6 +98,20 @@ const INNOVATOR_RING = BRAND.slate;
 const ATLAS_FRAMEWORK_URL = "https://www.atlas.sportstechx.com/framework";
 /* Startups to Watch: report partners get a "Report partner" tag linking to their feature */
 const REPORT_PARTNER_ANCHOR: Record<string, string> = { playermaker: "#featured", soccerment: "#soccerment" };
+/* Startups to Watch location: the record's HQ city when the API sends one
+   (hq_city), else the HQ city from Atlas as supplied for this edition.
+   English city names throughout (Cologne, Munich, Milan). */
+const STARTUP_HQ_CITY: Record<string, string> = {
+  celebreak: "Barcelona", coachesvoice: "London", fanalysis: "London", fantasyfootballhub: "Lewes",
+  gamecodeai: "Munich", marquee: "New York City", marqueeai: "New York City", oliversports: "Barcelona",
+  playermaker: "London", playersnap: "Santiago", prematch: "Cologne", soccerment: "Milan",
+  turfcoach: "Berlin",
+};
+const CITY_DISPLAY: Record<string, string> = { "Köln": "Cologne", "München": "Munich", "Milano": "Milan" };
+function startupLocation(c: { name: string; country?: string | null; city?: string | null }) {
+  const raw = c.city || STARTUP_HQ_CITY[startupMatchKey(c.name)] || null;
+  return { city: raw ? (CITY_DISPLAY[raw] ?? raw) : null, country: c.country ?? null };
+}
 /* "13 Nov 2026" from an ISO date; falls back to the raw value. */
 const formatEventDate = (iso?: string | null) => {
   if (!iso) return "TBC";
@@ -938,6 +955,34 @@ export default function ReportFTABR26({ content, preview = false }: {
     return <img src={g.src} alt={g.alt} loading="lazy" style={{ display: "block", width: "100%", height: "auto", borderRadius: 12, border: `1px solid ${t.border}` }} />;
   };
 
+  /* Insights copy: [text](https://…) becomes an inline source link (pink
+     underline, new tab); a paragraph whose lines all start with "- " is a list. */
+  const INLINE_LINK: React.CSSProperties = { color: "inherit", textDecoration: "underline", textDecorationColor: BRAND.pink, textDecorationThickness: 1.5, textUnderlineOffset: 3 };
+  const richText = (text: string): React.ReactNode[] => {
+    const out: React.ReactNode[] = [];
+    const re = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+    let last = 0, m: RegExpExecArray | null;
+    while ((m = re.exec(text))) {
+      if (m.index > last) out.push(text.slice(last, m.index));
+      out.push(<a key={m.index} href={m[2]} target="_blank" rel="noopener noreferrer" style={INLINE_LINK}>{m[1]}</a>);
+      last = re.lastIndex;
+    }
+    if (last < text.length) out.push(text.slice(last));
+    return out;
+  };
+  const insightPara = (para: string, i: number) => {
+    const lines = para.split("\n").map(l => l.trim()).filter(Boolean);
+    const spacing = i === 0 ? 0 : "16px 0 0";
+    if (lines.length > 0 && lines.every(l => l.startsWith("- "))) {
+      return (
+        <ul key={i} style={{ margin: spacing, paddingLeft: 22, listStyleType: "disc", display: "flex", flexDirection: "column", gap: 8 }}>
+          {lines.map((l, j) => <li key={j} style={{ display: "list-item", listStyleType: "disc", fontSize: 15, lineHeight: 1.75, color: t.text }}>{richText(l.slice(2))}</li>)}
+        </ul>
+      );
+    }
+    return <p key={i} style={{ margin: spacing, fontSize: 15, lineHeight: 1.85, color: t.text }}>{richText(para)}</p>;
+  };
+
   /* One Insights article: copy left, graphic right, "Our take" underneath.
      Stacks on mobile; runs full width when the article has no graphic. */
   const insightArticle = (a: InsightArticle) => {
@@ -954,9 +999,7 @@ export default function ReportFTABR26({ content, preview = false }: {
         {blockHeader(a.title, "clamp(24px,2.6vw,34px)")}
         <div style={{ display: "grid", gridTemplateColumns: isMobile || !graphic ? "1fr" : "minmax(0,1fr) minmax(0,1fr)", gap: isMobile ? 24 : 40, alignItems: "start", marginTop: isMobile ? 16 : 24 }}>
           <div>
-            {a.body.map((para, i) => (
-              <p key={i} style={{ margin: i === 0 ? 0 : "16px 0 0", fontSize: 15, lineHeight: 1.85, color: t.text }}>{para}</p>
-            ))}
+            {a.body.map((para, i) => insightPara(para, i))}
           </div>
           {graphic && <div>{graphic}</div>}
         </div>
@@ -965,21 +1008,12 @@ export default function ReportFTABR26({ content, preview = false }: {
           <div style={{ marginTop: isMobile ? 24 : 32, paddingTop: isMobile ? 20 : 26, borderTop: `1px solid ${t.border}` }}>
             <div style={{ borderLeft: `4px solid ${BRAND.pink}`, paddingLeft: isMobile ? 14 : 20 }}>
               <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: 1, color: BRAND.pink, lineHeight: 1 }}>Our take</div>
-              <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.85, color: t.text }}>{a.take}</p>
+              <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.85, color: t.text }}>{richText(a.take)}</p>
             </div>
           </div>
         )}
 
-        {a.sources && a.sources.length > 0 && (
-          <div style={{ marginTop: 22, display: "flex", flexWrap: "wrap", gap: "10px 22px" }}>
-            {a.sources.map(src => (
-              <a key={src.url} href={src.url} target="_blank" rel="noopener noreferrer"
-                style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: 1.2, color: BRAND.pink, textDecoration: "none", textTransform: "uppercase", borderBottom: `1px solid ${BRAND.pink}55`, paddingBottom: 2 }}>
-                {src.label} ↗
-              </a>
-            ))}
-          </div>
-        )}
+        {/* Source lists removed: every source is an inline link in the copy. */}
       </article>
       </div>
     );
@@ -1421,11 +1455,17 @@ export default function ReportFTABR26({ content, preview = false }: {
                                 </span>
                               )}
                             </span>
-                            {c.country && (
-                              <span style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2, fontSize: 11, color: t.textMuted, fontFamily: "'DM Mono',monospace" }}>
-                                {getCountryFlag(c.country)}<span>{c.country}</span>
-                              </span>
-                            )}
+                            {(() => {
+                              const loc = startupLocation(c);
+                              if (!loc.city && !loc.country) return null;
+                              const code = ecoFlagCode(loc.country);
+                              return (
+                                <span style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2, fontSize: 11, color: t.textMuted, fontFamily: "'DM Mono',monospace" }}>
+                                  {code && <img src={`/reports/ftabr26/flags/${code}.svg`} alt={loc.country ?? ""} title={loc.country ?? undefined} width={16} height={12} style={{ width: 16, height: 12, objectFit: "cover", borderRadius: 2, flexShrink: 0 }} />}
+                                  <span>{loc.city ?? loc.country}</span>
+                                </span>
+                              );
+                            })()}
                           </div>
                         </div>
                         {c.description && (
@@ -1587,7 +1627,6 @@ export default function ReportFTABR26({ content, preview = false }: {
           )}
         </div>
       </div>
-      <Ftabr26AtlasCta {...ATLAS_CTAS.scout} isMobile={isMobile} />
     </>),
     soccerment: (<>
       {/* Generic Atlas CTA sits between the two partner features: it opens the
@@ -1907,7 +1946,7 @@ export default function ReportFTABR26({ content, preview = false }: {
               {dfAccordion("df-companies", "TOP FUNDED COMPANIES", dfKeys.companies, (<>
               <div>
                 <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase", margin: "16px 0 0" }}>
-                  {facts.period.label} · the period toggle applies to countries and cities only
+                  {facts.period.label} · All-time ranking
                 </div>
                 {noteText(leaderCat === "only" ? dealflowCopy.companiesOnly : dealflowCopy.companiesAlso)}
                 {/* Rank, then a logo column matching the ecosystem tables,
@@ -2057,12 +2096,14 @@ export default function ReportFTABR26({ content, preview = false }: {
             <div style={{ display: "flex", alignItems: "flex-start", gap: 28, marginTop: 28, flexWrap: "wrap" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "rgba(190,208,227,0.45)", letterSpacing: 2, textTransform: "uppercase" }}>Published by</span>
-                <img src="/stx_white_horizontal.png" alt="SportsTechX" style={{ height: 33, opacity: 0.9 }} />
+                <div style={{ height: 33, display: "flex", alignItems: "center" }}><img src="/stx_white_horizontal.png" alt="SportsTechX" style={{ height: 33, opacity: 0.9 }} /></div>
               </div>
               <div style={{ width: 1, alignSelf: "stretch", background: "rgba(190,208,227,0.2)" }} />
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "rgba(190,208,227,0.45)", letterSpacing: 2, textTransform: "uppercase" }}>Data powered by</span>
-                <img src="/landing/atlas-wordmark-white.svg" alt="Atlas" style={{ height: 33, opacity: 0.9 }} />
+                {/* The solid Atlas wordmark reads bigger than the SportsTechX logo at the same
+                    height, so it sits ~25% smaller, centred on the same line. */}
+                <div style={{ height: 33, display: "flex", alignItems: "center" }}><img src="/landing/atlas-wordmark-white.svg" alt="Atlas" style={{ height: 25, opacity: 0.9 }} /></div>
               </div>
               {!isMobile && <div style={{ width: 1, alignSelf: "stretch", background: "rgba(190,208,227,0.2)" }} />}
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -2131,8 +2172,10 @@ export default function ReportFTABR26({ content, preview = false }: {
         const logoFilter = (kind: "light" | "dark") =>
           isDark ? (kind === "dark" ? "brightness(0) invert(1)" : "none") : "brightness(0)";
         const partners = [
-          { name: "Playermaker", href: "#featured", src: "/reports/ftabr26/featured/playermaker-logo-white.webp", kind: "light" as const },
-          { name: "Soccerment",  href: "#soccerment", src: "/reports/ftabr26/featured/soccerment-logo-trim.webp", kind: "dark" as const },
+          /* `scale` evens out visual weight inside identical boxes: the solid
+             Playermaker wordmark reads heavier than Soccerment at full width. */
+          { name: "Playermaker", href: "#featured", src: "/reports/ftabr26/featured/playermaker-logo-white.webp", kind: "light" as const, scale: 0.86 },
+          { name: "Soccerment",  href: "#soccerment", src: "/reports/ftabr26/featured/soccerment-logo-trim.webp", kind: "dark" as const, scale: 1 },
         ];
         return (<>
           <div id="about" style={{ background: t.bgSec, padding: isMobile ? "48px 0" : "88px 0" }}>
@@ -2153,7 +2196,7 @@ export default function ReportFTABR26({ content, preview = false }: {
                       style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: isMobile ? 120 : 140, height: isMobile ? 28 : 32 }}>
                       {/* Identical bounding boxes; each logo is contained, so the wide
                           Playermaker wordmark fills the width and Soccerment the height. */}
-                      <img src={pt.src} alt={pt.name} style={{ maxWidth: "100%", maxHeight: "100%", width: "auto", height: "auto", objectFit: "contain", filter: logoFilter(pt.kind) }} />
+                      <img src={pt.src} alt={pt.name} style={{ maxWidth: `${pt.scale * 100}%`, maxHeight: `${pt.scale * 100}%`, width: "auto", height: "auto", objectFit: "contain", filter: logoFilter(pt.kind) }} />
                     </a>
                   </React.Fragment>
                 ))}
@@ -2188,7 +2231,7 @@ export default function ReportFTABR26({ content, preview = false }: {
       {partOrder.map((id, i) => <React.Fragment key={id}>{i > 0 && pitchDivider}{PARTS[id]}</React.Fragment>)}
 
       {/* ── FOOTER (the exact Atlas landing footer) ─────────────────────── */}
-      <div className="lp"><LandingFooter /></div>
+      <div className={`lp ${lpDisplay.variable} ${lpMono.variable} ${lpSerif.variable}`}><LandingFooter /></div>
 
       </div>
       <style>{`

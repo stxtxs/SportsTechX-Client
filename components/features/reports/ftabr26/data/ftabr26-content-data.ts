@@ -279,7 +279,7 @@ export const FTABR26_WOMENS_MCO_GROUPS: Ftabr26McoGroup[] = [
 
 export const FTABR26_WOMENS_MCO = {
   eyebrow: "Feature",
-  title: "MCO IN WOMEN'S FOOTBALL",
+  title: "MULTI-CLUB OWNERSHIP IN WOMEN'S FOOTBALL",
   standfirst: "The new frontier for ownership and innovation.",
   intro:
     "Funding and recognition in women's football have surged in recent years, driven by the rise of multi-club ownership. Groups managing both men's and women's teams are building shared infrastructure and revenue streams that strengthen the women's game, while a newer class of owner assembles portfolios around women's clubs from the outset. UEFA has since confirmed that those rules apply in full to the women's game: ahead of the 2026 Women's Champions League final, head of women's football Nadine Kessler said clubs under common ownership will not be permitted in the same competition. She ruled out any waiver on the grounds that the women's game is less developed, asking why UEFA would protect sporting integrity in men's football but not women's.",
@@ -330,8 +330,8 @@ export const FTABR26_CREATOR_DEALS: { date: string; creator: string; event: stri
   { date: "May 26",  creator: "CazéTV",                      event: "LaLiga, Brazil",        what: "Took full live rights, displacing Disney" },
   { date: "Apr 26",  creator: "Enjoy Basketball",            event: "NBA",                   what: "Alternate telecast of a Pistons game on League Pass" },
   { date: "Feb 26",  creator: "ZwebackHD, Box2Box, Bugs",    event: "Bundesliga, Canada",    what: "Creator-led live streams on YouTube and Twitch" },
-  { date: "2025/26", creator: "The Overlap",                 event: "Bundesliga, UK",        what: "20 live Friday night matches, sold alongside Sky and BBC" },
-  { date: "2025/26", creator: "That's Football",             event: "Bundesliga, UK",        what: "A separate 20 live Friday night matches, same tier" },
+  { date: "2025/26", creator: "The Overlap",                 event: "Bundesliga, UK",        what: "Live Friday night matches, shared with That's Football and the BBC" },
+  { date: "2025/26", creator: "That's Football",             event: "Bundesliga, UK",        what: "The same Friday night matches, shown alongside The Overlap" },
 ];
 
 export const FTABR26_INSIGHTS: InsightArticle[] = [
@@ -342,8 +342,10 @@ export const FTABR26_INSIGHTS: InsightArticle[] = [
     description: "How innovation is reshaping the game on the pitch, from officiating and venues to the way players are valued and represented.",
     title: "OFFICIATING TECHNOLOGY MOVES FROM INNOVATION TO INFRASTRUCTURE",
     body: [
-      "Last year we described officiating technology as an accelerating shift. In 2026 it became infrastructure. At the World Cup, an upgraded semi-automated offside system, built on 3D scans of all 1,248 players, sent clear offsides straight to the officials on the pitch instead of routing them through the VAR. Referee body cameras fed the broadcast and stadium screens, and midway through the tournament referees began explaining overturned decisions over the stadium PA.",
-      "The rulebook has followed. IFAB's 2026/27 Laws let any competition equip referees, assistants and fourth officials with body cameras, and widen VAR's remit to wrongly issued second yellows and cases of mistaken identity. The Premier League's 2026/27 principles no longer argue for adoption; they fold SAOT efficiency into a standing VAR Improvement Plan. From this season the league also publishes weekly Key Match Incidents Panel reports and Ref Cam audio from selected fixtures.",
+      "Last year we described officiating technology as an accelerating shift. In 2026 it became infrastructure.",
+      "At the World Cup, an [upgraded semi-automated offside system](https://inside.fifa.com/news/offside-decisions-referee-body-cams-innovation-world-cup-2026), built on 3D scans of all 1,248 players, sent clear offsides straight to the officials on the pitch instead of routing them through the VAR. Referee body cameras fed the broadcast and stadium screens, and midway through the tournament referees began explaining overturned decisions over the stadium PA.",
+      "The rulebook has followed:",
+      "- [IFAB's 2026/27 Laws](https://www.thefa.com/football-rules-governance/lawsandrules/laws/football-11-11/law-changes-explained) let any competition put body cameras on referees, assistants and fourth officials.\n- VAR can now step in on wrongly issued second yellows and cases of mistaken identity.\n- [The Premier League's 2026/27 principles](https://www.premierleague.com/en/news/4674118/premier-league-sets-football-principles-for-202627-season) fold SAOT efficiency into a standing VAR Improvement Plan.\n- From this season the league also publishes [weekly Key Match Incidents Panel reports and Ref Cam audio](https://sports.yahoo.com/articles/premier-league-announce-key-changes-115735398.html) from selected fixtures.",
     ],
     take:
       "The technology question is settled; the trust question is not. Almost every officiating change in 2026 (referee announcements, Ref Cam audio, published panel verdicts) is about showing fans a decision rather than making it. That is where the next opportunity sits: products that turn officiating data into something fans, broadcasters and clubs can see and believe. Leagues that treat transparency as part of the product, not a concession, will be the ones that take the heat out of the argument.",
@@ -355,12 +357,6 @@ export const FTABR26_INSIGHTS: InsightArticle[] = [
         { src: "/reports/ftabr26/insights/officiating-ref-cam.webp", alt: "A player appeals to the referee, seen through a referee body camera" },
       ],
     },
-    sources: [
-      { label: "FIFA: innovation at the World Cup 2026", url: "https://inside.fifa.com/news/offside-decisions-referee-body-cams-innovation-world-cup-2026" },
-      { label: "The FA: 2026/27 law changes explained", url: "https://www.thefa.com/football-rules-governance/lawsandrules/laws/football-11-11/law-changes-explained" },
-      { label: "Premier League: Football Principles for 2026/27", url: "https://www.premierleague.com/en/news/4674118/premier-league-sets-football-principles-for-202627-season" },
-      { label: "Yahoo Sports: Premier League VAR changes for 2026/27", url: "https://sports.yahoo.com/articles/premier-league-announce-key-changes-115735398.html" },
-    ],
   },
   {
     key: "media",
@@ -369,19 +365,15 @@ export const FTABR26_INSIGHTS: InsightArticle[] = [
     description: "Where entertainment, interactivity, and digital culture redefine how fans engage with the sport.",
     title: "CREATOR-LED DISTRIBUTION REDEFINING SPORTS MEDIA",
     body: [
-      "Four years ago, FIFA gave a Brazilian streamer the rights to show 22 matches from the 2022 World Cup for free on YouTube. That experiment became CazéTV. This summer it was the only broadcaster in Brazil showing all 104 matches of the 2026 World Cup; Globo, the country's dominant football broadcaster for decades, carried 55. It has since added LaLiga rights in Brazil through 2032, exclusive WTA Tour rights bought from ESPN, and weekly Premier League and Champions League coverage in Brazil and Portugal.",
-      "For most of the last decade, creators made shoulder content around the sport, and live footage meant a takedown notice. That boundary has moved step by step. The Bundesliga handed 20 live Friday night games each to The Overlap and That's Football in the UK. The NBA commissioned an alternate telecast with Enjoy Basketball. Tottenham came to Men in Blazers to stream a friendly, drawing around 10,000 concurrent viewers against a forecast of 3,000. And DAZN lets KSI stream matches for Dagenham & Redbridge, the club he co-owns: give away one free match a week, and anyone who wants a second has to subscribe.",
-      "FIFA went further at the World Cup, launching its first global creator programme with Preferred Platform deals for TikTok and YouTube, Insider Access for selected creators, and the first ten minutes of every match livestreamed on official partners' YouTube channels. More than 1.7 billion unique viewers watched World Cup-related content on YouTube during the tournament.",
-      "The 2026 World Sevens Football London edition at Brentford's Gtech Community Stadium featured a $1.5M prize pool.",
+      "Four years ago, FIFA gave a Brazilian streamer the rights to show 22 matches from the 2022 World Cup for free on YouTube. That experiment became CazéTV.",
+      "This summer it was [the only broadcaster in Brazil showing all 104 matches](https://fortune.com/2026/06/11/cazetv-world-cup-brazil-globo-fifa-streaming/) of the 2026 World Cup. Globo, the country's dominant football broadcaster for decades, carried 55. CazéTV has since added [LaLiga rights in Brazil through 2032](https://www.sportcal.com/media/cazetv-snaps-up-laliga-rights-in-brazil-until-2032/), [exclusive WTA Tour rights bought from ESPN](https://www.sportcal.com/media/cazetv-supplants-espn-to-take-wta-tour-rights-in-brazil/), and [weekly Premier League and Champions League coverage](https://www.sportcal.com/newsletters/cazetv-takes-slice-of-brazilian-rights-to-englands-premier-league) in Brazil and Portugal.",
+      "For most of the last decade, creators made shoulder content around the sport, and live footage meant a takedown notice. That line has moved. The Bundesliga gave [The Overlap and That's Football the same 20 live Friday night games in the UK](https://insidersport.com/2025/08/20/bundesliga-new-uk-broadcast-deal/), shown alongside the BBC. And [DAZN lets KSI stream matches for Dagenham & Redbridge](https://www.daggers.co.uk/ksi-dazn-and-dagenham-redbridge-announce-landmark-broadcast-partnership-to-redefine-non-league-football-coverage/), the club he co-owns: one free match a week, and anyone who wants a second has to subscribe.",
+      "FIFA went further at the World Cup:",
+      "- [Preferred Platform deals with TikTok and YouTube](https://www.ibc.org/production/news/youtube-secures-preferred-platform-agreement-for-fifa-world-cup-2026/23090), with creator programmes giving selected creators behind-the-scenes access.\n- The option for official media partners to livestream the first ten minutes of every match on YouTube.\n- [More than 1.7 billion unique viewers](https://blog.youtube/culture-and-trends/youtube-fifa-world-cup-2026-viewership-stats/) watched World Cup-related content on YouTube during the tournament.",
     ],
     take:
-      "The money is still thin. Ampere Analysis found \"little to no money changing hands\" in European creator rights deals, and the audiences are modest and contested: The Overlap averaged around 14,000 viewers across its Bundesliga streams. For most rights holders this is marginal inventory, used to reach fans that conventional broadcasts miss or as an acquisition channel for the subscription behind it. Creators are not replacing broadcasters. But the old division, where broadcasters got the game and creators talked about it, is disappearing. Creators are becoming an integral part of the broadcast stack, and CazéTV shows how far that can go when the experiment works.",
+      "The money is still thin, and audiences are modest. For most rights holders this is marginal inventory, but it reaches fans conventional broadcasts miss: [54% of viewers watching the Bundesliga live on That's Football were aged 13 to 34](https://insidersport.com/2026/08/28/jamie-vardy-bundesliga-rights-youtube/). Creators aren't replacing broadcasters. But the old split, where broadcasters got the game and creators talked about it, is disappearing, and CazéTV shows how far that can go when the experiment works.",
     graphic: { kind: "creator-deals" },
-    sources: [
-      { label: "KSI, DAZN and Dagenham & Redbridge announce landmark broadcast partnership", url: "https://www.daggers.co.uk/ksi-dazn-and-dagenham-redbridge-announce-landmark-broadcast-partnership-to-redefine-non-league-football-coverage/" },
-      { label: "Just Women's Sports: W7F Manchester United, Aston Villa and London edition", url: "https://justwomenssports.com/reads/w7f-manchester-united-world-seven-football-aston-villa-london-edition-2026/" },
-      { label: "World Sevens Football: London edition prize pool", url: "https://www.worldsevensfootball.com/news/chelsea-fc-women-crowned-world-sevens-football-london-champions-as-three-day-spectacular-sets-new-records" },
-    ],
   },
   {
     key: "business",
@@ -389,9 +381,14 @@ export const FTABR26_INSIGHTS: InsightArticle[] = [
     heading: "OWNERSHIP, DATA, AND\nTHE BUSINESS OF FOOTBALL",
     description: "Inside the evolving structures shaping control, accountability, and value creation in the modern game.",
     title: FTABR26_WOMENS_MCO.title,
-    body: [FTABR26_WOMENS_MCO.intro],
+    body: [
+      "Multi-club ownership in the men's game is mostly retrofitted: groups buy established clubs and try to stitch decades-old structures together. In women's football, it is being designed from scratch.",
+      "Two models are emerging. Groups that already own men's clubs are adding women's teams and sharing facilities, staff and commercial deals across both. Alongside them, a newer class of owner is building portfolios around women's clubs from the outset: Michele Kang's Kynisca (Washington Spirit, OL Lyonnes, London City Lionesses), Monarch Collective, Mercury13 and Crux Football among them.",
+      "That second model looks less like a collection of clubs and more like a platform. [Lower valuations make these networks easier to assemble](https://www.cityam.com/?p=2426454), and owners can set up shared data, medical, scouting and commercial operations before legacy systems exist, then offer sponsors a multi-market women's football audience instead of a single club.",
+      "The regulatory limit is the same as in the men's game. Ahead of the 2026 Women's Champions League final, [UEFA's head of women's football Nadine Kessler confirmed](https://africa.espn.com/football/story/_/id/48826057/uefa-doubles-multi-club-ownership-stance-women-champions-league) that clubs under common ownership won't be allowed in the same competition, and ruled out any waiver for the women's game.",
+    ],
     take:
-      "Women's football is the one part of the game where multi-club ownership is being built from the ground up rather than bolted on. That gives groups such as Kynisca and Monarch Collective the chance to share data, medical and commercial infrastructure across their clubs from day one, the operational upside MCO promises but rarely delivers in the men's game. UEFA's refusal to grant an exemption means the same regulatory ceiling applies, so the portfolios that plan around it now will be best placed as the women's game scales.",
+      "Women's football is the one part of the game where multi-club ownership can deliver what it promises: shared infrastructure that's cheaper to build once than to merge later. That makes these portfolios a new kind of customer. Data, medical, scouting and fan-engagement vendors can sell across a group instead of one club at a time, and help shape the setup while it's still being built. UEFA's ruling limits how far groups can integrate on the pitch, but not off it. The portfolios that plan around it now, and the startups that build for them, will be best placed as the women's game scales.",
     graphic: { kind: "mco" },
   },
 ];

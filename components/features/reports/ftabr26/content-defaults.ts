@@ -18,7 +18,7 @@ import { FTABR26_SOCCERMENT } from './data/ftabr26-soccerment-data';
 
 /** The page parts between the hero and the footer, in their default order
  *  (the admin's Page order reorders them; `partners` joins when it's switched on). */
-export const FTABR26_PART_ORDER = ['trends', 'featured', 'innovators', 'startups', 'ecomap', 'soccerment', 'data'];
+export const FTABR26_PART_ORDER = ['trends', 'data', 'featured', 'soccerment', 'ecomap', 'startups', 'innovators', 'methodology', 'credits'];
 
 export const FTABR26_DEFAULTS: Record<string, unknown> = {
   partOrder: FTABR26_PART_ORDER,

@@ -18,13 +18,15 @@ export const FTABR26_HERO = {
   titleLines: ["FOOTBALL", "TECH & BUSINESS", "REPORT 2026"],
   edition: "Third edition",
   standfirst:
-    "Our deep dive into what's happening in football innovation. Investment patterns, the innovators defining where the industry is going, and the trends that separate real adoption from hype.",
+    "What the World Cup changed, and where football's tech money went next.",
   presentedBy: "SportsTechX",
   hashtag: "#FTABR26",
 } as const;
 
 export const FTABR26_ABOUT =
-  "Yes, we're talking about soccer. We distinguish between football-only and multisport platforms throughout, to accurately attribute investment raised specifically for football innovation. If you're investing in this space, building in it, or trying to figure out where football tech is actually headed versus where the hype says it's going, this report is meant to cut through the noise.";
+  "The third edition of our Football Tech & Business Report picks up where the second left off. That edition landed just before the 2026 FIFA World Cup. This one looks at what the tournament actually changed, and where football's tech money went next.\n\n" +
+  "As before, we separate football-only startups from multisport platforms, so the investment we attribute to football innovation really is football's. The report launches alongside Atlas, the newly updated SportsTechX Intelligence Hub, where the data behind every chart lives.\n\n" +
+  "If you're investing in football, building in it, or working out where it's actually heading rather than where the hype says it is, this is for you.";
 
 /* ── Ten trends, in three thematic groups
    Source: attached_assets/FTABR26_Micro_Trends_1789043561122.pdf (10 Sep 2026) ─── */
@@ -615,9 +617,9 @@ export const FTABR26_WORLDCUP = {
     sublabel: "Bank of America's estimate; half of the $40.0B generated globally",
   },
   stats: [
-    { value: "99.7%",  label: "Stadium occupancy",                            sublabel: "6.81M fans across 104 matches" },
-    { value: "14.04M", label: "Average US viewers per match",                 sublabel: "Up 116.0% on Fox and 143.0% on Telemundo vs 2022" },
-    { value: "13M GB", label: "Data across tournament and broadcast networks", sublabel: "Through the quarter-finals; over 161,000 km of fibre deployed" },
+    { value: "99.7%",  label: "Stadium occupancy",                            sublabel: "6.8M fans across 104 matches" },
+    { value: "14.0M",  label: "Average US viewers per match",                 sublabel: "Up 116.0% on Fox and 143.0% on Telemundo vs 2022" },
+    { value: "13 PB",  label: "Data across tournament and broadcast networks", sublabel: "Through the quarter-finals; over 161,000 km of fibre deployed" },
   ],
   techHeading: "Tech @ FIFA World Cup 26",
   tech: FTABR26_WORLDCUP_TECH,
@@ -645,7 +647,7 @@ export const FTABR26_FEATURED = {
       { src: "/reports/ftabr26/featured/playermaker-action.webp", alt: "Player wearing Playermaker sensors striking a football on grass", position: "center 55%" },
     ],
   },
-  aboutLabel: "What Playermaker Solves",
+  aboutLabel: "The problem & solution",
   about: [
     "We all move from our feet, yet nobody ever taught us how to walk, run or cut. Playermaker is claiming the foot wearable opportunity.",
     "Its foot-worn motion tracking, proven with the world's best footballers, coaches any athlete, at any level, in any sport, to stop guessing and start knowing: developing talent and finding the small adjustments that unlock their best.",
@@ -694,7 +696,7 @@ export const FTABR26_STARTUPS: Ftabr26Startup[] = [
 ];
 
 export const FTABR26_STARTUPS_NOTE =
-  "We asked each innovator featured in this report to name a football tech startup that has impressed them recently. Based on their recommendations, input from our partner Match Ventures, and standout startups we're closely tracking, we've curated this list of startups to watch in football tech.";
+  "Built from our innovators' recommendations, input from our partner Match Ventures and the startups we track most closely, this is our list of football tech startups to watch.";
 
 /* ── Ecosystem (source pp25, 28, 31) ────────────────────────────────────── */
 
@@ -812,9 +814,26 @@ export const FTABR26_METHODOLOGY = {
 } as const;
 
 export const FTABR26_IMPRINT = {
-  author: "Rohn Malhotra",
+  author: "SportsTechX",
   company: "SportsTechX GmbH",
   address: "Liebigstr. 35, 10247 Berlin, Germany",
   contact: "www.sportstechx.com / hello@sportstechx.com",
   note: "The content in this report is for general information purposes only and can change at any time. SportsTechX cannot guarantee the ultimate accuracy or completeness of the data.",
 } as const;
+
+
+/* ── Team credits and imprint (closes the page, after Methodology) ─────────
+   One thank-you line, then the imprint (content note reused from 2025). */
+export const FTABR26_CREDITS = {
+  /** One line above the imprint */
+  thanks:
+    "With thanks to the SportsTechX team, our report partners Playermaker and Soccerment, Match Ventures, and every innovator who shared their view of the game.",
+  imprint: {
+    author: "SportsTechX",
+    company: "SportsTechX GmbH, Berlin",
+    contact: "hello@sportstechx.com",
+    website: "www.sportstechx.com",
+  },
+  contentNote:
+    "The content in this report is for general information purposes only and can change at any time. SportsTechX cannot guarantee the ultimate accuracy or completeness of the data.",
+};

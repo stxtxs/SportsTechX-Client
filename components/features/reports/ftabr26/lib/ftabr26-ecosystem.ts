@@ -272,8 +272,12 @@ export function resolveFtabr26Ecosystem(live: Ftabr26Ecosystem | undefined): Fta
   return {
     initiatives: list(live?.initiatives, FTABR26_INITIATIVES),
     programs: withLocations(list(live?.programs, FTABR26_ACCELERATORS)),
-    // Keep the shared payload shape intact, but omit events from FTABR26.
-    events: [],
+    /* Upcoming events only: rows saved in the report content (admin →
+       Ecosystem → Events) dated today or later, soonest first. The master
+       events table is not used, so past FTR26 events never show here. */
+    events: (Array.isArray(live?.events) ? live!.events : [])
+      .filter(e => e && e.name && (!e.startDate || new Date(e.startDate).getTime() >= Date.now() - 864e5))
+      .sort((a, b) => String(a.startDate ?? "9999").localeCompare(String(b.startDate ?? "9999"))),
     isLive: Boolean(live && live.initiatives && live.initiatives.length > 0),
   };
 }

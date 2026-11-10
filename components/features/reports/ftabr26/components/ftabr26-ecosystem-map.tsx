@@ -29,8 +29,10 @@ import {
 
 /* Match the two ecosystem lists published in the football report. */
 export const FTABR26_ECO_COLORS: Record<Ftabr26EcoType, string> = {
-  initiatives: BRAND.tealBright,
-  programs: BRAND.navy,
+  /* Colour rules: not the sector colours or pink. Initiatives use the
+     Football Only green, accelerators the slate. */
+  initiatives: BRAND.green,
+  programs: BRAND.slate,
 };
 
 /* "Accelerators", not "Programs" — the report's own word for the tab. */

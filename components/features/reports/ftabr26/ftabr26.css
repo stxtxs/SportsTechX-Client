@@ -22,4 +22,12 @@
   .ft26-root a[href][style*="border-radius"],
   .ft26-root button[aria-haspopup="dialog"] { break-inside: avoid; }
   .ft26-root h2, .ft26-root h3 { break-after: avoid; }
+  /* Innovators: 7 per row like desktop, scaled to fit the A4 text width
+     (at full size the 7th column ran off the page) */
+  .ft26-root .ft26-innov-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 28px 20px !important;
+    zoom: 0.72;
+    break-inside: avoid;
+  }
 }

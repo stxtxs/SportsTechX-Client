@@ -1449,7 +1449,7 @@ export default function ReportFTABR26({ content, preview = false }: {
 
           {/* Desktop: 7 per row (14 innovators = 2 rows), with a slightly tighter gap so the
               avatars keep their size. Tablet keeps 6 per row, mobile 2. */}
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : windowWidth >= 1120 ? "repeat(7,1fr)" : "repeat(6,1fr)", gap: isMobile ? 24 : windowWidth >= 1120 ? "36px 28px" : 36, marginTop: isMobile ? 28 : 40 }}>
+          <div className="ft26-innov-grid" style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : windowWidth >= 1120 ? "repeat(7,1fr)" : "repeat(6,1fr)", gap: isMobile ? 24 : windowWidth >= 1120 ? "36px 28px" : 36, marginTop: isMobile ? 28 : 40 }}>
             {FTABR26_INNOVATORS.map(p => rosterTile({
               id: `ftabr26-inn-${p.id}`,
               name: p.name, company: p.company, photoUrl: p.photoUrl,

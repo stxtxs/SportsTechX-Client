@@ -95,7 +95,7 @@ export default function Ftabr26EcosystemMap({
     return () => { cancelled = true; };
   }, []);
 
-  const { counts, unplaced, plotted, global } = useMemo(() => ftabr26MapData(eco), [eco]);
+  const { counts, unplaced, plotted, global, multi } = useMemo(() => ftabr26MapData(eco), [eco]);
 
   const centers = useMemo(() => {
     if (!mapReady || !projRef.current) return {} as Record<string, { x: number; y: number }>;
@@ -315,9 +315,10 @@ export default function Ftabr26EcosystemMap({
 
       {/* Anything the master tables leave unplaceable is named here rather than
           quietly missing from the totals — the same note the static map carries. */}
-      {unplacedTotal > 0 && (
+      {(unplacedTotal > 0 || multi.length > 0) && (
         <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted, letterSpacing: 0.5, margin: "10px 0 0" }}>
           {plotted} of {plotted + unplacedTotal} entries mapped
+          {multi.map(m => ` · ${m.name} shown in ${m.cities.join(" and ")}`).join("")}
           {global > 0 && ` · ${global} global network${global === 1 ? "" : "s"} listed below`}
           {unplacedTotal - global > 0 && ` · ${unplacedTotal - global} without a location, listed in the tables below`}
         </p>

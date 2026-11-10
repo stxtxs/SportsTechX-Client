@@ -423,6 +423,8 @@ export type WorldCupTech = {
   category: WorldCupTechCategory;
   body: string;
   source?: { label: string; url: string };
+  /** Several sources; takes precedence over `source` when set. */
+  sources?: { label: string; url: string }[];
 };
 
 /* A post-tournament record of what actually ran at the 2026 World Cup, which is
@@ -439,7 +441,7 @@ export type WorldCupTech = {
 export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
   {
     id: "connected-ball",
-    title: "Connected ball technology",
+    title: "Connected ball (adidas Trionda)",
     category: "Officiating",
     body:
       "A 500Hz sensor suite embedded in the adidas Trionda match ball fed exact kick-point and ball-position data to the video team, converting judgement calls on offside timing and handball contact into measurable events.",
@@ -447,47 +449,42 @@ export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
   },
   {
     id: "semi-automated-offside",
-    title: "Semi-automated offside technology",
+    title: "Upgraded semi-automated offside (Lenovo player avatars)",
     category: "Officiating",
     body:
-      "Advanced semi-automated offside technology made its World Cup debut in 2026. For clear positional offsides, alerts went directly to on-pitch officials instead of first passing through VAR. The system used individual 3D player scans to make offside decisions and broadcast visualisations more accurate.",
-    source: { label: "FIFA", url: "https://inside.fifa.com/innovation/news/offside-decisions-referee-body-cams-innovation-world-cup-2026" },
-  },
-  {
-    id: "player-avatars",
-    title: "Player avatars",
-    category: "Officiating",
-    body:
-      "Lenovo 3D-scanned all 1,248 participating players before kick-off, giving the offside system true individual dimensions and replacing the old skeleton-line replay graphic with a photo-realistic model.",
-    source: { label: "Tom's Guide", url: "https://www.tomsguide.com/wellness/fitness/1-200-digital-athlete-avatars-and-jitter-free-field-footage-how-lenovo-is-using-ai-to-make-the-2026-fifa-world-cup-even-better" },
+      "Semi-automated offside, first used at Qatar 2022, was upgraded for 2026. Lenovo 3D-scanned all 1,248 players, giving the system each player's real dimensions, and clear offsides went straight to on-pitch officials instead of through the VAR.",
+    sources: [
+      { label: "FIFA", url: "https://inside.fifa.com/innovation/news/offside-decisions-referee-body-cams-innovation-world-cup-2026" },
+      { label: "FIFA/Lenovo", url: "https://inside.fifa.com/en/news/lenovo-tech-world-ai-powered-innovations-world-cup-2026" },
+    ],
   },
   {
     id: "var-announcements",
-    title: "In-stadium referee announcements of VAR outcomes",
+    title: "VAR decisions announced in stadium",
     category: "Officiating",
     body:
-      "Referees began explaining overturned decisions over the stadium PA partway through the tournament - a transparency process change rather than a new system, introduced after teams complained about opaque calls.",
+      "Referees began explaining overturned decisions over the stadium PA partway through the tournament: a change in process, not a new system, introduced after teams complained about opaque calls.",
     source: { label: "Times of India", url: "https://timesofindia.indiatimes.com/sports/football/fifa-world-cup/fifa-makes-major-var-change-for-remainder-of-world-cup-2026-after-teams-raise-furious-refereeing-complaints/articleshow/132301396.cms" },
   },
   {
     id: "ifab-laws",
-    title: "IFAB Laws of the Game 2025/26",
+    title: "Laws of the Game 2026/27 (IFAB)",
     category: "Officiating",
     body:
-      "The first major tournament played under the new laws: an eight-second goalkeeper limit sanctioned by corner, five-second countdowns on throw-ins and goal kicks, ten seconds to leave the pitch when substituted, a mandatory minute off after on-pitch treatment, and an expanded VAR remit covering second yellows.",
-    source: { label: "Sky Sports", url: "https://www.skysports.com/football/news/12098/13549645/world-cup-ifab-confirm-new-var-powers-10-second-substitutions-and-tactical-timeout-ban-in-major-rule-changes" },
+      "The first major tournament under the 2026/27 Laws, applied early: five-second countdowns on throw-ins and goal kicks, ten seconds to leave the pitch when substituted, and a wider VAR remit covering wrongly issued second yellows, mistaken identity and clearly wrong corners.",
+    source: { label: "FIFA/IFAB", url: "https://theifab.com/news/the-ifab-introduces-further-measures-to-improve-match-flow-and-player-behaviour/" },
   },
   {
     id: "host-broadcast-services",
-    title: "Host Broadcast Services",
+    title: "Host broadcast production (HBS)",
     category: "Broadcast & Production",
     body:
-      "HBS ran 45 cameras per match across all 104 fixtures - polecams, cablecams, cine-style rigs, 360-degree cameras and referee cams - all routed back to a single International Broadcast Centre in Dallas.",
+      "HBS ran 45 cameras per match across all 104 fixtures: polecams, cablecams, cine-style rigs, 360-degree cameras and referee cams, all routed back to a single International Broadcast Centre in Dallas.",
     source: { label: "The Ball Business", url: "https://theballbusiness.com/every-technology-at-the-2026-fifa-world-cup-and-what-it-means-for-football/" },
   },
   {
     id: "referee-view",
-    title: "Referee View (referee body-cam)",
+    title: "Referee View body cameras",
     category: "Broadcast & Production",
     body:
       "A head-mounted referee camera with real-time AI stabilisation smoothing the motion blur, putting the official's first-person perspective into live World Cup broadcast for the first time.",
@@ -503,15 +500,15 @@ export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
   },
   {
     id: "fifa-fan-id",
-    title: "FIFA Fan ID (NFC card)",
+    title: "Fan ID card (NFC)",
     category: "Fan Experience",
     body:
-      "A free NFC card collected at all 16 venues that, tapped to a phone, opened a personalised digital layer of content, rewards and custom merchandise - FIFA's attempt to bridge the physical and digital matchday.",
+      "A free NFC card collected at all 16 venues that, tapped to a phone, opened a personalised digital layer of content, rewards and custom merchandise: FIFA's attempt to bridge the physical and digital matchday.",
     source: { label: "SportsPro", url: "https://www.sportspro.com/news/fifa-world-cup-2026-fan-id-may-2026/" },
   },
   {
     id: "fifa-plus-app",
-    title: "FIFA+ / official tournament app",
+    title: "Official FIFA app",
     category: "Fan Experience",
     body:
       "A single software layer intended to carry the fan from hotel to seat: schedules, live scores, real-time alerts, 3D stadium maps, arrival planning and location-based prompts.",
@@ -530,16 +527,16 @@ export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
     title: "Dynamic ticket pricing",
     category: "Fan Experience",
     body:
-      "The first World Cup priced by demand rather than fixed face value, sold through staged lotteries into an official FIFA resale market with no price cap - the tournament's most contested piece of technology and the one with no on-pitch component at all.",
+      "The first World Cup priced by demand rather than fixed face value, sold through staged lotteries into an official FIFA resale market with no price cap. It was the tournament's most contested piece of technology and the one with no on-pitch component at all.",
     source: { label: "Al Jazeera", url: "https://www.aljazeera.com/sports/2026/4/27/fifa-world-cup-2026-dynamic-pricing-match-tickets-peter-moore" },
   },
   {
     id: "private-5g",
-    title: "Verizon private 5G",
+    title: "Private 5G networks (Verizon)",
     category: "Venue Operations & Security",
     body:
-      "Private 5G networks were built into all 16 venues, with public capacity at the 11 US stadiums lifted three to fivefold, so 80,000 people streaming and uploading at once didn't collapse the connection.",
-    source: { label: "The Ball Business", url: "https://theballbusiness.com/every-technology-at-the-2026-fifa-world-cup-and-what-it-means-for-football/" },
+      "Private 5G networks ran in all 16 venues, and Verizon lifted public capacity at the 11 US stadiums three- to fivefold. Its network carried nearly 500TB of data across the tournament.",
+    source: { label: "DCD", url: "https://www.datacenterdynamics.com/en/news/verizon-network-carries-close-to-500tb-of-data-during-2026-fifa-world-cup/" },
   },
   {
     id: "command-centre",
@@ -559,34 +556,37 @@ export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
   },
   {
     id: "facial-recognition",
-    title: "AI facial recognition",
+    title: "Facial recognition entry (opt-in)",
     category: "Venue Operations & Security",
     body:
-      "Used for accreditation and access control at all 16 venues and, at participating stadiums, for ticketless entry and cashless payment - with biometrics tokenised into numerical values rather than stored as raw images.",
-    source: { label: "Fares Solution", url: "https://faressolution.net/news/world-cup-tech-protection" },
+      "Several US venues, including Boston, Miami and Atlanta, offered opt-in facial recognition so registered fans could enter and pay without a ticket or card, the largest test yet of face-based entry at a football tournament.",
+    sources: [
+      { label: "The Next Web", url: "https://thenextweb.com/news/world-cup-2026-biometrics-google-gemini" },
+      { label: "ID Tech", url: "https://idtechwire.com/gillette-stadium-rolls-out-facial-recognition-entry-and-payment-system/" },
+    ],
   },
   {
     id: "security-robots",
     title: "Robotic security dogs",
     category: "Venue Operations & Security",
     body:
-      "Camera-equipped quadruped robots patrolled perimeters at broadcast compounds and stadium exteriors, covering ground that would otherwise need standing human posts.",
-    source: { label: "Fares Solution", url: "https://faressolution.net/news/world-cup-tech-protection" },
+      "In Mexico, camera-equipped robot dogs patrolled venue perimeters, covering ground that would otherwise need standing security posts.",
+    source: { label: "TechRound", url: "https://techround.co.uk/news/why-is-the-2026-world-cup-turning-stadiums-into-mass-surveillance-hubs/" },
   },
   {
     id: "fifa-ai-pro",
     title: "FIFA AI Pro",
     category: "Player Performance & Welfare",
     body:
-      "A hybrid and generative AI post-match analysis assistant built with Lenovo for all 48 teams - the point being to give squads without large analyst departments the same read on the data as the ones that have them.",
-    source: { label: "The National Desk", url: "https://thenationaldesk.com/top-videos/digital-avatars-ref-cams-and-ai-world-cup-tech-takes-center-stage" },
+      "A hybrid and generative AI post-match analysis assistant built with Lenovo for all 48 teams. The point was to give squads without large analyst departments the same read on the data as the ones that have them.",
+    source: { label: "FIFA/Lenovo", url: "https://inside.fifa.com/en/news/lenovo-tech-world-ai-powered-innovations-world-cup-2026" },
   },
   {
     id: "epts",
     title: "EPTS (Electronic Performance & Tracking Systems)",
     category: "Player Performance & Welfare",
     body:
-      "In-stadium optical tracking plus approved wearables delivering distance, sprint counts, top speeds and heat maps - the baseline layer nearly every other performance product at the tournament sits on top of.",
+      "In-stadium optical tracking plus approved wearables delivering distance, sprint counts, top speeds and heat maps: the baseline layer nearly every other performance product at the tournament sits on top of.",
     source: { label: "FIFA", url: "https://inside.fifa.com/innovation/standards/epts" },
   },
   {
@@ -594,7 +594,7 @@ export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
     title: "FOCUS concussion protocol",
     category: "Player Performance & Welfare",
     body:
-      "A standardised rapid on-pitch assessment, developed by FIFA-nominated doctors, designed to rule concussion out quickly rather than diagnose it - pilot runtime around three minutes against the 56-second average head-injury check at Qatar 2022.",
+      "A standardised rapid on-pitch assessment, developed by FIFA-nominated doctors, designed to rule concussion out quickly rather than diagnose it: pilot runtime around three minutes against the 56-second average head-injury check at Qatar 2022.",
     source: { label: "Medical Xpress", url: "https://medicalxpress.com/news/2026-07-soccer-concussion-protocol-game-hardest.html" },
   },
   {
@@ -602,29 +602,39 @@ export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
     title: "Social media protection service",
     category: "Player Performance & Welfare",
     body:
-      "FIFA's AI moderation layer scanned player and team accounts across the tournament, hiding abusive replies before they reached the athlete - over 53 million posts and comments processed.",
+      "FIFA's AI moderation layer scanned player and team accounts across the tournament, hiding abusive replies before they reached the athlete. It processed over 53 million posts and comments.",
     source: { label: "FIFA", url: "https://inside.fifa.com/campaigns/no-discrimination/news/53-million-posts-comments-world-cup-2026-social-media-protection-service" },
   },
 ];
 
 export const FTABR26_WORLDCUP = {
   eyebrow: "Feature",
-  title: "FIFA WORLD CUP 2026",
-  standfirst: "Technology took centre stage.",
+  title: "FIFA WORLD CUP 26",
+  standfirst: "The tech behind the biggest World Cup yet",
   intro:
-    "The 2026 FIFA World Cup, hosted across the United States, Canada and Mexico, marked a major step forward in football's technological evolution. With an expanded format of 48 teams and 16 host cities, technology proved crucial to keeping the tournament consistent, efficient and connected across three countries and 104 matches. From officiating systems and connected balls to enhanced tracking and in-stadium experiences, tech was embedded in every aspect of the tournament.",
+    "The 2026 World Cup was the biggest yet: 48 teams, 16 host cities across three countries and 104 matches. Keeping it consistent took a layer of technology most fans never saw, from a sensor inside the match ball to a private 5G network in every stadium.\n\n" +
+    "Below is what was deployed, grouped by who it served. For what it means for officiating beyond the tournament, see Insights → Tech.",
   headline: {
     value: "$20.0B",
     label: "Estimated US economic impact",
-    sublabel: "Bank of America's estimate; half of the $40.0B generated globally",
+    sublabel: "Bank of America estimate; half of the $40B generated globally",
+    source: { label: "Guardian Nigeria", url: "https://guardian.ng/?p=2882638" },
   },
   stats: [
-    { value: "99.7%",  label: "Stadium occupancy",                            sublabel: "6.8M fans across 104 matches" },
-    { value: "14.0M",  label: "Average US viewers per match",                 sublabel: "Up 116.0% on Fox and 143.0% on Telemundo vs 2022" },
-    { value: "13 PB",  label: "Data across tournament and broadcast networks", sublabel: "Through the quarter-finals; over 161,000 km of fibre deployed" },
+    { value: "99.7%", label: "Stadium occupancy",
+      sublabel: "6.8M fans across 104 matches, a World Cup record",
+      source: { label: "Football Ground Guide", url: "https://footballgroundguide.com/news/which-2026-world-cup-stadium-had-the-best-average-attendance-it-wasnt-metlife-or-att.html" } },
+    { value: "14.0M", label: "Average US viewers per match, Fox + Telemundo",
+      sublabel: "Fox 7.7M (+116%), Telemundo 6.3M (+143%) vs 2022",
+      source: { label: "Front Office Sports", url: "https://frontofficesports.com/article/world-cup-final-viewership-fox-telemundo-us-television-soccer-record/" } },
+    { value: "13 PB", label: "Data across tournament and broadcast networks",
+      sublabel: "Carried by tournament and broadcast networks across 16 stadiums",
+      source: { label: "SVG", url: "https://www.sportsvideo.org/2026/07/23/how-the-fifa-world-cups-record-revenue-masks-a-structural-market-contraction/" } },
   ],
-  techHeading: "Tech @ FIFA World Cup 26",
+  techHeading: "What was deployed",
   tech: FTABR26_WORLDCUP_TECH,
+  take:
+    "Most of the technology that mattered at this World Cup was infrastructure: networks, tracking and identity systems that fans only notice when they fail. What fans did notice was about trust (referee cameras, decisions explained over the PA) and access (FIFA ID, dynamic pricing). The most contested piece of tech had nothing to do with the football. For startups, the opening is in the layers FIFA now treats as standard, from tracking to fan identity, which clubs and leagues will want at their own scale.",
 } as const;
 
 /* ── Featured company: Playermaker ───────────────────────────────────────

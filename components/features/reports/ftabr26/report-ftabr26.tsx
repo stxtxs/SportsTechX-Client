@@ -40,7 +40,7 @@ import { formatFtabr26Money, formatFtabr26Percent } from "./lib/ftabr26-format";
 import {
   resolveFtabr26Ecosystem, ecoHref, ecoLogoUrl, ecoInitiativeLogoUrl, ecoFlagCode,
   resolveFtabr26Startups, startupLogoUrl, indexFtabr26Startups, lookupFtabr26Startups,
-  ecoContinent, startupMatchKey,
+  ecoContinents, ecoLocations, startupMatchKey,
   type Ftabr26Startup, type Ftabr26ContinentId,
 } from "./lib/ftabr26-ecosystem";
 import { FTABR26_INNOVATORS as FTABR26_INNOVATORS_DEFAULT, FTABR26_PLAYMAKER_COMPANIES as FTABR26_PLAYMAKER_COMPANIES_DEFAULT, FTABR26_QUESTIONS as FTABR26_QUESTIONS_DEFAULT, type FtabrInnovator } from "./data/ftabr26-innovators-data";
@@ -300,7 +300,7 @@ const STAT_ICONS = {
   ball:      (c: string) => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="m12 7 4.5 3.3-1.7 5.3h-5.6L7.5 10.3z" /><path d="M12 2v5M2.5 9l5 1.3M4.5 19l4.7-3.4M19.5 19l-4.7-3.4M21.5 9l-5 1.3" /></svg>,
 };
 
-function StatCard({ num, label, t, subtitle, style, icon }: { num: React.ReactNode; label: string; t: Theme; subtitle?: string; style?: React.CSSProperties; icon?: keyof typeof STAT_ICONS }) {
+function StatCard({ num, label, t, subtitle, style, icon, footer }: { num: React.ReactNode; label: string; t: Theme; subtitle?: string; style?: React.CSSProperties; icon?: keyof typeof STAT_ICONS; footer?: React.ReactNode }) {
   return (
     <div className="stx-reveal"
       style={{ background: t.bgCard, padding: "36px 32px", position: "relative", overflow: "hidden", borderRadius: 14, border: `1px solid ${t.border}`, ...style }}>
@@ -309,6 +309,7 @@ function StatCard({ num, label, t, subtitle, style, icon }: { num: React.ReactNo
       <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(44px,4.5vw,64px)", color: BRAND.pink, lineHeight: 1 }}>{num}</div>
       <div style={{ marginTop: 10, fontSize: 14, fontWeight: 600, color: t.text, lineHeight: 1.4 }}>{label}</div>
       {subtitle && <div style={{ marginTop: 8, fontSize: 12, color: t.textMuted, lineHeight: 1.5 }}>{subtitle}</div>}
+      {footer}
     </div>
   );
 }
@@ -518,7 +519,28 @@ export default function ReportFTABR26({ content, preview = false }: {
   const FTABR26_INSIGHTS = pick("insights", FTABR26_INSIGHTS_DEFAULT);
   const FTABR26_CREATOR_DEALS = pick("creatorDeals", FTABR26_CREATOR_DEALS_DEFAULT);
   const FTABR26_WOMENS_MCO_GROUPS = pick("womensMcoGroups", FTABR26_WOMENS_MCO_GROUPS_DEFAULT);
-  const FTABR26_WORLDCUP = pick("worldcup", FTABR26_WORLDCUP_DEFAULT);
+  const FTABR26_WORLDCUP_RAW = pick("worldcup", FTABR26_WORLDCUP_DEFAULT);
+  /* The admin's recap rows hold one source each, and its stat cards none. Where the
+     admin row is still the same item (same id, or same card value) the code default's
+     sources fill in: the second source on a two-source item, and the card links. */
+  type WcSrc = { label: string; url: string };
+  const wcDefaultTech = new Map<string, { source?: WcSrc; sources?: WcSrc[] }>(
+    (FTABR26_WORLDCUP_DEFAULT.tech as readonly { id: string; source?: WcSrc; sources?: readonly WcSrc[] }[])
+      .map(d => [d.id, { source: d.source, sources: d.sources ? [...d.sources] : undefined }]));
+  const wcDefaultCard = (value?: string) =>
+    [FTABR26_WORLDCUP_DEFAULT.headline, ...FTABR26_WORLDCUP_DEFAULT.stats].find(d => d.value === value) as { source?: WcSrc } | undefined;
+  const FTABR26_WORLDCUP = {
+    ...FTABR26_WORLDCUP_RAW,
+    headline: { ...FTABR26_WORLDCUP_RAW.headline, source: (FTABR26_WORLDCUP_RAW.headline as { source?: WcSrc }).source ?? wcDefaultCard(FTABR26_WORLDCUP_RAW.headline?.value)?.source },
+    stats: (FTABR26_WORLDCUP_RAW.stats ?? []).map(st => ({ ...st, source: (st as { source?: WcSrc }).source ?? wcDefaultCard(st.value)?.source })),
+    tech: (FTABR26_WORLDCUP_RAW.tech ?? []).map(item => {
+      const it = item as WorldCupTech;
+      if (it.sources?.length) return it;
+      const def = wcDefaultTech.get(it.id);
+      const sameFirst = !it.source || !def?.sources || def.sources.some(x => x.url === it.source?.url);
+      return def?.sources && sameFirst ? { ...it, sources: def.sources } : it;
+    }),
+  };
   const FTABR26_WORLDCUP_TECH_CATEGORIES = pick("worldcupTechCategories", FTABR26_WORLDCUP_TECH_CATEGORIES_DEFAULT);
   const FTABR26_STARTUPS_NOTE = pick("startupsNote", FTABR26_STARTUPS_NOTE_DEFAULT);
   const FTABR26_PARTNERS = pick("partners", FTABR26_PARTNERS_DEFAULT);
@@ -697,7 +719,8 @@ export default function ReportFTABR26({ content, preview = false }: {
      it appears only in the unfiltered view — the map footnotes how many. */
   const ecoShown = useMemo(() => {
     if (!ecoRegion) return eco;
-    const only = (rows: Ftabr26EcosystemEntry[]) => rows.filter(r => ecoContinent(r) === ecoRegion);
+    /* A row in several regions (PSG Labs: Europe & Asia) is listed under each */
+    const only = (rows: Ftabr26EcosystemEntry[]) => rows.filter(r => ecoContinents(r).includes(ecoRegion));
     return {
       ...eco,
       initiatives: only(eco.initiatives),
@@ -1085,27 +1108,58 @@ export default function ReportFTABR26({ content, preview = false }: {
     ));
   };
 
+  /* WC26 recap sources: an item or stat card takes `source` (one) or `sources` (several),
+     shown as "Source: X ↗" or "Sources: X ↗ · Y ↗", each opening in a new tab. */
+  type WcSource = { label: string; url: string };
+  const wcSourceLinks = (x: { source?: WcSource | null; sources?: WcSource[] | null }, style?: React.CSSProperties) => {
+    const list = (Array.isArray(x.sources) && x.sources.length ? x.sources : x.source ? [x.source] : [])
+      .filter(src => src && src.url);
+    if (list.length === 0) return null;
+    const linkStyle: React.CSSProperties = { color: BRAND.pink, textDecoration: "none", borderBottom: `1px solid ${BRAND.pink}55`, paddingBottom: 2 };
+    return (
+      <div style={{ alignSelf: "flex-start", fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: 1.5, color: BRAND.pink, textTransform: "uppercase", lineHeight: 1.9, ...style }}>
+        {list.length === 1 ? "Source: " : "Sources: "}
+        {list.map((src, i) => (
+          <span key={i}>
+            {i > 0 && " · "}
+            <a href={src.url} target="_blank" rel="noopener noreferrer" style={linkStyle}>{src.label} ↗</a>
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   /* Ecosystem location: [flag] City (same flags as Startups to Watch), or a globe and
      "Global" for a network with no single base. Null when the row has neither. */
-  const ecoLocationNode = (r: { city?: string | null; country?: string | null }, fontSize: number) => {
+  const ecoLocationNode = (r: { city?: string | null; country?: string | null; continent?: string | null }, fontSize: number) => {
     const isGlobal = /^global$/i.test((r.city ?? "").trim());
-    const code = isGlobal ? null : ecoFlagCode(r.country);
-    const label = isGlobal ? "Global" : (r.city || r.country || null);
-    if (!label) return null;
+    const parts = isGlobal ? [] : ecoLocations({ city: r.city ?? null, country: r.country ?? null, continent: r.continent ?? null })
+      .filter(l => l.city || l.country);
+    if (!isGlobal && parts.length === 0) return null;
+    const flag = (country: string | null) => {
+      const code = ecoFlagCode(country);
+      return code ? (
+        <img src={`/reports/ftabr26/flags/${code}.svg`} alt={country ?? ""} title={country ?? undefined} width={16} height={12}
+          style={{ width: 16, height: 12, objectFit: "cover", borderRadius: 2, flexShrink: 0 }} />
+      ) : null;
+    };
     return (
-      <span style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, fontFamily: "'DM Mono',monospace", fontSize, color: t.textMuted }}>
-        {isGlobal ? (
+      <span style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flexWrap: "wrap", fontFamily: "'DM Mono',monospace", fontSize, color: t.textMuted }}>
+        {isGlobal ? (<>
           <svg width={16} height={12} viewBox="0 0 16 12" aria-label="Global" role="img" style={{ flexShrink: 0 }}>
             <g fill="none" stroke="currentColor" strokeWidth="1">
               <circle cx="8" cy="6" r="5.5" />
               <path d="M2.5 6h11M8 0.5c1.6 1.5 2.4 3.4 2.4 5.5S9.6 10 8 11.5M8 0.5C6.4 2 5.6 3.9 5.6 6S6.4 10 8 11.5" />
             </g>
           </svg>
-        ) : code ? (
-          <img src={`/reports/ftabr26/flags/${code}.svg`} alt={r.country ?? ""} title={r.country ?? undefined} width={16} height={12}
-            style={{ width: 16, height: 12, objectFit: "cover", borderRadius: 2, flexShrink: 0 }} />
-        ) : null}
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
+          <span>Global</span>
+        </>) : parts.map((l, i) => (
+          <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+            {i > 0 && <span aria-hidden>&amp;</span>}
+            {flag(l.country)}
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.city ?? l.country}</span>
+          </span>
+        ))}
       </span>
     );
   };
@@ -1219,7 +1273,9 @@ export default function ReportFTABR26({ content, preview = false }: {
               <div className="stx-reveal" style={{ marginBottom: 32 }}>
                 {blockHeader(FTABR26_WORLDCUP.title)}
                 <p style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(16px,1.8vw,22px)", color: BRAND.pink, letterSpacing: 1, margin: "10px 0 0" }}>{FTABR26_WORLDCUP.standfirst}</p>
-                <p style={{ margin: "16px 0 0", fontSize: 15, lineHeight: 1.9, color: t.text }}>{FTABR26_WORLDCUP.intro}</p>
+                {String(FTABR26_WORLDCUP.intro ?? "").split(/\n\s*\n/).filter(Boolean).map((para, i) => (
+                  <p key={i} style={{ margin: "16px 0 0", fontSize: 15, lineHeight: 1.9, color: t.text }}>{richText(para.trim())}</p>
+                ))}
               </div>
 
               {/* Headline + supporting stats */}
@@ -1228,9 +1284,11 @@ export default function ReportFTABR26({ content, preview = false }: {
                   <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(48px,5vw,72px)", color: BRAND.pink, lineHeight: 1 }}>{FTABR26_WORLDCUP.headline.value}</div>
                   <div style={{ marginTop: 10, fontSize: 14, fontWeight: 700, color: t.text }}>{FTABR26_WORLDCUP.headline.label}</div>
                   <div style={{ marginTop: 8, fontSize: 12, color: t.textMuted, lineHeight: 1.6 }}>{FTABR26_WORLDCUP.headline.sublabel}</div>
+                  {wcSourceLinks(FTABR26_WORLDCUP.headline, { marginTop: 12 })}
                 </div>
                 {FTABR26_WORLDCUP.stats.map(s => (
-                  <StatCard key={s.label} num={s.value} label={s.label} subtitle={s.sublabel} t={t} style={{ padding: "32px 26px" }} />
+                  <StatCard key={s.label} num={s.value} label={s.label} subtitle={s.sublabel} t={t} style={{ padding: "32px 26px" }}
+                    footer={wcSourceLinks(s, { marginTop: 12 })} />
                 ))}
               </div>
 
@@ -1265,12 +1323,7 @@ export default function ReportFTABR26({ content, preview = false }: {
                                   <div style={{ padding: isMobile ? "20px 18px" : "24px 24px", display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
                                     <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 21, letterSpacing: 0.5, lineHeight: 1.15, color: titleCol }}>{item.title}</span>
                                     <p style={{ fontSize: 13.5, lineHeight: 1.75, color: t.text, margin: 0 }}>{item.body}</p>
-                                    {item.source && (
-                                      <a href={item.source.url} target="_blank" rel="noopener noreferrer"
-                                        style={{ marginTop: "auto", paddingTop: 6, alignSelf: "flex-start", fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: 1.5, color: BRAND.pink, textDecoration: "none", textTransform: "uppercase", borderBottom: `1px solid ${BRAND.pink}55`, paddingBottom: 2 }}>
-                                        Source: {item.source.label} ↗
-                                      </a>
-                                    )}
+                                    {wcSourceLinks(item, { marginTop: "auto", paddingTop: 6 })}
                                   </div>
                                 </div>
                               ))}
@@ -1282,6 +1335,16 @@ export default function ReportFTABR26({ content, preview = false }: {
                   })}
                 </div>
               </div>
+
+              {/* Our take: same treatment as the other Insights pieces */}
+              {FTABR26_WORLDCUP.take && (
+                <div className="stx-reveal" style={{ marginTop: isMobile ? 24 : 32, paddingTop: isMobile ? 20 : 26, borderTop: `1px solid ${t.border}` }}>
+                  <div style={{ borderLeft: `4px solid ${BRAND.pink}`, paddingLeft: isMobile ? 14 : 20 }}>
+                    <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: 1, color: BRAND.pink, lineHeight: 1 }}>Our take</div>
+                    <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.85, color: t.text }}>{richText(FTABR26_WORLDCUP.take)}</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1384,7 +1447,9 @@ export default function ReportFTABR26({ content, preview = false }: {
           </div>
 
 
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(6,1fr)", gap: isMobile ? 24 : 36, marginTop: isMobile ? 28 : 40 }}>
+          {/* Desktop: 7 per row (14 innovators = 2 rows), with a slightly tighter gap so the
+              avatars keep their size. Tablet keeps 6 per row, mobile 2. */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : windowWidth >= 1120 ? "repeat(7,1fr)" : "repeat(6,1fr)", gap: isMobile ? 24 : windowWidth >= 1120 ? "36px 28px" : 36, marginTop: isMobile ? 28 : 40 }}>
             {FTABR26_INNOVATORS.map(p => rosterTile({
               id: `ftabr26-inn-${p.id}`,
               name: p.name, company: p.company, photoUrl: p.photoUrl,

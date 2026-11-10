@@ -40,7 +40,7 @@ export const FTABR26_SUMMARY: SummaryStat[] = [
   { num: "$5.4B", label: "Raised in Europe",             subtitle: "North America next with $2.5B" },
   { num: "$6.7M",  label: "Average football-only round in 2025",          subtitle: "Down from $20.1M in 2021" },
   { num: "$20.0B", label: "Estimated US economic impact of World Cup 26", subtitle: "Bank of America estimate" },
-  { num: "27",     label: "Innovation programmes",                        subtitle: "20 initiatives by clubs, leagues and federations, plus 7 accelerators" },
+  { num: "25",     label: "Innovation programmes",                        subtitle: "18 initiatives by clubs, leagues and federations, plus 7 accelerators" },
 ];
 
 /* ── Investment by year (source p10) ────────────────────────────────────── */

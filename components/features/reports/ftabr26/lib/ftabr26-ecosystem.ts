@@ -197,6 +197,38 @@ export function ecoContinent(entry: Pick<Ftabr26EcosystemEntry, "continent" | "c
   return iso ? ISO_CONTINENT[iso.toUpperCase()] ?? null : null;
 }
 
+/* ── Several locations in one row ────────────────────────────────────────
+   One entry can run in more than one place (PSG Labs: Paris & Doha). The admin
+   row then lists the parts with " & " in the same order in each field:
+   City "Paris & Doha", Country "France & Qatar", Region "Europe & Asia".
+   ──────────────────────────────────────────────────────────────────────── */
+
+export type Ftabr26EcoLocation = { city: string | null; country: string | null; continent: string | null };
+
+const splitAmp = (v: string | null | undefined): string[] =>
+  (v ?? "").split(/\s*&\s*/).map(x => x.trim());
+
+/** The row's locations, one per " & "-separated part. A plain row gives one. */
+export function ecoLocations(entry: Pick<Ftabr26EcosystemEntry, "city" | "country" | "continent">): Ftabr26EcoLocation[] {
+  const cities = splitAmp(entry.city), countries = splitAmp(entry.country), continents = splitAmp(entry.continent);
+  const n = Math.max(cities.length, countries.length, continents.length);
+  return Array.from({ length: n }, (_, i) => ({
+    city: cities[i] || null,
+    country: countries[i] || (countries.length === 1 ? countries[0] || null : null),
+    continent: continents[i] || (continents.length === 1 ? continents[0] || null : null),
+  }));
+}
+
+/** Every bubble the row belongs to, in order and without repeats. */
+export function ecoContinents(entry: Pick<Ftabr26EcosystemEntry, "continent" | "country" | "city">): Ftabr26ContinentId[] {
+  const out: Ftabr26ContinentId[] = [];
+  for (const loc of ecoLocations(entry)) {
+    const c = ecoContinent({ continent: loc.continent, country: loc.country });
+    if (c && !out.includes(c)) out.push(c);
+  }
+  return out;
+}
+
 export type Ftabr26MapData = {
   /** continent id → per-type counts, every continent present even at zero. */
   counts: Record<Ftabr26ContinentId, Ftabr26ContinentCounts>;
@@ -206,6 +238,8 @@ export type Ftabr26MapData = {
   global: number;
   /** Rows actually drawn on the map. Zero means there is nothing to show. */
   plotted: number;
+  /** Rows drawn in more than one place, with the cities they show in. */
+  multi: { name: string; cities: string[] }[];
 };
 
 /** Per-continent tallies for the map, over exactly the rows the tables list. */
@@ -219,20 +253,24 @@ export function ftabr26MapData(eco: {
   const unplaced: Ftabr26ContinentCounts = { initiatives: 0, programs: 0 };
   let plotted = 0;
   let global = 0;
+  const multi: { name: string; cities: string[] }[] = [];
 
   for (const type of FTABR26_ECO_TYPES) {
     for (const row of eco[type]) {
-      const continent = ecoContinent(row);
-      if (!continent) {
+      const continents = ecoContinents(row);
+      if (continents.length === 0) {
         unplaced[type]++;
         if (/^global$/i.test((row.city ?? "").trim())) global++;
         continue;
       }
-      counts[continent][type]++;
+      /* One entry, counted once in the total but in every bubble it runs in */
+      for (const c of continents) counts[c][type]++;
       plotted++;
+      const locs = ecoLocations(row);
+      if (locs.length > 1) multi.push({ name: row.name, cities: locs.map(l => l.city ?? l.country ?? "").filter(Boolean) });
     }
   }
-  return { counts, unplaced, plotted, global };
+  return { counts, unplaced, plotted, global, multi };
 }
 
 /* ── Live/fallback resolution ──────────────────────────────────────────── */

@@ -100,3 +100,25 @@ export async function deleteWatchlist(id: string) {
 	// company page), and an investor list's investors falling back to Main.
 	await Promise.all([refreshWatchlists(), refreshPaths('/api/raise/pipeline')]);
 }
+
+/**
+ * Every company id in the user's company watchlists, in one request per
+ * watchlist (people keep a handful) rather than one per company, so a list of
+ * 24 rows can fill its bookmarks without 24 lookups. The key starts with
+ * /api/user-watchlists, so add/remove (refreshWatchlists) refreshes it too.
+ */
+export function useSavedCompanyIds(): Set<string> {
+	const { lists } = useCompanyWatchlists();
+	const ids = lists.filter((l) => !isInvestorList(l)).map((l) => l.id).sort();
+	const { data } = useSWR<string[]>(
+		ids.length ? ['/api/user-watchlists#saved-companies', ...ids] : null,
+		async () => {
+			const pages = await Promise.all(ids.map(async (id) => {
+				const res = await apiRequest('GET', qk.userWatchlists.companies(id)[0]);
+				return asList<WatchlistCompany>(await res.json());
+			}));
+			return pages.flat().map((c) => c.id);
+		},
+	);
+	return new Set(data ?? []);
+}

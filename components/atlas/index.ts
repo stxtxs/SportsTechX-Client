@@ -41,7 +41,7 @@ export { Pager, CardGrid, LockedFilters, lockedFiltersNote } from './patterns/ca
 export * from './charts';
 
 // Brand + app frame
-export { AtlasLogo } from './brand/atlas-logo';
+export { AtlasLogo, ProductWord } from './brand/atlas-logo';
 export { AtlasShell } from './shell/atlas-shell';
 export type { AtlasShellProps } from './shell/atlas-shell';
 export { isSection, pickActive, flattenNav } from './shell/nav';

@@ -84,8 +84,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 				// free user gets the assistant too and is told when they run out. The
 				// full chat page is itself the co-pilot, so don't stack a drawer on
 				// top of it there — nor on Home, whose own composer already asks
-				// Atlas (the button only covered the feed cards there).
-				overlay={!pathname.startsWith(hrefOf('chat')) && pathname !== homePath ? <RaiseChat /> : undefined}
+				// Atlas (the button only covered the feed cards there), nor on
+				// Interests, where it sat over the chips and the save bar.
+				overlay={!pathname.startsWith(hrefOf('chat')) ? <RaiseChat /> : undefined}
 			>
 				<RouteGate>{children}</RouteGate>
 			</AtlasShell>

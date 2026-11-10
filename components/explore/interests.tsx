@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo } from 'react';
 import useSWR from 'swr';
-import { cx } from '@/components/atlas';
 import { apiRequest } from '@/lib/query-client';
 import { qk } from '@/lib/query-keys';
 import { useSectorTiers, type SectorRef } from '@/hooks/use-sector-tiers';
@@ -36,10 +35,49 @@ export interface Interests {
 export const NO_INTERESTS: Interests = { sectors: [], subs: [], sports: [], geos: [], goals: [] };
 
 /** Fixed option sets — stored as text, so the chip value is its own label. */
-const FIXED_OPTIONS = {
+export const FIXED_OPTIONS = {
 	geos: { label: 'Countries or regions', options: ['Europe', 'United Kingdom', 'India', 'North America', 'Middle East', 'Global'] },
-	goals: { label: 'Primary goals', options: ['Understand the market', 'Track companies', 'Follow developments', 'Discover events', 'Read research', 'Explore a sector'] },
+	// Worded on purpose: the API scans goal text to recommend a product
+	// ("rais|fund…" → Raise, "source|deal flow…" → Scout), so the two
+	// commercial goals must keep those words. See explore.controller.ts.
+	goals: { label: 'Primary goals', options: [
+		'Understand the market',
+		'Track companies and competitors',
+		'Stay on top of news and deals',
+		'Raise funding for my startup',
+		'Source deals and startups to invest in',
+		'Discover events and programmes',
+	] },
 };
+
+/** A free-text goal is stored as "Other: …" (the API caps a goal at 80 chars). */
+export const OTHER_GOAL_PREFIX = 'Other: ';
+export const OTHER_GOAL_MAX = 80 - OTHER_GOAL_PREFIX.length;
+
+/** Goals saved under the previous list, mapped to their replacements. */
+const LEGACY_GOALS: Record<string, string> = {
+	'Explore a sector': 'Understand the market',
+	'Read research': 'Understand the market',
+	'Track companies': 'Track companies and competitors',
+	'Follow developments': 'Stay on top of news and deals',
+	'Discover events': 'Discover events and programmes',
+};
+
+/**
+ * Saved goals as the current list understands them: old labels become their
+ * replacements, and anything else unrecognised is kept as the "Other" text
+ * rather than silently dropped.
+ */
+export function normaliseGoals(saved: string[]): string[] {
+	const known = new Set(FIXED_OPTIONS.goals.options);
+	const out: string[] = [];
+	for (const g of saved) {
+		const v = LEGACY_GOALS[g] ?? g;
+		const next = known.has(v) || v.startsWith(OTHER_GOAL_PREFIX) ? v : `${OTHER_GOAL_PREFIX}${v}`.slice(0, 80);
+		if (!out.includes(next) && !(next.startsWith(OTHER_GOAL_PREFIX) && out.some((x) => x.startsWith(OTHER_GOAL_PREFIX)))) out.push(next);
+	}
+	return out;
+}
 
 interface Ref { id: string; name: string | null }
 interface StoredInterests { sectors: Ref[]; sports: Ref[]; geos: string[]; goals: string[] }
@@ -104,7 +142,7 @@ export function useInterests(): {
 			subs: stored.filter((id) => !topIds.has(id)),
 			sports: (data?.sports ?? []).map((s) => s.id),
 			geos: data?.geos ?? [],
-			goals: data?.goals ?? [],
+			goals: normaliseGoals(data?.goals ?? []),
 		};
 	}, [data, opts.sectors.options]);
 
@@ -114,7 +152,8 @@ export function useInterests(): {
 			sector_ids: [...next.sectors, ...next.subs],
 			sport_ids: next.sports,
 			geos: next.geos,
-			goals: next.goals,
+			// An "Other" ticked but left blank isn't a goal.
+			goals: next.goals.filter((g) => !(g.startsWith(OTHER_GOAL_PREFIX) && !g.slice(OTHER_GOAL_PREFIX.length).trim())),
 		});
 		if (!res.ok) throw new Error(`save failed (${res.status})`);
 		await mutate();
@@ -132,58 +171,4 @@ export function useInterests(): {
 	}, [value, opts]);
 
 	return { value, save, picked, isLoading };
-}
-
-/** Chip groups for the given interest keys; toggles update `value`. */
-export function InterestFields({ value, onChange, keys }: {
-	value: Interests;
-	onChange: (next: Interests) => void;
-	keys: (keyof Interests)[];
-}) {
-	const opts = useInterestOptions();
-	const { subTop } = opts;
-	const toggle = (k: keyof Interests, o: string) => {
-		// Deselecting a sector drops the sub-sectors that hung off it, so a stale
-		// child can't stay saved after its parent is gone.
-		if (k === 'sectors') {
-			const nextSectors = value.sectors.includes(o) ? value.sectors.filter((x) => x !== o) : [...value.sectors, o];
-			const allowed = new Set(nextSectors);
-			const nextSubs = value.subs.filter((id) => { const t = subTop.get(id); return !!t && allowed.has(t); });
-			onChange({ ...value, sectors: nextSectors, subs: nextSubs });
-			return;
-		}
-		onChange({ ...value, [k]: value[k].includes(o) ? value[k].filter((x) => x !== o) : [...value[k], o] });
-	};
-	// Sub-sectors cascade from the chosen sectors: show only children of a picked
-	// pillar, so the list isn't a flat dump of every sub-sector in the taxonomy.
-	const optionsFor = (k: keyof Interests): [string, string][] =>
-		k === 'subs'
-			? opts.subs.options.filter(([v]) => { const t = subTop.get(v); return !!t && value.sectors.includes(t); })
-			: opts[k].options;
-	return (
-		<div className="explore-interests">
-			{keys.map((k) => {
-				const options = optionsFor(k);
-				return (
-					<div key={k} className="explore-interests__group">
-						<div className="explore-interests__label">
-							{opts[k].label}
-						</div>
-						<div className="explore-chips">
-							{opts[k].options.length === 0
-								? <span className="explore-muted">Loading…</span>
-								: k === 'subs' && value.sectors.length === 0
-									? <span className="explore-muted">Pick a sector first to see its sub-sectors.</span>
-									: options.length === 0
-										? <span className="explore-muted">No sub-sectors for the selected sector{value.sectors.length > 1 ? 's' : ''}.</span>
-										: options.map(([v, label]) => {
-											const on = value[k].includes(v);
-											return <button key={v} type="button" className={cx('explore-chip', on && 'on')} aria-pressed={on} onClick={() => toggle(k, v)}>{label}</button>;
-										})}
-						</div>
-					</div>
-				);
-			})}
-		</div>
-	);
 }

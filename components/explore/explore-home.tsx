@@ -116,7 +116,7 @@ export function ExploreHome() {
 						onChange={setQ}
 						onSubmit={() => goChat(q)}
 						placeholderLead="Ask Atlas"
-						placeholder="about companies, funding, events and categories"
+						placeholder="about companies, funding, events and sectors"
 						compact
 						suggestions={suggestions}
 						onSuggestion={goChat}

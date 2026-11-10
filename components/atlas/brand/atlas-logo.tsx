@@ -63,6 +63,21 @@ export function AtlasLogo({ height = 31, product, productColor }: { height?: num
 }
 
 /**
+ * A product's name inside running text ("Atlas RAISE"), in the lockup's italic
+ * and the product colour, so it reads as the same brand mark as the logo tag.
+ */
+export function ProductWord({ product }: { product: string }) {
+	// Inline so it renders the same in surfaces that don't load the Atlas sheets
+	// (e.g. the legacy company drawer).
+	return (
+		<em style={{
+			fontFamily: '"new-frank", var(--a-font, inherit)', fontStyle: 'italic', fontWeight: 500,
+			letterSpacing: '0.06em', textTransform: 'uppercase', color: productColour(product),
+		}}>{product}</em>
+	);
+}
+
+/**
  * Just the "A", for the collapsed rail — where the design's hamburger left no
  * sign of which product you were in.
  */

@@ -494,7 +494,12 @@ span.atlas-fbar__pill-main { cursor: default; }
 	border-top: 1px solid var(--a-border); border-bottom: 1px solid var(--a-border);
 	font-family: var(--a-mono); font-size: 11px; letter-spacing: 0; text-transform: uppercase; color: var(--a-faint);
 }
-.atlas .atlas-table__head > * { font-family: var(--a-mono); font-size: 11px; font-weight: 400; color: var(--a-faint); }
+/* Headings in the platform's label style (as the company page's HEADQUARTERS).
+   `.atlas-table__head > .atlas-table__col` outranks the cells' body-text rule
+   below, which used to win and render most headings as 13px body text. */
+.atlas .atlas-table__head > *, .atlas .atlas-table__head > .atlas-table__col {
+	font-family: var(--a-mono); font-size: 10px; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; color: var(--a-muted);
+}
 .atlas .atlas-table__head .atlas-table__rank { height: auto; background: none; border: none; place-items: center start; padding-left: 4px; }
 .atlas .atlas-table__row { border-bottom: 1px solid var(--a-border); transition: background .15s; text-decoration: none; color: inherit; }
 .atlas .atlas-table__row:last-child { border-bottom: none; }
@@ -957,4 +962,29 @@ h1 .atlas-soon--inline, h2 .atlas-soon--inline, .atlas-h1 .atlas-soon--inline, .
 	/* An action column shrinks to its icon; its header text goes with the label. */
 	.atlas .atlas-table__col--action { width: 40px !important; text-align: center; }
 	.atlas .atlas-table__head .atlas-table__col--action { font-size: 0; }
+}
+
+/* Raising pill (RaisingPill in components/ui/atoms). Shared here because the
+   pages that show it (company profile, Companies list) don't load
+   company-detail.css, which ships only with the dynamically-imported drawer. */
+.atlas .rp {
+	display: inline-flex; align-items: center; gap: 6px;
+	height: 20px; padding: 0 8px;
+	background: color-mix(in oklch, var(--pos), transparent 88%);
+	color: var(--pos);
+	border: 1px solid color-mix(in oklch, var(--pos), transparent 70%);
+	border-radius: 999px;
+	font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+	letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap;
+}
+.atlas .rp.compact { height: 18px; padding: 0 6px; font-size: 9.5px; gap: 4px; }
+.atlas .rp-dot {
+	width: 6px; height: 6px; border-radius: 50%;
+	background: var(--pos); flex-shrink: 0;
+	animation: rp-pulse 2.4s ease-out infinite;
+}
+@keyframes rp-pulse {
+	0%   { box-shadow: 0 0 0 0   color-mix(in oklch, var(--pos), transparent 40%); }
+	70%  { box-shadow: 0 0 0 6px color-mix(in oklch, var(--pos), transparent 100%); }
+	100% { box-shadow: 0 0 0 0   color-mix(in oklch, var(--pos), transparent 100%); }
 }

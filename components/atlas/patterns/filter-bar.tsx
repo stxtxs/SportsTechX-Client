@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { Search, Plus, X, ChevronLeft, SlidersHorizontal, Lock } from 'lucide-react';
 import { cx } from '../ui/cx';
@@ -31,7 +31,7 @@ type MenuState = null | { at: 'add' | 'sort' | string; view: 'root' | string };
 /** Show an in-menu search when an option list is longer than this. */
 const SEARCHABLE_OPTIONS = 10;
 
-export function FilterBar({ search, groups, sort, canClear, onClear, count, actions }: {
+export function FilterBar({ search, groups, sort, canClear, onClear, count, actions, onMenuOpen }: {
 	/** Omit for a filters-only bar (no search box). */
 	search?: { value: string; onChange: (v: string) => void; placeholder: string };
 	groups: FilterGroup[];
@@ -41,8 +41,12 @@ export function FilterBar({ search, groups, sort, canClear, onClear, count, acti
 	count?: ReactNode;
 	/** Right-aligned list actions (Export, etc.) — rendered before Sort by. */
 	actions?: ReactNode;
+	/** Called when any menu opens, so a page can load option lists on demand. */
+	onMenuOpen?: () => void;
 }) {
 	const [menu, setMenu] = useState<MenuState>(null);
+	const menuOpen = !!menu;
+	useEffect(() => { if (menuOpen) onMenuOpen?.(); }, [menuOpen, onMenuOpen]);
 	const rootRef = useRef<HTMLDivElement>(null);
 	// One menu is open at a time, so one ref serves all three.
 	const menuRef = useRef<HTMLDivElement>(null);

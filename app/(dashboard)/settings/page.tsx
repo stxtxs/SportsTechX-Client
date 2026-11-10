@@ -88,7 +88,7 @@ export default function RaiseSettingsPage() {
 						<SummaryCard title="Company profile" fields={[
 							['Company name', s(r.company_name)], ['Website', s(r.company_website)],
 							['Headquarters', hq], ['Stage', r.company_stage === 'other' && s(r.company_stage_other) ? s(r.company_stage_other) : map(ROUND, r.company_stage)],
-							['Revenue status', map(REVENUE, r.revenue_status)], ['Category', category],
+							['Revenue status', map(REVENUE, r.revenue_status)], ['Sector', category],
 							['Description', s(r.company_description)],
 						]} />
 						<SummaryCard title="Raise details" fields={[

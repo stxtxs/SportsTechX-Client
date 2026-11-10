@@ -74,16 +74,95 @@
 @media (max-width: 1100px) { .atlas .explore-home { padding: 40px 32px 0; } }
 @media (max-width: 640px) { .atlas .explore-home { padding: 24px 16px 0; } .atlas .explore-home__attn { padding-top: 48px; } }
 
-/* ── Interests (page + onboarding) ───────────────────────────────────────── */
-.atlas .explore-interests { display: grid; gap: 24px; }
-.atlas .explore-interests__label { margin-bottom: 10px; font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--a-muted); }
-.atlas .explore-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.atlas .explore-chip {
-	padding: 8px 12px; border: none; border-radius: var(--a-radius-tag); cursor: pointer;
-	background: var(--a-inset); box-shadow: inset 0 0 0 1px var(--a-border); color: var(--a-deep);
-	font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+/* ── Interests (components/explore/interests-editor.tsx) ─────────────────── */
+/* Sections in decision order, sentence-case rounded chips (as the Home
+   prompts), sectors laid out like the Framework page. */
+.atlas .int-editor { display: grid; gap: 40px; padding-bottom: 24px; }
+.atlas .int-sec__head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.atlas .int-sec__title { margin: 0; font-family: var(--a-font); font-size: 18px; font-weight: 700; color: var(--a-ink); }
+.atlas .int-sec__count { font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--a-muted); }
+.atlas .int-sec__hint { margin: -6px 0 14px; font-family: var(--a-body); font-size: 13px; color: var(--a-muted); }
+.atlas .int-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.atlas .int-chip {
+	height: 32px; padding: 0 14px; border: 0; border-radius: var(--a-radius-pill); cursor: pointer;
+	background: color-mix(in srgb, var(--a-ink) 3%, transparent); box-shadow: inset 0 0 0 1px var(--a-border);
+	font-family: var(--a-body); font-size: 13px; color: var(--a-ink);
+	transition: background 0.12s, box-shadow 0.12s, color 0.12s;
 }
-.atlas .explore-chip.on { background: var(--a-purple-soft); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--a-purple) 40%, transparent); }
+.atlas .int-chip:hover:not(:disabled) { box-shadow: inset 0 0 0 1px var(--a-border-strong); }
+.atlas .int-chip.on { background: var(--a-primary); color: var(--a-primary-ink); box-shadow: inset 0 0 0 1px var(--a-primary); }
+.atlas .int-chip--lg { height: 38px; padding: 0 16px; font-size: 14px; }
+.atlas .int-goals { display: grid; gap: 12px; }
+.atlas .int-other {
+	max-width: 420px; height: 38px; padding: 0 14px; border: 0; outline: 0; border-radius: var(--a-radius-pill);
+	background: transparent; box-shadow: inset 0 0 0 1px var(--a-border-strong);
+	font-family: var(--a-body); font-size: 14px; color: var(--a-ink);
+}
+.atlas .int-other:focus { box-shadow: inset 0 0 0 1px var(--a-ink); }
+.atlas .int-chip:disabled { cursor: default; color: var(--a-muted); }
+.atlas .int-chip:focus-visible, .atlas .int-sub:focus-visible, .atlas .int-cat__name:focus-visible, .atlas .int-pillar__badge:focus-visible {
+	outline: 2px solid var(--a-ink); outline-offset: 2px;
+}
+
+/* Sectors: three columns like the Framework overview, tinted per audience. */
+.atlas .int-tree { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 1100px) { .atlas .int-tree { grid-template-columns: 1fr; } }
+.atlas .int-pillar {
+	display: flex; flex-direction: column; gap: 16px; padding: 18px; border-radius: var(--a-radius);
+	border: 1px solid var(--a-card-border); background-color: var(--a-surface);
+	background-image: linear-gradient(176deg, transparent 60%, color-mix(in srgb, var(--fw-color) 10%, transparent) 100%);
+}
+.atlas .int-pillar__badge {
+	align-self: flex-start; height: 30px; padding: 0 14px; border-radius: var(--a-radius-pill); cursor: pointer;
+	border: 1px solid var(--fw-color); background: transparent; color: var(--fw-color);
+	font-family: var(--a-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.atlas .int-pillar__badge.on { background: var(--fw-color); color: #FFFFFF; }
+.atlas .int-cat { display: flex; flex-direction: column; gap: 8px; }
+.atlas .int-cat__name {
+	align-self: flex-start; padding: 2px 0; border: 0; background: none; cursor: pointer; text-align: left;
+	font-family: var(--a-font); font-size: 14px; font-weight: 700; color: var(--a-ink);
+}
+.atlas .int-cat__name::before {
+	content: ""; display: inline-block; width: 12px; height: 12px; margin-right: 8px; vertical-align: -1px;
+	border-radius: 3px; box-shadow: inset 0 0 0 1.5px var(--a-border-strong);
+}
+.atlas .int-cat__name.on::before { background: var(--fw-color); box-shadow: inset 0 0 0 1.5px var(--fw-color); }
+.atlas .int-chips--sub { gap: 6px; padding-left: 20px; }
+.atlas .int-sub {
+	height: 28px; padding: 0 11px; border-radius: var(--a-radius-pill); cursor: pointer;
+	border: 1px solid color-mix(in srgb, var(--fw-color) 28%, transparent);
+	background: color-mix(in srgb, var(--fw-color) 6%, transparent); color: var(--a-ink);
+	font-family: var(--a-body); font-size: 12.5px;
+}
+.atlas .int-sub.on { background: var(--fw-color); border-color: var(--fw-color); color: #FFFFFF; }
+
+/* Sports. */
+.atlas .int-sports { display: grid; gap: 14px; }
+.atlas .int-search {
+	display: flex; align-items: center; gap: 8px; max-width: 320px; height: 36px; padding: 0 12px;
+	border-radius: var(--a-radius-pill); box-shadow: inset 0 0 0 1px var(--a-border-strong); color: var(--a-muted);
+}
+.atlas .int-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-family: var(--a-body); font-size: 13px; color: var(--a-ink); }
+.atlas .int-search:focus-within { box-shadow: inset 0 0 0 1px var(--a-ink); }
+.atlas .int-families { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px 28px; }
+.atlas .int-family__name { margin-bottom: 8px; font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--a-muted); }
+.atlas .int-more {
+	justify-self: start; padding: 0; border: 0; background: none; cursor: pointer;
+	font-family: var(--a-body); font-size: 13px; color: var(--a-navy);
+}
+.atlas .int-more:hover { text-decoration: underline; }
+
+/* Save bar: pinned to the bottom of the content area, so Save is always in
+   reach instead of below 86 sports. */
+.atlas .int-savebar {
+	position: sticky; bottom: 0; z-index: 5; margin: 0 -4px; padding: 14px 4px;
+	display: flex; align-items: center; flex-wrap: wrap; gap: 12px;
+	background: color-mix(in srgb, var(--a-page) 92%, transparent); backdrop-filter: blur(6px);
+	border-top: 1px solid var(--a-border);
+}
+.atlas .int-savebar__count { margin-right: auto; font-family: var(--a-body); font-size: 13px; color: var(--a-muted); }
 
 /* ── Account → Product access ────────────────────────────────────────────── */
 .atlas .explore-access__title { margin-bottom: 6px; font-family: var(--a-font); font-size: 16px; font-weight: 700; color: var(--a-ink); }

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
-import { ChevronRight, LogOut, Search, Settings, ShieldCheck, CreditCard } from 'lucide-react';
+import { ChevronRight, LogOut, Search, Settings, ShieldCheck, CreditCard, Sparkles } from 'lucide-react';
 import { cx, useDismiss } from '@/components/atlas';
 import { crumbsFor, type Crumb } from './breadcrumbs';
 import { initialsOf } from '@/components/atlas/shell/atlas-shell';
@@ -19,6 +19,7 @@ import { forTier, hrefOf, routeForPath } from '@/lib/routes';
 import { qk } from '@/lib/query-keys';
 import type { ConversationListItem } from '@/components/chat/chat-core';
 import type { Tier } from '@/lib/access';
+import { toggleCopilot, useCopilotOpen } from '@/lib/copilot';
 import './navbar.css';
 
 /**
@@ -67,6 +68,8 @@ function NavbarInner({ tier, nav, homePath, accountPath }: {
 			</div>
 
 			<div className="atlas-navbar__right">
+				{/* Not on Home or the Ask Atlas page: both already have the chat box. */}
+				{pathname !== homePath && !pathname.startsWith(hrefOf('chat')) && <AskAtlasButton />}
 				<SearchButton />
 				<VerifyButton />
 				<ThemeToggle header />
@@ -123,6 +126,20 @@ function useLeafTitle(pathname: string): string | null {
  * spans pages and records, so it needs the room, and ⌘K is the shortcut people
  * reach for before they look for a button.
  */
+/**
+ * Opens the Ask Atlas co-pilot beside the page (⌘J / Ctrl+J also toggles it).
+ * Set apart from Search by the product-colour sparkle; filled while open.
+ */
+function AskAtlasButton() {
+	const open = useCopilotOpen();
+	return (
+		<button type="button" className={cx('atlas-navask', open && 'is-open')} aria-pressed={open} aria-controls="atlas-copilot" onClick={toggleCopilot} title="Ask Atlas (⌘J)">
+			<Sparkles size={14} strokeWidth={1.75} aria-hidden="true" className="atlas-navask__spark" />
+			<span className="atlas-navask__label">Ask Atlas</span>
+		</button>
+	);
+}
+
 function SearchButton() {
 	const [open, setOpen] = useState(false);
 	const openIt = useCallback(() => setOpen(true), []);

@@ -1,6 +1,11 @@
 /* Fonts for the ported STX FTABR26 report (used via inline fontFamily) — the STX app loaded these globally. */
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Open+Sans:wght@300;400;500;600;700&display=swap');
 
+/* The Atlas footer is mounted inside .lp for its fonts, and .lp::after is the site's
+   fixed film-grain overlay. Inside the report it would sit over every section, and in
+   print it repeats as a full-page noise image on every page (about 1 MB a page). */
+.ft26-root .lp::after { display: none; }
+
 /* ── Print / Save as PDF (open /reports/ftabr26?pdf=true, then print) ─────────
    - A4 with no page margins, so the browser leaves out its date/URL header and
      footer and the dark sections run to the edge.

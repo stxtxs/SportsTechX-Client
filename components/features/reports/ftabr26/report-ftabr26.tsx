@@ -19,7 +19,7 @@ import "lenis/dist/lenis.css";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-import { getCountryFlag, getFlagByCountryCode } from "./lib/flags";
+import { getCountryFlag } from "./lib/flags";
 import { BRAND, DARK, LIGHT, WORLDCUP_TECH_COLORS, type Theme } from "./lib/report-theme";
 import {
   type LeaderRow, type CompanyRow, type YearRow,
@@ -1077,9 +1077,38 @@ export default function ReportFTABR26({ content, preview = false }: {
   /* Table header: same small grey mono caps as the chart captions, 1px rule under it */
   const TABLE_HEAD: React.CSSProperties = { background: "transparent", borderBottom: `1px solid ${t.border}`, fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase" };
 
-  const noteText = (text: string) => (
-    <p style={{ fontSize: 15, color: t.text, lineHeight: 1.9, margin: "16px 0 40px" }}>{text}</p>
-  );
+  /* Commentary block: paragraphs separated by a blank line render as separate <p>s */
+  const noteText = (text: string) => {
+    const paras = text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+    return paras.map((para, i) => (
+      <p key={i} style={{ fontSize: 15, color: t.text, lineHeight: 1.9, margin: `16px 0 ${i === paras.length - 1 ? 40 : 0}px` }}>{para}</p>
+    ));
+  };
+
+  /* Ecosystem location: [flag] City (same flags as Startups to Watch), or a globe and
+     "Global" for a network with no single base. Null when the row has neither. */
+  const ecoLocationNode = (r: { city?: string | null; country?: string | null }, fontSize: number) => {
+    const isGlobal = /^global$/i.test((r.city ?? "").trim());
+    const code = isGlobal ? null : ecoFlagCode(r.country);
+    const label = isGlobal ? "Global" : (r.city || r.country || null);
+    if (!label) return null;
+    return (
+      <span style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, fontFamily: "'DM Mono',monospace", fontSize, color: t.textMuted }}>
+        {isGlobal ? (
+          <svg width={16} height={12} viewBox="0 0 16 12" aria-label="Global" role="img" style={{ flexShrink: 0 }}>
+            <g fill="none" stroke="currentColor" strokeWidth="1">
+              <circle cx="8" cy="6" r="5.5" />
+              <path d="M2.5 6h11M8 0.5c1.6 1.5 2.4 3.4 2.4 5.5S9.6 10 8 11.5M8 0.5C6.4 2 5.6 3.9 5.6 6S6.4 10 8 11.5" />
+            </g>
+          </svg>
+        ) : code ? (
+          <img src={`/reports/ftabr26/flags/${code}.svg`} alt={r.country ?? ""} title={r.country ?? undefined} width={16} height={12}
+            style={{ width: 16, height: 12, objectFit: "cover", borderRadius: 2, flexShrink: 0 }} />
+        ) : null}
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
+      </span>
+    );
+  };
 
   /* Derived chart inputs */
   const yearSplitData: SplitDatum[] = useMemo(
@@ -1557,7 +1586,7 @@ export default function ReportFTABR26({ content, preview = false }: {
                 <div style={{ display: "grid", gridTemplateColumns: cols, gap: "0 12px", padding: "12px 20px", ...TABLE_HEAD }}>
                   <span />
                   <span>{ecoTab === "initiatives" ? "Initiative" : "Program"}</span>
-                  {!isMobile && <span>City</span>}
+                  {!isMobile && <span>Location</span>}
                 </div>
                 {rows.length === 0 && (
                   <div style={{ padding: "26px 20px", textAlign: "center", fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: 2, color: t.textMuted, borderTop: `1px solid ${t.border}` }}>
@@ -1567,13 +1596,9 @@ export default function ReportFTABR26({ content, preview = false }: {
                 {rows.map((r, i) => {
                   const href = ecoHref(r.website);
                   const logoUrl = ecoInitiativeLogoUrl(r.name, r.website);
-                  /* Same flags as the leaderboards, resolved through our own
-                     country lookup so the spellings in the master tables land.
-                     Sits with the city, not the name — "🇪🇬 Cairo". */
-                  const flagNode = getFlagByCountryCode(ecoFlagCode(r.country));
-                  const flagImg = flagNode && (
-                    <span title={r.country ?? undefined} style={{ fontSize: 12, lineHeight: 1, flexShrink: 0 }}>{flagNode}</span>
-                  );
+                  /* [flag] City, as on the Startups to Watch cards: the same SVG
+                     flags, size, gap and mono style. A global network gets a globe. */
+                  const loc = ecoLocationNode(r, isMobile ? 10.5 : 11.5);
                   const nameStyle: React.CSSProperties = { color: t.text, textDecoration: "none", borderBottom: href ? `1px solid ${BRAND.pink}44` : "none" };
                   return (
                     <div key={`${r.name}-${r.rank}`} style={{ display: "grid", gridTemplateColumns: cols, gap: "0 12px", padding: "12px 20px", alignItems: "center", background: "transparent", borderTop: `1px solid ${t.border}` }}>
@@ -1594,17 +1619,14 @@ export default function ReportFTABR26({ content, preview = false }: {
                         {href
                           ? <a href={href} target="_blank" rel="noopener noreferrer" style={nameStyle}>{r.name}</a>
                           : <span>{r.name}</span>}
-                        {isMobile && r.city && (
-                          <span style={{ display: "flex", alignItems: "center", gap: 5, width: "100%", fontFamily: "'DM Mono',monospace", fontSize: 10.5, color: t.textMuted, fontWeight: 400, marginTop: 2 }}>{flagImg}{r.city}</span>
+                        {isMobile && loc && (
+                          <span style={{ width: "100%", fontWeight: 400, marginTop: 2 }}>{loc}</span>
                         )}
                       </span>
 
-                      {!isMobile && (
-                        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11.5, color: t.textMuted, display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-                          {flagImg}
-                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.city ?? "Not listed"}</span>
-                        </span>
-                      )}
+                      {!isMobile && (loc ?? (
+                        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11.5, color: t.textMuted }}>Not listed</span>
+                      ))}
                     </div>
                   );
                 })}

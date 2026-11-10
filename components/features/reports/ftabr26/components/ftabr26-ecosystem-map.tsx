@@ -95,7 +95,7 @@ export default function Ftabr26EcosystemMap({
     return () => { cancelled = true; };
   }, []);
 
-  const { counts, unplaced, plotted } = useMemo(() => ftabr26MapData(eco), [eco]);
+  const { counts, unplaced, plotted, global } = useMemo(() => ftabr26MapData(eco), [eco]);
 
   const centers = useMemo(() => {
     if (!mapReady || !projRef.current) return {} as Record<string, { x: number; y: number }>;
@@ -287,7 +287,9 @@ export default function Ftabr26EcosystemMap({
           </div>
         </div>
 
-        {/* Hover readout — the three counts behind the pie */}
+        {/* Hover readout — the counts behind the pie. Rendered only while a
+            continent is hovered, so no empty "0 0" box is left behind. */}
+        {hovered && (
         <div style={{
           position: "absolute", bottom: 14, left: "50%", transform: "translateX(-50%)",
           background: isDark ? "rgba(10,14,26,0.95)" : "rgba(255,255,255,0.97)",
@@ -303,18 +305,21 @@ export default function Ftabr26EcosystemMap({
             <div key={key} style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: FTABR26_ECO_COLORS[key] }} />
               <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>
-                {hovered ? counts[hovered][key] : 0}
+                {counts[hovered][key]}
               </span>
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* Anything the master tables leave unplaceable is named here rather than
           quietly missing from the totals — the same note the static map carries. */}
       {unplacedTotal > 0 && (
         <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted, letterSpacing: 0.5, margin: "10px 0 0" }}>
-          {plotted} of {plotted + unplacedTotal} entries mapped · {unplacedTotal} without a location, listed in the tables below.
+          {plotted} of {plotted + unplacedTotal} entries mapped
+          {global > 0 && ` · ${global} global network${global === 1 ? "" : "s"} listed below`}
+          {unplacedTotal - global > 0 && ` · ${unplacedTotal - global} without a location, listed in the tables below`}
         </p>
       )}
     </div>

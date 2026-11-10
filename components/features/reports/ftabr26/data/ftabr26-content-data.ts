@@ -18,15 +18,15 @@ export const FTABR26_HERO = {
   titleLines: ["FOOTBALL", "TECH & BUSINESS", "REPORT 2026"],
   edition: "Third edition",
   standfirst:
-    "What the World Cup changed, and where football's tech money went next.",
+    "What the World Cup changed, and where football's tech money has been going.",
   presentedBy: "SportsTechX",
   hashtag: "#FTABR26",
 } as const;
 
 export const FTABR26_ABOUT =
-  "The third edition of our Football Tech & Business Report picks up where the second left off. That edition landed just before the 2026 FIFA World Cup. This one looks at what the tournament actually changed, and where football's tech money went next.\n\n" +
-  "As before, we separate football-only startups from multisport platforms, so the investment we attribute to football innovation really is football's. The report launches alongside Atlas, the newly updated SportsTechX Intelligence Hub, where the data behind every chart lives.\n\n" +
-  "If you're investing in football, building in it, or working out where it's actually heading rather than where the hype says it is, this is for you.";
+  "The third edition of our Football Tech & Business Report picks up where the second left off. That edition landed just before the 2026 FIFA World Cup. This one looks at what the tournament changed, and at five and a half years of football tech funding leading into it.\n\n" +
+  "As before, we separate football-only startups from multisport platforms, so the investment we attribute to football really is football's. The report launches alongside Atlas, our newly updated intelligence hub, where every number behind these charts lives.\n\n" +
+  "If you're investing in football, building in it, or trying to work out where it's actually heading rather than where the hype says it is, this is for you.";
 
 /* ── Ten trends, in three thematic groups
    Source: attached_assets/FTABR26_Micro_Trends_1789043561122.pdf (10 Sep 2026) ─── */
@@ -680,20 +680,20 @@ export const FTABR26_FEATURED = {
 
 export const FTABR26_STARTUPS: Ftabr26Startup[] = [
   {name: "Camb.ai", website: "http://camb.ai", country: "UAE", description: "AI Translation Platform", sector: "execs", logoUrl: null},
-  {name: "Coaches' Voice", website: "http://learning.coachesvoice.com", country: "UK", description: "Sports education company on a mission to maximise the impact of coaching for millions of players worldwide", sector: "athletes", logoUrl: null},
+  {name: "Coaches' Voice", website: "http://learning.coachesvoice.com", country: "UK", description: "Coaching education from elite football coaches", sector: "athletes", logoUrl: null},
   {name: "Data Sports Group", website: "http://datasportsgroup.com", country: "Germany", description: "Live sports data to media publishers & gaming segments", sector: "execs", logoUrl: null},
-  {name: "Gamecode.ai", website: "http://gamecode.ai", country: "Germany", description: "Intelligence platform for elite-sports enabling decision-makers to convert their sporting identity into proprietary metrics and generate IP moats.", sector: "athletes", logoUrl: "https://goabdwczszjcmwakybkm.supabase.co/storage/v1/object/public/company_logos/gamecode_ai_1781599811182.svg"},
+  {name: "Gamecode.ai", website: "http://gamecode.ai", country: "Germany", description: "Club-specific performance metrics for elite teams", sector: "athletes", logoUrl: "https://goabdwczszjcmwakybkm.supabase.co/storage/v1/object/public/company_logos/gamecode_ai_1781599811182.svg"},
   {name: "Gemini Sports Analytics", website: "http://geminisports.ai", country: "USA", description: "supports organizations in the business of improving athlete welfare and enhancing performance.", sector: "execs", logoUrl: null},
-  {name: "Marquee", website: "http://themarquee.ai", country: "USA", description: "360° view of every player with contextualized insights, letting you get back to what you do best: identifying the right talent", sector: "athletes", logoUrl: null},
-  {name: "OLIVER Sports", website: "http://oliversports.ai", country: "Spain", description: "OLIVER Sports introduces the new generation of player performance monitoring technology, powered by AI", sector: "athletes", logoUrl: null},
+  {name: "Marquee", website: "http://themarquee.ai", country: "USA", description: "AI player profiles for talent identification", sector: "athletes", logoUrl: null},
+  {name: "OLIVER Sports", website: "http://oliversports.ai", country: "Spain", description: "AI-powered player performance monitoring", sector: "athletes", logoUrl: null},
   {name: "Output Sports", website: "http://outputsports.com", country: "Ireland", description: "One-stop tool for athlete performance optimisation", sector: "athletes", logoUrl: null},
-  {name: "Playermaker", website: "http://playermaker.com", country: "UK", description: "Football performance tracker", sector: "athletes", logoUrl: null},
+  {name: "Playermaker", website: "http://playermaker.com", country: "UK", description: "Foot-worn performance tracking", sector: "athletes", logoUrl: null},
   {name: "Respo Vision", website: "http://respo.vision", country: "Poland", description: "AI football video analyser", sector: "athletes", logoUrl: null},
   {name: "ScorePlay", website: "http://scoreplay.io", country: "Portugal", description: "Sports club management software", sector: "execs", logoUrl: null},
-  {name: "Soccerment", website: "http://soccerment.com", country: "Italy", description: "AI-powered football intelligence platform combining advanced analytics and video analysis for professional football (SICS+) and wearables (XSEED).", sector: "athletes", logoUrl: null},
+  {name: "Soccerment", website: "http://soccerment.com", country: "Italy", description: "AI football intelligence: analytics, video and wearables", sector: "athletes", logoUrl: null},
   {name: "Sportswik", website: "http://sportswik.com", country: "Sweden", description: "Sportswik is a white-label platform enabling federations & leagues to boost coverage and engagement, generate new digital revenues and own their data.", sector: "fans", logoUrl: null},
   {name: "Sportvot", website: "http://sportvot.com", country: "India", description: "Platform for sport bodies & local sports to stream their games online", sector: "fans", logoUrl: null},
-  {name: "Turf Coach", website: "http://turfcoach.com", country: "Germany", description: "Provides innovative hardware and software solutions for automatic data collection across your entire pitch. Monitor key turf parameters continuously and with ease!", sector: "execs", logoUrl: null},
+  {name: "Turf Coach", website: "http://turfcoach.com", country: "Germany", description: "Automated pitch and turf monitoring", sector: "execs", logoUrl: null},
   {name: "Zentag", website: "http://zentag.ai", country: "Germany", description: "Automates sports video highlights and replays", sector: "execs", logoUrl: null},
 ];
 
@@ -714,7 +714,7 @@ export const FTABR26_INITIATIVES: EcosystemEntry[] = [
   { rank:  7, name: "Fan Engagement Startup Challenge (LaLiga x Sportboost)", hq: "Madrid" },
   { rank:  8, name: "Real Madrid Next",                                    hq: "Madrid",    url: "https://realmadridnext.com" },
   { rank:  9, name: "Atleti Lab",                                          hq: "Madrid",    url: "https://atletilab.com" },
-  { rank: 10, name: "Sevilla FC Innovation Center",                        hq: "Sevilla",   url: "https://sevillafc.es" },
+  { rank: 10, name: "Sevilla FC Innovation Center",                        hq: "Seville",   url: "https://sevillafc.es" },
   { rank: 11, name: "Valencia CF Innovation Hub",                          hq: "Valencia" },
   { rank: 12, name: "CeltaLab1923",                                        hq: "Vigo",      url: "https://celtalab1923.es" },
   { rank: 13, name: "UEFA Innovation Hub",                                 hq: "Nyon" },
@@ -808,7 +808,7 @@ export const FTABR26_CLOSING_QUOTE =
 
 export const FTABR26_METHODOLOGY = {
   intro:
-    "The data in this report was obtained by reviewing thousands of startups and funding deals in global sports tech. The deal period covered is Jan 1, 2021 - Jun 30, 2026. Companies founded before the year 2000 are excluded unless otherwise stated. All deals are reported in USD; for deals not in USD, the average conversion rate for the deal currency in the deal year was used. As far as possible, we source public-domain information for all deals included.",
+    "The data in this report was obtained by reviewing thousands of startups and funding deals in global sports tech. The deal period covered is 1 January 2021 – 30 June 2026. Companies founded before the year 2000 are excluded unless otherwise stated. All deals are reported in USD; for deals not in USD, the average conversion rate for the deal currency in the deal year was used. As far as possible, we source public-domain information for all deals included.",
   categories: [
     { name: "Football Only", description: "Startups and solutions focused solely on football. Their products, services, and technology are built specifically for the football ecosystem.", examples: "Sorare, OneFootball, TOCA Football" },
     { name: "Football Also", description: "Multisport startups that include football as part of their broader offering, serving football alongside other sports.", examples: "DAZN, Teamworks, Genius Sports" },

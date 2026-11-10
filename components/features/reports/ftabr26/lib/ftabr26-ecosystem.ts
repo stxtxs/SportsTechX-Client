@@ -57,6 +57,7 @@ export function ecoLogoUrl(website: string | null | undefined, size = 64): strin
 
 const INITIATIVE_LOGO_DOMAINS: Record<string, string> = {
   "Fan Engagement Startup Challenge (La Liga x Sportboost)": "laliga.com",
+  "Fan Engagement Startup Challenge (LaLiga x Sportboost)": "laliga.com",
   "Future of Sport Lab x FIFA 2026 Legacy Incubation Hub": "futuresportlab.com",
   "Real Madrid Next": "realmadrid.com",
 };
@@ -201,6 +202,8 @@ export type Ftabr26MapData = {
   counts: Record<Ftabr26ContinentId, Ftabr26ContinentCounts>;
   /** Rows that carry no placeable location, by type. */
   unplaced: Ftabr26ContinentCounts;
+  /** Of the unplaced rows, those whose city is "Global" (a network with no single base). */
+  global: number;
   /** Rows actually drawn on the map. Zero means there is nothing to show. */
   plotted: number;
 };
@@ -215,16 +218,21 @@ export function ftabr26MapData(eco: {
   ) as Record<Ftabr26ContinentId, Ftabr26ContinentCounts>;
   const unplaced: Ftabr26ContinentCounts = { initiatives: 0, programs: 0 };
   let plotted = 0;
+  let global = 0;
 
   for (const type of FTABR26_ECO_TYPES) {
     for (const row of eco[type]) {
       const continent = ecoContinent(row);
-      if (!continent) { unplaced[type]++; continue; }
+      if (!continent) {
+        unplaced[type]++;
+        if (/^global$/i.test((row.city ?? "").trim())) global++;
+        continue;
+      }
       counts[continent][type]++;
       plotted++;
     }
   }
-  return { counts, unplaced, plotted };
+  return { counts, unplaced, plotted, global };
 }
 
 /* ── Live/fallback resolution ──────────────────────────────────────────── */

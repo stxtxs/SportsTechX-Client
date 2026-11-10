@@ -101,8 +101,8 @@ function liveSummaryCards(
     },
     {
       num: formatFtabr26Percent(s.pctToFansRecent),
-      label: "Of funding to fans & content",
-      subtitle: `${direction} ${formatFtabr26Percent(s.pctToFansAllTime)} across the full period`,
+      label: "Of funding to Fan Tech",
+      subtitle: `Since ${period.recentStart.slice(0, 4)}, ${direction.toLowerCase()} ${formatFtabr26Percent(s.pctToFansAllTime)} across ${period.label.replace(/\s*–\s*/g, "–")}`,
     },
     {
       num: fmt(s.topRegionMusd),

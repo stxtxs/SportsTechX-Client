@@ -99,9 +99,9 @@ const SECTOR_COLOR: Record<"athletes" | "fans" | "execs", string> = {
   execs:    BRAND.execs,
 };
 const SECTOR_LABEL: Record<"athletes" | "fans" | "execs", string> = {
-  athletes: "For Athletes",
-  fans:     "For Fans",
-  execs:    "For Executives",
+  athletes: "Athlete Tech",
+  fans:     "Fan Tech",
+  execs:    "Executive Tech",
 };
 
 /* Continent ring colours for the innovator grid */
@@ -399,11 +399,14 @@ const WORLDCUP_TECH_GROUPS: { category: string; items: WorldCupTech[] }[] =
    `activeDot` is a 1-based index into this array. */
 const NAV_ITEMS: { href: string; label: string }[] = [
   { href: "#trends",     label: "Insights" },
-  { href: "#innovators", label: "Innovators" },
-  { href: "#ecosystem",  label: "Startups to Watch" },
+  { href: "#dealflow",   label: "Dealflow" },
   { href: "#ecomap",     label: "Ecosystem" },
-  { href: "#dealflow",   label: "Data in Full" },
+  { href: "#ecosystem",  label: "Startups to Watch" },
+  { href: "#innovators", label: "Innovators" },
 ];
+/* NOTE: this order must follow the saved page order (admin → Page order), because
+   the active-link highlight walks these sections top to bottom. If the page
+   order changes in the admin, update this list to match. */
 
 /* Executive Summary ("THE NUMBERS THAT MATTER") is hidden for now. Flip to true
    to bring the section — and the divider that follows it — back. */
@@ -1172,7 +1175,7 @@ export default function ReportFTABR26({ content, preview = false }: {
             {sectionLabel("Innovators")}
             {sectionTitle("THE PEOPLE DEFINING\nFOOTBALL INNOVATION")}
             <p style={{ fontSize: 15, color: t.text, lineHeight: 1.9, margin: "24px 0 0" }}>
-              Our Football Tech Innovators list showcases the leaders driving the ecosystem's growth through transformative initiatives all over the world. Select anyone to read their answers in full.
+              Our Football Tech Innovators list showcases the leaders driving the ecosystem's growth through transformative initiatives all over the world. Select any innovator to read their answers in full.
             </p>
           </div>
 
@@ -1202,7 +1205,7 @@ export default function ReportFTABR26({ content, preview = false }: {
             flag={getCountryFlag(p.country)}
             subtitle={`${p.designation} · ${p.company}`}
             linkedin={p.linkedin || undefined}
-            reportLabel="FTABR 2026"
+            reportLabel={FTABR26_HERO.hashtag}
             onClose={() => closeDrawer(`ftabr26-inn-${p.id}`, setSelectedInnovator)}
             t={t} isDark={isDark} isMobile={isMobile}>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -1594,7 +1597,7 @@ export default function ReportFTABR26({ content, preview = false }: {
               <div className="stx-reveal" style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 40 : 32, alignItems: "start" }}>
                 {/* Slices are named from SECTOR_LABEL, not the row's own
                     label — the feed carries the database's wording ("Fans &
-                    Content"), and the report says "For Fans" everywhere else. */}
+                    Content"), and the report says "Fan Tech" everywhere else. */}
                 <DonutChart t={t} isPdf={isPdf} title={`Funding per sector · ${facts.period.label}`}
                   slices={facts.sectorShare.map(s => ({ label: SECTOR_LABEL[s.sector], pct: s.pct, color: SECTOR_COLOR[s.sector] }))} />
                 <DonutChart t={t} isPdf={isPdf} title={`Funding per sector · ${facts.period.recentLabel}`}
@@ -1749,8 +1752,15 @@ export default function ReportFTABR26({ content, preview = false }: {
             </div>
           )}
 
+        </div>
+      </div>
+    </>),
+    methodology: (<>
+      {/* ── METHODOLOGY (split out of Data in Full so it can close the page) ── */}
+      <div id="methodology" style={{ background: t.bg, padding: isMobile ? "0 0 48px" : "0 0 88px" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "0 16px" : "0 40px" }}>
           {/* Methodology note */}
-          <div className="stx-reveal" style={{ marginTop: 72, background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 14, padding: isMobile ? "22px 18px" : "30px 34px" }}>
+          <div className="stx-reveal" style={{ marginTop: isMobile ? 48 : 72, background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 14, padding: isMobile ? "22px 18px" : "30px 34px" }}>
             <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 2, color: BRAND.pink, textTransform: "uppercase", marginBottom: 12 }}>Methodology</div>
             <p style={{ fontSize: 13.5, lineHeight: 1.85, color: t.textMuted, margin: "0 0 22px" }}>{FTABR26_METHODOLOGY.intro}</p>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 16 : 24 }}>
@@ -1837,8 +1847,13 @@ export default function ReportFTABR26({ content, preview = false }: {
             </p>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 28, marginTop: 28, flexWrap: "wrap" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "rgba(190,208,227,0.45)", letterSpacing: 2, textTransform: "uppercase" }}>Presented by</span>
-                <img src="/landing/atlas-wordmark-white.svg" alt="SportsTechX" style={{ height: 33, opacity: 0.9 }} />
+                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "rgba(190,208,227,0.45)", letterSpacing: 2, textTransform: "uppercase" }}>Published by</span>
+                <img src="/stx_white_horizontal.png" alt="SportsTechX" style={{ height: 33, opacity: 0.9 }} />
+              </div>
+              <div style={{ width: 1, alignSelf: "stretch", background: "rgba(190,208,227,0.2)" }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "rgba(190,208,227,0.45)", letterSpacing: 2, textTransform: "uppercase" }}>Data powered by</span>
+                <img src="/landing/atlas-wordmark-white.svg" alt="Atlas" style={{ height: 33, opacity: 0.9 }} />
               </div>
               <div style={{ width: 1, alignSelf: "stretch", background: "rgba(190,208,227,0.2)" }} />
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1895,6 +1910,48 @@ export default function ReportFTABR26({ content, preview = false }: {
       )}
 
       <div ref={skewWrapRef} style={{ willChange: "transform", transformOrigin: "center top", position: "relative", zIndex: 1 }}>
+
+      {/* ── ABOUT THIS REPORT + REPORT PARTNERS ─────────────────────────────
+         Paragraphs come from the admin "About paragraphs" field (Hero & about),
+         split on blank lines; the last one renders bold. Partner logos share one
+         height and a monochrome treatment so neither partner reads as bigger. */}
+      {(() => {
+        const paras = String(FTABR26_ABOUT ?? "").split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+        if (paras.length === 0) return null;
+        /* Dark mode: every logo in white. Light mode: every logo in black. */
+        const logoFilter = (kind: "light" | "dark") =>
+          isDark ? (kind === "dark" ? "brightness(0) invert(1)" : "none") : "brightness(0)";
+        const partners = [
+          { name: "Playermaker", href: "#featured", src: "/reports/ftabr26/featured/playermaker-logo-white.webp", kind: "light" as const },
+          { name: "Soccerment",  href: "#soccerment", src: "/reports/ftabr26/featured/soccerment-logo-trim.webp", kind: "dark" as const },
+        ];
+        return (<>
+          <div id="about" style={{ background: t.bgSec, padding: isMobile ? "48px 0" : "88px 0" }}>
+            <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "0 16px" : "0 40px" }}>
+              <div className="stx-reveal" style={{ maxWidth: 860 }}>
+                {sectionLabel("About this report")}
+                {paras.map((p, i) => (
+                  <p key={i} style={{ fontSize: 15, color: t.text, lineHeight: 1.9, margin: i === 0 ? "24px 0 0" : "16px 0 0", fontWeight: i === paras.length - 1 && paras.length > 1 ? 700 : 400 }}>{p}</p>
+                ))}
+              </div>
+              <div className="stx-reveal" style={{ display: "flex", alignItems: "center", gap: isMobile ? 18 : 28, flexWrap: "wrap", marginTop: 40, paddingTop: 24, borderTop: `1px solid ${t.border}` }}>
+                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase" }}>Report partners</span>
+                {partners.map((pt, i) => (
+                  <React.Fragment key={pt.name}>
+                    {i > 0 && <span aria-hidden style={{ color: t.textMuted }}>·</span>}
+                    <a href={pt.href} aria-label={`${pt.name}: partner feature`}
+                      onClick={e => { e.preventDefault(); jumpTo(pt.href, pt.name, false); }}
+                      style={{ display: "inline-flex", alignItems: "center", height: 36 }}>
+                      <img src={pt.src} alt={pt.name} style={{ height: isMobile ? 26 : 32, width: "auto", objectFit: "contain", filter: logoFilter(pt.kind) }} />
+                    </a>
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          </div>
+          {pitchDivider}
+        </>);
+      })()}
 
       {/* ── ABOUT / EXECUTIVE SUMMARY ───────────────────────────────────── */}
       {SHOW_EXEC_SUMMARY && (<>

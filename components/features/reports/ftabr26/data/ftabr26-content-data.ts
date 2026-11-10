@@ -18,13 +18,15 @@ export const FTABR26_HERO = {
   titleLines: ["FOOTBALL", "TECH & BUSINESS", "REPORT 2026"],
   edition: "Third edition",
   standfirst:
-    "Our deep dive into what's happening in football innovation. Investment patterns, the innovators defining where the industry is going, and the trends that separate real adoption from hype.",
+    "What the World Cup changed, and where football's tech money went next.",
   presentedBy: "SportsTechX",
   hashtag: "#FTABR26",
 } as const;
 
 export const FTABR26_ABOUT =
-  "Yes, we're talking about soccer. We distinguish between football-only and multisport platforms throughout, to accurately attribute investment raised specifically for football innovation. If you're investing in this space, building in it, or trying to figure out where football tech is actually headed versus where the hype says it's going, this report is meant to cut through the noise.";
+  "The third edition of our Football Tech & Business Report picks up where the second left off. That edition landed just before the 2026 FIFA World Cup. This one looks at what the tournament actually changed, and where football's tech money went next.\n\n" +
+  "As before, we separate football-only startups from multisport platforms, so the investment we attribute to football innovation really is football's. The report launches alongside Atlas, the newly updated SportsTechX Intelligence Hub, where the data behind every chart lives.\n\n" +
+  "If you're investing in football, building in it, or working out where it's actually heading rather than where the hype says it is, this is for you.";
 
 /* ── Ten trends, in three thematic groups
    Source: attached_assets/FTABR26_Micro_Trends_1789043561122.pdf (10 Sep 2026) ─── */
@@ -694,7 +696,7 @@ export const FTABR26_STARTUPS: Ftabr26Startup[] = [
 ];
 
 export const FTABR26_STARTUPS_NOTE =
-  "We asked each innovator featured in this report to name a football tech startup that has impressed them recently. Based on their recommendations, input from our partner Match Ventures, and standout startups we're closely tracking, we've curated this list of startups to watch in football tech.";
+  "We asked each of the innovators featured further down in this report to name a football tech startup that has impressed them recently. Based on their recommendations, input from our partner Match Ventures, and standout startups we're closely tracking, we've curated this list of startups to watch in football tech.";
 
 /* ── Ecosystem (source pp25, 28, 31) ────────────────────────────────────── */
 

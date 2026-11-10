@@ -970,17 +970,29 @@ export default function ReportFTABR26({ content, preview = false }: {
     if (last < text.length) out.push(text.slice(last));
     return out;
   };
-  const insightPara = (para: string, i: number) => {
-    const lines = para.split("\n").map(l => l.trim()).filter(Boolean);
-    const spacing = i === 0 ? 0 : "16px 0 0";
-    if (lines.length > 0 && lines.every(l => l.startsWith("- "))) {
-      return (
-        <ul key={i} style={{ margin: spacing, paddingLeft: 22, listStyleType: "disc", display: "flex", flexDirection: "column", gap: 8 }}>
-          {lines.map((l, j) => <li key={j} style={{ display: "list-item", listStyleType: "disc", fontSize: 15, lineHeight: 1.75, color: t.text }}>{richText(l.slice(2))}</li>)}
-        </ul>
-      );
+  /* Body items render in order. Items (or lines) starting with "- " are bullets;
+     consecutive bullets are grouped into one list. The admin stores one line per
+     body item, so each bullet is its own item there. */
+  const insightBody = (body: string[]) => {
+    const lines = body.flatMap(p => String(p).split("\n")).map(l => l.trim()).filter(Boolean);
+    const blocks: { kind: "p" | "ul"; items: string[] }[] = [];
+    for (const l of lines) {
+      const isBullet = l.startsWith("- ");
+      const prev = blocks[blocks.length - 1];
+      if (isBullet && prev?.kind === "ul") prev.items.push(l.slice(2));
+      else blocks.push({ kind: isBullet ? "ul" : "p", items: [isBullet ? l.slice(2) : l] });
     }
-    return <p key={i} style={{ margin: spacing, fontSize: 15, lineHeight: 1.85, color: t.text }}>{richText(para)}</p>;
+    return blocks.map((b, i) => {
+      const spacing = i === 0 ? 0 : "16px 0 0";
+      if (b.kind === "ul") {
+        return (
+          <ul key={i} style={{ margin: spacing, paddingLeft: 22, listStyleType: "disc", display: "flex", flexDirection: "column", gap: 8 }}>
+            {b.items.map((item, j) => <li key={j} style={{ display: "list-item", listStyleType: "disc", fontSize: 15, lineHeight: 1.75, color: t.text }}>{richText(item)}</li>)}
+          </ul>
+        );
+      }
+      return <p key={i} style={{ margin: spacing, fontSize: 15, lineHeight: 1.85, color: t.text }}>{richText(b.items[0])}</p>;
+    });
   };
 
   /* One Insights article: copy left, graphic right, "Our take" underneath.
@@ -999,7 +1011,7 @@ export default function ReportFTABR26({ content, preview = false }: {
         {blockHeader(a.title, "clamp(24px,2.6vw,34px)")}
         <div style={{ display: "grid", gridTemplateColumns: isMobile || !graphic ? "1fr" : "minmax(0,1fr) minmax(0,1fr)", gap: isMobile ? 24 : 40, alignItems: "start", marginTop: isMobile ? 16 : 24 }}>
           <div>
-            {a.body.map((para, i) => insightPara(para, i))}
+            {insightBody(a.body)}
           </div>
           {graphic && <div>{graphic}</div>}
         </div>

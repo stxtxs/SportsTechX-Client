@@ -11,9 +11,8 @@ import { refreshAccount } from '@/lib/invalidate';
 import { logoutState } from '@/lib/logout-state';
 import { enableQueryPolling } from '@/lib/query-client';
 import { Button } from '@/components/atlas';
-import { AuthSidePanel } from '@/components/auth/auth-quotes';
 import { OAuthButtons } from '@/components/auth/oauth-buttons';
-import { AuthNotice, AuthOr, AuthSplit, AuthSpinner, AuthThemeToggle, PasswordField } from '@/components/auth/auth-shell';
+import { AuthNotice, AuthOr, AuthFormColumn, AuthSpinner, AuthThemeToggle, PasswordField } from '@/components/auth/auth-shell';
 
 /**
  * Log in.
@@ -21,7 +20,7 @@ import { AuthNotice, AuthOr, AuthSplit, AuthSpinner, AuthThemeToggle, PasswordFi
  * Presentation only was changed here: this used to carry its own palette
  * (`--atlas-*`, the superseded Raise prototype's tokens), its own field CSS in a
  * `<style jsx global>` block, and its own copy of the OAuth buttons. All three
- * are gone — the frame is `AuthSplit`, the tokens are `--a-*` from the route
+ * are gone — the frame is the `(split)` layout, the tokens are `--a-*` from the route
  * layout, and the providers come from the shared `OAuthButtons`.
  *
  * There is no Atlas mockup for login (the Scout v2 prototype only has signup, and
@@ -39,8 +38,14 @@ export default function LoginPage() {
 
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
-	const [error, setError] = useState('');
-	const [message, setMessage] = useState('');
+	// Notices carried in the query string are the page's starting state rather
+	// than something an effect sets after mount (one render, not two; the server
+	// can read the query too, so the first paint already shows them).
+	// `?reason=session_expired` comes from the session guard; reset-password sends
+	// `?message=password_updated`, which nothing used to read, so a successful
+	// reset landed on a silent login screen.
+	const [error, setError] = useState(() => (reason === 'session_expired' ? 'Your session expired. Please sign in again.' : ''));
+	const [message, setMessage] = useState(() => (notice === 'password_updated' ? 'Password updated. Sign in with your new password.' : ''));
 	const [loading, setLoading] = useState(false);
 	// True when the URL hash carries a Supabase OTP-expired error — we show
 	// an inline "Resend confirmation email" CTA next to the error banner.
@@ -49,10 +54,6 @@ export default function LoginPage() {
 	useEffect(() => {
 		// Enable query polling on login page mount (recovery after logout)
 		if (!logoutState.isLoggingOut()) enableQueryPolling();
-		if (reason === 'session_expired') setError('Your session expired. Please sign in again.');
-		// reset-password sends us here with ?message=password_updated. Nothing read
-		// it before, so a successful reset landed on a silent login screen.
-		if (notice === 'password_updated') setMessage('Password updated. Sign in with your new password.');
 
 		// Supabase's verify endpoint encodes errors in the URL HASH fragment
 		// (e.g. #error=access_denied&error_code=otp_expired&error_description=…).
@@ -61,6 +62,10 @@ export default function LoginPage() {
 		// mails), so by the time the user actually clicks the link, it's gone.
 		// Parse the fragment, show a useful message, and offer a one-click
 		// resend instead of leaving them staring at "auth_callback_failed".
+		// The fragment never reaches the server, so this can only run after
+		// hydration: a one-time sync from the browser URL, which is what an effect
+		// is for. The hash is then stripped, so it can't be derived during render.
+		/* eslint-disable react-hooks/set-state-in-effect -- browser-only URL fragment, read once after hydration (see above) */
 		if (typeof window !== 'undefined' && window.location.hash) {
 			const h = new URLSearchParams(window.location.hash.replace(/^#/, ''));
 			const code = h.get('error_code');
@@ -79,7 +84,8 @@ export default function LoginPage() {
 				window.history.replaceState({}, '', u.toString());
 			}
 		}
-	}, [reason, notice]);
+		/* eslint-enable react-hooks/set-state-in-effect */
+	}, []);
 
 	const supabase = getSupabaseBrowser();
 
@@ -136,7 +142,7 @@ export default function LoginPage() {
 	return (
 		<>
 			<AuthThemeToggle />
-			<AuthSplit panel={<AuthSidePanel />}>
+			<AuthFormColumn>
 				<div>
 					<h1 className="auth-form__title">Log in to your account</h1>
 					<p className="auth-form__sub">Welcome back. Enter your details to continue.</p>
@@ -198,7 +204,7 @@ export default function LoginPage() {
 				<p className="auth-form__alt">
 					Don&apos;t have an account? <Link href="/signup">Sign up</Link>
 				</p>
-			</AuthSplit>
+			</AuthFormColumn>
 		</>
 	);
 }

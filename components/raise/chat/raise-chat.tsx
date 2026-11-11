@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ArrowUp, ArrowUpRight, X, Download, Plus, History, Maximize2 } from 'lucide-react';
 import { useChat, AI_MD_CSS } from '@/components/chat/chat-core';
@@ -11,12 +11,18 @@ import {
 } from './founder-chat';
 import { RAISE_SUGGESTIONS, SCOUT_SUGGESTIONS, EXPLORE_SUGGESTIONS } from '@/components/raise/raise-search';
 import { useNav } from '@/hooks/use-nav';
+import { setCopilotOpen, toggleCopilot, useCopilotOpen } from '@/lib/copilot';
+import { hrefOf } from '@/lib/routes';
+import { deslug } from '@/components/shell/breadcrumbs';
 import './raise-chat.css';
 
 /**
- * Atlas chat — the streaming agent as a right-side drawer opened by a
- * bottom-right launcher on every page except the full chat page. Route policy +
- * transcript render are shared with the chat page via founder-chat.tsx.
+ * Ask Atlas — the streaming agent as a co-pilot docked on the right. Opened from
+ * the top bar's Ask Atlas button or ⌘J / Ctrl+J; open state lives in
+ * lib/copilot. It sits beside the page rather than over it: no backdrop, the
+ * page narrows to make room (html.copilot-open, ≥1024px), and it stays mounted
+ * across page changes so the conversation carries on while you browse. Route
+ * policy + transcript render are shared with the chat page via founder-chat.tsx.
  *
  * Mounted for every product (see app-shell): the component is identical, only
  * the copy, the suggested prompts and the route policy differ, and all three
@@ -28,65 +34,21 @@ import './raise-chat.css';
  * "Atlas"), mono uppercase labels, and the command palette's row for prompts.
  */
 
-/** Which corner the launcher is parked in. Dropped wherever you let go. */
-type Corner = 'tl' | 'tr' | 'bl' | 'br';
-const CORNER_OFFSET: Record<Corner, React.CSSProperties> = {
-	br: { right: 24, bottom: 24, left: 'auto', top: 'auto' },
-	bl: { left: 24, bottom: 24, right: 'auto', top: 'auto' },
-	tr: { right: 24, top: 24, left: 'auto', bottom: 'auto' },
-	tl: { left: 24, top: 24, right: 'auto', bottom: 'auto' },
-};
-const CORNER_KEY = 'atlas:alphy-corner';
-const isCorner = (v: unknown): v is Corner => v === 'tl' || v === 'tr' || v === 'bl' || v === 'br';
-
 export function RaiseChat() {
-	const [open, setOpen] = useState(false);
+	const open = useCopilotOpen();
 	const pathname = usePathname();
 	const router = useRouter();
 	const { tier } = useNav();
 	const isScout = tier === 'scout';
 	const copy = chatCopy(tier);
-	const suggestions = isScout ? SCOUT_SUGGESTIONS : tier === 'raise' ? RAISE_SUGGESTIONS : EXPLORE_SUGGESTIONS;
+	// Lead with the page you're on: a company profile offers "Tell me about
+	// <Company>" (the name in the prompt, so it needs no entity support).
+	const pageSuggestion = pageSuggestionFor(pathname);
+	const suggestions = [
+		...(pageSuggestion ? [pageSuggestion] : []),
+		...(isScout ? SCOUT_SUGGESTIONS : tier === 'raise' ? RAISE_SUGGESTIONS : EXPLORE_SUGGESTIONS),
+	].slice(0, 5);
 	const inputRef = useRef<HTMLTextAreaElement>(null);
-
-	// Draggable launcher. The FAB was fixed bottom-right and sat on top of the
-	// pagination "next" control (feedback: "Unable to go to next page because of
-	// Ask Atlas icon"). Drag it to any corner; the choice is a per-viewer
-	// convenience kept in localStorage. A drop under the move threshold counts as
-	// a click and opens the panel, so keyboard/tap users are unaffected.
-	const [corner, setCorner] = useState<Corner>(() => {
-		if (typeof window === 'undefined') return 'br';
-		try { const c = localStorage.getItem(CORNER_KEY); return isCorner(c) ? c : 'br'; } catch { return 'br'; }
-	});
-	const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
-	const dragStart = useRef<{ x: number; y: number } | null>(null);
-	const moved = useRef(false);
-	const onFabPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
-		if (e.button !== 0) return;
-		e.currentTarget.setPointerCapture(e.pointerId);
-		dragStart.current = { x: e.clientX, y: e.clientY };
-		moved.current = false;
-	};
-	const onFabPointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
-		if (!dragStart.current) return;
-		const dx = e.clientX - dragStart.current.x, dy = e.clientY - dragStart.current.y;
-		if (!moved.current && Math.hypot(dx, dy) < 5) return; // below threshold = still a click
-		moved.current = true;
-		setDrag({ x: e.clientX, y: e.clientY });
-	};
-	const onFabPointerUp = (e: React.PointerEvent<HTMLButtonElement>) => {
-		if (!dragStart.current) return;
-		dragStart.current = null;
-		if (!moved.current) return; // a tap — let onClick open the panel
-		const next = `${e.clientY < window.innerHeight / 2 ? 't' : 'b'}${e.clientX < window.innerWidth / 2 ? 'l' : 'r'}` as Corner;
-		setCorner(next);
-		setDrag(null);
-		try { localStorage.setItem(CORNER_KEY, next); } catch { /* private mode / blocked */ }
-	};
-	// If the gesture is interrupted (pointercancel, e.g. the OS takes over), snap
-	// the button back to its parked corner and clear the drag flags so the next
-	// click opens the panel normally and the button isn't left stuck mid-drag.
-	const onFabPointerCancel = () => { dragStart.current = null; moved.current = false; setDrag(null); };
 
 	// Memoized: `useChat` keeps this in its callback deps, so a fresh closure on
 	// every render would rebuild them for nothing.
@@ -105,15 +67,17 @@ export function RaiseChat() {
 	const {
 		messages, input, setInput, streaming, stage, conversationId, loading,
 		showHistory, conversations, historyLoading, bodyRef,
-		send, resetConversation, toggleHistory, loadConversation, exportConversation, abort,
+		send, resetConversation, toggleHistory, loadConversation, exportConversation,
 	} = chat;
 
-	const close = () => { abort(); setOpen(false); };
+	// Closing hides the panel; a reply still being written carries on and is
+	// there when it's reopened.
+	const close = () => setCopilotOpen(false);
 	// Move the current thread to the full chat page. The page renders the same
 	// shared session, so the thread is there at once and a reply that is still
 	// streaming carries on — nothing to abort or refetch.
 	const expand = () => {
-		setOpen(false);
+		setCopilotOpen(false);
 		router.push(conversationId ? `/chat/${conversationId}` : '/chat');
 	};
 	// A fresh conversation is just the greeting. That state gets the intro and
@@ -130,41 +94,39 @@ export function RaiseChat() {
 		if (open) inputRef.current?.focus();
 	}, [open]);
 
+	// Dock: the page narrows to make room (CSS on html.copilot-open).
+	useEffect(() => {
+		document.documentElement.classList.toggle('copilot-open', open);
+		return () => document.documentElement.classList.remove('copilot-open');
+	}, [open]);
+
+	// ⌘J / Ctrl+J toggles from anywhere; Esc closes while focus is in the panel.
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => {
+			if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') { e.preventDefault(); toggleCopilot(); }
+		};
+		window.addEventListener('keydown', onKey);
+		return () => window.removeEventListener('keydown', onKey);
+	}, []);
+
 	return (
 		<>
 			<style>{AI_MD_CSS}</style>
 
-			{!open && (
-				<button
-					className="raise-chat-fab"
-					style={drag
-						? { left: drag.x, top: drag.y, right: 'auto', bottom: 'auto', transform: 'translate(-50%, -50%)', transition: 'none', cursor: 'grabbing' }
-						: CORNER_OFFSET[corner]}
-					onPointerDown={onFabPointerDown}
-					onPointerMove={onFabPointerMove}
-					onPointerUp={onFabPointerUp}
-					onPointerCancel={onFabPointerCancel}
-					onClick={() => { if (moved.current) { moved.current = false; return; } setOpen(true); }}
-					aria-label={copy.fabLabel}
-					title="Drag to move • click to open"
-				>
-					<span className="raise-chat-fab__mark"><AtlasMark size={14} /></span>
-					<span className="raise-chat-fab__label">Ask Atlas</span>
-				</button>
-			)}
-
-			{/* Desktop only (hidden ≤720px, where the panel is full-screen). Gives
-			    the drawer depth over the page and a click-away to close it. */}
-			{open && <div className="raise-chat-scrim" onClick={close} aria-hidden="true" />}
-
 			{/* Panel stays mounted (for the slide animation + to keep the thread on
 			    close); `inert` when closed removes its off-screen controls from tab
 			    order and the a11y tree. */}
-			<aside className={`raise-chat-panel ${open ? 'open' : ''}`} inert={!open ? true : undefined} aria-label="Atlas co-pilot">
+			<aside
+				id="atlas-copilot"
+				className={`raise-chat-panel ${open ? 'open' : ''}`}
+				inert={!open ? true : undefined}
+				aria-label="Ask Atlas"
+				onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } }}
+			>
 				<header className="raise-chat-head">
 					<div className="raise-chat-mark"><AtlasMark size={17} /></div>
 					<div className="raise-chat-titles">
-						<h3>Co-pilot</h3>
+						<h3>Ask Atlas</h3>
 						<div className="raise-chat-status">
 							<span className={`raise-chat-dot ${streaming ? 'busy' : ''}`} />
 							{streaming ? `${stage || 'Thinking'}…` : 'Online'}
@@ -187,7 +149,7 @@ export function RaiseChat() {
 						<button className="raise-chat-iconbtn" onClick={expand} aria-label="Open full chat page" title="Expand">
 							<Maximize2 size={14} strokeWidth={1.5} />
 						</button>
-						<button className="raise-chat-iconbtn" onClick={close} aria-label="Close co-pilot" title="Close">
+						<button className="raise-chat-iconbtn" onClick={close} aria-label="Close Ask Atlas" title="Close (Esc)">
 							<X size={16} strokeWidth={1.5} />
 						</button>
 					</div>
@@ -216,7 +178,7 @@ export function RaiseChat() {
 						<div className="raise-chatpage-loading" role="status">Loading conversation…</div>
 					) : fresh ? (
 						<div className="raise-chat-intro">
-							<div className="raise-chat-intro__eyebrow">Atlas co-pilot</div>
+							<div className="raise-chat-intro__eyebrow">Ask Atlas</div>
 							<h2 className="raise-chat-intro__title">What can I help with?</h2>
 							<p className="raise-chat-intro__lede">{copy.greeting}</p>
 
@@ -233,7 +195,7 @@ export function RaiseChat() {
 					) : (
 						<FounderMessages
 							messages={messages} streaming={streaming} stage={stage}
-							onAction={(href) => { router.push(href); close(); }}
+							onAction={(href) => router.push(href)}
 							rewritePath={isScout ? scoutRewritePath : founderRewritePath}
 						/>
 					)}
@@ -268,4 +230,12 @@ export function RaiseChat() {
 			</aside>
 		</>
 	);
+}
+
+/** A prompt for the page in view, or null. Company profiles only, for now. */
+function pageSuggestionFor(pathname: string | null): string | null {
+	const base = `${hrefOf('companies')}/`;
+	if (!pathname?.startsWith(base)) return null;
+	const slug = decodeURIComponent(pathname.slice(base.length).split('/')[0] ?? '');
+	return slug ? `Tell me about ${deslug(slug)}` : null;
 }

@@ -105,6 +105,8 @@ export const qk = {
     detail: (id: string) => [`/api/user-watchlists/${id}`] as const,
     companies: (id: string) => [`/api/user-watchlists/${id}/companies`] as const,
     containing: (companyId: string) => [`/api/user-watchlists/containing/${companyId}`] as const,
+    /** Every company id on any of the user's company watchlists (one call). */
+    companyIds: () => ['/api/user-watchlists/company-ids'] as const,
   },
   publicWatchlists: {
     byToken: (token: string) => [`/api/public/watchlists/${token}`] as const,
@@ -173,6 +175,7 @@ export const qk = {
   explore: {
     interests: () => ['/api/explore/interests'] as const,
     home: () => ['/api/explore/home'] as const,
+    fitBox: () => ['/api/explore/fit-box'] as const,
   },
 
   // ── Newsletter (Beehiiv RSS proxy) ──────────────────────────────────────

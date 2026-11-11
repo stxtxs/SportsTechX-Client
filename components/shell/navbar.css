@@ -36,6 +36,10 @@
 }
 .atlas a.atlas-crumb:hover { color: var(--a-ink); }
 .atlas .atlas-crumb.is-plain { color: var(--a-faint); }
+/* With Ask Atlas docked the bar is narrower: keep only the last two steps
+   (e.g. Companies > Mirata) rather than squeezing every one to a letter. */
+html.copilot-open .atlas .atlas-crumbs > :not(:nth-last-child(-n+2)) { display: none; }
+html.copilot-open .atlas .atlas-crumbs > .atlas-crumb-wrap:nth-last-child(2):not(:first-child) > .atlas-crumb-sep { display: none; }
 
 /* ── Search ────────────────────────────────────────────────────────────────*/
 .atlas .atlas-navsearch__btn {
@@ -60,11 +64,15 @@
 /* ── Avatar + account menu ─────────────────────────────────────────────────*/
 .atlas .atlas-avatar {
 	display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0;
-	/* Square with soft corners, matching the sidebar account avatar. */
-	padding: 0; border: none; border-radius: 7px; overflow: hidden; cursor: pointer;
-	background: var(--a-primary); color: var(--a-primary-ink);
+	/* Round and quiet, like the theme and bell buttons beside it: the solid
+	   black square was the heaviest thing on the page. */
+	padding: 0; border: none; border-radius: 50%; overflow: hidden; cursor: pointer;
+	background: color-mix(in srgb, var(--a-ink) 6%, var(--a-page)); color: var(--a-ink);
+	box-shadow: inset 0 0 0 1px var(--a-border-strong);
 	font-family: var(--a-mono); font-size: 12px; letter-spacing: 0.06em;
+	transition: background 0.12s;
 }
+.atlas .atlas-avatar:hover { background: color-mix(in srgb, var(--a-ink) 10%, var(--a-page)); }
 .atlas .atlas-avatar__img { width: 100%; height: 100%; object-fit: cover; }
 .atlas .atlas-account-menu { z-index: 50; min-width: min(92vw, 230px); }
 .atlas .atlas-account-menu .atlas-menu__item { text-decoration: none; }
@@ -207,3 +215,24 @@
 	/* The hamburger beside them, matched. */
 	.atlas .atlas-hamburger { border: 0; background: none; }
 }
+
+/* Ask Atlas: the co-pilot's door, left of Search. Same pill size as Search,
+   told apart by the sparkle in the product colour; filled while open. */
+.atlas .atlas-navask {
+	display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px 0 12px; flex-shrink: 0;
+	border: 0; border-radius: var(--a-radius-pill); cursor: pointer;
+	background: color-mix(in srgb, var(--atlas-product, var(--a-ink)) 7%, transparent);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--atlas-product, var(--a-ink)) 35%, var(--a-border-strong));
+	color: var(--a-ink); font-family: var(--a-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+	transition: background 0.15s, box-shadow 0.15s;
+}
+.atlas .atlas-navask__spark { color: var(--atlas-product, var(--a-ink)); }
+.atlas .atlas-navask:hover { background: color-mix(in srgb, var(--atlas-product, var(--a-ink)) 13%, transparent); }
+.atlas .atlas-navask.is-open { background: var(--a-primary); color: var(--a-primary-ink); box-shadow: inset 0 0 0 1px var(--a-primary); }
+.atlas .atlas-navask:focus-visible { outline: 2px solid var(--a-ink); outline-offset: 2px; }
+@media (max-width: 1024px) { .atlas .atlas-navask__label { display: none; } .atlas .atlas-navask { padding: 0 10px; } }
+/* Docked: the bar is narrower, so the button goes to its icon (the panel is
+   titled Ask Atlas) and Search to its natural width. */
+html.copilot-open .atlas .atlas-navask__label { display: none; }
+html.copilot-open .atlas .atlas-navask { padding: 0 10px; }
+html.copilot-open .atlas .atlas-navsearch__btn { min-width: 0; }

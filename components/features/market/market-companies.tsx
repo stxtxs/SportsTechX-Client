@@ -1,19 +1,22 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Globe, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { useUrlSync, useUrlReader, useUrlModal } from '@/hooks/use-url-state';
 import useSWR from 'swr';
 import { qk } from '@/lib/query-keys';
 import type { CompanyListItem as Company } from '@/types/api';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
-import { Loading, Empty, Action, FilterBar, type FilterDef, Logo, Flag, Pager, ViewToggle, type ViewMode, lockedFiltersNote } from '@/components/atlas';
-import { VerifiedBadge } from '@/components/atlas/icons/verified-badge';
+import { Loading, Empty, FilterBar, type FilterDef, Logo, Flag, Pager, ViewToggle, type ViewMode, lockedFiltersNote } from '@/components/atlas';
 import { ExportButton } from '@/components/features/exports/export-button';
 import { BUSINESS_MODELS, FUNDING_BUCKETS, SINCE_YEARS } from '@/lib/catalog-options';
 import { useSectorTierData, useSportOptions, useLocationFacetOptions, useTechTagOptions, useCountryOptions } from '@/hooks/use-catalog-options';
 import { fmtUsd } from './format';
+import { SectorMark, StatusMarks } from './company-marks';
+import { SaveToWatchlist } from '@/components/features/watchlists/save-to-watchlist';
+import { useSavedCompanyIds } from '@/components/features/watchlists/use-company-watchlists';
+import { useCanSeeFundraising } from '@/hooks/use-user-profile';
 import { ResultCapNote } from './result-cap-note';
 import dynamic from 'next/dynamic';
 // ~650 lines (plus the watchlist picker and drawer primitive it pulls in) for a
@@ -67,6 +70,11 @@ export function MarketCompanies({ companyHref }: { companyHref?: (idOrSlug: stri
 	// slug is format-validated (useUrlModal's default), so a junk param won't fire
 	// a fetch or open an empty drawer.
 	const [openId, setOpenId] = useUrlModal('company');
+	// Fundraising is a Scout-only signal (useCanSeeFundraising); the $ column
+	// slot only exists for them. Saved state for every row in one lookup.
+	const canSeeRaising = useCanSeeFundraising();
+	const statusWidth = canSeeRaising ? 48 : 26;
+	const savedIds = useSavedCompanyIds();
 	const reset = () => setPage(1);
 
 	// Mirror the whole view-state into the URL (defaults omitted to keep it short).
@@ -78,12 +86,17 @@ export function MarketCompanies({ companyHref }: { companyHref?: (idOrSlug: stri
 		sort: sort !== '-created_at' ? sort : undefined,
 		page: page > 1 ? page : undefined,
 	});
-	const sectors = useSectorTierData();
-	const sportOptions = useSportOptions();
-	const countryOptions = useCountryOptions();
-	const techTags = useTechTagOptions();
+	// Filter option lists load when the filter menu first opens, not with the
+	// page: four reference calls the list itself never needs. Each still loads
+	// up front when the URL already uses it, so its applied chip has a label.
+	const [optionsWanted, setOptionsWanted] = useState(false);
+	const wantOptions = useCallback(() => setOptionsWanted(true), []);
+	const sectors = useSectorTierData(optionsWanted || !!(sector || subSector || subSubSector));
+	const sportOptions = useSportOptions(optionsWanted || !!sport);
+	const countryOptions = useCountryOptions(optionsWanted || !!country);
+	const techTags = useTechTagOptions(optionsWanted || !!techTag);
 	const adv = useFeatureAccess('advanced_filters');
-	const loc = useLocationFacetOptions(adv.hasAccess);
+	const loc = useLocationFacetOptions(adv.hasAccess && (optionsWanted || !!(city || continent || region)));
 
 	const params = useMemo(() => {
 		const p: Record<string, unknown> = { page, limit: PAGE_SIZE, sort };
@@ -97,7 +110,8 @@ export function MarketCompanies({ companyHref }: { companyHref?: (idOrSlug: stri
 		if (funding) p.min_funding = funding;
 		if (founded) p.founded_year_min = founded;
 		if (verified) p.is_verified = true;
-		if (raising) p.is_actively_raising = true;
+		// Scout only; a stale ?raising=1 from another plan is ignored.
+		if (raising && canSeeRaising) p.is_actively_raising = true;
 		if (unicorn) p.is_unicorn = true;
 		if (adv.hasAccess) {
 			if (city) p.city = city;
@@ -106,7 +120,7 @@ export function MarketCompanies({ companyHref }: { companyHref?: (idOrSlug: stri
 			if (techTag) p.tech_tag_slug = techTag;
 		}
 		return p;
-	}, [page, sort, dq, model, sectors, sector, subSector, subSubSector, sport, country, funding, founded, verified, raising, unicorn, adv.hasAccess, city, continent, region, techTag]);
+	}, [page, sort, dq, model, sectors, sector, subSector, subSubSector, sport, country, funding, founded, verified, raising, canSeeRaising, unicorn, adv.hasAccess, city, continent, region, techTag]);
 
 	// Two inputs to `params` resolve asynchronously, and each can add a key to
 	// the query once it lands: the sector hierarchy (which turns a `?sector=`
@@ -165,12 +179,13 @@ export function MarketCompanies({ companyHref }: { companyHref?: (idOrSlug: stri
 					] },
 					{ label: 'Status', filters: [
 						tog('verified', 'Verified', verified, setVerified),
-						tog('raising', 'Raising now', raising, setRaising),
+						...(canSeeRaising ? [tog('raising', 'Raising now', raising, setRaising)] : []),
 						tog('unicorn', 'Unicorn', unicorn, setUnicorn),
 					] },
 					...(adv.isLocked ? [{ label: 'Advanced', filters: [], locked: lockedFiltersNote(adv.requiredTier) }] : []),
 				]}
 				sort={{ value: sort, options: COMPANY_SORTS, onChange: (v) => { setSort(v); reset(); } }}
+				onMenuOpen={wantOptions}
 				canClear={anyFilter}
 				onClear={clearAll}
 			/>
@@ -187,17 +202,27 @@ export function MarketCompanies({ companyHref }: { companyHref?: (idOrSlug: stri
 								<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><ViewToggle value={view} onChange={setView} /><ExportButton entity="companies" search={dq} params={params} /></div>
 							</div>
 							{view === 'cards'
-								? <div className="mkt-list">{rows.map((c) => <CompanyRow key={c.id} c={c} href={companyHref?.(c.slug ?? c.id)} onOpen={() => setOpenId(c.slug ?? c.id)} />)}</div>
+								? <div className="mkt-list">{rows.map((c) => <CompanyRow key={c.id} c={c} href={companyHref?.(c.slug ?? c.id)} onOpen={() => setOpenId(c.slug ?? c.id)} saved={savedIds.has(c.id)} canSeeRaising={canSeeRaising} />)}</div>
 								: (
-								<div className="atlas-table" role="table">
+								<div className="atlas-table mkt-table" role="table">
+									{/* Company, then its status marks in their own narrow column
+									    (verified; fundraising for Scout only) so they line up down
+									    the page, Sector as icon + sub-category, Location as flag +
+									    city, Funding, and a bookmark. Founded, sport and model live
+									    on the profile and in the filters. */}
 									<div className="atlas-table__head">
 										<span className="atlas-table__name">Company</span>
-										<span className="atlas-table__col hide-sm" style={{ width: 160 }}>Sector</span>
-										<span className="atlas-table__col hide-sm" style={{ width: 140 }}>Location</span>
-										<span className="atlas-table__col hide-sm hide-md" style={{ width: 70 }}>Founded</span>
-										<span className="atlas-table__col hide-sm hide-md" style={{ width: 100 }}>Sport</span>
-										<span className="atlas-table__col hide-sm hide-md" style={{ width: 66 }}>Model</span>
-										<span className="atlas-table__col" style={{ width: 96, textAlign: 'right' }}>Funding</span>
+										<span className="atlas-table__col" style={{ width: statusWidth }}><span className="sr-only">Status</span></span>
+										<span className="atlas-table__col hide-sm mkt-sector">Sector</span>
+										<span className="atlas-table__col hide-sm" style={{ width: 170 }}>Location</span>
+										<span className="atlas-table__col" style={{ width: 96, textAlign: 'right' }}>
+											{/* Sorts by funding; pressed again it returns to the default order. */}
+											<button type="button" className="mkt-sort" aria-pressed={sort === '-total_funding'}
+												onClick={() => { setSort(sort === '-total_funding' ? '-created_at' : '-total_funding'); reset(); }}>
+												Funding{sort === '-total_funding' ? ' ↓' : ''}
+											</button>
+										</span>
+										<span className="atlas-table__col" style={{ width: 32 }}><span className="sr-only">Save</span></span>
 									</div>
 									{rows.map((c) => {
 										const href = companyHref?.(c.slug ?? c.id);
@@ -206,21 +231,37 @@ export function MarketCompanies({ companyHref }: { companyHref?: (idOrSlug: stri
 										const inner = <>
 											<div className="atlas-table__name">
 												<Logo co={{ name: c.name, website: c.website, custom_logo_url: c.custom_logo_url }} size={30} radius={6} />
-												<div className="atlas-table__name-main" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-													<span className="atlas-ellipsis" style={{ fontWeight: 600, minWidth: 0 }}>{c.name}</span>
-													{c.is_verified && <VerifiedBadge size={13} />}
+												<div className="atlas-table__name-main">
+													{/* The name is the row's link; its ::after covers the row, so the
+													    whole row opens the company while the bookmark stays its own
+													    button (no button inside a link). */}
+													{href
+														? <Link href={href} className="atlas-ellipsis mkt-row-link" style={{ fontWeight: 600, minWidth: 0 }}>{c.name}</Link>
+														: <span className="atlas-ellipsis" style={{ fontWeight: 600, minWidth: 0 }}>{c.name}</span>}
 												</div>
 											</div>
-											<span className="atlas-table__col hide-sm" style={{ width: 160 }}>{c.primary_sector ?? DASH}</span>
-											<span className="atlas-table__col hide-sm" style={{ width: 140 }}>{hq || DASH}</span>
-											<span className="atlas-table__col hide-sm hide-md" style={{ width: 70 }}>{c.founded_year ?? DASH}</span>
-											<span className="atlas-table__col hide-sm hide-md" style={{ width: 100 }}>{c.primary_sport ?? DASH}</span>
-											<span className="atlas-table__col hide-sm hide-md" style={{ width: 66 }}>{c.business_model ? <span className="atlas-chip-sm">{c.business_model.toUpperCase()}</span> : DASH}</span>
+											<span className="atlas-table__col" style={{ width: statusWidth }}>
+												<StatusMarks verified={c.is_verified} raising={canSeeRaising && c.is_actively_raising} showRaisingSlot={canSeeRaising} />
+											</span>
+											{/* Sector as its icon (name on hover), then the sub-category. */}
+											<span className="atlas-table__col hide-sm mkt-icontext mkt-sector" title={c.primary_sector ?? undefined}>
+												<SectorMark slug={c.primary_sector_slug} />
+												<span className="atlas-ellipsis">{c.primary_sector ?? DASH}</span>
+											</span>
+											{/* Flag (country on hover) + city; the country name when there's no city. */}
+											<span className="atlas-table__col hide-sm mkt-icontext" style={{ width: 170 }} title={hq || undefined}>
+												{c.hq_country || c.hq_city
+													? <><span className="mkt-flag has-tip" data-tip={c.hq_country ?? undefined}><Flag cc={c.hq_country} size={13} /></span><span className="atlas-ellipsis">{c.hq_city || c.hq_country}</span></>
+													: DASH}
+											</span>
 											<span className="atlas-table__col" style={{ width: 96, textAlign: 'right', fontWeight: funding === '—' ? 400 : 600, color: funding === '—' ? undefined : 'var(--a-ink)' }}>{funding === '—' ? DASH : funding}</span>
+											<span className="atlas-table__col mkt-save" style={{ width: 32 }}>
+												<SaveToWatchlist companyId={c.id} companyName={c.name} compact saved={savedIds.has(c.id)} />
+											</span>
 										</>;
 										return href
-											? <Link key={c.id} className="atlas-table__row" href={href}>{inner}</Link>
-											: <div key={c.id} className="atlas-table__row" style={{ cursor: 'pointer' }} onClick={() => setOpenId(c.slug ?? c.id)}>{inner}</div>;
+											? <div key={c.id} className="atlas-table__row mkt-row">{inner}</div>
+											: <div key={c.id} className="atlas-table__row mkt-row" style={{ cursor: 'pointer' }} onClick={() => setOpenId(c.slug ?? c.id)}>{inner}</div>;
 									})}
 								</div>
 								)}
@@ -235,33 +276,40 @@ export function MarketCompanies({ companyHref }: { companyHref?: (idOrSlug: stri
 	);
 }
 
-function CompanyRow({ c, href, onOpen }: { c: Company; href?: string; onOpen: () => void }) {
+/**
+ * Tile view, in step with the list: name with its status icons, flag + city,
+ * what it does, Sector icon + sub-category, and funding. One quiet "View company" pill; the whole tile
+ * is the link (the pill's ::after covers it), as on Home's cards.
+ */
+function CompanyRow({ c, href, onOpen, saved, canSeeRaising }: { c: Company; href?: string; onOpen: () => void; saved: boolean; canSeeRaising: boolean }) {
 	const hq = [c.hq_city, c.hq_country].filter(Boolean).join(', ');
-	const tags = [c.primary_sector, c.business_model ? c.business_model.toUpperCase() : null, c.primary_sport].filter(Boolean) as string[];
 	const funding = fmtUsd(c.total_funding_usd == null ? null : Number(c.total_funding_usd));
 	return (
-		<div className="mkt-co">
+		<div className="mkt-co mkt-co--tile">
+			<div className="mkt-co-save"><SaveToWatchlist companyId={c.id} companyName={c.name} compact saved={saved} /></div>
 			<Logo co={{ name: c.name, website: c.website, custom_logo_url: c.custom_logo_url }} size={72} radius={9} />
 			<div className="mkt-co-body">
 				<div className="mkt-co-head">
 					<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
 						{href ? <Link href={href} className="mkt-co-name mkt-co-name--link">{c.name}</Link> : <span className="mkt-co-name">{c.name}</span>}
-						{c.is_verified && <VerifiedBadge size={15} />}
+						<StatusMarks verified={c.is_verified} raising={canSeeRaising && c.is_actively_raising} inline />
 					</span>
-					<span className="mkt-co-meta">
-						{c.hq_country && <Flag cc={c.hq_country} size={11} />}
-						{hq}{hq && c.founded_year ? ' · ' : ''}{c.founded_year ? `Founded ${c.founded_year}` : ''}
-					</span>
+					{(c.hq_country || c.hq_city) && (
+						<span className="mkt-co-meta" title={hq}>
+							<span className="mkt-flag has-tip" data-tip={c.hq_country ?? undefined}><Flag cc={c.hq_country} size={11} /></span>{c.hq_city || c.hq_country}
+						</span>
+					)}
 				</div>
 				{c.description && <div className="mkt-co-desc">{c.description}</div>}
 				<div className="mkt-tags">
-					{tags.map((t, i) => <span className="mkt-tag" key={i}>{t}</span>)}
+					{c.primary_sector && <span className="mkt-tag mkt-icontext"><SectorMark slug={c.primary_sector_slug} />{c.primary_sector}</span>}
 					{funding !== '—' && <span className="mkt-tag">{funding} raised</span>}
 				</div>
 			</div>
 			<div className="mkt-co-actions">
-				{c.website && <Action icon={<Globe />} href={c.website.startsWith('http') ? c.website : `https://${c.website}`} external>Website</Action>}
-				{href ? <Action icon={<ArrowUpRight />} href={href}>View company</Action> : <Action icon={<ArrowUpRight />} onClick={onOpen}>View company</Action>}
+				{href
+					? <Link href={href} className="mkt-co-view">View company <ArrowUpRight size={12} strokeWidth={1.75} aria-hidden="true" /></Link>
+					: <button type="button" className="mkt-co-view" onClick={onOpen}>View company <ArrowUpRight size={12} strokeWidth={1.75} aria-hidden="true" /></button>}
 			</div>
 		</div>
 	);

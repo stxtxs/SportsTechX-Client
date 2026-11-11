@@ -277,3 +277,16 @@ body {
   --space-6: 36px;
 }
 
+
+/* "BY SPORTSTECHX" under/next to the Atlas wordmark: Bebas Neue, as on the
+ * Atlas landing nav. One rule so every lockup matches (auth screens, /plans,
+ * 404). `--lp-display` comes from `lpDisplay` on <html> (app/layout.tsx).
+ * Colour is left to each lockup. */
+.stx-byline {
+  font-family: var(--lp-display), "Bebas Neue", "Arial Narrow", sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}

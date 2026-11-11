@@ -109,11 +109,11 @@ function Pie({ slices, fmt }: { slices: { name: string; v: number; color: string
 	const total = slices.reduce((a, s) => a + s.v, 0);
 	const pt = (deg: number, r: number) => [CX + r * Math.cos((-deg * Math.PI) / 180), CY + r * Math.sin((-deg * Math.PI) / 180)] as const;
 
-	let acc = 0;
-	const arcs = slices.map((s) => {
-		const a0 = (acc / total) * 360;
-		acc += s.v;
-		const a1 = (acc / total) * 360;
+	// Running total before each slice (no variable mutated during render).
+	const before = slices.map((_, i) => slices.slice(0, i).reduce((sum, x) => sum + x.v, 0));
+	const arcs = slices.map((s, i) => {
+		const a0 = (before[i] / total) * 360;
+		const a1 = ((before[i] + s.v) / total) * 360;
 		const [x0, y0] = pt(a0, R), [x1, y1] = pt(a1, R);
 		const d = a1 - a0 >= 359.999
 			? `M${CX - R},${CY} a${R},${R} 0 1 0 ${2 * R},0 a${R},${R} 0 1 0 ${-2 * R},0 Z`

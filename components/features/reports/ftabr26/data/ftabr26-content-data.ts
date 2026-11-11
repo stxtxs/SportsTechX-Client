@@ -559,7 +559,7 @@ export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
     title: "Facial recognition entry (opt-in)",
     category: "Venue Operations & Security",
     body:
-      "Several US venues, including Boston, Miami and Atlanta, offered opt-in facial recognition so registered fans could enter and pay without a ticket or card, the largest test yet of face-based entry at a football tournament.",
+      "Several US venues, including Gillette Stadium near Boston, offered opt-in facial recognition so registered fans could enter and pay without a ticket or card, the largest test yet of face-based entry at a football tournament.",
     sources: [
       { label: "The Next Web", url: "https://thenextweb.com/news/world-cup-2026-biometrics-google-gemini" },
       { label: "ID Tech", url: "https://idtechwire.com/gillette-stadium-rolls-out-facial-recognition-entry-and-payment-system/" },
@@ -575,7 +575,7 @@ export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
   },
   {
     id: "fifa-ai-pro",
-    title: "FIFA AI Pro",
+    title: "Football AI Pro",
     category: "Player Performance & Welfare",
     body:
       "A hybrid and generative AI post-match analysis assistant built with Lenovo for all 48 teams. The point was to give squads without large analyst departments the same read on the data as the ones that have them.",
@@ -623,7 +623,8 @@ export const FTABR26_WORLDCUP = {
   stats: [
     { value: "99.7%", label: "Stadium occupancy",
       sublabel: "6.8M fans across 104 matches, a World Cup record",
-      source: { label: "Football Ground Guide", url: "https://footballgroundguide.com/news/which-2026-world-cup-stadium-had-the-best-average-attendance-it-wasnt-metlife-or-att.html" } },
+      // 99.7%: FIFA release of 8 Jul 2026. 6.8M final total: Football Ground Guide.
+      sources: [{ label: "FIFA", url: "https://inside.fifa.com/media-releases/packed-stadiums-record-digital-reach-world-cup-2026-numbers-unprecedented-scale" }, { label: "Football Ground Guide", url: "https://footballgroundguide.com/news/which-2026-world-cup-stadium-had-the-best-average-attendance-it-wasnt-metlife-or-att.html" }] },
     { value: "14.0M", label: "Average US viewers per match, Fox + Telemundo",
       sublabel: "Fox 7.7M (+116%), Telemundo 6.3M (+143%) vs 2022",
       source: { label: "Front Office Sports", url: "https://frontofficesports.com/article/world-cup-final-viewership-fox-telemundo-us-television-soccer-record/" } },

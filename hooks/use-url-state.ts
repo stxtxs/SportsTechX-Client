@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 /**
@@ -92,14 +92,42 @@ export function useUrlSync(state: Record<string, ParamVal>): void {
 		if (typeof window === 'undefined') return;
 		const live = new URLSearchParams(window.location.search);
 		const qs = merge(live, state);
-		if (qs === live.toString()) return;
-		// Relative URL keeps the current pathname; null state lets Next's patched
-		// replaceState inject its own router state.
-		selfWritten = qs;
-		window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
+		if (qs !== live.toString()) {
+			// Relative URL keeps the current pathname; null state lets Next's patched
+			// replaceState inject its own router state.
+			selfWritten = qs;
+			window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
+		}
+		rememberListUrl(window.location.pathname, qs);
 		// `state` is captured through `serialized`; that is the intended dep.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [serialized]);
+}
+
+/**
+ * "Return to results" buttons: the list's last URL (filters, page, sort) in this
+ * tab, so a detail page can send the user back to exactly the view they left —
+ * a plain link to the list dropped it. Per-tab sessionStorage, navigation state
+ * only; a drawer's `?company=` is not part of the list view, so it's left out.
+ */
+const LIST_KEY = (path: string) => `atlas:list:${path}`;
+function rememberListUrl(path: string, qs: string): void {
+	const p = new URLSearchParams(qs);
+	p.delete('company');
+	const s = p.toString();
+	try { sessionStorage.setItem(LIST_KEY(path), s ? `${path}?${s}` : path); } catch { /* storage blocked: plain link */ }
+}
+
+/** The list URL to return to (`listPath` with its last filters), or `listPath` itself. */
+export function useListReturnHref(listPath: string): string {
+	const [href, setHref] = useState(listPath);
+	useEffect(() => {
+		try {
+			const v = sessionStorage.getItem(LIST_KEY(listPath));
+			if (v && (v === listPath || v.startsWith(`${listPath}?`))) setHref(v);
+		} catch { /* storage blocked: plain link */ }
+	}, [listPath]);
+	return href;
 }
 
 // Query-string values are attacker-controllable (anyone can hand-craft a link),

@@ -56,7 +56,7 @@ function subscribeScreen(onChange: () => void): () => void {
 	return () => mq.removeEventListener('change', onChange);
 }
 
-type FitBoxState = { dismissed_until: string | null };
+type FitBoxState = { dismissed_until: string | null; hidden: boolean };
 
 export function FitBox() {
 	const { data: profile } = useUserProfile();
@@ -65,7 +65,8 @@ export function FitBox() {
 	// never flashes in for someone who dismissed it or on a short screen.
 	const short = useSyncExternalStore(subscribeScreen, isShortScreen, () => true);
 	const { data: state, mutate } = useSWR<FitBoxState>(isExplore ? qk.explore.fitBox() : null);
-	const dismissed = !state || (!!state.dismissed_until && new Date(state.dismissed_until).getTime() > Date.now());
+	// The server compares the dismissal with its clock and says whether to hide.
+	const dismissed = !state || state.hidden;
 	const variant = VARIANT_BY_ROLE[getAccountType(profile)];
 	const visible = isExplore && !short && !dismissed;
 
@@ -79,7 +80,7 @@ export function FitBox() {
 		track(Events.fitBoxDismissed, { variant });
 		// Optimistic: gone on click; the server's answer replaces the guess.
 		const until = new Date(Date.now() + DISMISS_DAYS * 86_400_000).toISOString();
-		await mutate({ dismissed_until: until }, { revalidate: false });
+		await mutate({ dismissed_until: until, hidden: true }, { revalidate: false });
 		try {
 			const res = await apiRequest('POST', '/api/explore/fit-box/dismiss');
 			await mutate((await res.json()) as FitBoxState, { revalidate: false });

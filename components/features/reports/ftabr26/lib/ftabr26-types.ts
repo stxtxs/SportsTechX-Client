@@ -157,6 +157,8 @@ export type Ftabr26Startup = {
   /** Raw value from sm_test; may lack a scheme. */
   website: string | null;
   country: string | null;
+  /** HQ city (sm_test hq_city) when the endpoint sends it; optional until it does. */
+  city?: string | null;
   description: string | null;
   /** Mapped from the STX top-level sector; null when it is unset or unknown. */
   sector: Ftabr26StartupSector | null;

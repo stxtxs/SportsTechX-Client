@@ -10,8 +10,7 @@ import { InterestsEditor } from './interests-editor';
  * Interests — what Atlas prioritises on Home.
  *
  * Everything shown persists to the account via `PUT /api/explore/interests`
- * (sectors, sports, regions, goals), except Technologies, which the API can't
- * store yet and the editor says so. The save bar is pinned to the bottom of
+ * (sectors, sports, technologies, regions, goals). The save bar is pinned to the bottom of
  * the content area so Save never sits below the fold.
  */
 export function InterestsPage() {
@@ -19,7 +18,7 @@ export function InterestsPage() {
 	const [draft, setDraft] = useState<Interests | null>(null);
 	const [busy, setBusy] = useState(false);
 	const value = draft ?? saved;
-	const total = value.goals.length + value.sectors.length + value.subs.length + value.geos.length + value.sports.length;
+	const total = value.goals.length + value.sectors.length + value.subs.length + value.geos.length + value.sports.length + value.techs.length;
 
 	return (
 		<>

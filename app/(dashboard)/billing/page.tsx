@@ -160,7 +160,7 @@ export default function BillingPage() {
 				<div style={{ ...CARD_TITLE, marginBottom: 6 }}>{hasActiveSub || teamPlan ? 'Your subscription' : 'Choose a plan'}</div>
 				{!hasActiveSub && hubBilling ? (
 					<>
-						<p style={{ ...BODY, margin: '0 0 16px' }}>Your plan is billed through your Intelligence Hub subscription. Update your payment details, see invoices or manage its renewal in the billing portal. Your Atlas access runs until the date above.</p>
+						<p style={{ ...BODY, margin: '0 0 16px' }}>Your plan was paid through the Intelligence Hub. In the billing portal you can see its invoices and payment details, and manage any renewal. Your Atlas access runs until the date above.</p>
 						<Button size="sm" disabled={busy !== null} onClick={() => void manage()}>{busy === 'portal' ? <Loader2 className="animate-spin" size={13} /> : 'Open billing portal'}</Button>
 					</>
 				) : !hasActiveSub && teamPlan ? (

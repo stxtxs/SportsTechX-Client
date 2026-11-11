@@ -31,6 +31,10 @@ type MenuState = null | { at: 'add' | 'sort' | string; view: 'root' | string };
 /** Show an in-menu search when an option list is longer than this. */
 const SEARCHABLE_OPTIONS = 5;
 
+/** Focus menu search boxes only with a mouse/trackpad: on a phone it would pop the
+ *  keyboard over the menu every time it opens. */
+const finePointer = () => typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches;
+
 /** "Fans & Content › Fantasy Sports & Betting" → leaf + its parent path (sector trees). */
 function splitPath(label: string): { leaf: string; path: string } {
 	const parts = label.split(' › ');
@@ -133,7 +137,7 @@ export function FilterBar({ search, groups, sort, canClear, onClear, count, acti
 					<div ref={menuRef} className={cx('atlas-menu atlas-menu--sheet atlas-menu--drill', (groups.length > 1 || menu.view !== 'root') && 'atlas-menu--wide')} role="dialog" aria-label="Add filter">
 						{menu.view === 'root' && allFilters.length > 4 && (
 							<input className="atlas-menu__search" placeholder="Search all filters…" aria-label="Search all filters" value={findQ}
-								onChange={(e) => setFindQ(e.target.value)} autoFocus
+								onChange={(e) => setFindQ(e.target.value)} autoFocus={finePointer()}
 								onKeyDown={(e) => { if (e.key === 'Enter' && found[0]) found[0].apply(); }} />
 						)}
 						{menu.view === 'root' && findTerm ? (
@@ -222,7 +226,7 @@ function OptionsView({ f, onBack, onDone }: { f: Extract<FilterDef, { kind: 'sel
 				<span>{f.label}</span>
 			</div>
 			{f.options.length > SEARCHABLE_OPTIONS && (
-				<input className="atlas-menu__search" placeholder={`Search ${f.label.toLowerCase()}…`} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
+				<input className="atlas-menu__search" placeholder={`Search ${f.label.toLowerCase()}…`} value={q} onChange={(e) => setQ(e.target.value)} autoFocus={finePointer()} />
 			)}
 			<div className="atlas-menu__list atlas-menu__list--scroll atlas-menu__list--rows">
 				{f.value && !term && (

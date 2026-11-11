@@ -45,7 +45,8 @@ export function reportCard({ title, description, path, cover }: Card): Metadata 
 export async function reportMetadata(slug: string, fallbackTitle = 'Report'): Promise<Metadata> {
 	const path = `/reports/${slug}`;
 	try {
-		const r = await fetch(`${process.env.BACKEND_URL}/api/reports/${encodeURIComponent(slug)}`, { next: { revalidate: 300 } });
+		// Bots wait for metadata: a hung backend must cost a fallback card, not the preview.
+		const r = await fetch(`${process.env.BACKEND_URL}/api/reports/${encodeURIComponent(slug)}`, { next: { revalidate: 300 }, signal: AbortSignal.timeout(3000) });
 		if (r.ok) {
 			const report = (await r.json()) as { title?: string | null; description?: string | null; cover_url?: string | null };
 			if (report.title) return reportCard({ title: report.title, description: report.description, path, cover: report.cover_url });

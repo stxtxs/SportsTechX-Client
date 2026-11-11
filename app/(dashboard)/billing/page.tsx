@@ -39,6 +39,8 @@ const fmtPrice = (p: PlanRow) => {
 };
 
 interface Invoice { id: string; number: string | null; status: string | null; amount_paid: number; currency: string; created: number; hosted_invoice_url: string | null; invoice_pdf: string | null }
+/** Where the plan comes from and when it ends (GET /api/billing/access). */
+interface Access { source: 'stripe' | 'granted' | 'legacy' | 'free'; ends_at: string | null; renews: boolean }
 interface Sub { subscription_status?: string | null; is_trial?: boolean | null; subscription_current_period_end?: string | null; subscription_cancel_at?: string | null }
 interface SubRow { stripe_subscription_id: string; subscription_status: string; is_active: boolean; is_trial: boolean; plan_name: string | null; user_type: string; subscription_current_period_end: string | null; subscription_cancel_at: string | null; updated_at: string }
 
@@ -63,6 +65,10 @@ export default function BillingPage() {
 	const matchedPlan = (plans.data?.data ?? []).find((r) => r.tier === plan);
 	const p = { label: matchedPlan?.name ?? TIER_LABEL[plan] ?? plan, price: matchedPlan ? fmtPrice(matchedPlan) : (plan === 'explore' ? '€0' : '') };
 	const sub = useSWR<Sub | null>(['/api/billing/subscription']);
+	const access = useSWR<Access>(['/api/billing/access']);
+	// Set up by the STX team (admin grant / trial, or a carried-over Hub plan):
+	// nothing in Stripe, so no billing portal or cancel — only its end date.
+	const teamPlan = access.data?.source === 'granted' || access.data?.source === 'legacy';
 	const allSubs = useSWR<SubRow[]>(['/api/billing/subscriptions']);
 	const invoices = useSWR<Invoice[]>(['/api/billing/invoices']);
 	const { balance: bal } = useCreditBalance();
@@ -120,6 +126,15 @@ export default function BillingPage() {
 						{cancelling && (
 							<p style={{ ...BODY, marginTop: 10 }}>Your plan access ends on {fmtISO(sub.data?.subscription_cancel_at ?? sub.data?.subscription_current_period_end ?? null)}. You keep full access until then.</p>
 						)}
+						{hasActiveSub && !cancelling && sub.data?.subscription_current_period_end && (
+							<p style={{ ...BODY, marginTop: 10 }}>{sub.data.is_trial ? 'Trial ends' : 'Renews'} on {fmtISO(sub.data.subscription_current_period_end)}.</p>
+						)}
+						{!hasActiveSub && teamPlan && (
+							<p style={{ ...BODY, marginTop: 10 }}>
+								{access.data?.source === 'legacy' ? 'Carried over from your Intelligence Hub plan' : 'Set up for you by the SportsTechX team'}
+								{access.data?.ends_at ? `, active until ${fmtISO(access.data.ends_at)}.` : ', with no end date.'}
+							</p>
+						)}
 					</div>
 					{hasActiveSub && (
 						<div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
@@ -136,8 +151,13 @@ export default function BillingPage() {
 			</Card>
 
 			<Card style={{ marginBottom: 24 }}>
-				<div style={{ ...CARD_TITLE, marginBottom: 6 }}>{hasActiveSub ? 'Your subscription' : 'Choose a plan'}</div>
-				{hasActiveSub ? (
+				<div style={{ ...CARD_TITLE, marginBottom: 6 }}>{hasActiveSub || teamPlan ? 'Your subscription' : 'Choose a plan'}</div>
+				{!hasActiveSub && teamPlan ? (
+					<>
+						<p style={{ ...BODY, margin: '0 0 16px' }}>This plan isn’t billed through Stripe, so there’s nothing to manage or cancel here. To change it, email <a href="mailto:hello@sportstechx.com" style={{ color: 'inherit', textDecoration: 'underline' }}>hello@sportstechx.com</a>. To start a paid plan of your own, see the plans.</p>
+						<Button variant="outline" size="sm" onClick={() => router.push(PLANS_PATH)}>See plans</Button>
+					</>
+				) : hasActiveSub ? (
 					<>
 						<p style={{ ...BODY, margin: '0 0 16px' }}>Update your payment method, see invoices or cancel in the billing portal. Plans can’t be switched mid-subscription: to move to another plan, cancel this one (you keep access until the end of the billing period), then subscribe to the new plan.</p>
 						<Button size="sm" disabled={busy !== null} onClick={() => void manage()}>{busy === 'portal' ? <Loader2 className="animate-spin" size={13} /> : 'Open billing portal'}</Button>

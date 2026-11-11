@@ -1,2 +1,87 @@
 /* Fonts for the ported STX FTABR26 report (used via inline fontFamily) — the STX app loaded these globally. */
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Open+Sans:wght@300;400;500;600;700&display=swap');
+
+/* The Atlas footer is mounted inside .lp for its fonts, and .lp::after is the site's
+   fixed film-grain overlay. Inside the report it would sit over every section, and in
+   print it repeats as a full-page noise image on every page (about 1 MB a page). */
+.ft26-root .lp::after { display: none; }
+
+/* ── Print / Save as PDF (open /reports/ftabr26?pdf=true, then print) ─────────
+   - A4 with no page margins, so the browser leaves out its date/URL header and
+     footer and the dark sections run to the edge.
+   - Backgrounds print even if "Background graphics" is left off in the dialog.
+   - An open accordion's height was measured at screen width; printing reflows the
+     page narrower, so the measured max-height would clip it (the last WC26 card
+     went missing). Open accordions drop the cap when printing.
+   - Cards and table rows don't split across pages. */
+@page ftabr26 { size: A4; margin: 0; }
+@media print {
+  .ft26-root { page: ftabr26; }
+  .ft26-root, .ft26-root * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .ft26-root .ft26-acc-open { max-height: none !important; overflow: visible !important; opacity: 1 !important; }
+  .ft26-root [id^="wc-tech-"],
+  .ft26-root .stx-reveal > div[style*="grid"] > div,
+  .ft26-root a[href][style*="border-radius"],
+  .ft26-root button[aria-haspopup="dialog"] { break-inside: avoid; }
+  .ft26-root h2, .ft26-root h3 { break-after: avoid; }
+  /* Innovators: 7 per row like desktop, scaled to fit the A4 text width
+     (at full size the 7th column ran off the page) */
+  .ft26-root .ft26-innov-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 28px 20px !important;
+    zoom: 0.72;
+    break-inside: avoid;
+  }
+}
+
+/* ── Print document (?pdf=true): fixed A4 pages ─────────────────────────────
+   On screen the pages stack like a PDF preview; when printing each one is
+   exactly one A4 page. */
+.ft26-print { background: #D5DAE1; padding: 24px 0; min-height: 100vh; }
+.ft26-page {
+  width: 210mm; height: 297mm; margin: 0 auto 24px; position: relative;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 6px 24px rgba(17, 24, 39, 0.18);
+  font-family: 'Open Sans', system-ui, sans-serif; color: #1F2933;
+}
+.ft26-page-head {
+  flex: 0 0 30px; display: flex; align-items: center; gap: 14px; padding: 0 22px;
+  color: rgba(255, 255, 255, 0.72); font-family: 'DM Mono', monospace; font-size: 8.5px;
+  letter-spacing: 2.2px; text-transform: uppercase;
+}
+.ft26-page-head span:first-of-type { margin-left: auto; }
+.ft26-page-no { color: #fff; font-weight: 500; min-width: 18px; text-align: right; }
+.ft26-page-body { flex: 1 1 auto; min-height: 0; position: relative; overflow: hidden; }
+.ft26-page--cover .ft26-page-body { height: 100%; }
+.ft26-page--cover .ft26-fit { height: 100%; }
+.ft26-fit { transform-origin: top left; }
+/* Insight copy reused from the web page, set at print size */
+.ft26-pp p, .ft26-pp li { font-size: 11px !important; line-height: 1.65 !important; }
+.ft26-pp p { margin: 0 0 8px !important; }
+.ft26-pp ul { margin: 0 0 8px !important; gap: 4px !important; padding-left: 18px !important; }
+.ft26-pp-graphic img { border-radius: 6px !important; }
+/* The app shell makes html/body a 100%-high scroll box; printed, that clips the
+   document to its first screen (every page after the cover came out blank). */
+html:has(.ft26-print), body:has(.ft26-print) { height: auto !important; overflow: visible !important; }
+/* Playermaker fills its page like Soccerment does: the panel stretches to the page
+   height and the extra room goes to the image mosaic. Structure (PARTS.featured):
+   outer padding div > gradient frame > #featured > content > [header, story+mosaic, footer row] */
+#pdf-playermaker .ft26-fit { height: 100%; }
+#pdf-playermaker .ft26-fit > div { height: 100%; padding: 34px 0 !important; box-sizing: border-box; }
+#pdf-playermaker .ft26-fit > div > div { height: 100%; box-sizing: border-box; margin: 0 8px !important; }
+#pdf-playermaker #featured { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
+#pdf-playermaker #featured > div { flex: 1 1 auto; width: 100%; display: flex; flex-direction: column; }
+#pdf-playermaker #featured > div > div:nth-child(2) { flex: 1 1 auto; align-items: stretch !important; }
+#pdf-playermaker #featured > div > div:nth-child(2) > div:first-child { justify-content: space-around; }
+#pdf-playermaker #featured > div > div:nth-child(2) > div:nth-child(2) { height: auto !important; min-height: 320px; }
+@media print {
+  .ft26-print { background: none; padding: 0; min-height: 0; }
+  /* A hair under 297mm so rounding never spills a page onto a blank one */
+  .ft26-page { margin: 0; box-shadow: none; break-after: page; height: 296.6mm; }
+  .ft26-page:last-child { break-after: auto; }
+  /* Nothing but the pages: stray zero-height app nodes after them added a blank last page */
+  body:has(.ft26-print) > :not(.ft26-root) { display: none !important; }
+}

@@ -36,11 +36,11 @@ export type SummaryStat = { num: string; label: string; subtitle?: string };
    in the offline path. */
 export const FTABR26_SUMMARY: SummaryStat[] = [
   { num: "$8.1B", label: "Global football tech dealflow", subtitle: "Since 2021, incl. $476.0M in H1 2026 alone" },
-  { num: "77.0%", label: "Of funding to fans & content", subtitle: "Up from 68.0% across the full period" },
+  { num: "72.0%", label: "Of funding to Fan Tech",       subtitle: "Since 2025, up from 65.9% across 2021–H1 2026" },
   { num: "$5.4B", label: "Raised in Europe",             subtitle: "North America next with $2.5B" },
-  { num: "10",    label: "Trends in football innovation", subtitle: "Plus women's football and World Cup 26" },
-  { num: "20",    label: "Innovation initiatives",        subtitle: "By teams, leagues and federations" },
-  { num: "15",    label: "Football tech innovators",      subtitle: "Interviewed for this edition" },
+  { num: "$6.7M",  label: "Average football-only round in 2025",          subtitle: "Down from $20.1M in 2021" },
+  { num: "$20.0B", label: "Estimated US economic impact of World Cup 26", subtitle: "Bank of America estimate" },
+  { num: "25",     label: "Innovation programmes",                        subtitle: "18 initiatives by clubs, leagues and federations, plus 7 accelerators" },
 ];
 
 /* ── Investment by year (source p10) ────────────────────────────────────── */

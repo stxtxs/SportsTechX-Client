@@ -22,10 +22,8 @@ import {
   type SectorShare, type SubSectorShare, type LeaderRow, type CompanyRow,
 } from "../data/ftabr26-facts-data";
 import { formatFtabr26Percent } from "./ftabr26-format";
-import {
-  FTABR26_TREND_GROUPS, FTABR26_INITIATIVES,
-} from "../data/ftabr26-content-data";
-import { FTABR26_INNOVATORS } from "../data/ftabr26-innovators-data";
+import { ftabr26DisplayCompany } from "./ftabr26-company-display";
+import { FTABR26_INITIATIVES } from "../data/ftabr26-content-data";
 
 export type Ftabr26Leaderboards = {
   onlyAllTime: LeaderRow[];
@@ -72,13 +70,40 @@ function board(live: Ftabr26Leaderboards | undefined, fallback: Ftabr26Leaderboa
 
    The initiatives count now comes from the ecosystem table when the caller
    has it, so the card and the "Initiatives (N)" tab can't disagree. */
-function editorialCards(initiativeCount?: number): SummaryStat[] {
-  const trendCount = FTABR26_TREND_GROUPS.reduce((n, g) => n + g.trends.length, 0);
+export type Ftabr26CardExtras = {
+  /** Accelerator count from the ecosystem table (initiatives come in separately). */
+  programCount?: number;
+  /** The WC26 recap's headline value, e.g. "$20.0B" (admin → FIFA WC26 Recap). */
+  wcHeadlineValue?: string;
+};
+
+/* Cards 4–6: the average football-only round (2025 vs 2021, from the deal
+   data), the WC26 headline figure, and the innovation programmes count
+   (initiatives + accelerators, from the ecosystem table). */
+function editorialCards(
+  byYear: { year: string; footballOnly: number; roundsOnly: number }[],
+  fmt: (m: number) => string,
+  initiativeCount?: number,
+  extras: Ftabr26CardExtras = {},
+): SummaryStat[] {
   const fallback = FTABR26_SUMMARY.slice(3);
+  const avgOnly = (year: string) => {
+    const r = byYear.find(y => y.year === year);
+    return r && r.roundsOnly ? r.footballOnly / r.roundsOnly : null;
+  };
+  const a25 = avgOnly("2025"), a21 = avgOnly("2021");
+  const initiatives = initiativeCount ?? FTABR26_INITIATIVES.length;
+  const programs = extras.programCount ?? 0;
   return [
-    { ...fallback[0], num: String(trendCount) },
-    { ...fallback[1], num: String(initiativeCount ?? FTABR26_INITIATIVES.length) },
-    { ...fallback[2], num: String(FTABR26_INNOVATORS.length) },
+    a25 != null && a21 != null
+      ? { num: fmt(a25), label: "Average football-only round in 2025", subtitle: `${a25 <= a21 ? "Down" : "Up"} from ${fmt(a21)} in 2021` }
+      : fallback[0],
+    { ...fallback[1], num: extras.wcHeadlineValue || fallback[1].num },
+    {
+      num: String(initiatives + programs),
+      label: "Innovation programmes",
+      subtitle: `${initiatives} initiatives by clubs, leagues and federations, plus ${programs} accelerators`,
+    },
   ];
 }
 
@@ -101,8 +126,8 @@ function liveSummaryCards(
     },
     {
       num: formatFtabr26Percent(s.pctToFansRecent),
-      label: "Of funding to fans & content",
-      subtitle: `${direction} ${formatFtabr26Percent(s.pctToFansAllTime)} across the full period`,
+      label: "Of funding to Fan Tech",
+      subtitle: `Since ${period.recentStart.slice(0, 4)}, ${direction.toLowerCase()} ${formatFtabr26Percent(s.pctToFansAllTime)} across ${period.label.replace(/\s*–\s*/g, "–")}`,
     },
     {
       num: fmt(s.topRegionMusd),
@@ -117,6 +142,8 @@ export function resolveFtabr26Facts(
   fmt: (m: number) => string,
   /** Live initiative count, when the caller has already resolved the ecosystem. */
   initiativeCount?: number,
+  /** Accelerator count and the WC26 headline value for cards 5 and 6. */
+  extras: Ftabr26CardExtras = {},
 ): Ftabr26Resolved {
   const isLive = Boolean(live && live.byYear && live.byYear.length > 0);
 
@@ -141,8 +168,8 @@ export function resolveFtabr26Facts(
         }
       : FTABR26_PERIOD,
     summary: canBuildSummary && live
-      ? [...liveSummaryCards(live, live.period, fmt), ...editorialCards(initiativeCount)]
-      : [...FTABR26_SUMMARY.slice(0, 3), ...editorialCards(initiativeCount)],
+      ? [...liveSummaryCards(live, live.period, fmt), ...editorialCards(list(live?.byYear, FTABR26_BY_YEAR), fmt, initiativeCount, extras)]
+      : [...FTABR26_SUMMARY.slice(0, 3), ...editorialCards(list(live?.byYear, FTABR26_BY_YEAR), fmt, initiativeCount, extras)],
     byYear: list(live?.byYear, FTABR26_BY_YEAR),
     byRegion: list(live?.byRegion, FTABR26_BY_REGION),
     sectorByYear: list(live?.sectorByYear, FTABR26_SECTOR_BY_YEAR),
@@ -151,8 +178,8 @@ export function resolveFtabr26Facts(
     subSectorShare: list(live?.subSectorShare, FTABR26_SUB_SECTOR_SHARE),
     topCountries: board(live?.topCountries, FTABR26_TOP_COUNTRIES),
     topCities: board(live?.topCities, FTABR26_TOP_CITIES),
-    topCompaniesOnly: list(live?.topCompaniesOnly, FTABR26_TOP_COMPANIES_ONLY),
-    topCompaniesAlso: list(live?.topCompaniesAlso, FTABR26_TOP_COMPANIES_ALSO),
+    topCompaniesOnly: list(live?.topCompaniesOnly, FTABR26_TOP_COMPANIES_ONLY).map(ftabr26DisplayCompany),
+    topCompaniesAlso: list(live?.topCompaniesAlso, FTABR26_TOP_COMPANIES_ALSO).map(ftabr26DisplayCompany),
     isLive,
     dataAsOf: live?.dataAsOf ?? null,
     excludesDebt: live?.excludesDebt ?? true,

@@ -18,13 +18,15 @@ export const FTABR26_HERO = {
   titleLines: ["FOOTBALL", "TECH & BUSINESS", "REPORT 2026"],
   edition: "Third edition",
   standfirst:
-    "Our deep dive into what's happening in football innovation. Investment patterns, the innovators defining where the industry is going, and the trends that separate real adoption from hype.",
+    "What the World Cup changed, and where football's tech money has been going.",
   presentedBy: "SportsTechX",
   hashtag: "#FTABR26",
 } as const;
 
 export const FTABR26_ABOUT =
-  "Yes, we're talking about soccer. We distinguish between football-only and multisport platforms throughout, to accurately attribute investment raised specifically for football innovation. If you're investing in this space, building in it, or trying to figure out where football tech is actually headed versus where the hype says it's going, this report is meant to cut through the noise.";
+  "The third edition of our Football Tech & Business Report picks up where the second left off. That edition landed just before the 2026 FIFA World Cup. This one looks at what the tournament changed, and at five and a half years of football tech funding leading into it.\n\n" +
+  "As before, we separate football-only startups from multisport platforms, so the investment we attribute to football really is football's. The report launches alongside Atlas, our newly updated intelligence hub, where every number behind these charts lives.\n\n" +
+  "If you're investing in football, building in it, or trying to work out where it's actually heading rather than where the hype says it is, this is for you.";
 
 /* ── Ten trends, in three thematic groups
    Source: attached_assets/FTABR26_Micro_Trends_1789043561122.pdf (10 Sep 2026) ─── */
@@ -277,7 +279,7 @@ export const FTABR26_WOMENS_MCO_GROUPS: Ftabr26McoGroup[] = [
 
 export const FTABR26_WOMENS_MCO = {
   eyebrow: "Feature",
-  title: "MCO IN WOMEN'S FOOTBALL",
+  title: "MULTI-CLUB OWNERSHIP IN WOMEN'S FOOTBALL",
   standfirst: "The new frontier for ownership and innovation.",
   intro:
     "Funding and recognition in women's football have surged in recent years, driven by the rise of multi-club ownership. Groups managing both men's and women's teams are building shared infrastructure and revenue streams that strengthen the women's game, while a newer class of owner assembles portfolios around women's clubs from the outset. UEFA has since confirmed that those rules apply in full to the women's game: ahead of the 2026 Women's Champions League final, head of women's football Nadine Kessler said clubs under common ownership will not be permitted in the same competition. She ruled out any waiver on the grounds that the women's game is less developed, asking why UEFA would protect sporting integrity in men's football but not women's.",
@@ -324,12 +326,12 @@ export const FTABR26_CREATOR_DEALS: { date: string; creator: string; event: stri
   { date: "Aug 26",  creator: "KSI",                         event: "Dagenham & Redbridge",  what: "Streamed a match for the club he co-owns" },
   { date: "Aug 26",  creator: "Men in Blazers",              event: "Tottenham Hotspur",     what: "Carried the club's live feed for a friendly" },
   { date: "Jul 26",  creator: "CazéTV",                      event: "WTA Tour, Brazil",      what: "Bought exclusive Brazilian rights off ESPN" },
-  { date: "Jun 26",  creator: "iShowSpeed",                  event: "FIFA World Cup 2026",   what: "Streamed official match feeds with FIFA, Fox and YouTube" },
+  { date: "Jun 26",  creator: "iShowSpeed",                  event: "FIFA World Cup 26",   what: "Streamed official match feeds with FIFA, Fox and YouTube" },
   { date: "May 26",  creator: "CazéTV",                      event: "LaLiga, Brazil",        what: "Took full live rights, displacing Disney" },
   { date: "Apr 26",  creator: "Enjoy Basketball",            event: "NBA",                   what: "Alternate telecast of a Pistons game on League Pass" },
   { date: "Feb 26",  creator: "ZwebackHD, Box2Box, Bugs",    event: "Bundesliga, Canada",    what: "Creator-led live streams on YouTube and Twitch" },
-  { date: "2025/26", creator: "The Overlap",                 event: "Bundesliga, UK",        what: "20 live Friday night matches, sold alongside Sky and BBC" },
-  { date: "2025/26", creator: "That's Football",             event: "Bundesliga, UK",        what: "A separate 20 live Friday night matches, same tier" },
+  { date: "2025/26", creator: "The Overlap",                 event: "Bundesliga, UK",        what: "Live Friday night matches, shared with That's Football and the BBC" },
+  { date: "2025/26", creator: "That's Football",             event: "Bundesliga, UK",        what: "The same Friday night matches, shown alongside The Overlap" },
 ];
 
 export const FTABR26_INSIGHTS: InsightArticle[] = [
@@ -340,8 +342,13 @@ export const FTABR26_INSIGHTS: InsightArticle[] = [
     description: "How innovation is reshaping the game on the pitch, from officiating and venues to the way players are valued and represented.",
     title: "OFFICIATING TECHNOLOGY MOVES FROM INNOVATION TO INFRASTRUCTURE",
     body: [
-      "Last year we described officiating technology as an accelerating shift. In 2026 it became infrastructure. At the World Cup, an upgraded semi-automated offside system, built on 3D scans of all 1,248 players, sent clear offsides straight to the officials on the pitch instead of routing them through the VAR. Referee body cameras fed the broadcast and stadium screens, and midway through the tournament referees began explaining overturned decisions over the stadium PA.",
-      "The rulebook has followed. IFAB's 2026/27 Laws let any competition equip referees, assistants and fourth officials with body cameras, and widen VAR's remit to wrongly issued second yellows and cases of mistaken identity. The Premier League's 2026/27 principles no longer argue for adoption; they fold SAOT efficiency into a standing VAR Improvement Plan. From this season the league also publishes weekly Key Match Incidents Panel reports and Ref Cam audio from selected fixtures.",
+      "Last year we described officiating technology as an accelerating shift. In 2026 it became infrastructure.",
+      "At the World Cup, an [upgraded semi-automated offside system](https://inside.fifa.com/news/offside-decisions-referee-body-cams-innovation-world-cup-2026), built on 3D scans of all 1,248 players, sent clear offsides straight to the officials on the pitch instead of routing them through the VAR. Referee body cameras fed the broadcast and stadium screens, and midway through the tournament referees began explaining overturned decisions over the stadium PA.",
+      "The rulebook has followed:",
+      "- [IFAB's 2026/27 Laws](https://www.thefa.com/football-rules-governance/lawsandrules/laws/football-11-11/law-changes-explained) let any competition put body cameras on referees, assistants and fourth officials.",
+      "- VAR can now step in on wrongly issued second yellows and cases of mistaken identity.",
+      "- [The Premier League's 2026/27 principles](https://www.premierleague.com/en/news/4674118/premier-league-sets-football-principles-for-202627-season) fold SAOT efficiency into a standing VAR Improvement Plan.",
+      "- From this season the league also publishes [weekly Key Match Incidents Panel reports and Ref Cam audio](https://sports.yahoo.com/articles/premier-league-announce-key-changes-115735398.html) from selected fixtures.",
     ],
     take:
       "The technology question is settled; the trust question is not. Almost every officiating change in 2026 (referee announcements, Ref Cam audio, published panel verdicts) is about showing fans a decision rather than making it. That is where the next opportunity sits: products that turn officiating data into something fans, broadcasters and clubs can see and believe. Leagues that treat transparency as part of the product, not a concession, will be the ones that take the heat out of the argument.",
@@ -353,12 +360,6 @@ export const FTABR26_INSIGHTS: InsightArticle[] = [
         { src: "/reports/ftabr26/insights/officiating-ref-cam.webp", alt: "A player appeals to the referee, seen through a referee body camera" },
       ],
     },
-    sources: [
-      { label: "FIFA: innovation at the World Cup 2026", url: "https://inside.fifa.com/news/offside-decisions-referee-body-cams-innovation-world-cup-2026" },
-      { label: "The FA: 2026/27 law changes explained", url: "https://www.thefa.com/football-rules-governance/lawsandrules/laws/football-11-11/law-changes-explained" },
-      { label: "Premier League: Football Principles for 2026/27", url: "https://www.premierleague.com/en/news/4674118/premier-league-sets-football-principles-for-202627-season" },
-      { label: "Yahoo Sports: Premier League VAR changes for 2026/27", url: "https://sports.yahoo.com/articles/premier-league-announce-key-changes-115735398.html" },
-    ],
   },
   {
     key: "media",
@@ -367,19 +368,17 @@ export const FTABR26_INSIGHTS: InsightArticle[] = [
     description: "Where entertainment, interactivity, and digital culture redefine how fans engage with the sport.",
     title: "CREATOR-LED DISTRIBUTION REDEFINING SPORTS MEDIA",
     body: [
-      "Four years ago, FIFA gave a Brazilian streamer the rights to show 22 matches from the 2022 World Cup for free on YouTube. That experiment became CazéTV. This summer it was the only broadcaster in Brazil showing all 104 matches of the 2026 World Cup; Globo, the country's dominant football broadcaster for decades, carried 55. It has since added LaLiga rights in Brazil through 2032, exclusive WTA Tour rights bought from ESPN, and weekly Premier League and Champions League coverage in Brazil and Portugal.",
-      "For most of the last decade, creators made shoulder content around the sport, and live footage meant a takedown notice. That boundary has moved step by step. The Bundesliga handed 20 live Friday night games each to The Overlap and That's Football in the UK. The NBA commissioned an alternate telecast with Enjoy Basketball. Tottenham came to Men in Blazers to stream a friendly, drawing around 10,000 concurrent viewers against a forecast of 3,000. And DAZN lets KSI stream matches for Dagenham & Redbridge, the club he co-owns: give away one free match a week, and anyone who wants a second has to subscribe.",
-      "FIFA went further at the World Cup, launching its first global creator programme with Preferred Platform deals for TikTok and YouTube, Insider Access for selected creators, and the first ten minutes of every match livestreamed on official partners' YouTube channels. More than 1.7 billion unique viewers watched World Cup-related content on YouTube during the tournament.",
-      "The 2026 World Sevens Football London edition at Brentford's Gtech Community Stadium featured a $1.5M prize pool.",
+      "Four years ago, FIFA gave a Brazilian streamer the rights to show 22 matches from the 2022 World Cup for free on YouTube. That experiment became CazéTV.",
+      "This summer it was [the only broadcaster in Brazil showing all 104 matches](https://fortune.com/2026/06/11/cazetv-world-cup-brazil-globo-fifa-streaming/) of the 2026 World Cup. Globo, the country's dominant football broadcaster for decades, carried 55. CazéTV has since added [LaLiga rights in Brazil through 2032](https://www.sportcal.com/media/cazetv-snaps-up-laliga-rights-in-brazil-until-2032/), [exclusive WTA Tour rights bought from ESPN](https://www.sportcal.com/media/cazetv-supplants-espn-to-take-wta-tour-rights-in-brazil/), and [weekly Premier League and Champions League coverage](https://www.sportcal.com/newsletters/cazetv-takes-slice-of-brazilian-rights-to-englands-premier-league) in Brazil and Portugal.",
+      "For most of the last decade, creators made shoulder content around the sport, and live footage meant a takedown notice. That line has moved. The Bundesliga gave [The Overlap and That's Football the same 20 live Friday night games in the UK](https://insidersport.com/2025/08/20/bundesliga-new-uk-broadcast-deal/), shown alongside the BBC. And [DAZN lets KSI stream matches for Dagenham & Redbridge](https://www.daggers.co.uk/ksi-dazn-and-dagenham-redbridge-announce-landmark-broadcast-partnership-to-redefine-non-league-football-coverage/), the club he co-owns: one free match a week, and anyone who wants a second has to subscribe.",
+      "FIFA went further at the World Cup:",
+      "- [Preferred Platform deals with TikTok and YouTube](https://www.ibc.org/production/news/youtube-secures-preferred-platform-agreement-for-fifa-world-cup-2026/23090), with creator programmes giving selected creators behind-the-scenes access.",
+      "- The option for official media partners to livestream the first ten minutes of every match on YouTube.",
+      "- [More than 1.7 billion unique viewers](https://blog.youtube/culture-and-trends/youtube-fifa-world-cup-2026-viewership-stats/) watched World Cup-related content on YouTube during the tournament.",
     ],
     take:
-      "The money is still thin. Ampere Analysis found \"little to no money changing hands\" in European creator rights deals, and the audiences are modest and contested: The Overlap averaged around 14,000 viewers across its Bundesliga streams. For most rights holders this is marginal inventory, used to reach fans that conventional broadcasts miss or as an acquisition channel for the subscription behind it. Creators are not replacing broadcasters. But the old division, where broadcasters got the game and creators talked about it, is disappearing. Creators are becoming an integral part of the broadcast stack, and CazéTV shows how far that can go when the experiment works.",
+      "The money is still thin, and audiences are modest. For most rights holders this is marginal inventory, but it reaches fans conventional broadcasts miss: [54% of viewers watching the Bundesliga live on That's Football were aged 13 to 34](https://insidersport.com/2026/08/28/jamie-vardy-bundesliga-rights-youtube/). Creators aren't replacing broadcasters. But the old split, where broadcasters got the game and creators talked about it, is disappearing, and CazéTV shows how far that can go when the experiment works.",
     graphic: { kind: "creator-deals" },
-    sources: [
-      { label: "KSI, DAZN and Dagenham & Redbridge announce landmark broadcast partnership", url: "https://www.daggers.co.uk/ksi-dazn-and-dagenham-redbridge-announce-landmark-broadcast-partnership-to-redefine-non-league-football-coverage/" },
-      { label: "Just Women's Sports: W7F Manchester United, Aston Villa and London edition", url: "https://justwomenssports.com/reads/w7f-manchester-united-world-seven-football-aston-villa-london-edition-2026/" },
-      { label: "World Sevens Football: London edition prize pool", url: "https://www.worldsevensfootball.com/news/chelsea-fc-women-crowned-world-sevens-football-london-champions-as-three-day-spectacular-sets-new-records" },
-    ],
   },
   {
     key: "business",
@@ -387,9 +386,14 @@ export const FTABR26_INSIGHTS: InsightArticle[] = [
     heading: "OWNERSHIP, DATA, AND\nTHE BUSINESS OF FOOTBALL",
     description: "Inside the evolving structures shaping control, accountability, and value creation in the modern game.",
     title: FTABR26_WOMENS_MCO.title,
-    body: [FTABR26_WOMENS_MCO.intro],
+    body: [
+      "Multi-club ownership in the men's game is mostly retrofitted: groups buy established clubs and try to stitch decades-old structures together. In women's football, it is being designed from scratch.",
+      "Two models are emerging. Groups that already own men's clubs are adding women's teams and sharing facilities, staff and commercial deals across both. Alongside them, a newer class of owner is building portfolios around women's clubs from the outset: Michele Kang's Kynisca (Washington Spirit, OL Lyonnes, London City Lionesses), Monarch Collective, Mercury13 and Crux Football among them.",
+      "That second model looks less like a collection of clubs and more like a platform. [Lower valuations make these networks easier to assemble](https://www.cityam.com/?p=2426454), and owners can set up shared data, medical, scouting and commercial operations before legacy systems exist, then offer sponsors a multi-market women's football audience instead of a single club.",
+      "The regulatory limit is the same as in the men's game. Ahead of the 2026 Women's Champions League final, [UEFA's head of women's football Nadine Kessler confirmed](https://africa.espn.com/football/story/_/id/48826057/uefa-doubles-multi-club-ownership-stance-women-champions-league) that clubs under common ownership won't be allowed in the same competition, and ruled out any waiver for the women's game.",
+    ],
     take:
-      "Women's football is the one part of the game where multi-club ownership is being built from the ground up rather than bolted on. That gives groups such as Kynisca and Monarch Collective the chance to share data, medical and commercial infrastructure across their clubs from day one, the operational upside MCO promises but rarely delivers in the men's game. UEFA's refusal to grant an exemption means the same regulatory ceiling applies, so the portfolios that plan around it now will be best placed as the women's game scales.",
+      "Women's football is the one part of the game where multi-club ownership can deliver what it promises: shared infrastructure that's cheaper to build once than to merge later. That makes these portfolios a new kind of customer. Data, medical, scouting and fan-engagement vendors can sell across a group instead of one club at a time, and help shape the setup while it's still being built. UEFA's ruling limits how far groups can integrate on the pitch, but not off it. The portfolios that plan around it now, and the startups that build for them, will be best placed as the women's game scales.",
     graphic: { kind: "mco" },
   },
 ];
@@ -419,6 +423,8 @@ export type WorldCupTech = {
   category: WorldCupTechCategory;
   body: string;
   source?: { label: string; url: string };
+  /** Several sources; takes precedence over `source` when set. */
+  sources?: { label: string; url: string }[];
 };
 
 /* A post-tournament record of what actually ran at the 2026 World Cup, which is
@@ -435,7 +441,7 @@ export type WorldCupTech = {
 export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
   {
     id: "connected-ball",
-    title: "Connected ball technology",
+    title: "Connected ball (adidas Trionda)",
     category: "Officiating",
     body:
       "A 500Hz sensor suite embedded in the adidas Trionda match ball fed exact kick-point and ball-position data to the video team, converting judgement calls on offside timing and handball contact into measurable events.",
@@ -443,47 +449,42 @@ export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
   },
   {
     id: "semi-automated-offside",
-    title: "Semi-automated offside technology",
+    title: "Upgraded semi-automated offside (Lenovo player avatars)",
     category: "Officiating",
     body:
-      "Advanced semi-automated offside technology made its World Cup debut in 2026. For clear positional offsides, alerts went directly to on-pitch officials instead of first passing through VAR. The system used individual 3D player scans to make offside decisions and broadcast visualisations more accurate.",
-    source: { label: "FIFA", url: "https://inside.fifa.com/innovation/news/offside-decisions-referee-body-cams-innovation-world-cup-2026" },
-  },
-  {
-    id: "player-avatars",
-    title: "Player avatars",
-    category: "Officiating",
-    body:
-      "Lenovo 3D-scanned all 1,248 participating players before kick-off, giving the offside system true individual dimensions and replacing the old skeleton-line replay graphic with a photo-realistic model.",
-    source: { label: "Tom's Guide", url: "https://www.tomsguide.com/wellness/fitness/1-200-digital-athlete-avatars-and-jitter-free-field-footage-how-lenovo-is-using-ai-to-make-the-2026-fifa-world-cup-even-better" },
+      "Semi-automated offside, first used at Qatar 2022, was upgraded for 2026. Lenovo 3D-scanned all 1,248 players, giving the system each player's real dimensions, and clear offsides went straight to on-pitch officials instead of through the VAR.",
+    sources: [
+      { label: "FIFA", url: "https://inside.fifa.com/innovation/news/offside-decisions-referee-body-cams-innovation-world-cup-2026" },
+      { label: "FIFA/Lenovo", url: "https://inside.fifa.com/en/news/lenovo-tech-world-ai-powered-innovations-world-cup-2026" },
+    ],
   },
   {
     id: "var-announcements",
-    title: "In-stadium referee announcements of VAR outcomes",
+    title: "VAR decisions announced in stadium",
     category: "Officiating",
     body:
-      "Referees began explaining overturned decisions over the stadium PA partway through the tournament - a transparency process change rather than a new system, introduced after teams complained about opaque calls.",
+      "Referees began explaining overturned decisions over the stadium PA partway through the tournament: a change in process, not a new system, introduced after teams complained about opaque calls.",
     source: { label: "Times of India", url: "https://timesofindia.indiatimes.com/sports/football/fifa-world-cup/fifa-makes-major-var-change-for-remainder-of-world-cup-2026-after-teams-raise-furious-refereeing-complaints/articleshow/132301396.cms" },
   },
   {
     id: "ifab-laws",
-    title: "IFAB Laws of the Game 2025/26",
+    title: "Laws of the Game 2026/27 (IFAB)",
     category: "Officiating",
     body:
-      "The first major tournament played under the new laws: an eight-second goalkeeper limit sanctioned by corner, five-second countdowns on throw-ins and goal kicks, ten seconds to leave the pitch when substituted, a mandatory minute off after on-pitch treatment, and an expanded VAR remit covering second yellows.",
-    source: { label: "Sky Sports", url: "https://www.skysports.com/football/news/12098/13549645/world-cup-ifab-confirm-new-var-powers-10-second-substitutions-and-tactical-timeout-ban-in-major-rule-changes" },
+      "The first major tournament under the 2026/27 Laws, applied early: five-second countdowns on throw-ins and goal kicks, ten seconds to leave the pitch when substituted, and a wider VAR remit covering wrongly issued second yellows, mistaken identity and clearly wrong corners.",
+    source: { label: "FIFA/IFAB", url: "https://theifab.com/news/the-ifab-introduces-further-measures-to-improve-match-flow-and-player-behaviour/" },
   },
   {
     id: "host-broadcast-services",
-    title: "Host Broadcast Services",
+    title: "Host broadcast production (HBS)",
     category: "Broadcast & Production",
     body:
-      "HBS ran 45 cameras per match across all 104 fixtures - polecams, cablecams, cine-style rigs, 360-degree cameras and referee cams - all routed back to a single International Broadcast Centre in Dallas.",
+      "HBS ran 45 cameras per match across all 104 fixtures: polecams, cablecams, cine-style rigs, 360-degree cameras and referee cams, all routed back to a single International Broadcast Centre in Dallas.",
     source: { label: "The Ball Business", url: "https://theballbusiness.com/every-technology-at-the-2026-fifa-world-cup-and-what-it-means-for-football/" },
   },
   {
     id: "referee-view",
-    title: "Referee View (referee body-cam)",
+    title: "Referee View body cameras",
     category: "Broadcast & Production",
     body:
       "A head-mounted referee camera with real-time AI stabilisation smoothing the motion blur, putting the official's first-person perspective into live World Cup broadcast for the first time.",
@@ -499,15 +500,15 @@ export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
   },
   {
     id: "fifa-fan-id",
-    title: "FIFA Fan ID (NFC card)",
+    title: "Fan ID card (NFC)",
     category: "Fan Experience",
     body:
-      "A free NFC card collected at all 16 venues that, tapped to a phone, opened a personalised digital layer of content, rewards and custom merchandise - FIFA's attempt to bridge the physical and digital matchday.",
+      "A free NFC card collected at all 16 venues that, tapped to a phone, opened a personalised digital layer of content, rewards and custom merchandise: FIFA's attempt to bridge the physical and digital matchday.",
     source: { label: "SportsPro", url: "https://www.sportspro.com/news/fifa-world-cup-2026-fan-id-may-2026/" },
   },
   {
     id: "fifa-plus-app",
-    title: "FIFA+ / official tournament app",
+    title: "Official FIFA app",
     category: "Fan Experience",
     body:
       "A single software layer intended to carry the fan from hotel to seat: schedules, live scores, real-time alerts, 3D stadium maps, arrival planning and location-based prompts.",
@@ -526,20 +527,20 @@ export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
     title: "Dynamic ticket pricing",
     category: "Fan Experience",
     body:
-      "The first World Cup priced by demand rather than fixed face value, sold through staged lotteries into an official FIFA resale market with no price cap - the tournament's most contested piece of technology and the one with no on-pitch component at all.",
+      "The first World Cup priced by demand rather than fixed face value, sold through staged lotteries into an official FIFA resale market with no price cap. It was the tournament's most contested piece of technology and the one with no on-pitch component at all.",
     source: { label: "Al Jazeera", url: "https://www.aljazeera.com/sports/2026/4/27/fifa-world-cup-2026-dynamic-pricing-match-tickets-peter-moore" },
   },
   {
     id: "private-5g",
-    title: "Verizon private 5G",
+    title: "Private 5G networks (Verizon)",
     category: "Venue Operations & Security",
     body:
-      "Private 5G networks were built into all 16 venues, with public capacity at the 11 US stadiums lifted three to fivefold, so 80,000 people streaming and uploading at once didn't collapse the connection.",
-    source: { label: "The Ball Business", url: "https://theballbusiness.com/every-technology-at-the-2026-fifa-world-cup-and-what-it-means-for-football/" },
+      "Private 5G networks ran in all 16 venues, and Verizon lifted public capacity at the 11 US stadiums three- to fivefold. Its network carried nearly 500TB of data across the tournament.",
+    source: { label: "DCD", url: "https://www.datacenterdynamics.com/en/news/verizon-network-carries-close-to-500tb-of-data-during-2026-fifa-world-cup/" },
   },
   {
     id: "command-centre",
-    title: "Intelligent Command Centre",
+    title: "Intelligent command centre",
     category: "Venue Operations & Security",
     body:
       "A single control room monitored crowd density and security conditions across all 16 venues simultaneously, surfacing developing problems to tournament officials before they reached the concourse.",
@@ -555,34 +556,37 @@ export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
   },
   {
     id: "facial-recognition",
-    title: "AI facial recognition",
+    title: "Facial recognition entry (opt-in)",
     category: "Venue Operations & Security",
     body:
-      "Used for accreditation and access control at all 16 venues and, at participating stadiums, for ticketless entry and cashless payment - with biometrics tokenised into numerical values rather than stored as raw images.",
-    source: { label: "Fares Solution", url: "https://faressolution.net/news/world-cup-tech-protection" },
+      "Several US venues, including Boston, Miami and Atlanta, offered opt-in facial recognition so registered fans could enter and pay without a ticket or card, the largest test yet of face-based entry at a football tournament.",
+    sources: [
+      { label: "The Next Web", url: "https://thenextweb.com/news/world-cup-2026-biometrics-google-gemini" },
+      { label: "ID Tech", url: "https://idtechwire.com/gillette-stadium-rolls-out-facial-recognition-entry-and-payment-system/" },
+    ],
   },
   {
     id: "security-robots",
     title: "Robotic security dogs",
     category: "Venue Operations & Security",
     body:
-      "Camera-equipped quadruped robots patrolled perimeters at broadcast compounds and stadium exteriors, covering ground that would otherwise need standing human posts.",
-    source: { label: "Fares Solution", url: "https://faressolution.net/news/world-cup-tech-protection" },
+      "In Mexico, camera-equipped robot dogs patrolled venue perimeters, covering ground that would otherwise need standing security posts.",
+    source: { label: "TechRound", url: "https://techround.co.uk/news/why-is-the-2026-world-cup-turning-stadiums-into-mass-surveillance-hubs/" },
   },
   {
     id: "fifa-ai-pro",
     title: "FIFA AI Pro",
     category: "Player Performance & Welfare",
     body:
-      "A hybrid and generative AI post-match analysis assistant built with Lenovo for all 48 teams - the point being to give squads without large analyst departments the same read on the data as the ones that have them.",
-    source: { label: "The National Desk", url: "https://thenationaldesk.com/top-videos/digital-avatars-ref-cams-and-ai-world-cup-tech-takes-center-stage" },
+      "A hybrid and generative AI post-match analysis assistant built with Lenovo for all 48 teams. The point was to give squads without large analyst departments the same read on the data as the ones that have them.",
+    source: { label: "FIFA/Lenovo", url: "https://inside.fifa.com/en/news/lenovo-tech-world-ai-powered-innovations-world-cup-2026" },
   },
   {
     id: "epts",
     title: "EPTS (Electronic Performance & Tracking Systems)",
     category: "Player Performance & Welfare",
     body:
-      "In-stadium optical tracking plus approved wearables delivering distance, sprint counts, top speeds and heat maps - the baseline layer nearly every other performance product at the tournament sits on top of.",
+      "In-stadium optical tracking plus approved wearables delivering distance, sprint counts, top speeds and heat maps: the baseline layer nearly every other performance product at the tournament sits on top of.",
     source: { label: "FIFA", url: "https://inside.fifa.com/innovation/standards/epts" },
   },
   {
@@ -590,7 +594,7 @@ export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
     title: "FOCUS concussion protocol",
     category: "Player Performance & Welfare",
     body:
-      "A standardised rapid on-pitch assessment, developed by FIFA-nominated doctors, designed to rule concussion out quickly rather than diagnose it - pilot runtime around three minutes against the 56-second average head-injury check at Qatar 2022.",
+      "A standardised rapid on-pitch assessment, developed by FIFA-nominated doctors, designed to rule concussion out quickly rather than diagnose it: pilot runtime around three minutes against the 56-second average head-injury check at Qatar 2022.",
     source: { label: "Medical Xpress", url: "https://medicalxpress.com/news/2026-07-soccer-concussion-protocol-game-hardest.html" },
   },
   {
@@ -598,29 +602,39 @@ export const FTABR26_WORLDCUP_TECH: WorldCupTech[] = [
     title: "Social media protection service",
     category: "Player Performance & Welfare",
     body:
-      "FIFA's AI moderation layer scanned player and team accounts across the tournament, hiding abusive replies before they reached the athlete - over 53 million posts and comments processed.",
+      "FIFA's AI moderation layer scanned player and team accounts across the tournament, hiding abusive replies before they reached the athlete. It processed over 53 million posts and comments.",
     source: { label: "FIFA", url: "https://inside.fifa.com/campaigns/no-discrimination/news/53-million-posts-comments-world-cup-2026-social-media-protection-service" },
   },
 ];
 
 export const FTABR26_WORLDCUP = {
   eyebrow: "Feature",
-  title: "FIFA WORLD CUP 2026",
-  standfirst: "Technology took centre stage.",
+  title: "FIFA WORLD CUP 26",
+  standfirst: "The tech behind the biggest World Cup yet",
   intro:
-    "The 2026 FIFA World Cup, hosted across the United States, Canada and Mexico, marked a major step forward in football's technological evolution. With an expanded format of 48 teams and 16 host cities, technology proved crucial to keeping the tournament consistent, efficient and connected across three countries and 104 matches. From officiating systems and connected balls to enhanced tracking and in-stadium experiences, tech was embedded in every aspect of the tournament.",
+    "The 2026 World Cup was the biggest yet: 48 teams, 16 host cities across three countries and 104 matches. Keeping it consistent took a layer of technology most fans never saw, from a sensor inside the match ball to a private 5G network in every stadium.\n\n" +
+    "Below is what was deployed, grouped by who it served. For what it means for officiating beyond the tournament, see Insights → Tech.",
   headline: {
     value: "$20.0B",
     label: "Estimated US economic impact",
-    sublabel: "Bank of America's estimate; half of the $40.0B generated globally",
+    sublabel: "Bank of America estimate; half of the $40B generated globally",
+    source: { label: "American Banker", url: "https://www.americanbanker.com/payments/news/how-the-world-cup-boosted-bofas-payments" },
   },
   stats: [
-    { value: "99.7%",  label: "Stadium occupancy",                            sublabel: "6.81M fans across 104 matches" },
-    { value: "14.04M", label: "Average US viewers per match",                 sublabel: "Up 116.0% on Fox and 143.0% on Telemundo vs 2022" },
-    { value: "13M GB", label: "Data across tournament and broadcast networks", sublabel: "Through the quarter-finals; over 161,000 km of fibre deployed" },
+    { value: "99.7%", label: "Stadium occupancy",
+      sublabel: "6.8M fans across 104 matches, a World Cup record",
+      source: { label: "Football Ground Guide", url: "https://footballgroundguide.com/news/which-2026-world-cup-stadium-had-the-best-average-attendance-it-wasnt-metlife-or-att.html" } },
+    { value: "14.0M", label: "Average US viewers per match, Fox + Telemundo",
+      sublabel: "Fox 7.7M (+116%), Telemundo 6.3M (+143%) vs 2022",
+      source: { label: "Front Office Sports", url: "https://frontofficesports.com/article/world-cup-final-viewership-fox-telemundo-us-television-soccer-record/" } },
+    { value: "13 PB", label: "Data across tournament and broadcast networks",
+      sublabel: "Carried by tournament and broadcast networks across 16 stadiums",
+      source: { label: "SVG", url: "https://www.sportsvideo.org/2026/07/23/how-the-fifa-world-cups-record-revenue-masks-a-structural-market-contraction/" } },
   ],
-  techHeading: "Tech @ FIFA World Cup 26",
+  techHeading: "What was deployed",
   tech: FTABR26_WORLDCUP_TECH,
+  take:
+    "Most of the technology that mattered at this World Cup was infrastructure: networks, tracking and identity systems that fans only notice when they fail. What fans did notice was about trust (referee cameras, decisions explained over the PA) and access (FIFA ID, dynamic pricing). The most contested piece of tech had nothing to do with the football. For startups, the opening is in the layers FIFA now treats as standard, from tracking to fan identity, which clubs and leagues will want at their own scale.",
 } as const;
 
 /* ── Featured company: Playermaker ───────────────────────────────────────
@@ -645,7 +659,7 @@ export const FTABR26_FEATURED = {
       { src: "/reports/ftabr26/featured/playermaker-action.webp", alt: "Player wearing Playermaker sensors striking a football on grass", position: "center 55%" },
     ],
   },
-  aboutLabel: "What Playermaker Solves",
+  aboutLabel: "The problem & solution",
   about: [
     "We all move from our feet, yet nobody ever taught us how to walk, run or cut. Playermaker is claiming the foot wearable opportunity.",
     "Its foot-worn motion tracking, proven with the world's best footballers, coaches any athlete, at any level, in any sport, to stop guessing and start knowing: developing talent and finding the small adjustments that unlock their best.",
@@ -676,25 +690,25 @@ export const FTABR26_FEATURED = {
 
 export const FTABR26_STARTUPS: Ftabr26Startup[] = [
   {name: "Camb.ai", website: "http://camb.ai", country: "UAE", description: "AI Translation Platform", sector: "execs", logoUrl: null},
-  {name: "Coaches' Voice", website: "http://learning.coachesvoice.com", country: "UK", description: "Sports education company on a mission to maximise the impact of coaching for millions of players worldwide", sector: "athletes", logoUrl: null},
+  {name: "Coaches' Voice", website: "http://learning.coachesvoice.com", country: "UK", description: "Coaching education from elite football coaches", sector: "athletes", logoUrl: null},
   {name: "Data Sports Group", website: "http://datasportsgroup.com", country: "Germany", description: "Live sports data to media publishers & gaming segments", sector: "execs", logoUrl: null},
-  {name: "Gamecode.ai", website: "http://gamecode.ai", country: "Germany", description: "Intelligence platform for elite-sports enabling decision-makers to convert their sporting identity into proprietary metrics and generate IP moats.", sector: "athletes", logoUrl: "https://goabdwczszjcmwakybkm.supabase.co/storage/v1/object/public/company_logos/gamecode_ai_1781599811182.svg"},
+  {name: "Gamecode.ai", website: "http://gamecode.ai", country: "Germany", description: "Club-specific performance metrics for elite teams", sector: "athletes", logoUrl: "https://goabdwczszjcmwakybkm.supabase.co/storage/v1/object/public/company_logos/gamecode_ai_1781599811182.svg"},
   {name: "Gemini Sports Analytics", website: "http://geminisports.ai", country: "USA", description: "supports organizations in the business of improving athlete welfare and enhancing performance.", sector: "execs", logoUrl: null},
-  {name: "Marquee", website: "http://themarquee.ai", country: "USA", description: "360° view of every player with contextualized insights, letting you get back to what you do best: identifying the right talent", sector: "athletes", logoUrl: null},
-  {name: "OLIVER Sports", website: "http://oliversports.ai", country: "Spain", description: "OLIVER Sports introduces the new generation of player performance monitoring technology, powered by AI", sector: "athletes", logoUrl: null},
+  {name: "Marquee", website: "http://themarquee.ai", country: "USA", description: "AI player profiles for talent identification", sector: "athletes", logoUrl: null},
+  {name: "OLIVER Sports", website: "http://oliversports.ai", country: "Spain", description: "AI-powered player performance monitoring", sector: "athletes", logoUrl: null},
   {name: "Output Sports", website: "http://outputsports.com", country: "Ireland", description: "One-stop tool for athlete performance optimisation", sector: "athletes", logoUrl: null},
-  {name: "Playermaker", website: "http://playermaker.com", country: "UK", description: "Football performance tracker", sector: "athletes", logoUrl: null},
+  {name: "Playermaker", website: "http://playermaker.com", country: "UK", description: "Foot-worn performance tracking", sector: "athletes", logoUrl: null},
   {name: "Respo Vision", website: "http://respo.vision", country: "Poland", description: "AI football video analyser", sector: "athletes", logoUrl: null},
   {name: "ScorePlay", website: "http://scoreplay.io", country: "Portugal", description: "Sports club management software", sector: "execs", logoUrl: null},
-  {name: "Soccerment", website: "http://soccerment.com", country: "Italy", description: "AI-powered football intelligence platform combining advanced analytics and video analysis for professional football (SICS+) and wearables (XSEED).", sector: "athletes", logoUrl: null},
+  {name: "Soccerment", website: "http://soccerment.com", country: "Italy", description: "AI football intelligence: analytics, video and wearables", sector: "athletes", logoUrl: null},
   {name: "Sportswik", website: "http://sportswik.com", country: "Sweden", description: "Sportswik is a white-label platform enabling federations & leagues to boost coverage and engagement, generate new digital revenues and own their data.", sector: "fans", logoUrl: null},
   {name: "Sportvot", website: "http://sportvot.com", country: "India", description: "Platform for sport bodies & local sports to stream their games online", sector: "fans", logoUrl: null},
-  {name: "Turf Coach", website: "http://turfcoach.com", country: "Germany", description: "Provides innovative hardware and software solutions for automatic data collection across your entire pitch. Monitor key turf parameters continuously and with ease!", sector: "execs", logoUrl: null},
+  {name: "Turf Coach", website: "http://turfcoach.com", country: "Germany", description: "Automated pitch and turf monitoring", sector: "execs", logoUrl: null},
   {name: "Zentag", website: "http://zentag.ai", country: "Germany", description: "Automates sports video highlights and replays", sector: "execs", logoUrl: null},
 ];
 
 export const FTABR26_STARTUPS_NOTE =
-  "We asked each innovator featured in this report to name a football tech startup that has impressed them recently. Based on their recommendations, input from our partner Match Ventures, and standout startups we're closely tracking, we've curated this list of startups to watch in football tech.";
+  "Built from our innovators' recommendations, input from our partner Match Ventures and the startups we track most closely, this is our list of football tech startups to watch.";
 
 /* ── Ecosystem (source pp25, 28, 31) ────────────────────────────────────── */
 
@@ -710,7 +724,7 @@ export const FTABR26_INITIATIVES: EcosystemEntry[] = [
   { rank:  7, name: "Fan Engagement Startup Challenge (LaLiga x Sportboost)", hq: "Madrid" },
   { rank:  8, name: "Real Madrid Next",                                    hq: "Madrid",    url: "https://realmadridnext.com" },
   { rank:  9, name: "Atleti Lab",                                          hq: "Madrid",    url: "https://atletilab.com" },
-  { rank: 10, name: "Sevilla FC Innovation Center",                        hq: "Sevilla",   url: "https://sevillafc.es" },
+  { rank: 10, name: "Sevilla FC Innovation Center",                        hq: "Seville",   url: "https://sevillafc.es" },
   { rank: 11, name: "Valencia CF Innovation Hub",                          hq: "Valencia" },
   { rank: 12, name: "CeltaLab1923",                                        hq: "Vigo",      url: "https://celtalab1923.es" },
   { rank: 13, name: "UEFA Innovation Hub",                                 hq: "Nyon" },
@@ -804,7 +818,7 @@ export const FTABR26_CLOSING_QUOTE =
 
 export const FTABR26_METHODOLOGY = {
   intro:
-    "The data in this report was obtained by reviewing thousands of startups and funding deals in global sports tech. The deal period covered is Jan 1, 2021 - Jun 30, 2026. Companies founded before the year 2000 are excluded unless otherwise stated. All deals are reported in USD; for deals not in USD, the average conversion rate for the deal currency in the deal year was used. As far as possible, we source public-domain information for all deals included.",
+    "The data in this report was obtained by reviewing thousands of startups and funding deals in global sports tech. The deal period covered is 1 January 2021 – 30 June 2026. Companies founded before the year 2000 are excluded unless otherwise stated. All deals are reported in USD; for deals not in USD, the average conversion rate for the deal currency in the deal year was used. As far as possible, we source public-domain information for all deals included.",
   categories: [
     { name: "Football Only", description: "Startups and solutions focused solely on football. Their products, services, and technology are built specifically for the football ecosystem.", examples: "Sorare, OneFootball, TOCA Football" },
     { name: "Football Also", description: "Multisport startups that include football as part of their broader offering, serving football alongside other sports.", examples: "DAZN, Teamworks, Genius Sports" },
@@ -812,9 +826,26 @@ export const FTABR26_METHODOLOGY = {
 } as const;
 
 export const FTABR26_IMPRINT = {
-  author: "Rohn Malhotra",
+  author: "SportsTechX",
   company: "SportsTechX GmbH",
   address: "Liebigstr. 35, 10247 Berlin, Germany",
   contact: "www.sportstechx.com / hello@sportstechx.com",
   note: "The content in this report is for general information purposes only and can change at any time. SportsTechX cannot guarantee the ultimate accuracy or completeness of the data.",
 } as const;
+
+
+/* ── Team credits and imprint (closes the page, after Methodology) ─────────
+   One thank-you line, then the imprint (content note reused from 2025). */
+export const FTABR26_CREDITS = {
+  /** One line above the imprint */
+  thanks:
+    "With thanks to the SportsTechX team, our report partners Playermaker and Soccerment, Match Ventures, and every innovator who shared their view of the game.",
+  imprint: {
+    author: "SportsTechX",
+    company: "SportsTechX GmbH, Berlin",
+    contact: "hello@sportstechx.com",
+    website: "www.sportstechx.com",
+  },
+  contentNote:
+    "The content in this report is for general information purposes only and can change at any time. SportsTechX cannot guarantee the ultimate accuracy or completeness of the data.",
+};

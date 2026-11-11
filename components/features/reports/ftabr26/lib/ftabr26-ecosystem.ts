@@ -57,6 +57,7 @@ export function ecoLogoUrl(website: string | null | undefined, size = 64): strin
 
 const INITIATIVE_LOGO_DOMAINS: Record<string, string> = {
   "Fan Engagement Startup Challenge (La Liga x Sportboost)": "laliga.com",
+  "Fan Engagement Startup Challenge (LaLiga x Sportboost)": "laliga.com",
   "Future of Sport Lab x FIFA 2026 Legacy Incubation Hub": "futuresportlab.com",
   "Real Madrid Next": "realmadrid.com",
 };
@@ -196,13 +197,49 @@ export function ecoContinent(entry: Pick<Ftabr26EcosystemEntry, "continent" | "c
   return iso ? ISO_CONTINENT[iso.toUpperCase()] ?? null : null;
 }
 
+/* ── Several locations in one row ────────────────────────────────────────
+   One entry can run in more than one place (PSG Labs: Paris & Doha). The admin
+   row then lists the parts with " & " in the same order in each field:
+   City "Paris & Doha", Country "France & Qatar", Region "Europe & Asia".
+   ──────────────────────────────────────────────────────────────────────── */
+
+export type Ftabr26EcoLocation = { city: string | null; country: string | null; continent: string | null };
+
+const splitAmp = (v: string | null | undefined): string[] =>
+  (v ?? "").split(/\s*&\s*/).map(x => x.trim());
+
+/** The row's locations, one per " & "-separated part. A plain row gives one. */
+export function ecoLocations(entry: Pick<Ftabr26EcosystemEntry, "city" | "country" | "continent">): Ftabr26EcoLocation[] {
+  const cities = splitAmp(entry.city), countries = splitAmp(entry.country), continents = splitAmp(entry.continent);
+  const n = Math.max(cities.length, countries.length, continents.length);
+  return Array.from({ length: n }, (_, i) => ({
+    city: cities[i] || null,
+    country: countries[i] || (countries.length === 1 ? countries[0] || null : null),
+    continent: continents[i] || (continents.length === 1 ? continents[0] || null : null),
+  }));
+}
+
+/** Every bubble the row belongs to, in order and without repeats. */
+export function ecoContinents(entry: Pick<Ftabr26EcosystemEntry, "continent" | "country" | "city">): Ftabr26ContinentId[] {
+  const out: Ftabr26ContinentId[] = [];
+  for (const loc of ecoLocations(entry)) {
+    const c = ecoContinent({ continent: loc.continent, country: loc.country });
+    if (c && !out.includes(c)) out.push(c);
+  }
+  return out;
+}
+
 export type Ftabr26MapData = {
   /** continent id → per-type counts, every continent present even at zero. */
   counts: Record<Ftabr26ContinentId, Ftabr26ContinentCounts>;
   /** Rows that carry no placeable location, by type. */
   unplaced: Ftabr26ContinentCounts;
+  /** Of the unplaced rows, those whose city is "Global" (a network with no single base). */
+  global: number;
   /** Rows actually drawn on the map. Zero means there is nothing to show. */
   plotted: number;
+  /** Rows drawn in more than one place, with the cities they show in. */
+  multi: { name: string; cities: string[] }[];
 };
 
 /** Per-continent tallies for the map, over exactly the rows the tables list. */
@@ -215,16 +252,25 @@ export function ftabr26MapData(eco: {
   ) as Record<Ftabr26ContinentId, Ftabr26ContinentCounts>;
   const unplaced: Ftabr26ContinentCounts = { initiatives: 0, programs: 0 };
   let plotted = 0;
+  let global = 0;
+  const multi: { name: string; cities: string[] }[] = [];
 
   for (const type of FTABR26_ECO_TYPES) {
     for (const row of eco[type]) {
-      const continent = ecoContinent(row);
-      if (!continent) { unplaced[type]++; continue; }
-      counts[continent][type]++;
+      const continents = ecoContinents(row);
+      if (continents.length === 0) {
+        unplaced[type]++;
+        if (/^global$/i.test((row.city ?? "").trim())) global++;
+        continue;
+      }
+      /* One entry, counted once in the total but in every bubble it runs in */
+      for (const c of continents) counts[c][type]++;
       plotted++;
+      const locs = ecoLocations(row);
+      if (locs.length > 1) multi.push({ name: row.name, cities: locs.map(l => l.city ?? l.country ?? "").filter(Boolean) });
     }
   }
-  return { counts, unplaced, plotted };
+  return { counts, unplaced, plotted, global, multi };
 }
 
 /* ── Live/fallback resolution ──────────────────────────────────────────── */
@@ -272,8 +318,12 @@ export function resolveFtabr26Ecosystem(live: Ftabr26Ecosystem | undefined): Fta
   return {
     initiatives: list(live?.initiatives, FTABR26_INITIATIVES),
     programs: withLocations(list(live?.programs, FTABR26_ACCELERATORS)),
-    // Keep the shared payload shape intact, but omit events from FTABR26.
-    events: [],
+    /* Upcoming events only: rows saved in the report content (admin →
+       Ecosystem → Events) dated today or later, soonest first. The master
+       events table is not used, so past FTR26 events never show here. */
+    events: (Array.isArray(live?.events) ? live!.events : [])
+      .filter(e => e && e.name && (!e.startDate || new Date(e.startDate).getTime() >= Date.now() - 864e5))
+      .sort((a, b) => String(a.startDate ?? "9999").localeCompare(String(b.startDate ?? "9999"))),
     isLive: Boolean(live && live.initiatives && live.initiatives.length > 0),
   };
 }

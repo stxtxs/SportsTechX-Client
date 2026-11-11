@@ -29,8 +29,10 @@ import {
 
 /* Match the two ecosystem lists published in the football report. */
 export const FTABR26_ECO_COLORS: Record<Ftabr26EcoType, string> = {
-  initiatives: BRAND.tealBright,
-  programs: BRAND.navy,
+  /* Colour rules: not the sector colours or pink. Initiatives use the
+     Football Only green, accelerators the slate. */
+  initiatives: BRAND.green,
+  programs: BRAND.slate,
 };
 
 /* "Accelerators", not "Programs" — the report's own word for the tab. */
@@ -51,11 +53,13 @@ type EcoLists = {
 };
 
 export default function Ftabr26EcosystemMap({
-  t, isDark, isMobile = false, eco, selected, onSelect,
+  t, isDark, isMobile = false, eco, selected, onSelect, print = false,
 }: {
   t: Theme;
   isDark: boolean;
   isMobile?: boolean;
+  /** PDF: no click prompts (there is nothing to click on paper) */
+  print?: boolean;
   /** The same rows the tables below list, so the tallies always agree. */
   eco: EcoLists;
   selected: Ftabr26ContinentId | null;
@@ -93,7 +97,7 @@ export default function Ftabr26EcosystemMap({
     return () => { cancelled = true; };
   }, []);
 
-  const { counts, unplaced, plotted } = useMemo(() => ftabr26MapData(eco), [eco]);
+  const { counts, unplaced, plotted, global, multi } = useMemo(() => ftabr26MapData(eco), [eco]);
 
   const centers = useMemo(() => {
     if (!mapReady || !projRef.current) return {} as Record<string, { x: number; y: number }>;
@@ -158,9 +162,11 @@ export default function Ftabr26EcosystemMap({
             </span>
           </div>
         ))}
+        {!print && (
         <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted, letterSpacing: 1 }}>
           {selected ? "Selected. The tables below show this region." : "Select a continent to filter the tables below."}
         </span>
+        )}
       </div>
 
       {/* ── MAP ── */}
@@ -274,7 +280,7 @@ export default function Ftabr26EcosystemMap({
           border: `1px solid ${BRAND.pink}30`, borderRadius: 8,
           padding: isMobile ? "12px 14px" : "16px 20px",
           backdropFilter: "blur(8px)", zIndex: 10, maxWidth: isMobile ? 130 : 170,
-          opacity: !isMobile && mapReady && !selected && !hovered ? 1 : 0,
+          opacity: !print && !isMobile && mapReady && !selected && !hovered ? 1 : 0,
           pointerEvents: "none", transition: "opacity 0.3s ease",
         }}>
           <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 14 : 16, color: t.titleColor, lineHeight: 1.2, marginBottom: 6 }}>
@@ -285,7 +291,9 @@ export default function Ftabr26EcosystemMap({
           </div>
         </div>
 
-        {/* Hover readout — the three counts behind the pie */}
+        {/* Hover readout — the counts behind the pie. Rendered only while a
+            continent is hovered, so no empty "0 0" box is left behind. */}
+        {hovered && (
         <div style={{
           position: "absolute", bottom: 14, left: "50%", transform: "translateX(-50%)",
           background: isDark ? "rgba(10,14,26,0.95)" : "rgba(255,255,255,0.97)",
@@ -301,18 +309,22 @@ export default function Ftabr26EcosystemMap({
             <div key={key} style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: FTABR26_ECO_COLORS[key] }} />
               <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>
-                {hovered ? counts[hovered][key] : 0}
+                {counts[hovered][key]}
               </span>
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* Anything the master tables leave unplaceable is named here rather than
           quietly missing from the totals — the same note the static map carries. */}
-      {unplacedTotal > 0 && (
+      {(unplacedTotal > 0 || multi.length > 0) && (
         <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted, letterSpacing: 0.5, margin: "10px 0 0" }}>
-          {plotted} of {plotted + unplacedTotal} entries mapped · {unplacedTotal} without a location, listed in the tables below.
+          {plotted} of {plotted + unplacedTotal} entries mapped
+          {multi.map(m => ` · ${m.name} shown in ${m.cities.join(" and ")}`).join("")}
+          {global > 0 && ` · ${global} global network${global === 1 ? "" : "s"} listed below`}
+          {unplacedTotal - global > 0 && ` · ${unplacedTotal - global} without a location, listed in the tables below`}
         </p>
       )}
     </div>

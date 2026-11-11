@@ -132,10 +132,14 @@ export default function BillingPage() {
 						{hasActiveSub && !cancelling && sub.data?.subscription_current_period_end && (
 							<p style={{ ...BODY, marginTop: 10 }}>{sub.data.is_trial ? 'Trial ends' : 'Renews'} on {fmtISO(sub.data.subscription_current_period_end)}.</p>
 						)}
-						{!hasActiveSub && teamPlan && (
+						{!hasActiveSub && access.data?.source === 'legacy' && (
 							<p style={{ ...BODY, marginTop: 10 }}>
-								{access.data?.source === 'legacy' ? 'Carried over from your Intelligence Hub plan' : 'Set up for you by the SportsTechX team'}
-								{access.data?.ends_at ? `, active until ${fmtISO(access.data.ends_at)}.` : ', with no end date.'}
+								You’re on your <b>Intelligence Hub plan</b>, carried over to its Atlas equivalent at the price you already paid. Atlas won’t charge you anything until it ends on <b>{fmtISO(access.data.ends_at)}</b>. After that, choose an Atlas plan to keep your access.
+							</p>
+						)}
+						{!hasActiveSub && access.data?.source === 'granted' && (
+							<p style={{ ...BODY, marginTop: 10 }}>
+								Set up for you by the SportsTechX team{access.data.ends_at ? `, active until ${fmtISO(access.data.ends_at)}.` : ', with no end date.'}
 							</p>
 						)}
 					</div>
@@ -160,7 +164,7 @@ export default function BillingPage() {
 				<div style={{ ...CARD_TITLE, marginBottom: 6 }}>{hasActiveSub || teamPlan ? 'Your subscription' : 'Choose a plan'}</div>
 				{!hasActiveSub && hubBilling ? (
 					<>
-						<p style={{ ...BODY, margin: '0 0 16px' }}>Your plan was paid through the Intelligence Hub. In the billing portal you can see its invoices and payment details, and manage any renewal. Your Atlas access runs until the date above.</p>
+						<p style={{ ...BODY, margin: '0 0 16px' }}>Your plan was paid through the Intelligence Hub. In the billing portal you can see what you bought, its invoices and your payment details. If your Hub plan still renews automatically, you can turn that off there, or email <a href="mailto:hello@sportstechx.com" style={{ color: 'inherit', textDecoration: 'underline' }}>hello@sportstechx.com</a> and we’ll do it for you.</p>
 						<Button size="sm" disabled={busy !== null} onClick={() => void manage()}>{busy === 'portal' ? <Loader2 className="animate-spin" size={13} /> : 'Open billing portal'}</Button>
 					</>
 				) : !hasActiveSub && teamPlan ? (

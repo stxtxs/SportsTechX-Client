@@ -102,3 +102,21 @@ export const PRIVATE_PREFIXES = [
 export function isPrivatePath(pathname: string): boolean {
   return PRIVATE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
+
+/**
+ * Link-preview bots (LinkedIn, Slack, X, WhatsApp, Teams…) fetch a shared URL to
+ * build its card. On report pages the edge gate lets them through so the card
+ * shows the report's own title, description and image instead of the login page.
+ *
+ * They only ever get the server HTML: the page's <head> metadata plus the
+ * <ProtectedRoute> "Loading…" placeholder. The report itself mounts only with a
+ * valid session, so a spoofed user agent sees nothing more, and in a browser it
+ * is still redirected to /login. Search crawlers are deliberately not listed
+ * (indexing is a separate decision). Checked by lib/link-preview.check.ts.
+ */
+const PREVIEW_BOT =
+  /LinkedInBot|Slackbot|Slack-ImgProxy|Twitterbot|facebookexternalhit|WhatsApp|TelegramBot|Discordbot|Applebot|SkypeUriPreview|MicrosoftPreview/i;
+
+export function isLinkPreview(method: string, pathname: string, userAgent: string | null): boolean {
+  return (method === 'GET' || method === 'HEAD') && pathname.startsWith('/reports/') && PREVIEW_BOT.test(userAgent ?? '');
+}

@@ -26,10 +26,13 @@
 	display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .atlas .mkt-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+/* Tags in the platform's chip style (as the Interests chips and Home prompts):
+   sentence case, body font, rounded. Mono caps are kept for labels and buttons. */
 .atlas .mkt-tag {
-	background: color-mix(in srgb, var(--a-ink) 3%, transparent); border: 1px solid color-mix(in srgb, var(--a-ink) 9%, transparent);
-	border-radius: var(--a-radius-tag); padding: 3px 10px 2px;
-	font-family: var(--a-mono); font-size: 8px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--a-deep);
+	display: inline-flex; align-items: center; gap: 6px;
+	background: color-mix(in srgb, var(--a-ink) 3%, transparent); box-shadow: inset 0 0 0 1px var(--a-border);
+	border-radius: var(--a-radius-pill); padding: 4px 11px;
+	font-family: var(--a-body); font-size: 12px; line-height: 1.3; color: var(--a-ink-2);
 }
 .atlas .mkt-co-actions { display: flex; align-items: center; gap: 19px; flex-shrink: 0; align-self: flex-end; padding-bottom: 12px; }
 @media (max-width: 640px) { .atlas .mkt-co-actions { width: 100%; padding: 0 0 0 85px; } }
@@ -88,3 +91,65 @@
 	font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.03em;
 	font-weight: 600; color: var(--a-muted);
 }
+
+/* ── Companies list: segment, country, sortable funding, tile pill ───────── */
+/* Status and Sector icons (company-marks.tsx): self-describing on hover. */
+.atlas .co-marks { display: inline-flex; align-items: center; gap: 4px; flex: none; width: 40px; }
+.atlas .co-marks--inline { width: auto; gap: 3px; }
+.atlas .co-mark { display: inline-flex; width: 18px; justify-content: center; flex: none; }
+/* Icon + text cells (Sector, Location), icons in a fixed slot so text lines up. */
+.atlas .mkt-icontext { display: inline-flex; align-items: center; gap: 8px; }
+/* Fixed slot, so names line up when a country has no flag. */
+.atlas .mkt-flag { display: inline-flex; width: 18px; flex: none; }
+.atlas .mkt-sort {
+	padding: 0; border: 0; background: none; cursor: pointer;
+	font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit;
+}
+.atlas .mkt-sort:hover, .atlas .mkt-sort[aria-pressed="true"] { color: var(--a-ink); }
+/* Tile: the whole tile opens the company (the pill's ::after covers it). */
+.atlas .mkt-co--tile { position: relative; }
+.atlas .mkt-co-view {
+	display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px 0 14px;
+	border: 0; border-radius: var(--a-radius-pill); cursor: pointer; text-decoration: none; white-space: nowrap;
+	background: color-mix(in srgb, var(--a-ink) 5%, transparent); color: var(--a-muted);
+	box-shadow: inset 0 0 0 1px var(--a-border-strong);
+	font-family: var(--a-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+	transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.atlas .mkt-co-view::after { content: ""; position: absolute; inset: 0; }
+.atlas .mkt-co--tile:hover .mkt-co-view, .atlas .mkt-co-view:focus-visible {
+	background: var(--a-primary); color: var(--a-primary-ink); box-shadow: inset 0 0 0 1px var(--a-primary);
+}
+.atlas .mkt-co-view:focus-visible { outline: 2px solid var(--a-ink); outline-offset: 2px; }
+/* The name link stays clickable above the tile-wide hit area. */
+.atlas .mkt-co--tile .mkt-co-name--link { position: relative; z-index: 1; }
+
+/* Rows: the company name is the link and its ::after covers the row, so the
+   bookmark can be a real button (not nested in a link). */
+.atlas .mkt-row { position: relative; }
+.atlas .mkt-row-link { color: inherit; text-decoration: none; }
+.atlas .mkt-row-link::after { content: ""; position: absolute; inset: 0; }
+.atlas .mkt-row-link:focus-visible { outline: none; }
+.atlas .mkt-row:has(.mkt-row-link:focus-visible) { outline: 2px solid var(--a-ink); outline-offset: -2px; }
+.atlas .mkt-save { position: relative; z-index: 1; display: inline-flex; justify-content: flex-end; overflow: visible; }
+/* Tiles: bookmark in the top-right corner, above the tile-wide link. */
+.atlas .mkt-co-save { position: absolute; top: 12px; right: 16px; z-index: 2; }
+
+/* Companies table: the name column has a set width so the status marks sit
+   just after the names (and line up); Sector takes the spare width instead. */
+.atlas .mkt-table .atlas-table__name { flex: 0 1 300px; }
+.atlas .mkt-table .mkt-sector { flex: 1 1 200px; min-width: 0; }
+
+/* Instant hover labels for icons (data-tip). Positioned and raised above a
+   row's or tile's stretched link, which otherwise took the hover. */
+.atlas .has-tip { position: relative; z-index: 1; }
+.atlas .has-tip[data-tip]:hover::after {
+	content: attr(data-tip); position: absolute; left: 50%; bottom: calc(100% + 6px); transform: translateX(-50%);
+	padding: 4px 8px; border-radius: 6px; white-space: nowrap; pointer-events: none; z-index: 10;
+	background: var(--a-primary); color: var(--a-primary-ink);
+	font-family: var(--a-body); font-size: 11.5px; font-weight: 500; line-height: 1.2; letter-spacing: 0; text-transform: none;
+}
+/* Table cells clip overflow for ellipsis; in this table the text spans do their
+   own ellipsis, so the cells can let a tooltip out. */
+.atlas .mkt-table .atlas-table__col { overflow: visible; }
+.atlas .mkt-co-meta .mkt-flag { width: auto; }

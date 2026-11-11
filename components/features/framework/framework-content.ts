@@ -8,7 +8,8 @@
  */
 
 export interface PillarCopy {
-	/** Audience badge, e.g. "For athletes". */
+	/** Audience name, e.g. "Athlete Tech": the badge on Framework and Interests, and
+	 *  the Category shown on company pages (instead of the pillar's database name). */
 	badge: string;
 	/** Badge + card-glow colour (Figma "Card Title" fill). */
 	color: string;
@@ -24,9 +25,9 @@ export interface CategoryCopy {
 
 /** Pillars in display order (left → right). */
 export const PILLARS: Record<string, PillarCopy> = {
-	activity_performance: { badge: 'For athletes', color: '#4C1D95', tagInk: '#210D3F' },
-	fans_content: { badge: 'For fans', color: '#1479FF', tagInk: '#103463' },
-	management_organisation: { badge: 'For executives', color: '#0FB86A', tagInk: '#14513A' },
+	activity_performance: { badge: 'Athlete Tech', color: '#4C1D95', tagInk: '#210D3F' },
+	fans_content: { badge: 'Fan Tech', color: '#1479FF', tagInk: '#103463' },
+	management_organisation: { badge: 'Executive Tech', color: '#0FB86A', tagInk: '#14513A' },
 };
 
 /** Categories in display order within their pillar. */
@@ -74,4 +75,4 @@ export const CATEGORIES: Record<string, CategoryCopy> = {
 };
 
 /** Intro paragraph above the pillar cards (Figma). */
-export const FRAMEWORK_INTRO = 'The SportsTechX framework organises sports tech by who it serves — athletes, fans and executives — then by category and sub-category. Select a category to see what sits inside it and how it connects to the rest of the market.';
+export const FRAMEWORK_INTRO = 'The SportsTechX framework organises sports tech by who it serves — athletes, fans and executives — then by sub-sector and sub-sub sector. Select a sub-sector to see what sits inside it and how it connects to the rest of the market.';

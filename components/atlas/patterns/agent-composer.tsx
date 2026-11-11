@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { ArrowUpRight, Sparkles, Send, Square } from 'lucide-react';
+import { Sparkles, Send, Square } from 'lucide-react';
 
 import type { ReactNode } from 'react';
 
@@ -22,11 +22,21 @@ export function AgentComposer({
 	suggestions,
 	onSuggestion,
 	badge,
+	placeholderLead,
+	compact = false,
 }: {
 	value: string;
 	onChange: (v: string) => void;
 	onSubmit: () => void;
 	placeholder?: string;
+	/**
+	 * Highlighted words before the placeholder ("**Ask Atlas** about …"). A
+	 * native placeholder can't style part of itself, so with a lead the
+	 * placeholder is drawn as an overlay and the textarea is labelled instead.
+	 */
+	placeholderLead?: string;
+	/** A shorter empty box (one line plus room), e.g. on Home. */
+	compact?: boolean;
 	disabled?: boolean;
 	autoFocus?: boolean;
 	streaming?: boolean;
@@ -49,20 +59,28 @@ export function AgentComposer({
 	const submit = () => { if (value.trim() && !disabled) onSubmit(); };
 
 	return (
-		<div className="atlas-composer">
+		<div className={`atlas-composer${compact ? ' atlas-composer--compact' : ''}`}>
 			<div className="atlas-composer-box">
 				<div className="atlas-composer-row">
 					<Sparkles size={19} strokeWidth={1.25} className="atlas-composer-glyph" aria-hidden="true" />
-					<textarea
-						ref={taRef}
-						className="atlas-composer-input"
-						placeholder={placeholder}
-						value={value}
-						rows={1}
-						autoFocus={autoFocus}
-						onChange={(e) => { onChange(e.target.value); grow(e.target); }}
-						onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); } }}
-					/>
+					<div className="atlas-composer-field">
+						<textarea
+							ref={taRef}
+							className="atlas-composer-input"
+							placeholder={placeholderLead ? undefined : placeholder}
+							aria-label={placeholderLead ? `${placeholderLead} ${placeholder}` : undefined}
+							value={value}
+							rows={1}
+							autoFocus={autoFocus}
+							onChange={(e) => { onChange(e.target.value); grow(e.target); }}
+							onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); } }}
+						/>
+						{placeholderLead && !value && (
+							<span className="atlas-composer-ph" aria-hidden="true">
+								<b>{placeholderLead}</b> {placeholder}
+							</span>
+						)}
+					</div>
 				</div>
 				<div className="atlas-composer-actions">
 					{badge && <span className="atlas-composer-badge">{badge}</span>}
@@ -81,7 +99,7 @@ export function AgentComposer({
 				<div className="atlas-composer-suggest">
 					<span className="atlas-composer-suggest-label">Suggestions:</span>
 					{suggestions.map((s) => (
-						<button key={s} type="button" className="atlas-composer-chip" onClick={() => { (onSuggestion ?? onChange)(s); taRef.current?.focus(); }}>{s}<ArrowUpRight size={12} strokeWidth={1.75} aria-hidden="true" /></button>
+						<button key={s} type="button" className="atlas-composer-chip" onClick={() => { (onSuggestion ?? onChange)(s); taRef.current?.focus(); }}>{s}</button>
 					))}
 				</div>
 			)}

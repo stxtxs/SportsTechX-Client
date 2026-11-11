@@ -40,24 +40,64 @@
 	.atlas .auth-split--panelled .auth-panel { display: flex; }
 }
 
-/* The side panel: tagline at the top, carousel vertically centred below it. */
-.atlas .auth-panel--side { overflow: hidden; justify-content: flex-start; gap: 0; }
-.atlas .auth-panel__mid { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; }
+/* The side panel: tagline, then the carousel 56px below it. The block sits
+   about mid-height, but from a FIXED top offset rather than flex-centred:
+   centring made the lines move whenever the carousel's height changed (quotes
+   loading) and differ between login and signup. */
+.atlas .auth-panel--side {
+	position: relative; isolation: isolate; overflow: hidden; justify-content: flex-start; gap: 56px;
+	padding-top: max(56px, calc(50vh - 225px));
+}
+.atlas .auth-panel__mid { width: 100%; display: flex; align-items: center; }
+
+/* A quiet echo of the Atlas landing hero: its pink wash rising from the
+   bottom-left corner and its rings, both well below the hero's strength. The
+   form column stays plain. */
+.atlas .auth-panel--side::before,
+.atlas .auth-panel--side::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.atlas .auth-panel--side::before {
+	background: radial-gradient(ellipse 90% 70% at 0% 100%, rgba(243, 33, 99, 0.22) 0%, rgba(243, 33, 99, 0) 100%);
+}
+/* The hero's rings, drawn in CSS (the hero SVG only lines up inside its own
+   stage): hairline circles from the same corner, fading out toward the top. */
+.atlas .auth-panel--side::after {
+	background: repeating-radial-gradient(circle at 0% 100%,
+		transparent 0 159px, color-mix(in srgb, var(--a-ink) 9%, transparent) 159px 160px);
+	-webkit-mask-image: radial-gradient(circle at 0% 100%, #000 15%, transparent 80%);
+	        mask-image: radial-gradient(circle at 0% 100%, #000 15%, transparent 80%);
+}
+/* On the light rail the pink reads heavier; halve it. */
+[data-theme="light"] .atlas .auth-panel--side::before { opacity: 0.5; }
 .atlas .auth-panel__tagline {
 	font-family: var(--a-font); font-size: clamp(30px, 3.2vw, 40px); font-weight: 700;
 	line-height: 1.08; letter-spacing: -0.01em; color: var(--a-ink); max-width: 460px; margin: 0;
 }
+.atlas .auth-panel__line { display: block; }
 
-/* Horizontal auto-scrolling testimonial carousel — fixed height, edge-masked. */
+/* Signup: each hero line → its product lockup, in three aligned columns. */
+.atlas .auth-panel__tagline--products {
+	max-width: none; font-size: clamp(22px, 2.1vw, 30px);
+	display: grid; grid-template-columns: max-content max-content max-content;
+	align-items: center; gap: 18px 16px;
+}
+.atlas .auth-pline { display: contents; }
+.atlas .auth-pline__arrow { width: 0.8em; height: 0.8em; color: var(--a-faint); }
+
+/* Horizontal auto-scrolling testimonial carousel, edge-masked. No fixed height:
+   the row takes the tallest card, and the others stretch to match it, so the
+   longest quote always shows in full whatever the CMS sends. */
 .atlas .auth-tcarousel {
-	position: relative; width: 100%; height: 176px; overflow: hidden;
+	position: relative; width: 100%; overflow: hidden;
+	/* Hidden until the quotes are in (see AuthTestimonials), then faded in. */
+	opacity: 0; transition: opacity 0.4s ease-out;
 	-webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
 	        mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
 }
 .atlas .auth-tcarousel__track {
-	display: flex; height: 100%; width: max-content;
+	display: flex; align-items: stretch; width: max-content;
 	animation: auth-hscroll linear infinite; will-change: transform;
 }
+.atlas .auth-tcarousel.is-ready { opacity: 1; }
 .atlas .auth-tcarousel:hover .auth-tcarousel__track { animation-play-state: paused; }
 @keyframes auth-hscroll {
 	from { transform: translateX(0); }
@@ -74,14 +114,13 @@
 /* Testimonial card — fixed width for the horizontal rail; right margin is the
    inter-card gap (not flex gap) so the two copies tile evenly across the seam. */
 .atlas .auth-tcard {
-	flex: 0 0 auto; width: 300px; height: 100%; margin: 0 16px 0 0;
+	flex: 0 0 auto; width: 300px; margin: 0 16px 0 0;
 	display: flex; flex-direction: column; justify-content: space-between;
 	padding: 20px 22px; border-radius: var(--a-radius);
 	background: var(--a-surface); border: 1px solid var(--a-border);
 }
 .atlas .auth-tcard__quote {
 	margin: 0; font-family: var(--a-body); font-size: 13.5px; line-height: 1.55; color: var(--a-ink-2);
-	display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
 .atlas .auth-tcard__by { display: flex; align-items: center; gap: 11px; margin-top: 16px; }
 .atlas .auth-tcard__img { width: 36px; height: 36px; flex-shrink: 0; border-radius: var(--a-radius-pill); object-fit: cover; }
@@ -98,14 +137,26 @@
 .atlas .auth-form { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 22px; }
 
 .atlas .auth-brand { display: flex; align-items: baseline; gap: 9px; color: var(--a-ink); }
-.atlas .auth-brand__by { font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--a-faint); }
+/* Type comes from the shared `.stx-byline` (app/globals.css); colour only here. */
+.atlas .auth-brand__by { color: var(--a-faint); }
 
 .atlas .auth-form__title { margin: 0; font-family: var(--a-font); font-size: 28px; font-weight: 700; line-height: 1.15; color: var(--a-ink); }
 .atlas .auth-form__sub { margin: 6px 0 0; font-family: var(--a-body); font-size: 14px; line-height: 1.5; color: var(--a-muted); }
 .atlas .auth-form__legal { margin: 0; font-family: var(--a-body); font-size: 12px; line-height: 1.5; color: var(--a-faint); }
+/* Terms / Privacy: a shade brighter than the sentence, with a soft underline. */
+.atlas .auth-form__legal a {
+	color: var(--a-muted); text-decoration: underline; text-decoration-thickness: 1px;
+	text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+	transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+.atlas .auth-form__legal a:hover,
+.atlas .auth-form__legal a:focus-visible { color: var(--a-ink); text-decoration-color: currentColor; }
 .atlas .auth-form__alt { margin: 0; font-family: var(--a-body); font-size: 13px; color: var(--a-muted); }
 .atlas .auth-form__alt a { color: var(--a-navy); text-decoration: none; }
 .atlas .auth-form__alt a:hover { text-decoration: underline; }
+/* Inline link in the subtitle ("Find your fit →"), same blue as Log in / Sign up. */
+.atlas .auth-form__sub a { color: var(--a-navy); text-decoration: none; white-space: nowrap; }
+.atlas .auth-form__sub a:hover, .atlas .auth-form__sub a:focus-visible { text-decoration: underline; }
 
 /* Field stack. Labels are the Atlas mono label; inputs are `.atlas-input`. */
 .atlas .auth-fields { display: flex; flex-direction: column; gap: 16px; }

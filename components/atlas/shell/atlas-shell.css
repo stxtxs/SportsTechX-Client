@@ -34,13 +34,14 @@
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  background-color: var(--a-rail);
-  /* The real Figma texture. What was here before was an feTurbulence SVG at
-     0.09 alpha, which rendered as flat grey — the sidebar had no visible grain
-     at all. The PNG is RGBA, so it overlays the dark rail too. */
-  background-image: var(--a-noise);
-  background-size: 128px 128px;
-  box-shadow: inset -1px 0 0 var(--a-border);
+  /* Solid, in the card surface shade (#F9F9F9 light / #171718 dark), so the
+     sidebar matches the Home cards and the fit box sits on it as they sit on
+     the page. It used the textured --a-rail + --a-noise before; against that
+     grain the same card colour read as white. */
+  background-color: var(--a-surface);
+  /* A shade stronger than --a-border: without the grain, this line is all
+     that separates the rail from the page. */
+  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--a-ink) 14%, transparent);
   padding: 23px 19px 14px 17px;
   /* The rail itself never scrolls — only the nav does. `overflow-y: auto` was
      here, which scrolled the whole column: with enough nav items the brand and
@@ -96,7 +97,16 @@
    made the set look mismatched. */
 .atlas-nav-ico { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; flex: none; }
 .atlas-nav-item:hover { background: color-mix(in srgb, var(--a-ink) 3%, transparent); color: var(--a-ink-2); }
-.atlas-nav-item.active { background: color-mix(in srgb, var(--a-ink) 5%, transparent); color: color-mix(in srgb, var(--a-ink) 85%, transparent); }
+.atlas-nav-item.active { background: color-mix(in srgb, var(--a-ink) 8%, transparent); color: color-mix(in srgb, var(--a-ink) 85%, transparent); }
+/* Brand accent, kept small: the active item's icon and a short bar at its left
+   edge take the product colour (--atlas-product, set by AtlasShell). Text and
+   background stay neutral. */
+.atlas-nav-item { position: relative; }
+.atlas-nav-item.active .atlas-nav-ico { color: var(--atlas-product, currentColor); }
+.atlas-nav-item.active::before {
+  content: ""; position: absolute; left: 0; top: 50%; width: 3px; height: 14px; transform: translateY(-50%);
+  border-radius: 0 2px 2px 0; background: var(--atlas-product, var(--a-ink));
+}
 /* The item's Figma line-height of 1 gives a 14px line box, and the ellipsis
    clip (overflow: hidden) cut off descenders — the "g" in Programs / Signals.
    A taller line box inside the centred 32px row keeps the text where it was. */
@@ -142,9 +152,10 @@
 .atlas-acct__who:hover { background: color-mix(in srgb, var(--a-ink) 4%, transparent); }
 .atlas-acct__avatar {
   display: grid; place-items: center; flex: none; overflow: hidden;
-  /* Square with soft corners, as in the Figma sidebar — not a circle. */
-  width: 28px; height: 28px; border-radius: 6px;
-  background: var(--a-primary); color: var(--a-primary-ink);
+  /* Round and quiet, matching the top bar's account avatar. */
+  width: 28px; height: 28px; border-radius: 50%;
+  background: color-mix(in srgb, var(--a-ink) 6%, var(--a-page)); color: var(--a-ink);
+  box-shadow: inset 0 0 0 1px var(--a-border-strong);
   font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.04em;
 }
 .atlas-acct__img { width: 100%; height: 100%; object-fit: cover; }
@@ -182,10 +193,10 @@
 .atlas-rail-toggle {
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
   width: 36px; height: 34px; border-radius: var(--a-radius-xs);
-  /* No wash of its own — it reads as part of the rail, not a chip on top of
-     it. The hairline is the only thing marking it as a control at rest. */
+  /* A plain icon at rest: no wash and no hairline, so it reads as part of the
+     rail. Hover gives it its shape. */
   background: transparent;
-  border: 1px solid color-mix(in srgb, var(--a-ink) 8%, transparent); cursor: pointer; color: var(--a-ink);
+  border: none; cursor: pointer; color: var(--a-ink);
   transition: background 0.12s;
 }
 .atlas-rail-toggle:hover { background: color-mix(in srgb, var(--a-ink) 5%, transparent); }
@@ -240,9 +251,8 @@
     display: flex; align-items: center; justify-content: space-between;
     position: sticky; top: 0; z-index: 40;
     padding: 14px 16px 10px;
-    background-color: var(--a-rail);
-    background-image: var(--a-noise);
-    background-size: 128px 128px;
+    /* Same solid shade as the desktop rail. */
+    background-color: var(--a-surface);
     border-bottom: 1px solid var(--a-border);
   }
   .atlas-hamburger {
@@ -304,4 +314,11 @@
 }
 /* `margin-top: auto` no longer does anything now the nav grows instead —
    kept so a short nav still pins the cards to the bottom. */
-.atlas-rail-extra { display: flex; flex-direction: column; gap: 10px; padding: 18px 10px 4px; flex-shrink: 0; }
+.atlas-rail-extra { display: flex; flex-direction: column; gap: 10px; padding: 18px 10px 4px; flex-shrink: 0; overflow: hidden; }
+/* Expanding the rail mounts this while the column is still widening (0.2s),
+   which squeezed the box and reflowed its text. Hold its full width so nothing
+   wraps mid-animation, and fade it in once the rail has opened. */
+.atlas-rail-extra > * { min-width: 205px; }
+@keyframes atlas-rail-extra-in { from { opacity: 0; } to { opacity: 1; } }
+.atlas-rail-extra { animation: atlas-rail-extra-in 0.15s ease-out 0.2s both; }
+@media (prefers-reduced-motion: reduce) { .atlas-rail-extra { animation: none; } }

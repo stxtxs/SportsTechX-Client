@@ -13,7 +13,15 @@ import './watchlists.css';
  * search, the user's watchlists as toggles (✓ = company is in it), and
  * "+ New watchlist" with a name field (creates the list and adds the company).
  */
-export function SaveToWatchlist({ companyId, companyName }: { companyId: string; companyName: string }) {
+export function SaveToWatchlist({ companyId, companyName, compact, saved }: {
+	companyId: string;
+	companyName: string;
+	/** Icon-only bookmark (company lists and tiles); same menu. */
+	compact?: boolean;
+	/** Compact: whether it's in any watchlist, from a page-wide lookup
+	 *  (useSavedCompanyIds), so a list doesn't fetch membership per row. */
+	saved?: boolean;
+}) {
 	const [open, setOpen] = useState(false);
 	const [q, setQ] = useState('');
 	const [creating, setCreating] = useState(false);
@@ -28,9 +36,11 @@ export function SaveToWatchlist({ companyId, companyName }: { companyId: string;
 	// Company lists only — a Raise investor list can't hold companies.
 	const { lists: all, isLoading } = useCompanyWatchlists();
 	const lists = all.filter((l) => !isInvestorList(l));
-	const { ids } = useWatchlistsContaining(companyId);
+	// Compact rows fetch their own membership only once the menu is open.
+	const { ids } = useWatchlistsContaining(!compact || open ? companyId : null);
 	// Only lists that still exist count (a just-deleted one may linger in `ids`).
 	const inCount = ids.filter((id) => lists.some((l) => l.id === id)).length;
+	const isSaved = compact && !open ? !!saved : inCount > 0;
 	const term = q.trim().toLowerCase();
 	const shown = term ? lists.filter((l) => l.name.toLowerCase().includes(term)) : lists;
 
@@ -57,12 +67,25 @@ export function SaveToWatchlist({ companyId, companyName }: { companyId: string;
 
 	return (
 		<div className="atlas-fbar__anchor" ref={ref}>
-			<button type="button" className="atlas-action atlas-action--save" aria-haspopup="dialog" aria-expanded={open} onClick={() => (open ? close() : setOpen(true))}>
-				<span className="atlas-action__icon"><Bookmark fill={inCount ? 'currentColor' : 'none'} /></span>
-				<span className="atlas-action__label">{inCount ? `In ${inCount} watchlist${inCount === 1 ? '' : 's'}` : 'Add to watchlist'}</span>
-			</button>
+			{compact ? (
+				<button
+					type="button" className={cx('atlas-wl-bookmark', isSaved && 'on')}
+					aria-haspopup="dialog" aria-expanded={open}
+					aria-label={isSaved ? `${companyName}: saved to a watchlist` : `Save ${companyName} to a watchlist`}
+					title={isSaved ? 'Saved to a watchlist' : 'Save to watchlist'}
+					// Lives inside clickable rows and tiles: don't open the company too.
+					onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (open) close(); else setOpen(true); }}
+				>
+					<Bookmark size={15} strokeWidth={1.75} fill={isSaved ? 'currentColor' : 'none'} aria-hidden="true" />
+				</button>
+			) : (
+				<button type="button" className="atlas-action atlas-action--save" aria-haspopup="dialog" aria-expanded={open} onClick={() => (open ? close() : setOpen(true))}>
+					<span className="atlas-action__icon"><Bookmark fill={inCount ? 'currentColor' : 'none'} /></span>
+					<span className="atlas-action__label">{inCount ? `In ${inCount} watchlist${inCount === 1 ? '' : 's'}` : 'Add to watchlist'}</span>
+				</button>
+			)}
 			{open && (
-				<div ref={menuRef} className="atlas-menu atlas-menu--end atlas-wl-menu atlas-menu--sheet" role="dialog" aria-label="Save to watchlist">
+				<div ref={menuRef} className="atlas-menu atlas-menu--end atlas-wl-menu atlas-menu--sheet" role="dialog" aria-label="Save to watchlist" onClick={(e) => e.stopPropagation()}>
 					<div className="atlas-menu__head"><span>Save to watchlist</span></div>
 					{lists.length > 5 && (
 						<div className="atlas-switcher__search">

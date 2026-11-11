@@ -44,7 +44,7 @@ const STEPS = ['Company', 'Your raise', 'History & traction', 'What’s ready', 
 const GEO_OPTIONS = ['North America', 'Europe', 'United Kingdom', 'Middle East', 'Africa', 'Asia', 'South Asia', 'Southeast Asia', 'East Asia', 'Latin America', 'Oceania', 'Global'];
 
 const REQUIRED: { key: string; label: string; kind?: 'array' | 'bool' }[][] = [
-	[{ key: 'company_name', label: 'Company name' }, { key: 'company_website', label: 'Website' }, { key: 'hq_country', label: 'Country' }, { key: 'hq_city', label: 'City' }, { key: 'company_description', label: 'What the company does' }, { key: 'company_sector_id', label: 'Category' }, { key: 'company_stage', label: 'Stage' }, { key: 'revenue_status', label: 'Revenue status' }],
+	[{ key: 'company_name', label: 'Company name' }, { key: 'company_website', label: 'Website' }, { key: 'hq_country', label: 'Country' }, { key: 'hq_city', label: 'City' }, { key: 'company_description', label: 'What the company does' }, { key: 'company_sector_id', label: 'Sector' }, { key: 'company_stage', label: 'Stage' }, { key: 'revenue_status', label: 'Revenue status' }],
 	[{ key: 'fundraising_process', label: 'Fundraising process' }, { key: 'round_type', label: 'Round' }, { key: 'target_amount', label: 'Amount raising' }, { key: 'committed_amount', label: 'Already committed' }, { key: 'target_close_date', label: 'Target close date' }, { key: 'lead_investor_status', label: 'Lead investor' }, { key: 'structure', label: 'Structure' }],
 	[{ key: 'prior_capital_raised', label: 'Prior capital raised' }, { key: 'last_round_date', label: 'Last round date' }, { key: 'annual_revenue', label: 'Annual revenue / ARR' }, { key: 'monthly_burn', label: 'Monthly burn' }, { key: 'runway_months', label: 'Runway months' }],
 	[{ key: 'pitch_deck_status', label: 'Pitch deck' }, { key: 'financial_model_status', label: 'Financial model' }, { key: 'data_room_status', label: 'Data room' }, { key: 'has_target_list', label: 'Investor target list', kind: 'bool' }],
@@ -100,6 +100,9 @@ export function RaiseSetup({ onClose, edit = false }: { onClose: () => void; edi
 	const hydrated = useRef(false);
 	useEffect(() => {
 		if (hydrated.current || !data) return;
+		// A one-time seed from the saved draft (guarded by `hydrated`); the form is
+		// edited locally from then on, so it can't be derived from `data` in render.
+		// eslint-disable-next-line react-hooks/set-state-in-effect
 		if (data.raise) setForm(data.raise);
 		if (s(data.raise?.company_name)) setDraftCo(true);
 		if (data.criteria) setCrit(data.criteria);
@@ -111,7 +114,6 @@ export function RaiseSetup({ onClose, edit = false }: { onClose: () => void; edi
 			if (requiredFor(i, src(i)).some((rr) => isEmpty(src(i)[rr.key], rr.kind))) { setStep(i); break; }
 		}
 		hydrated.current = true;
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [data]);
 
 	// Track edited fields so a step's save submits only what the founder changed —
@@ -193,6 +195,9 @@ export function RaiseSetup({ onClose, edit = false }: { onClose: () => void; edi
 		for (const k of Object.keys(CO_FIELDS)) {
 			const v = coFact(k);
 			if (!v || s(formRef.current[k]) === v) continue;
+			// Syncs the form to the linked company's record once it loads; only
+			// fields that differ, so it settles after one pass.
+			// eslint-disable-next-line react-hooks/set-state-in-effect
 			if (k !== 'company_sector_id') set(k, v);
 			else if (sectorOptions.length) pickSector(v); // needs the taxonomy for its category path
 		}
@@ -345,7 +350,7 @@ export function RaiseSetup({ onClose, edit = false }: { onClose: () => void; edi
 						<Field label="Website"><Input placeholder="https://" value={s(form.company_website)} onChange={(e) => set('company_website', e.target.value)} disabled={coLock('company_website')} /></Field>
 						<Grid><Field label="Country"><LocationSelect value={s(form.hq_country)} onChange={(v) => set('hq_country', v)} disabled={coLock('hq_country')} /></Field><Field label="City"><CityInput value={s(form.hq_city)} onChange={(v) => set('hq_city', v)} onPick={(h) => { if (h.country && !coLock('hq_country')) set('hq_country', h.country); }} disabled={coLock('hq_city')} geo={s(form.hq_country)} /></Field></Grid>
 						<Field label="What does the company do?"><Input placeholder="One sentence" value={s(form.company_description)} onChange={(e) => set('company_description', e.target.value)} disabled={coLock('company_description')} /></Field>
-						<Field label="Which category best describes the company?"><Select placeholder="Select the closest Atlas category…" value={s(form.company_sector_id)} onChange={(e) => pickSector(e.target.value)} options={sectorOptions} groups={sectorGroups} disabled={coLock('company_sector_id')} /></Field>
+						<Field label="Which sector best describes the company?"><Select placeholder="Select the closest Atlas sector…" value={s(form.company_sector_id)} onChange={(e) => pickSector(e.target.value)} options={sectorOptions} groups={sectorGroups} disabled={coLock('company_sector_id')} /></Field>
 						{linked && <div style={{ fontSize: 11, color: 'var(--a-faint)', marginTop: -6 }}>Company details come from the Atlas profile. Verify your company to request changes.</div>}
 						</> : (
 							<div style={{ fontSize: 12, lineHeight: 1.55, color: 'var(--a-muted)' }}>Search for your company above. If it isn&apos;t in Atlas, add it — you claim it as its founder, and it goes live once our team verifies it.</div>

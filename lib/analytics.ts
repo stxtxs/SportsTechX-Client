@@ -105,4 +105,8 @@ export const Events = {
 	chatExported: 'chat_exported',
 	billingCheckoutStarted: 'billing_checkout_started',
 	billingPortalOpened: 'billing_portal_opened',
+	// Explore sidebar box; `variant` is neutral | raise | scout.
+	fitBoxViewed: 'fit_box_viewed',
+	fitBoxClicked: 'fit_box_clicked',
+	fitBoxDismissed: 'fit_box_dismissed',
 } as const;

@@ -27,7 +27,7 @@ const LABELS: Record<keyof CorrectionData, string> = {
 	hq_city: 'City',
 	hq_country: 'Country',
 	founded_year: 'Founded year',
-	sector: 'Category',
+	sector: 'Sector',
 	business_model: 'Business model',
 	other: 'Other notes',
 };
@@ -151,7 +151,7 @@ export function SuggestCorrection({ companyId, companyName, current }: {
 							<CityInput value={values.hq_city ?? ''} onChange={(v) => set('hq_city', v)} onPick={(h) => { if (h.country) set('hq_country', h.country); }} placeholder="City name" geo={values.hq_country ?? ''} />
 						</Field>
 						<Field label={LABELS.sector}>
-							<Input value={values.sector ?? ''} onChange={(e) => set('sector', e.target.value)} placeholder="Category" />
+							<Input value={values.sector ?? ''} onChange={(e) => set('sector', e.target.value)} placeholder="Sector" />
 						</Field>
 						<Field label={LABELS.business_model}>
 							<Select

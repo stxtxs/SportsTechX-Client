@@ -10,6 +10,7 @@ import { useSectorTierData, useLocationFacetOptions } from '@/hooks/use-catalog-
 import { ago, place } from '@/components/features/market/format';
 import { SaveToWatchlist } from '@/components/features/watchlists/save-to-watchlist';
 import type { Signal, SignalType } from '@/types/api';
+import { useCanSeeFundraising } from '@/hooks/use-user-profile';
 import './signals.css';
 
 const FILTERS: { key: 'All' | SignalType; label: string }[] = [
@@ -23,6 +24,8 @@ const TYPE_LABEL: Record<string, string> = {
 
 export function Signals({ companiesHref }: { companiesHref: string }) {
 	const [type, setType] = useState<'All' | SignalType>('All');
+	// Fundraising signals are Scout-only (the server leaves them out for everyone else).
+	const filters = useCanSeeFundraising() ? FILTERS : FILTERS.filter((f) => f.key !== 'fundraising');
 	const [view, setView] = useState<ViewMode>('cards');
 	const [sector, setSector] = useState('');
 	const [country, setCountry] = useState('');
@@ -51,7 +54,7 @@ export function Signals({ companiesHref }: { companiesHref: string }) {
 				<p className="atlas-sig-lede">Companies showing activity worth watching.</p>
 			</div>
 			<div className="atlas-sig-filter atlas-sig-filter--top">
-				<PillTabs ariaLabel="Signal type" value={type} onChange={setType} options={FILTERS} />
+				<PillTabs ariaLabel="Signal type" value={type} onChange={setType} options={filters} />
 				<ViewToggle value={view} onChange={setView} />
 			</div>
 			<div className="atlas-sig-filter atlas-sig-filter--row">

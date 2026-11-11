@@ -167,7 +167,7 @@ export function MaDeals() {
 		filtersReady ? qk.acquisitions.list(params) : null,
 		{ keepPreviousData: true },
 	);
-	const rows = res.data?.data ?? [];
+	const rows = useMemo(() => res.data?.data ?? [], [res.data]);
 	const total = res.data?.total ?? 0;
 	// Panel content is the row matching ?deal=; closes automatically on Back.
 	// If the deal isn't on the loaded page (a shared/pasted link, or a different

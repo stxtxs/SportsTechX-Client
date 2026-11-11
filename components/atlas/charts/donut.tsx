@@ -63,13 +63,13 @@ export function PieDonut({
 	const cy = r;
 	const innerR = mode === 'donut' ? r * 0.62 : 0;
 
-	let acc = 0;
+	// Running total before each segment (no variable mutated during render).
+	const before = segments.map((_, i) => segments.slice(0, i).reduce((sum, x) => sum + x.v, 0));
 	const slices = segments
 		.map((s, i) => {
 			if (s.v === 0) return null;
-			const start = (acc / total) * Math.PI * 2 - Math.PI / 2;
-			acc += s.v;
-			const end = (acc / total) * Math.PI * 2 - Math.PI / 2;
+			const start = (before[i] / total) * Math.PI * 2 - Math.PI / 2;
+			const end = ((before[i] + s.v) / total) * Math.PI * 2 - Math.PI / 2;
 			const big = end - start > Math.PI ? 1 : 0;
 			const sx = cx + Math.cos(start) * r;
 			const sy = cy + Math.sin(start) * r;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { qk } from '@/lib/query-keys';
 import {
@@ -27,10 +27,13 @@ export function FundingTab() {
 	const [region, setRegion] = useState<Region>('all');
 
 	// The hub flipped the card toggles to CUSTOM while filters were on, and back.
-	useEffect(() => {
+	// Adjusted during render when `active` flips (no effect, no extra pass).
+	const [wasActive, setWasActive] = useState(active);
+	if (active !== wasActive) {
+		setWasActive(active);
 		const v: WinOrCustom = active ? 'custom' : '10y';
 		setSummaryRange(v); setSectorRange(v); setBmRange(v); setGeoRange(v);
-	}, [active]);
+	}
 
 	const base = useFunding('10y', filters);
 	const sector = useFunding(fetchWin(sectorRange), filters);
@@ -54,7 +57,7 @@ export function FundingTab() {
 		],
 	}];
 
-	const yearly = base.data?.yearly ?? [];
+	const yearly = useMemo(() => base.data?.yearly ?? [], [base.data]);
 	const totalUsd = yearly.reduce((s, r) => s + r.total_usd, 0);
 	const totalRounds = yearly.reduce((s, r) => s + r.count, 0);
 	const chart = useMemo(() => byWindow(yearly, summaryRange).map((r) => ({ year: r.year, amt: r.total_usd, deals: r.count })), [yearly, summaryRange]);

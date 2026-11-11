@@ -8,6 +8,7 @@ import { ThesisMatchCard } from '@/components/scout/thesis-match-card';
 import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
 import { companyHref, hrefOf } from '@/lib/routes';
 import { track, Events } from '@/lib/analytics';
+import { useListReturnHref } from '@/hooks/use-url-state';
 
 /**
  * Discover → Companies → one company's profile.
@@ -22,11 +23,13 @@ export default function Page() {
 	// Activation signal: which companies people actually open.
 	useEffect(() => { track(Events.companyOpened, { slug }); }, [slug]);
 	const list = hrefOf('companies');
+	// "Return to results" lands on the list exactly as the user left it (filters, page, sort).
+	const back = useListReturnHref(list);
 	return (
 		<Screen>
 			<CompanyProfile
 				idOrSlug={slug}
-				backHref={list}
+				backHref={back}
 				companyHref={companyHref}
 				listHref={({ sector, sub, subsub }) => {
 					const q = new URLSearchParams(Object.entries({ sector, sub, subsub }).filter(([, v]) => v) as [string, string][]);

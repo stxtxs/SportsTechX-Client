@@ -29,7 +29,13 @@ export interface FilterGroup {
 type MenuState = null | { at: 'add' | 'sort' | string; view: 'root' | string };
 
 /** Show an in-menu search when an option list is longer than this. */
-const SEARCHABLE_OPTIONS = 10;
+const SEARCHABLE_OPTIONS = 5;
+
+/** "Fans & Content › Fantasy Sports & Betting" → leaf + its parent path (sector trees). */
+function splitPath(label: string): { leaf: string; path: string } {
+	const parts = label.split(' › ');
+	return { leaf: parts[parts.length - 1], path: parts.slice(0, -1).join(' › ') };
+}
 
 export function FilterBar({ search, groups, sort, canClear, onClear, count, actions }: {
 	/** Omit for a filters-only bar (no search box). */
@@ -58,7 +64,30 @@ export function FilterBar({ search, groups, sort, canClear, onClear, count, acti
 	const allFilters = useMemo(() => groups.filter((g) => !g.locked).flatMap((g) => g.filters), [groups]);
 	const applied = allFilters.filter((f) => (f.kind === 'select' ? !!f.value : f.value));
 	const byKey = (k: string) => allFilters.find((f) => f.key === k);
-	const toggleMenu = (at: string, view = 'root') => setMenu((m) => (m && m.at === at ? null : { at, view }));
+	const toggleMenu = (at: string, view = 'root') => { setFindQ(''); setMenu((m) => (m && m.at === at ? null : { at, view })); };
+
+	// "Search all filters": one box over every filter name and every option value,
+	// so a value can be found without knowing which filter holds it.
+	const [findQ, setFindQ] = useState('');
+	const findTerm = findQ.trim().toLowerCase();
+	const found = useMemo(() => {
+		if (!findTerm) return [];
+		const out: { id: string; title: string; sub: string; on: boolean; apply: () => void }[] = [];
+		for (const f of allFilters) {
+			if (f.label.toLowerCase().includes(findTerm)) {
+				out.push(f.kind === 'toggle'
+					? { id: f.key, title: f.label, sub: f.value ? 'On · tap to turn off' : 'Turn on', on: f.value, apply: () => { f.onChange(!f.value); setMenu(null); } }
+					: { id: f.key, title: f.label, sub: 'Choose a value', on: !!f.value, apply: () => { setFindQ(''); setMenu({ at: 'add', view: f.key }); } });
+			}
+			if (f.kind !== 'select') continue;
+			for (const [v, l] of f.options) {
+				if (!l.toLowerCase().includes(findTerm)) continue;
+				const { leaf, path } = splitPath(l);
+				out.push({ id: `${f.key}:${v}`, title: leaf, sub: path ? `${f.label} · ${path}` : f.label, on: f.value === v, apply: () => { f.onChange(v); setMenu(null); } });
+			}
+		}
+		return out.slice(0, 60);
+	}, [allFilters, findTerm]);
 
 	return (
 		<div className="atlas-fbar" ref={rootRef}>
@@ -102,7 +131,22 @@ export function FilterBar({ search, groups, sort, canClear, onClear, count, acti
 				</button>
 				{menu?.at === 'add' && (
 					<div ref={menuRef} className={cx('atlas-menu atlas-menu--sheet atlas-menu--drill', (groups.length > 1 || menu.view !== 'root') && 'atlas-menu--wide')} role="dialog" aria-label="Add filter">
-						{menu.view === 'root' ? (
+						{menu.view === 'root' && allFilters.length > 4 && (
+							<input className="atlas-menu__search" placeholder="Search all filters…" aria-label="Search all filters" value={findQ}
+								onChange={(e) => setFindQ(e.target.value)} autoFocus
+								onKeyDown={(e) => { if (e.key === 'Enter' && found[0]) found[0].apply(); }} />
+						)}
+						{menu.view === 'root' && findTerm ? (
+							<div className="atlas-menu__list atlas-menu__list--scroll atlas-menu__list--rows">
+								{found.length === 0 && <div className="atlas-menu__empty">No filters or values match “{findQ.trim()}”</div>}
+								{found.map((r) => (
+									<button key={r.id} type="button" className={cx('atlas-menu__item atlas-menu__item--plain', r.on && 'on')} onClick={r.apply}>
+										<span className="atlas-menu__dot" aria-hidden="true" />
+										<span className="atlas-menu__opt">{r.title}<span className="atlas-menu__opt-path">{r.sub}</span></span>
+									</button>
+								))}
+							</div>
+						) : menu.view === 'root' ? (
 							<div className="atlas-menu__groups">
 								{groups.map((g) => (
 									<div className="atlas-menu__group" key={g.label}>
@@ -180,23 +224,28 @@ function OptionsView({ f, onBack, onDone }: { f: Extract<FilterDef, { kind: 'sel
 			{f.options.length > SEARCHABLE_OPTIONS && (
 				<input className="atlas-menu__search" placeholder={`Search ${f.label.toLowerCase()}…`} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
 			)}
-			<div className="atlas-menu__list atlas-menu__list--scroll">
+			<div className="atlas-menu__list atlas-menu__list--scroll atlas-menu__list--rows">
 				{f.value && !term && (
-					<button type="button" className="atlas-menu__item" onClick={() => pick('')}>
+					<button type="button" className="atlas-menu__item atlas-menu__item--plain" onClick={() => pick('')}>
 						<span className="atlas-menu__dot" aria-hidden="true" />Any
 					</button>
 				)}
 				{opts.length === 0 && <div className="atlas-menu__empty">{f.options.length === 0 ? 'No options' : 'No matches'}</div>}
-				{opts.map(([v, l]) => (
-					<button key={v} type="button" className={cx('atlas-menu__item', v === f.value && 'on')} aria-pressed={v === f.value} onClick={() => pick(v)}>
-						<span className="atlas-menu__dot" aria-hidden="true" />{l}
-					</button>
-				))}
+				{opts.map(([v, l]) => {
+					const { leaf, path } = splitPath(l);
+					return (
+						<button key={v} type="button" className={cx('atlas-menu__item atlas-menu__item--plain', v === f.value && 'on')} aria-pressed={v === f.value} onClick={() => pick(v)}>
+							<span className="atlas-menu__dot" aria-hidden="true" />
+							<span className="atlas-menu__opt">{leaf}{path && <span className="atlas-menu__opt-path">{path}</span>}</span>
+						</button>
+					);
+				})}
 			</div>
 		</>
 	);
 }
 
 function optionLabel(f: Extract<FilterDef, { kind: 'select' }>): string {
-	return f.options.find(([v]) => v === f.value)?.[1] ?? f.value;
+	const l = f.options.find(([v]) => v === f.value)?.[1];
+	return l ? splitPath(l).leaf : f.value;
 }

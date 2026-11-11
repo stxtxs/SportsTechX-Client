@@ -31,10 +31,10 @@ export function FrameworkCategory({ slug, backHref, categoryHref, exploreHref }:
 	);
 
 	if (isLoading && !c) return <Loading />;
-	if (!pillar || !c) return <Empty>That category doesn&apos;t exist. <Link href={backHref}>Back to the framework</Link></Empty>;
+	if (!pillar || !c) return <Empty>That sub-sector doesn&apos;t exist. <Link href={backHref}>Back to the framework</Link></Empty>;
 
 	const textCols: { title: string; items: string[] }[] = [
-		{ title: 'Sub-categories', items: c.subCategories },
+		{ title: 'Sub-sub sectors', items: c.subCategories },
 		{ title: 'Included technologies', items: c.copy?.technologies ?? [] },
 		{ title: 'Example use cases', items: c.copy?.useCases ?? [] },
 	];
@@ -72,7 +72,7 @@ export function FrameworkCategory({ slug, backHref, categoryHref, exploreHref }:
 
 			{(cos.length > 0 || examples.isLoading) && (
 				<>
-					<h3 className="atlas-fw-col__title" style={{ marginTop: 40 }}>Top companies in this category</h3>
+					<h3 className="atlas-fw-col__title" style={{ marginTop: 40 }}>Top companies in this sub-sector</h3>
 					<div className="atlas-fw-companies">
 						{examples.isLoading && cos.length === 0 && <p className="atlas-fw-col__empty">Loading…</p>}
 						{cos.map((co) => (
@@ -90,7 +90,7 @@ export function FrameworkCategory({ slug, backHref, categoryHref, exploreHref }:
 
 			<hr className="atlas-fw-detail__rule atlas-fw-detail__rule--full" />
 			<Link href={exploreHref(pillar.slug, c.slug)} className="atlas-btn atlas-btn--primary">
-				Explore {count == null ? '' : `${count.toLocaleString()} `}companies in this category <ArrowUpRight />
+				Explore {count == null ? '' : `${count.toLocaleString()} `}companies in this sub-sector <ArrowUpRight />
 			</Link>
 		</section>
 	);

@@ -12,12 +12,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import useSWR from 'swr';
-import { ArrowRight, Send, Heart, Link2, Lock, Plus, Zap } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Send, Heart, Link2, Lock, Plus, Zap } from 'lucide-react';
 import { qk } from '@/lib/query-keys';
 import { useFavorite } from '@/hooks/use-favorite';
 import { usePrimaryContact } from '@/hooks/use-primary-contact';
+import { useCanSeeFundraising } from '@/hooks/use-user-profile';
 import { openClaim } from '@/lib/claim-events';
-import { hrefOf } from '@/lib/routes';
+import { PLANS_PATH } from '@/lib/routes';
+import { ProductWord } from '@/components/atlas/brand/atlas-logo';
 import type { Company, Deal, Page } from '@/types/api';
 import {
 	Drawer, DrawerHead, DrawerTabs, DrawerBody, DrawerFoot,
@@ -51,6 +53,8 @@ export function CompanyDrawer({
 	const [tab, setTab] = useState<Tab>('general');
 	const [shareToast, setShareToast] = useState<string | null>(null);
 	const [pickerOpen, setPickerOpen] = useState(false);
+	// Fundraising is shown to Scout only (see useCanSeeFundraising).
+	const canSeeRaising = useCanSeeFundraising();
 
 	const { data: company, isLoading } = useSWR<Company>(
 		idOrSlug ? qk.companies.detail(idOrSlug) : null,
@@ -119,7 +123,7 @@ export function CompanyDrawer({
 									{company.name}
 								</button>
 								{company.is_verified && <VerifiedBadge size={15} />}
-								{company.is_actively_raising && <RaisingPill compact />}
+								{canSeeRaising && company.is_actively_raising && <RaisingPill compact />}
 							</div>
 							{company.website && (
 								<a
@@ -153,7 +157,7 @@ export function CompanyDrawer({
 						</div>
 					</DrawerHead>
 
-					{company.is_actively_raising && (
+					{canSeeRaising && company.is_actively_raising && (
 						<div className="co-drawer-raising">
 							<Zap size={14} style={{ color: 'var(--pos)' }} />
 							<span style={{ fontWeight: 700, fontSize: 12 }}>Actively raising</span>
@@ -346,7 +350,7 @@ function ConnectBlock({ company }: { company: Company }) {
 }
 
 /**
- * Primary-contact block. Pro-gated via the `company_contacts` feature:
+ * Primary-contact block. Gated by the `company_contacts` feature (Raise, Scout):
  *   - not entitled → upgrade teaser with a working link to /billing;
  *   - entitled → the real contact, or an honest empty state. No fabricated data.
  */
@@ -366,8 +370,9 @@ function PrimaryContact({ company }: { company: Company }) {
 					<div className="co-locked-cover">
 						<div className="co-locked-icon"><Lock size={20} /></div>
 						<div className="co-locked-title">Unlock contact details</div>
-						<div className="co-locked-sub">Pro members can see the founder&apos;s email and LinkedIn for every company.</div>
-						<Link href={hrefOf('billing')} className="btn co-locked-btn">Upgrade to Pro</Link>
+						{/* Matches the `company_contacts` entitlement: Raise and Scout, not Explore. */}
+						<div className="co-locked-sub">Founder name, email and LinkedIn are included in Atlas <ProductWord product="Raise" /> and Atlas <ProductWord product="Scout" />.</div>
+						<Link href={PLANS_PATH} className="btn co-locked-btn">Explore <ArrowUpRight size={12} strokeWidth={1.75} aria-hidden="true" /></Link>
 					</div>
 				</div>
 			</div>

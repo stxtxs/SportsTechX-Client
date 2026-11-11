@@ -532,7 +532,7 @@ export default function ReportFTABR26({ content, preview = false }: {
   const FTABR26_WORLDCUP = {
     ...FTABR26_WORLDCUP_RAW,
     headline: { ...FTABR26_WORLDCUP_RAW.headline, source: (FTABR26_WORLDCUP_RAW.headline as { source?: WcSrc }).source ?? wcDefaultCard(FTABR26_WORLDCUP_RAW.headline?.value)?.source },
-    stats: (FTABR26_WORLDCUP_RAW.stats ?? []).map(st => ({ ...st, source: (st as { source?: WcSrc }).source ?? wcDefaultCard(st.value)?.source })),
+    stats: (FTABR26_WORLDCUP_RAW.stats ?? []).map(st => ({ ...st, source: (st as { source?: WcSrc }).source ?? wcDefaultCard(st.value)?.source, sources: (st as { sources?: WcSrc[] }).sources ?? (wcDefaultCard(st.value) as { sources?: WcSrc[] } | undefined)?.sources })),
     tech: (FTABR26_WORLDCUP_RAW.tech ?? []).map(item => {
       const it = item as WorldCupTech;
       if (it.sources?.length) return it;

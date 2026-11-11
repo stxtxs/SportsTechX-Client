@@ -1,32 +1,39 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useTheme } from 'next-themes';
+import { useState } from 'react';
+import { useAuthTheme } from './auth-theme';
 import { Eye, EyeOff, Loader2, Moon, Sun } from 'lucide-react';
 import { AtlasLogo } from '@/components/atlas';
 import type { ReactNode } from 'react';
 import './auth.css';
 
 /**
- * The shared frame for the pre-login screens.
+ * The split frame for login and signup: the left panel, then the page.
  *
- * There was none before: login, signup, and forgot/reset each built their own,
- * on three different palettes. The split layout is from the Scout v2 signup
- * mockup; `panel` is what fills the left half — the value props on signup, the
- * testimonial rail on login.
+ * It is rendered by `app/(auth)/(split)/layout.tsx`, not by each page, so the
+ * panel stays mounted when moving between login and signup — no testimonial
+ * refetch, no carousel restart, no jump. The layout is from the Scout v2 signup
+ * mockup.
  *
  * `.atlas` comes from `app/(auth)/layout.tsx`, which is what makes `--a-*`
  * resolve. These components assume it is above them.
  */
-export function AuthSplit({ panel, children }: { panel?: ReactNode; children: ReactNode }) {
+export function AuthSplit({ panel, children }: { panel: ReactNode; children: ReactNode }) {
 	return (
-		<div className={`auth-split${panel ? ' auth-split--panelled' : ''}`}>
+		<div className="auth-split auth-split--panelled">
 			{panel}
-			<div className="auth-form-col">
-				<div className="auth-form">
-					<AuthBrand />
-					{children}
-				</div>
+			{children}
+		</div>
+	);
+}
+
+/** The right-hand column of the split frame: brand lockup, then the form. */
+export function AuthFormColumn({ children }: { children: ReactNode }) {
+	return (
+		<div className="auth-form-col">
+			<div className="auth-form">
+				<AuthBrand />
+				{children}
 			</div>
 		</div>
 	);
@@ -44,7 +51,7 @@ export function AuthBrand() {
 	return (
 		<div className="auth-brand">
 			<AtlasLogo height={27} />
-			<span className="auth-brand__by">by SportsTechX</span>
+			<span className="auth-brand__by stx-byline">by SportsTechX</span>
 		</div>
 	);
 }
@@ -126,14 +133,14 @@ export function AuthSpinner() {
 }
 
 /**
- * Light/dark toggle. The app's toggle lives in the shell, which no pre-login
- * page renders, so without this a visitor is stuck on whatever theme they have.
+ * Light/dark toggle for the pre-login screens. It switches the auth theme (see
+ * `auth-theme.tsx`), not the app's, and starts dark.
  */
 export function AuthThemeToggle() {
-	const { resolvedTheme, setTheme } = useTheme();
-	const [mounted, setMounted] = useState(false);
-	useEffect(() => setMounted(true), []);
-	const isDark = resolvedTheme === 'dark';
+	// The auth theme is 'dark' on the server and during hydration, so the icon
+	// can render straight away without a mismatch.
+	const { theme, setTheme } = useAuthTheme();
+	const isDark = theme === 'dark';
 	return (
 		<button
 			type="button"
@@ -141,7 +148,7 @@ export function AuthThemeToggle() {
 			aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
 			onClick={() => setTheme(isDark ? 'light' : 'dark')}
 		>
-			{mounted && (isDark ? <Sun size={15} /> : <Moon size={15} />)}
+			{isDark ? <Sun size={15} /> : <Moon size={15} />}
 		</button>
 	);
 }

@@ -9,8 +9,7 @@ import { callPostLogin } from '@/lib/post-login';
 import { refreshAccount } from '@/lib/invalidate';
 import { Button } from '@/components/atlas';
 import { OAuthButtons } from '@/components/auth/oauth-buttons';
-import { AuthNotice, AuthOr, AuthSplit, AuthSpinner, AuthThemeToggle, PasswordField } from '@/components/auth/auth-shell';
-import { AuthSidePanel } from '@/components/auth/auth-quotes';
+import { AuthNotice, AuthOr, AuthFormColumn, AuthSpinner, AuthThemeToggle, PasswordField } from '@/components/auth/auth-shell';
 
 /**
  * Create an account.
@@ -85,10 +84,13 @@ export default function SignupPage() {
 	return (
 		<>
 			<AuthThemeToggle />
-			<AuthSplit panel={<AuthSidePanel />}>
+			<AuthFormColumn>
 				<div>
 					<h1 className="auth-form__title">Create your Atlas account</h1>
-					<p className="auth-form__sub">Free to start. No card required.</p>
+					<p className="auth-form__sub">
+						Explore is free forever. Add Raise or Scout when you need them.{' '}
+						<Link href="/plans">Find your fit →</Link>
+					</p>
 				</div>
 
 				{error && <AuthNotice tone="error">{error}</AuthNotice>}
@@ -155,7 +157,7 @@ export default function SignupPage() {
 				<p className="auth-form__alt">
 					Already have an account? <Link href="/login">Log in</Link>
 				</p>
-			</AuthSplit>
+			</AuthFormColumn>
 		</>
 	);
 }

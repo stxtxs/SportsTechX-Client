@@ -41,10 +41,11 @@ export interface SectorTierData {
 /** Sector hierarchy split into pillar / sub / sub-sub tiers, each filtering by
  *  `sector_slug` with descendant expansion (picking a pillar matches every leaf
  *  beneath it — the backends match an exact slug list). */
-export function useSectorTierData(): SectorTierData {
+/** `enabled: false` skips the request (a page that only needs it once a filter menu opens). */
+export function useSectorTierData(enabled = true): SectorTierData {
 	// Sibling hooks tolerate both shapes; /api/sectors is a bare array today, but
 	// guard anyway so an envelope switch can't crash useSectorTiers(list).
-	const { data, error } = useSWR<SectorRef[] | { data: SectorRef[] }>(qk.reference.sectors(), { dedupingInterval: 60 * 60_000 });
+	const { data, error } = useSWR<SectorRef[] | { data: SectorRef[] }>(enabled ? qk.reference.sectors() : null, { dedupingInterval: 60 * 60_000 });
 	// Settled, not successful. An empty list counts, and so does a failure —
 	// callers gate a request on this, so treating an error as "still loading"
 	// would leave them spinning forever instead of querying without the sector
@@ -79,9 +80,9 @@ export function useSectorTierData(): SectorTierData {
 /** Authoritative country options from the `/api/countries` reference endpoint.
  *  Returns [name, name] pairs (canonical name is both value + label now that
  *  the `locations` data has been canonicalised — no CSV folding needed). */
-export function useCountryOptions(): [string, string][] {
+export function useCountryOptions(enabled = true): [string, string][] {
 	const { data } = useSWR<Array<{ name: string; slug: string; iso2: string | null; continent: string | null; region: string | null }>>(
-		qk.reference.countries(), { dedupingInterval: 60 * 60_000 },
+		enabled ? qk.reference.countries() : null, { dedupingInterval: 60 * 60_000 },
 	);
 	return useMemo(() => {
 		const list = Array.isArray(data) ? data : [];
@@ -100,7 +101,7 @@ export function useCountryOptions(): [string, string][] {
  */
 export function useLocationFacetOptions(enabled = true) {
 	const { data } = useSWR<LocationFacets>(enabled ? qk.reference.locationFacets() : null, { dedupingInterval: 60 * 60_000 });
-	const countries = useCountryOptions();
+	const countries = useCountryOptions(enabled);
 	return useMemo(() => {
 		const clean = (vals: string[] | undefined): [string, string][] => {
 			const seen = new Set<string>();
@@ -125,8 +126,8 @@ export function useLocationFacetOptions(enabled = true) {
 }
 
 /** Tech-tag options as [slug, name] (filter by tech_tag_slug). */
-export function useTechTagOptions(): [string, string][] {
-	const { data } = useSWR<Array<{ name: string; slug: string }> | { data: Array<{ name: string; slug: string }> }>(qk.reference.techTags(), { dedupingInterval: 60 * 60_000 });
+export function useTechTagOptions(enabled = true): [string, string][] {
+	const { data } = useSWR<Array<{ name: string; slug: string }> | { data: Array<{ name: string; slug: string }> }>(enabled ? qk.reference.techTags() : null, { dedupingInterval: 60 * 60_000 });
 	return useMemo(() => {
 		const listT = Array.isArray(data) ? data : (data?.data ?? []);
 		return listT.map((t) => [t.slug, t.name] as [string, string]).sort((a, b) => a[1].localeCompare(b[1]));
@@ -134,8 +135,8 @@ export function useTechTagOptions(): [string, string][] {
 }
 
 /** Sports as [id, name] options (filter by sport_id). */
-export function useSportOptions(): [string, string][] {
-	const { data } = useSWR<Array<{ id: string; name: string }> | { data: Array<{ id: string; name: string }> }>(qk.reference.sports(), { dedupingInterval: 60 * 60_000 });
+export function useSportOptions(enabled = true): [string, string][] {
+	const { data } = useSWR<Array<{ id: string; name: string }> | { data: Array<{ id: string; name: string }> }>(enabled ? qk.reference.sports() : null, { dedupingInterval: 60 * 60_000 });
 	return useMemo(() => {
 		const list = Array.isArray(data) ? data : (data?.data ?? []);
 		return list.map((s) => [s.id, s.name] as [string, string]).sort((a, b) => a[1].localeCompare(b[1]));

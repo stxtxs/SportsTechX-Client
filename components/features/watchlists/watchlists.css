@@ -24,3 +24,13 @@
 .atlas .atlas-wl-rename { display: flex; gap: 8px; align-items: center; max-width: 520px; }
 .atlas .atlas-wl-co__id { display: flex; align-items: center; gap: 14px; min-width: 0; }
 .atlas .atlas-wl-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+
+/* Icon-only bookmark (SaveToWatchlist compact): company lists and tiles. */
+.atlas .atlas-wl-bookmark {
+	display: inline-grid; place-items: center; width: 30px; height: 30px; padding: 0;
+	border: 0; border-radius: var(--a-radius-pill); background: none; cursor: pointer;
+	color: color-mix(in srgb, var(--a-ink) 45%, transparent); transition: color 0.15s, background 0.15s;
+}
+.atlas .atlas-wl-bookmark:hover { color: var(--a-ink); background: color-mix(in srgb, var(--a-ink) 6%, transparent); }
+.atlas .atlas-wl-bookmark.on { color: var(--a-ink); }
+.atlas .atlas-wl-bookmark:focus-visible { outline: 2px solid var(--a-ink); outline-offset: 1px; }

@@ -1,8 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { useTheme } from 'next-themes';
 import { Sun, Moon } from 'lucide-react';
+
+/** Nothing to subscribe to: "are we in the browser?" never changes. */
+const noSubscribe = () => () => undefined;
 
 /**
  * Light/dark switch — compact icon button for the mobile top bar, a row inside
@@ -11,11 +14,12 @@ import { Sun, Moon } from 'lucide-react';
  * Three shapes rather than three components: the `mounted` guard below is the
  * whole reason this exists (SSR has no theme, so rendering the real icon first
  * paint is a hydration mismatch), and that is not worth copying per variant.
+ * `useSyncExternalStore` gives false on the server and during hydration and true
+ * after, without the extra render a `useEffect(() => setMounted(true))` costs.
  */
 export function ThemeToggle({ compact, menu, collapsed, header }: { compact?: boolean; menu?: boolean; collapsed?: boolean; header?: boolean }) {
 	const { resolvedTheme, setTheme } = useTheme();
-	const [mounted, setMounted] = useState(false);
-	useEffect(() => setMounted(true), []);
+	const mounted = useSyncExternalStore(noSubscribe, () => true, () => false);
 	const isDark = resolvedTheme === 'dark';
 	const toggle = () => setTheme(isDark ? 'light' : 'dark');
 	const Icon = isDark ? Sun : Moon;

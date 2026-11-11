@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import { Providers } from './providers';
+// Bebas Neue for the "BY SPORTSTECHX" byline (`.stx-byline`), on every page.
+import { lpDisplay } from './fonts';
 import './globals.css';
 
 // Three font families per the ui_design system:
@@ -98,7 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       // `compact` matches the ui_design_3 shipped default.
       data-density="compact"
       suppressHydrationWarning
-      className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} h-full`}
+      className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} ${lpDisplay.variable} h-full`}
     >
       <head>
         {/* Adobe Fonts kit from the designer's account (same kit the landing/

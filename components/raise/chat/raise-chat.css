@@ -11,7 +11,6 @@
  * palette's row (suggested prompts).
  */
 .raise-chat-panel,
-.raise-chat-fab,
 .raise-chatpage {
 	--accent: var(--a-navy);
 	--bg-2: var(--a-inset);
@@ -23,50 +22,16 @@
 	--font-mono: var(--a-mono);
 }
 
-/* ── Launcher ──────────────────────────────────────────────────────────────*/
-/* A labelled pill rather than a bare icon: "Ask Atlas" says what it is, and
-   the mark says whose it is. */
-.raise-chat-fab {
-	position: fixed; right: 24px; bottom: 24px; z-index: 70;
-	display: inline-flex; align-items: center; gap: 9px;
-	height: 40px; padding: 0 16px 0 6px;
-	border: 0; border-radius: var(--a-radius-pill); cursor: pointer;
-	background: var(--a-primary); color: var(--a-primary-ink);
-	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), inset 0 0 0 0.5px var(--a-border);
-	transition: transform 0.15s, box-shadow 0.15s;
-	/* Draggable: suppress touch scrolling so a drag moves the button, and hint
-	   the grab affordance. Position is set inline from the parked corner. */
-	cursor: grab; touch-action: none;
-}
-.raise-chat-fab:active { cursor: grabbing; }
-.raise-chat-fab:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px var(--a-border); }
-.raise-chat-fab:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--a-ink) 22%, transparent), 0 8px 24px rgba(0, 0, 0, 0.18); }
-.raise-chat-fab__mark {
-	display: grid; place-items: center; flex: none;
-	width: 28px; height: 28px; border-radius: 50%;
-	background: var(--a-primary-ink); color: var(--a-primary);
-}
-.raise-chat-fab__label {
-	font-family: var(--a-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1;
-}
-
-/* ── Scrim ─────────────────────────────────────────────────────────────────*/
-/* Depth, and a click-away. Without it the drawer read as a column bolted onto
-   the page rather than a layer above it. */
-.raise-chat-scrim {
-	position: fixed; inset: 0; z-index: 79;
-	background: rgba(0, 0, 0, 0.32);
-	animation: raiseChatFade 0.2s ease;
-}
-@keyframes raiseChatFade { from { opacity: 0; } to { opacity: 1; } }
-
 /* ── Panel ─────────────────────────────────────────────────────────────────*/
+/* Docked co-pilot: beside the page, not over it. From 1024px the page narrows
+   by the panel's width (html.copilot-open), so nothing is covered or dimmed;
+   below that there's no room, and it's a full-width sheet. */
 .raise-chat-panel {
 	position: fixed; top: 0; right: 0; z-index: 80;
-	width: 440px; max-width: 100vw; height: 100dvh;
+	width: var(--copilot-w, 420px); max-width: 100vw; height: 100dvh;
 	display: flex; flex-direction: column;
 	background: var(--a-page);
-	box-shadow: inset 1px 0 0 var(--a-border), -16px 0 48px rgba(0, 0, 0, 0.14);
+	box-shadow: inset 1px 0 0 var(--a-border-strong);
 	transform: translateX(100%);
 	transition: transform 0.26s cubic-bezier(0.32, 0.72, 0, 1);
 	color: var(--a-ink); font-family: var(--a-body);
@@ -281,16 +246,20 @@
 /* ── Mobile: full-screen ───────────────────────────────────────────────────*/
 @media (max-width: 720px) {
 	.raise-chat-panel { width: 100vw; box-shadow: none; }
-	.raise-chat-scrim { display: none; }
 	.raise-chat-head { padding: 14px 10px 14px 16px; }
 	.raise-chat-body { padding: 20px 16px; }
 	.raise-chat-foot { padding: 10px 12px 12px; }
 	.raise-chat-hint { display: none; }
-	.raise-chat-fab { right: 16px; bottom: 16px; }
-	/* Hide the launcher while the mobile nav drawer is open (the rail gets
-	   `.open`); the launcher is a following sibling of the rail in AtlasShell. */
-	.atlas-rail.open ~ .raise-chat-fab { display: none; }
 }
 
 /* Opening a conversation that isn't cached yet (shared chat session → loading). */
 .raise-chatpage-loading { padding: 24px 4px; font-size: 13px; color: var(--a-muted); }
+
+/* The dock: the main column gives up the panel's width while it's open. */
+.atlas-main { transition: margin-right 0.26s cubic-bezier(0.32, 0.72, 0, 1); }
+@media (min-width: 1024px) {
+	html.copilot-open .atlas-main { margin-right: var(--copilot-w, 420px); }
+}
+@media (max-width: 1023px) {
+	.raise-chat-panel { width: 100vw; box-shadow: none; }
+}

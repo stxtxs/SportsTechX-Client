@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useState, useSyncExternalStore } from 'react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { MenuIcon } from '../brand/menu-icon';
 import { PLACEHOLDER_LABEL } from '../patterns/placeholder-tag';
-import { AtlasLogo, AtlasMark } from '../brand/atlas-logo';
+import { AtlasLogo, AtlasMark, productColour } from '../brand/atlas-logo';
 import { FigmaIcon } from '../icons/figma-icons';
 import { isSection, pickActive, type ShellNavEntry, type ShellNavItem } from './nav';
 import './atlas-shell.css';
@@ -133,7 +133,12 @@ export function AtlasShell({ product, productColor, homePath, nav, topbar, overl
 	const homeLabel = `Atlas ${product} home`;
 
 	return (
-		<div className={`atlas atlas-shell${collapsed ? ' is-collapsed' : ''}`}>
+		<div
+			className={`atlas atlas-shell${collapsed ? ' is-collapsed' : ''}`}
+			// The product's colour (Explore pink, Raise blue, Scout teal), for the
+			// two small brand accents: the active nav item and the Ask Atlas box.
+			style={{ '--atlas-product': productColour(product) ?? productColor ?? '#4580EC' } as CSSProperties}
+		>
 			<aside className={`atlas-rail ${open ? 'open' : ''}`}>
 				<div className="atlas-rail-head">
 					{/* Collapsed, the mark IS the expand control. The design put a bare

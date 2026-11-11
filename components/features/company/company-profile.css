@@ -23,16 +23,31 @@
    the implementation had dropped it and read as a flat grey panel. */
 .atlas .atlas-co__facts {
 	display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 32px; padding: 26px 30px 30px;
-	background-image: linear-gradient(170deg, transparent 52%, color-mix(in srgb, var(--a-pink) 16%, transparent) 100%);
+	/* In the product's colour (set by AtlasShell): pink on Explore, blue on
+	   Raise, teal on Scout; pink where no shell sets it. */
+	background-image: linear-gradient(170deg, transparent 52%, color-mix(in srgb, var(--atlas-product, var(--a-pink)) 16%, transparent) 100%);
 }
 @media (max-width: 640px) { .atlas .atlas-co__facts { grid-template-columns: 1fr; padding: 22px; } }
 .atlas .atlas-co__fact-k { font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--a-muted); margin-bottom: 6px; }
 .atlas .atlas-co__fact-v { font-family: var(--a-font); font-size: 17px; font-weight: 500; line-height: 1.35; color: var(--a-ink); }
+/* Sector › Sub-Sector › Sub-sub sector: one line across both columns. */
+.atlas .atlas-co__fact--wide { grid-column: 1 / -1; }
+.atlas .atlas-co__tiers { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.atlas .atlas-co__tiers > .co-mark { margin-right: 2px; }
+.atlas .atlas-co__tier { display: inline-flex; align-items: center; gap: 6px; }
+.atlas .atlas-co__tier a { color: inherit; text-decoration: none; }
+.atlas .atlas-co__tier a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.atlas .atlas-co__tier-sep { color: var(--a-faint); flex-shrink: 0; }
 
+/* Description, first in the facts card, across both columns, no heading. */
+.atlas .atlas-co__about {
+	grid-column: 1 / -1; margin: 0; padding-bottom: 22px; border-bottom: 1px solid var(--a-border);
+	font-family: var(--a-body); font-size: 15px; line-height: 1.65; color: var(--a-ink-2); max-width: 760px;
+}
 .atlas .atlas-co__text { padding: 0 18px; }
 .atlas .atlas-co__text p { margin: 10px 0 0; font-family: var(--a-body); font-size: 14px; line-height: 1.7; color: var(--a-muted); max-width: 760px; }
-.atlas .atlas-co__h { margin: 0; font-family: var(--a-font); font-size: 15px; font-weight: 700; color: var(--a-ink); }
-.atlas .atlas-co__h2 { margin: 0; font-family: var(--a-font); font-size: 20px; font-weight: 700; color: var(--a-ink); }
+/* One size for every card title on the page (main column and rail alike). */
+.atlas .atlas-co__h, .atlas .atlas-co__h2 { margin: 0; font-family: var(--a-font); font-size: 17px; font-weight: 700; color: var(--a-ink); }
 
 /* Funding history */
 /* No divider under the title — the bordered header band below is the separator. */
@@ -41,27 +56,47 @@
 
 /* Crunchbase-style rounds table: a bordered header band, then roomy divided rows.
    Header and rows share one grid so the columns line up. */
+/* Columns flex with the card, and Investors keeps a real minimum. They used to
+   be 140/180/130px fixed with Investors taking the rest, so with the sidebar
+   open the rest was ~0 and names broke one letter per line. The card is a size
+   container; the table keeps its columns down to phone width (below). */
+.atlas .atlas-co__funding { container-type: inline-size; }
 .atlas .atlas-co__deals { padding: 0 20px 10px; }
 .atlas .atlas-co__deal {
-	display: grid; grid-template-columns: 140px 180px 130px minmax(0, 1fr); gap: 16px; align-items: start;
+	display: grid; grid-template-columns: minmax(96px, 0.9fr) minmax(120px, 1.1fr) minmax(96px, 0.9fr) minmax(180px, 2fr); gap: 16px; align-items: start;
 	padding: 16px 14px; border-top: 1px solid var(--a-border); font-family: var(--a-body); font-size: 15px; color: var(--a-muted);
 }
+/* Column headings in the page's label style (as HEADQUARTERS / FOUNDED in the
+   facts card): small mono caps, muted, no band of their own. */
 .atlas .atlas-co__deal--head {
-	border: 1px solid var(--a-border); border-radius: var(--a-radius-sm); background: var(--a-inset);
-	padding: 13px 14px; margin-bottom: 2px;
-	font-size: 13px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--a-ink);
+	padding: 6px 14px 10px; border-top: none;
+	font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--a-muted);
 }
-/* First real row sits just under the band with no extra divider. */
-.atlas .atlas-co__deal--head + .atlas-co__deal { border-top: none; }
 .atlas .atlas-co__amt { font-weight: 700; color: var(--a-ink); font-variant-numeric: tabular-nums; }
 /* Investor names must show in full (feedback: truncated even when zoomed out),
    so the cell wraps instead of clipping to one ellipsised line. */
-.atlas .atlas-co__investors { white-space: normal; overflow-wrap: anywhere; line-height: 1.4; }
-@media (max-width: 760px) {
+/* `break-word`, not `anywhere`: only a single over-long word may break, never
+   every name letter by letter. */
+.atlas .atlas-co__investors { white-space: normal; overflow-wrap: break-word; line-height: 1.4; color: var(--a-ink-2); }
+/* Investors with an Atlas page: same colour as the rest, always underlined so
+   they read as links; the underline darkens on hover. */
+.atlas .atlas-co__inv-link {
+	color: inherit; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px;
+	text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+.atlas .atlas-co__inv-link:hover { color: var(--a-ink); text-decoration-color: currentColor; }
+/* Only when the card is phone-narrow does each round become a small card —
+   date and type, amount, then the investors in full. With the sidebar open the
+   card is ~640px, which the flexible columns above still fit. */
+@container (max-width: 480px) {
 	.atlas .atlas-co__deals { padding: 0 14px 10px; }
-	.atlas .atlas-co__deal { grid-template-columns: 1fr 1fr; padding: 14px 10px; }
-	.atlas .atlas-co__investors { grid-column: 1 / -1; }
+	.atlas .atlas-co__deal { grid-template-columns: 1fr auto; gap: 6px 16px; padding: 14px 10px; }
+	.atlas .atlas-co__deal > :nth-child(1) { grid-column: 1; grid-row: 1; font-size: 13px; }
+	.atlas .atlas-co__deal > :nth-child(2) { grid-column: 1; grid-row: 2; color: var(--a-ink); }
+	.atlas .atlas-co__deal > .atlas-co__amt { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+	.atlas .atlas-co__investors { grid-column: 1 / -1; grid-row: 3; font-size: 14px; }
 	.atlas .atlas-co__deal--head { display: none; }
+	.atlas .atlas-co__deal--head + .atlas-co__deal { border-top: none; }
 }
 .atlas .atlas-co__empty { margin: 0; padding: 18px 30px 22px; font-size: 13px; color: var(--a-faint); }
 
@@ -82,13 +117,22 @@
 .atlas .atlas-co__rel > span:first-child { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .atlas .atlas-co__rel-name { font-family: var(--a-font); font-size: 14px; font-weight: 700; color: var(--a-ink); }
 .atlas .atlas-co__rel-meta { font-family: var(--a-body); font-size: 12px; color: var(--a-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.atlas .atlas-co__rel-go {
-	display: inline-grid; place-items: center; flex-shrink: 0; width: 32px; height: 24px;
-	border-radius: var(--a-radius-pill); background: var(--a-field); border: 1px solid var(--a-border); color: var(--a-ink);
-	transition: background 0.15s, color 0.15s;
+/* One button style on the page, the Home feed card's: a quiet outline pill
+   that fills ink on hover. Used by Explore, View related companies and the
+   arrow on each related company. */
+.atlas .atlas-co__pill, .atlas .atlas-co__rel-go {
+	display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0;
+	height: 28px; padding: 0 12px 0 14px; border-radius: var(--a-radius-pill); text-decoration: none; white-space: nowrap;
+	background: color-mix(in srgb, var(--a-ink) 5%, transparent); color: var(--a-muted);
+	box-shadow: inset 0 0 0 1px var(--a-border-strong);
+	font-family: var(--a-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+	transition: background 0.15s, color 0.15s, box-shadow 0.15s;
 }
-.atlas .atlas-co__rel:hover .atlas-co__rel-go { background: var(--a-primary); color: var(--a-primary-ink); }
-.atlas .atlas-co__more { margin-top: 18px; height: 28px; font-size: 10.5px; }
+.atlas .atlas-co__rel-go { width: 32px; padding: 0; }
+.atlas .atlas-co__pill:hover, .atlas .atlas-co__pill:focus-visible, .atlas .atlas-co__rel:hover .atlas-co__rel-go {
+	background: var(--a-primary); color: var(--a-primary-ink); box-shadow: inset 0 0 0 1px var(--a-primary);
+}
+.atlas .atlas-co__more { margin-top: 18px; align-self: flex-start; }
 /* Programs rail card: logo beside the name/meta stack. */
 .atlas .atlas-co__rel > span.atlas-co__prog:first-child { display: flex; flex-direction: row; align-items: center; gap: 10px; }
 .atlas .atlas-co__prog-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -96,28 +140,4 @@
 @media (max-width: 640px) {
 	.atlas .atlas-co__name { font-size: 28px; }
 	.atlas .atlas-co__actions { padding-top: 0; gap: 18px; }
-}
-
-/* Raising pill — the profile route doesn't load company-detail.css (that sheet
-   ships with the dynamically-imported drawer), so the .rp rules live here too. */
-.atlas-co .rp {
-	display: inline-flex; align-items: center; gap: 6px;
-	height: 20px; padding: 0 8px;
-	background: color-mix(in oklch, var(--pos), transparent 88%);
-	color: var(--pos);
-	border: 1px solid color-mix(in oklch, var(--pos), transparent 70%);
-	border-radius: 999px;
-	font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-	letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap;
-}
-.atlas-co .rp.compact { height: 18px; padding: 0 6px; font-size: 9.5px; gap: 4px; }
-.atlas-co .rp-dot {
-	width: 6px; height: 6px; border-radius: 50%;
-	background: var(--pos); flex-shrink: 0;
-	animation: rp-pulse 2.4s ease-out infinite;
-}
-@keyframes rp-pulse {
-	0%   { box-shadow: 0 0 0 0   color-mix(in oklch, var(--pos), transparent 40%); }
-	70%  { box-shadow: 0 0 0 6px color-mix(in oklch, var(--pos), transparent 100%); }
-	100% { box-shadow: 0 0 0 0   color-mix(in oklch, var(--pos), transparent 100%); }
 }

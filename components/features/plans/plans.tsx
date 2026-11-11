@@ -16,8 +16,6 @@ import { getUserType, TIER_LABEL, useUserProfile } from '@/hooks/use-user-profil
 import { useAuthSession } from '@/hooks/use-auth-session';
 import type { Feature } from '@/contexts/feature-access-context';
 import { PRODUCT } from '@/components/features/tier-gate/tier-gate';
-import { EXPLORE_COLOR } from '@/components/explore/shell-config';
-import { SCOUT_COLOR } from '@/components/scout/shell-config';
 import type { Tier } from '@/lib/access';
 import './plans.css';
 
@@ -54,8 +52,6 @@ const WELCOME_CREDITS = 300;
 /** Display order, cheapest first. Explore is never a checkout target. */
 const ORDER: Tier[] = ['explore', 'raise', 'scout'];
 
-/** Same product tags as the sidebar logo (Raise uses the logo's default blue). */
-const TAG_COLOR: Record<Tier, string | undefined> = { explore: EXPLORE_COLOR, raise: undefined, scout: SCOUT_COLOR };
 
 const money = (cents: number, ccy: string) =>
 	new Intl.NumberFormat(undefined, { style: 'currency', currency: (ccy || 'eur').toUpperCase(), maximumFractionDigits: 0 })
@@ -206,12 +202,11 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 					const plan = byTier.get(tier);
 					const copy = tier === 'explore' ? null : PRODUCT[tier];
 					const isCurrent = showCurrent && tier === current;
-					const recommended = tier === 'raise' && !isCurrent;
 					return (
-						<Card key={tier} glow={isCurrent ? 'blue' : undefined} focus={isCurrent} className={`plans-card${recommended ? ' plans-card--rec' : ''}`}>
+						<Card key={tier} glow={isCurrent ? 'blue' : undefined} focus={isCurrent} className="plans-card">
 							<div className="plans-card__head">
-								<AtlasLogo height={24} product={TIER_LABEL[tier]} productColor={TAG_COLOR[tier]} />
-								{isCurrent ? <Badge tone="ok">Current plan</Badge> : recommended ? <Badge tone="navy">Recommended</Badge> : null}
+								<AtlasLogo height={24} product={TIER_LABEL[tier]} />
+								{isCurrent && <Badge tone="ok">Current plan</Badge>}
 							</div>
 							<div className="plans-card__price">
 								{plan ? money(plan.price_amount, plan.currency_code) : '—'}

@@ -1,6 +1,6 @@
-import type { Metadata } from 'next';
+import { reportMetadata } from '@/lib/report-metadata';
 
-export const metadata: Metadata = { title: 'Global Sports Tech Ecosystem Report 2026' };
+export const generateMetadata = () => reportMetadata('gster26', 'Global Sports Tech Ecosystem Report 2026');
 
 export default function Layout({ children }: { children: React.ReactNode }) {
 	return children;

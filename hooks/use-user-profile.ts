@@ -86,6 +86,32 @@ export function getUserType(profile: Profile | null | undefined): UserType {
   return (UPGRADE_PATH as readonly string[]).includes(raw ?? '') ? (raw as UserType) : 'explore';
 }
 
+/**
+ * Whether the viewer sees "actively fundraising": a deal-sourcing signal for
+ * investors, so Scout only — not Explore, not Raise. One rule for every surface
+ * (company lists, tiles, the profile header, the drawer, the "Raising now"
+ * filter), so it can't show in one place and leak the same signal in another.
+ */
+export function useCanSeeFundraising(): boolean {
+  const { data: profile } = useUserProfile();
+  return getUserType(profile) === 'scout';
+}
+
+/**
+ * A first name fit for a greeting, or null. Profiles often carry the email
+ * handle as their display name ("rohn.malhotra+121"), which reads as raw data
+ * in a greeting, so only a word made of letters counts.
+ */
+export function firstNameOf(name: string | null | undefined): string | null {
+  const word = (name ?? '').trim().split(/\s+/)[0] ?? '';
+  return /^\p{L}[\p{L}'’-]*$/u.test(word) ? word : null;
+}
+
+/** First name for a greeting: full name first, then display name; null when neither is a real name. */
+export function greetingName(profile: Profile | null | undefined): string | null {
+  return firstNameOf(profile?.full_name) ?? firstNameOf(profile?.display_name);
+}
+
 // Resolve the self-declared persona, defaulting an undeclared profile to 'user'.
 export function getAccountType(profile: Profile | null | undefined): AccountType {
   return (profile?.account_type as AccountType) ?? 'user';

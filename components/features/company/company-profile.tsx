@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { useMemo, type ReactNode } from 'react';
 import useSWR from 'swr';
-import { ArrowUpLeft, ArrowUpRight, Globe, Lock, Mail } from 'lucide-react';
+import { ArrowUpLeft, ArrowUpRight, ChevronRight, Globe, Info, Lock, Mail } from 'lucide-react';
 import { VerifiedBadge } from '@/components/atlas/icons/verified-badge';
 import { SaveToWatchlist } from '@/components/features/watchlists/save-to-watchlist';
 import { qk } from '@/lib/query-keys';
 import type { Company, Deal } from '@/types/api';
-import { Action, Empty, Loading, Logo } from '@/components/atlas';
+import { Action, Empty, Loading, Logo, ProductWord } from '@/components/atlas';
 import { RaisingPill } from '@/components/ui/atoms';
 import { ago, fmtUsd, place } from '@/components/features/market/format';
 import { VerifyButton } from '@/components/features/verify/verify-cta';
@@ -16,7 +16,11 @@ import { SuggestCorrection } from '@/components/features/verify/suggest-correcti
 import { CompanyMa } from '@/components/features/company/company-ma';
 import { CompanyPrograms } from '@/components/features/company/company-programs';
 import { usePrimaryContact } from '@/hooks/use-primary-contact';
-import { hrefOf } from '@/lib/routes';
+import { useCanSeeFundraising } from '@/hooks/use-user-profile';
+import { PLANS_PATH } from '@/lib/routes';
+import { PILLARS } from '@/components/features/framework/framework-content';
+import { SectorMark } from '@/components/features/market/company-marks';
+import { useFeatureAccess } from '@/contexts/feature-access-context';
 import './company-profile.css';
 
 /**
@@ -38,7 +42,8 @@ interface SectorRef { id: string; name: string; slug: string; parent_id?: string
 const BrandSvg = ({ d }: { d: string }) => (
 	<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={d} /></svg>
 );
-const BRAND = {
+/** Social-network glyphs (also used by the investor profile). */
+export const BRAND = {
 	linkedin: <BrandSvg d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z" />,
 	x: <BrandSvg d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.4l-5.8-7.58-6.63 7.58H.49l8.6-9.83L0 1.15h7.59l5.24 6.93 6.07-6.93zm-1.29 19.5h2.04L6.48 3.24H4.3l13.31 17.4z" />,
 	instagram: <BrandSvg d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16zM12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.3-1.46.72-2.12 1.38A5.86 5.86 0 0 0 .63 4.14c-.3.76-.5 1.64-.56 2.91C.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.3.79.72 1.46 1.38 2.12.66.66 1.33 1.08 2.12 1.38.76.3 1.64.5 2.91.56C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56a5.86 5.86 0 0 0 2.12-1.38 5.86 5.86 0 0 0 1.38-2.12c.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91a5.86 5.86 0 0 0-1.38-2.12A5.86 5.86 0 0 0 19.86.63c-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0zm0 5.84a6.16 6.16 0 1 0 0 12.32 6.16 6.16 0 0 0 0-12.32zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.4-10.4a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z" />,
@@ -48,7 +53,41 @@ const BRAND = {
 
 const BUSINESS_MODELS: Record<string, string> = { b2b: 'B2B', b2c: 'B2C', b2b2c: 'B2B2C', d2c: 'D2C', b2g: 'B2G', other: 'Other' };
 const asList = <T,>(d: unknown): T[] => (Array.isArray(d) ? d : ((d as { data?: T[] } | null)?.data ?? [])) as T[];
-const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
+export const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
+
+/**
+ * The Framework tiers as one connected line: Sector › Sub-Sector › Sub-sub
+ * sector. The Sector leads with its icon, in its colour; each level links to
+ * the companies list filtered down to it — the deeper two only on plans with
+ * advanced filters, since the list ignores them otherwise.
+ */
+function SectorPath({ path, fallback, listHref }: {
+	path: SectorRef[];
+	fallback?: string | null;
+	listHref: (filter: { sector?: string; sub?: string; subsub?: string }) => string;
+}) {
+	const canFilterDeeper = useFeatureAccess('advanced_filters').hasAccess;
+	if (!path.length) return <>{fallback || '—'}</>;
+	const pillar = PILLARS[path[0].slug];
+	const keys = ['sector', 'sub', 'subsub'] as const;
+	return (
+		<nav className="atlas-co__tiers" aria-label="Sector">
+			<SectorMark slug={path[0].slug} size={16} />
+			{path.slice(0, 3).map((s, i) => {
+				const filter = Object.fromEntries(path.slice(0, i + 1).map((p, j) => [keys[j], p.slug]));
+				const name = i === 0 ? (pillar?.badge ?? s.name) : s.name;
+				return (
+					<span key={s.id} className="atlas-co__tier">
+						{i > 0 && <ChevronRight size={14} strokeWidth={1.75} className="atlas-co__tier-sep" aria-hidden="true" />}
+						{i === 0 || canFilterDeeper
+							? <Link href={listHref(filter)} style={i === 0 && pillar ? { color: pillar.color } : undefined}>{name}</Link>
+							: <span>{name}</span>}
+					</span>
+				);
+			})}
+		</nav>
+	);
+}
 
 /**
  * Primary contact (POC) — Pro-gated via `company_contacts`, same rule as the
@@ -65,8 +104,9 @@ function ContactCard({ companyId }: { companyId: string }) {
 			<h2 className="atlas-co__h">Primary contact</h2>
 			{access.isLocked ? (
 				<>
-					<p className="atlas-co__sub" style={{ display: 'flex', gap: 6, alignItems: 'center' }}><Lock size={13} aria-hidden="true" /> Pro members can see the founder&apos;s name, email and LinkedIn for every company.</p>
-					<Link href={hrefOf('billing')} className="atlas-btn atlas-btn--outline atlas-co__more">Upgrade to Pro</Link>
+					{/* Matches the `company_contacts` entitlement: Raise and Scout, not Explore. */}
+					<p className="atlas-co__sub" style={{ display: 'flex', gap: 6, alignItems: 'center' }}><Lock size={13} aria-hidden="true" /> <span>Founder name, email and LinkedIn are included in Atlas <ProductWord product="Raise" /> and Atlas <ProductWord product="Scout" />.</span></p>
+					<Link href={PLANS_PATH} className="atlas-co__pill atlas-co__more">Explore <ArrowUpRight size={12} strokeWidth={1.75} aria-hidden="true" /></Link>
 				</>
 			) : isLoading ? <Loading /> : contact ? (
 				<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 12 }}>
@@ -98,6 +138,8 @@ export function CompanyProfile({ idOrSlug, backHref, companyHref, listHref, rail
 	railTop?: ReactNode;
 }) {
 	const detail = useSWR<Company>(qk.companies.detail(idOrSlug));
+	// Fundraising is shown to Scout only (see useCanSeeFundraising).
+	const canSeeRaising = useCanSeeFundraising();
 	const c = detail.data;
 	// These three key off `idOrSlug`, which is known on the first render, so
 	// they start alongside `detail` rather than waiting for it. They used to be
@@ -112,7 +154,7 @@ export function CompanyProfile({ idOrSlug, backHref, companyHref, listHref, rail
 	const deals = useSWR<{ data: Deal[] }>(c ? qk.deals.list({ company_id: c.id, limit: 30, sort: '-announced_date' }) : null);
 	const sectors = useSWR<SectorRef[] | { data: SectorRef[] }>(qk.reference.sectors(), { dedupingInterval: 60 * 60_000 });
 
-	// Sector path (pillar › category › sub-category) for the facts card + related link.
+	// Sector path (Sector › Sub-Sector › Sub-sub sector) for the facts card + related link.
 	const path = useMemo(() => {
 		const list = asList<SectorRef>(sectors.data);
 		const byId = new Map(list.map((s) => [s.id, s]));
@@ -127,31 +169,32 @@ export function CompanyProfile({ idOrSlug, backHref, companyHref, listHref, rail
 
 	const hq = place(c.hq_city, c.hq_country);
 	const raised = fmtUsd(c.total_funding_usd == null ? null : Number(c.total_funding_usd));
-	const rounds = c.deal_count ? `${c.deal_count} round${c.deal_count === 1 ? '' : 's'}` : null;
 	const website = c.website ? (c.website.startsWith('http') ? c.website : `https://${c.website}`) : null;
-	// Social links come from the joined social_profiles row; render only the ones
-	// that exist, never empty links (per the Company type's contract).
+	// Links under the name: the website first, then the social profiles (from the
+	// joined social_profiles row). Only the ones that exist, never empty links.
 	const ext = (u: string | null) => (u ? (/^(https?:|mailto:)/.test(u) ? u : `https://${u}`) : null);
 	const socialLinks = ([
+		['website', 'Website', website, <Globe key="website" size={15} aria-hidden="true" />],
 		['linkedin', 'LinkedIn', ext(c.linkedin_url), BRAND.linkedin],
 		['twitter', 'X (Twitter)', ext(c.twitter_url), BRAND.x],
 		['instagram', 'Instagram', ext(c.instagram_url), BRAND.instagram],
 		['facebook', 'Facebook', ext(c.facebook_url), BRAND.facebook],
 		['youtube', 'YouTube', ext(c.youtube_url), BRAND.youtube],
-		['email', 'Email', c.contact_email ? `mailto:${c.contact_email}` : null, <Mail size={15} aria-hidden="true" />],
+		['email', 'Email', c.contact_email ? `mailto:${c.contact_email}` : null, <Mail key="email" size={15} aria-hidden="true" />],
 	] as Array<[string, string, string | null, ReactNode]>).filter((s) => s[2]);
 	const sportNames = asList<Sport>(sports.data).map((s) => s.name);
 	const tagNames = asList<{ name: string }>(techTags.data).map((t) => t.name);
-	const facts: Array<[string, string]> = [
+	// In pairs (the card is two columns): where and when, then the Framework
+	// tiers as one line across both columns, then the rest. The header carries
+	// only the name and links. No Stage, and Total raised without the round count.
+	const facts: Array<[string, ReactNode, boolean?]> = [
+		['Headquarters', hq || '—'],
 		['Founded', c.founded_year ? String(c.founded_year) : '—'],
+		['Sector', <SectorPath key="sector" path={path} fallback={c.primary_sector} listHref={listHref} />, true],
+		['Business model', c.business_model ? (BUSINESS_MODELS[c.business_model.toLowerCase()] ?? c.business_model) : '—'],
 		['Sports', sportNames.length ? sportNames.join(', ') : '—'],
 		['Tech', tagNames.length ? tagNames.join(', ') : '—'],
-		['Headquarters', hq || '—'],
-		['Business model', c.business_model ? (BUSINESS_MODELS[c.business_model.toLowerCase()] ?? c.business_model) : '—'],
-		['Category', path[0]?.name ?? '—'],
-		['Stage', c.last_round_type ?? '—'],
-		['Sub-category', path.length > 1 ? path.slice(1).map((s) => s.name).join(' › ') : (c.primary_sector ?? '—')],
-		['Total raised', raised === '—' ? '—' : [raised, rounds].filter(Boolean).join(' · ')],
+		['Total raised', raised],
 	];
 	const dealRows = deals.data?.data ?? [];
 	const newsRows = asList<NewsItem>(news.data).slice(0, 4);
@@ -164,8 +207,7 @@ export function CompanyProfile({ idOrSlug, backHref, companyHref, listHref, rail
 				<div className="atlas-co__id">
 					<Logo co={{ name: c.name, website: c.website ?? null, custom_logo_url: c.custom_logo_url }} size={72} radius={10} />
 					<div>
-						<h1 className="atlas-co__name">{c.name}{c.is_verified && <span style={{ marginLeft: 6, display: 'inline-flex', verticalAlign: 'middle' }}><VerifiedBadge size={20} /></span>}{c.is_actively_raising && <span style={{ marginLeft: 8, display: 'inline-flex', verticalAlign: 'middle' }}><RaisingPill compact /></span>}</h1>
-						<div className="atlas-co__meta">{[hq, c.founded_year ? `Founded ${c.founded_year}` : null].filter(Boolean).join(' · ')}</div>
+						<h1 className="atlas-co__name">{c.name}{c.is_verified && <span style={{ marginLeft: 6, display: 'inline-flex', verticalAlign: 'middle' }}><VerifiedBadge size={20} /></span>}{canSeeRaising && c.is_actively_raising && <span style={{ marginLeft: 8, display: 'inline-flex', verticalAlign: 'middle' }}><RaisingPill compact /></span>}</h1>
 						{socialLinks.length > 0 && (
 							<div className="atlas-co__socials">
 								{socialLinks.map(([key, label, href, icon]) => (
@@ -194,25 +236,29 @@ export function CompanyProfile({ idOrSlug, backHref, companyHref, listHref, rail
 						founded_year: c.founded_year ? String(c.founded_year) : '',
 						sector: c.primary_sector ?? '', business_model: c.business_model ?? '',
 					}} />
-					{website && <Action icon={<Globe />} href={website} external>Website</Action>}
 					<Action icon={<ArrowUpLeft />} href={backHref}>Return to results</Action>
 				</div>
 			</header>
 
+			{/* Reviewed out of the catalog: lists and search leave it out, so a
+			    direct link is the only way here — say why it isn't in the list. */}
+			{c.status === 'not_sportstech' && (
+				<p className="atlas-co__notice" role="note">
+					<Info size={15} aria-hidden="true" />
+					<span><strong>Not listed in Atlas.</strong> This company was reviewed and isn&apos;t part of the sports tech catalog, so it doesn&apos;t appear in lists or search.</span>
+				</p>
+			)}
+
 			<div className="atlas-co__grid">
 				<div className="atlas-co__main">
-					<section className="atlas-card atlas-co__facts" aria-label="Key facts">
-						{facts.map(([k, v]) => (
-							<div key={k}><div className="atlas-co__fact-k">{k}</div><div className="atlas-co__fact-v">{v}</div></div>
+					{/* What the company does comes first, inside the facts card and
+					    without a heading of its own; the facts follow. */}
+					<section className="atlas-card atlas-co__facts" aria-label="About the company">
+						{c.description && <p className="atlas-co__about">{c.description}</p>}
+						{facts.map(([k, v, wide]) => (
+							<div key={k} className={wide ? 'atlas-co__fact--wide' : undefined}><div className="atlas-co__fact-k">{k}</div><div className="atlas-co__fact-v">{v}</div></div>
 						))}
 					</section>
-
-					{c.description && (
-						<section className="atlas-co__text">
-							<h2 className="atlas-co__h">Description</h2>
-							<p>{c.description}</p>
-						</section>
-					)}
 
 					<section className="atlas-card atlas-chart-card atlas-co__funding">
 						<div className="atlas-co__card-head">
@@ -243,7 +289,7 @@ export function CompanyProfile({ idOrSlug, backHref, companyHref, listHref, rail
 												? d.investor_links.map((iv, i) => (
 													<span key={(iv.slug ?? iv.name) + i}>
 														{iv.slug
-															? <Link href={`/investors/${iv.slug}`} style={{ color: 'var(--a-navy)', textDecoration: 'none' }}>{iv.name}</Link>
+															? <Link href={`/investors/${iv.slug}`} className="atlas-co__inv-link">{iv.name}</Link>
 															: <span>{iv.name}</span>}
 														{iv.is_lead ? ' (lead)' : ''}{i < d.investor_links!.length - 1 ? ', ' : ''}
 													</span>
@@ -263,18 +309,22 @@ export function CompanyProfile({ idOrSlug, backHref, companyHref, listHref, rail
 					{railTop}
 					<ContactCard companyId={c.id} />
 					<CompanyPrograms companyId={c.id} />
+					{/* Only when there is news: an empty card at the top of the rail
+					    pushed the useful ones (related companies) down on most pages. */}
+					{newsRows.length > 0 && (
 					<section className="atlas-card atlas-co__side">
 						<h2 className="atlas-co__h">Recent signals</h2>
-						{newsRows.length === 0 ? <p className="atlas-co__empty">No recent signals for this company yet.</p> : newsRows.map((n) => (
+						{newsRows.map((n) => (
 							<div key={n.id} className="atlas-co__signal">
 								<div className="atlas-co__signal-meta">{[n.source ?? 'News', ago(n.published_at)].filter(Boolean).join(' · ')}</div>
 								{n.url ? <a href={n.url} target="_blank" rel="noopener noreferrer">{n.title}</a> : <span>{n.title}</span>}
 							</div>
 						))}
 					</section>
+					)}
 
 					<section className="atlas-card atlas-co__side">
-						<h2 className="atlas-co__h">Related Companies</h2>
+						<h2 className="atlas-co__h">Related companies</h2>
 						<p className="atlas-co__sub">Similar categories, sports, customers and geographies</p>
 						{related.length === 0 ? <p className="atlas-co__empty">No related companies found.</p> : related.map((r) => (
 							<Link key={r.id} href={companyHref(r.slug ?? r.id)} className="atlas-co__rel">
@@ -285,7 +335,7 @@ export function CompanyProfile({ idOrSlug, backHref, companyHref, listHref, rail
 								<span className="atlas-co__rel-go" aria-hidden="true"><ArrowUpRight size={12} /></span>
 							</Link>
 						))}
-						{relatedFilter.sector && <Link href={listHref(relatedFilter)} className="atlas-btn atlas-btn--outline atlas-co__more">View related companies</Link>}
+						{relatedFilter.sector && <Link href={listHref(relatedFilter)} className="atlas-co__pill atlas-co__more">View related companies <ArrowUpRight size={12} strokeWidth={1.75} aria-hidden="true" /></Link>}
 					</section>
 				</aside>
 			</div>

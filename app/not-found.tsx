@@ -23,7 +23,7 @@ export default function NotFound() {
 				{/* Brand lockup — the Atlas wordmark + byline, same as the auth screens. */}
 				<div style={{ display: 'flex', alignItems: 'baseline', gap: 9, color: 'var(--a-ink)', marginBottom: 44 }}>
 					<AtlasLogo height={30} />
-					<span style={{ fontFamily: 'var(--a-mono)', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--a-faint)' }}>by SportsTechX</span>
+					<span className="stx-byline" style={{ color: 'var(--a-faint)' }}>by SportsTechX</span>
 				</div>
 
 				{/* Oversized, faint 404 as the visual anchor; the heading overlaps its foot. */}

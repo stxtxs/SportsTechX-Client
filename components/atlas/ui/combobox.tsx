@@ -97,9 +97,13 @@ export function Combobox({ value, onChange, options, groups, placeholder = 'Sele
 			setPos({ left, width, bottom: window.innerHeight - r.top + gap, maxH: Math.min(want, above) });
 		}
 	};
+	// Deliberate: opening resets the panel (position, search, active row) in one
+	// layout pass before paint. Every dropdown in the app goes through here, so
+	// it stays an effect rather than being threaded through each open handler.
 	useLayoutEffect(() => {
 		if (!open) return;
 		place();
+		// eslint-disable-next-line react-hooks/set-state-in-effect
 		setQuery('');
 		keyNav.current = true; // scroll the selected option into view on open
 		setActive(Math.max(0, visible.findIndex(([v]) => v === value)));

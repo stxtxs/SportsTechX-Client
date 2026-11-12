@@ -1,7 +1,10 @@
+import type { CSSProperties } from 'react';
+import { SOLUTIONS } from '@/components/landing/atlas-solutions';
+
 /**
  * Atlas wordmark (vector lifted from the Atlas Product UX v3 Figma "Menu Logo").
- * Inherits `currentColor`, so it follows the theme. `product` renders the small
- * italic product tag (e.g. RAISE) above the "s", as in the Figma sidebar.
+ * Inherits `currentColor`, so it follows the theme. `product` renders the
+ * italic product tag (e.g. RAISE) beside it, as on the landing page.
  *
  * The paths are split into the "A" glyph and the "tlas" letters so the mark can
  * stand on its own in the collapsed rail. They are the same Figma artwork in
@@ -30,15 +33,47 @@ const WORD_PATHS = (
 	</>
 );
 
-export function AtlasLogo({ height = 31, product, productColor }: { height?: number; product?: string; /** Tag colour, e.g. Raise blue / Scout green. */ productColor?: string }) {
+/**
+ * Product tag colours, from the Atlas landing page (`SOLUTIONS`) so the lockup
+ * reads the same in the app, on /plans, on login and on the landing.
+ */
+const PRODUCT_COLOR: Record<string, string> = Object.fromEntries(SOLUTIONS.map((s) => [s.id, s.colour]));
+
+/** A product's colour by name ("Explore", "raise"…), as on the landing page. */
+export const productColour = (product: string | undefined): string | undefined =>
+	product ? PRODUCT_COLOR[product.toLowerCase()] : undefined;
+
+/**
+ * The wordmark, optionally with its product tag ("Atlas EXPLORE"): New Frank
+ * italic to the right of the wordmark, top-aligned, at about half its height —
+ * the landing page's solution-card lockup. `productColor` only applies to a
+ * product with no colour of its own.
+ */
+export function AtlasLogo({ height = 31, product, productColor }: { height?: number; product?: string; productColor?: string }) {
+	const color = product ? (productColour(product) ?? productColor) : undefined;
 	return (
-		<span className="atlas-logo" style={{ height }}>
+		<span className="atlas-logo" style={{ height, '--atlas-logo-h': `${height}px` } as CSSProperties}>
 			<svg viewBox="0 0 87 31" height={height} fill="currentColor" role="img" aria-label="Atlas">
 				{MARK_PATHS}
 				{WORD_PATHS}
 			</svg>
-			{product && <span className="atlas-logo__product" style={productColor ? { color: productColor } : undefined}>{product}</span>}
+			{product && <span className="atlas-logo__product" style={color ? { color } : undefined}>{product}</span>}
 		</span>
+	);
+}
+
+/**
+ * A product's name inside running text ("Atlas RAISE"), in the lockup's italic
+ * and the product colour, so it reads as the same brand mark as the logo tag.
+ */
+export function ProductWord({ product }: { product: string }) {
+	// Inline so it renders the same in surfaces that don't load the Atlas sheets
+	// (e.g. the legacy company drawer).
+	return (
+		<em style={{
+			fontFamily: '"new-frank", var(--a-font, inherit)', fontStyle: 'italic', fontWeight: 500,
+			letterSpacing: '0.06em', textTransform: 'uppercase', color: productColour(product),
+		}}>{product}</em>
 	);
 }
 

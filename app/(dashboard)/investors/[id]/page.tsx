@@ -1,43 +1,38 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useMemo, useState, type ReactNode } from 'react';
+import { useParams } from 'next/navigation';
 import useSWR from 'swr';
 import { toast } from 'sonner';
-import { ArrowLeft, Loader2, Archive } from 'lucide-react';
+import { ArrowUpLeft, ArrowUpRight, Archive, Globe, Loader2, Mail } from 'lucide-react';
 import { qk } from '@/lib/query-keys';
 import { hrefOf } from '@/lib/routes';
 import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
+import { useListReturnHref } from '@/hooks/use-url-state';
 import type { Deal, Investor, PipelineActivity as Activity, PipelineStage, PipelineUpdate } from '@/types/api';
 import { apiRequest } from '@/lib/query-client';
 import { refreshPipeline } from '@/lib/invalidate';
-import { Screen, Card, Badge, Button, Field, Input, Select, Loading, Empty, Logo, Flag } from '@/components/atlas';
+import { Action, Badge, Button, Card, Empty, Field, Input, Loading, Logo, Screen, Select } from '@/components/atlas';
+import { VerifiedBadge } from '@/components/atlas/icons/verified-badge';
 import { DatePicker } from '@/components/atlas/ui/date-picker';
 import { SaveInvestorToWatchlist } from '@/components/raise/save-investor-to-watchlist';
 import { categoryLabel } from '@/components/raise/investors';
-import { place } from '@/components/features/market/format';
+import { fmtUsd, place } from '@/components/features/market/format';
+import { BRAND, fmtDate } from '@/components/features/company/company-profile';
+import '@/components/features/company/company-profile.css';
 
 /**
- * Atlas Raise — Investor profile (mock-ups 12/13 / canvas isProfileBaseline &
- * isProfileNorthgate). One page, two states: not-in-pipeline (Add to pipeline)
- * and in-pipeline (your pipeline record + activity). Wired to GET /api/investors/:id
- * and the founder's raise pipeline.
+ * Investor profile — the same layout as the company profile (header with name,
+ * links and actions; a facts card; a history table; a side rail), so the two
+ * read as one product. Raise users also get their pipeline record for this
+ * investor (stage, contact, next step, activity), unchanged from before.
+ *
+ * Data: GET /api/investors/:id, /thesis (stages, geography, cheque range), and
+ * the deals they took part in. The pipeline is Raise-only (`@RequireTier('raise')`),
+ * so it isn't fetched for anyone else — that would 402 and open the plan modal.
  */
 
-/**
- * `GET /api/investors/:id/thesis`.
- *
- * Deliberately has no prose field. This used to declare
- * `thesis: { description?: string | null }` and render an "Investment thesis"
- * section from it — but `investor_thesis` has no `description` column
- * (`server/src/db/types.ts` → `InvestorThesisRow` is ids, amounts, timestamps),
- * so the section could never appear. The prose lives on `investors.description`
- * and already renders above as "Overview"; pointing this at the same field
- * would have shown it twice.
- *
- * `thesis.amount_min_usd` / `amount_max_usd` DO exist and are still unused —
- * "Typical cheque size" below is hardcoded to "Not confirmed".
- */
 interface ThesisBundle {
 	thesis: { amount_min_usd?: string | null; amount_max_usd?: string | null } | null;
 	round_types: Array<{ name: string }>;
@@ -49,105 +44,155 @@ interface Pipe {
 	next_step_due: string | null; notes: string | null;
 }
 
-
-
 const STAGES: [string, string][] = [
 	['target', 'Target'], ['contacted', 'Contacted'], ['in_conversation', 'In conversation'],
 	['due_diligence', 'Due diligence'], ['term_sheet', 'Term sheet'], ['committed', 'Committed'],
 	['closed', 'Closed'], ['passed', 'Passed'],
 ];
 const STAGE_LABEL = Object.fromEntries(STAGES);
-const geoOf = (i: Investor) => place(i.hq_city, i.hq_country) || i.hq_region || '—';
+const ext = (u: string | null) => (u ? (/^(https?:|mailto:)/.test(u) ? u : `https://${u}`) : null);
+
+/** "$500K – $2M" from the thesis cheque range; null when neither end is known. */
+function chequeRange(t: ThesisBundle['thesis']): string | null {
+	const lo = t?.amount_min_usd != null ? Number(t.amount_min_usd) : null;
+	const hi = t?.amount_max_usd != null ? Number(t.amount_max_usd) : null;
+	if (lo && hi) return `${fmtUsd(lo)} – ${fmtUsd(hi)}`;
+	if (lo) return `From ${fmtUsd(lo)}`;
+	if (hi) return `Up to ${fmtUsd(hi)}`;
+	return null;
+}
 
 export default function InvestorProfilePage() {
 	const id = String(useParams().id);
-	const router = useRouter();
 	const { data: profile } = useUserProfile();
-	// The pipeline/watchlist is Atlas Raise only (a founder tracking investors to
-	// pitch). `/api/raise/pipeline` is `@RequireTier('raise')`, so fetching it for
-	// a Scout viewer 402s and pops the global "different plan" modal — hence the
-	// key is null for anyone but Raise, and the pipeline UI below is hidden too.
 	const isRaise = getUserType(profile) === 'raise';
+	// "Return to results" lands on the investor list as the user left it (filters, page).
+	const back = useListReturnHref(hrefOf('investors'));
 	const { data: inv, isLoading, error } = useSWR<Investor>(qk.investors.detail(id));
 	const { data: bundle } = useSWR<ThesisBundle>(qk.investors.thesis(id));
-	const { data: deals } = useSWR<{ data: Deal[] }>(qk.deals.list({ investor_id: id, sort: '-announced_date', limit: 12 }));
+	const deals = useSWR<{ data: Deal[] }>(qk.deals.list({ investor_id: id, sort: '-announced_date', limit: 20 }));
 	const pipe = useSWR<{ data: Pipe[] }>(isRaise ? qk.raise.pipeline() : null);
 	const record = useMemo(() => (pipe.data?.data ?? []).find((r) => r.investor_id === id) ?? null, [pipe.data, id]);
 
-	if (error) return <Screen><Empty>Investor not found. <button onClick={() => router.push(hrefOf('investors'))} style={{ background: 'none', border: 'none', color: 'var(--a-navy)', cursor: 'pointer', font: 'inherit' }}>Back to investors</button></Empty></Screen>;
+	if (error) return <Screen><Empty>Investor not found. <Link href={back}>Back to investors</Link></Empty></Screen>;
 	if (isLoading || !inv) return <Screen><Loading /></Screen>;
 
-	const stages = bundle?.round_types?.map((r) => r.name).join(', ') || 'Not specified';
+	const links = ([
+		['website', 'Website', ext(inv.website), <Globe key="website" size={15} aria-hidden="true" />],
+		['linkedin', 'LinkedIn', ext(inv.linkedin_url), BRAND.linkedin],
+		['twitter', 'X (Twitter)', ext(inv.twitter_url), BRAND.x],
+		['instagram', 'Instagram', ext(inv.instagram_url), BRAND.instagram],
+		['facebook', 'Facebook', ext(inv.facebook_url), BRAND.facebook],
+		['youtube', 'YouTube', ext(inv.youtube_url), BRAND.youtube],
+		['email', 'Email', inv.contact_email ? `mailto:${inv.contact_email}` : null, <Mail key="email" size={15} aria-hidden="true" />],
+	] as Array<[string, string, string | null, ReactNode]>).filter((l) => l[2]);
+
+	const stages = bundle?.round_types?.map((r) => r.name).join(', ');
 	// Thesis geography (where they invest) is separate from HQ (where they sit).
-	const geoText = bundle?.geo?.map((g) => g.scope_value).join(', ') || '';
+	const geo = bundle?.geo?.map((g) => g.scope_value).join(', ');
+	const investments = inv.num_investments ?? inv.deals_count;
+	const facts: Array<[string, ReactNode, boolean?]> = [
+		['Headquarters', place(inv.hq_city, inv.hq_country) || inv.hq_region || '—'],
+		['Launched', inv.year_launched ? String(inv.year_launched) : '—'],
+		['Type', inv.category ? categoryLabel(inv.category) : '—'],
+		['Actively investing', inv.actively_investing ? 'Yes' : 'Not currently'],
+		['Stages', stages || '—', true],
+		['Investment geography', geo || '—', true],
+		['Typical cheque', chequeRange(bundle?.thesis ?? null) ?? '—'],
+		['Investments', investments != null ? String(investments) : '—'],
+		['Exits', inv.num_exits != null ? String(inv.num_exits) : '—'],
+	];
+
+	const dealRows = deals.data?.data ?? [];
+	// Portfolio = distinct companies from their deals, newest first.
+	const portfolio = [...new Map(dealRows.filter((d) => d.company_name).map((d) => [d.company_id, d])).values()].slice(0, 8);
 
 	return (
 		<Screen>
-			<button onClick={() => router.back()} className="atlas-action" aria-label="Back"><span className="atlas-action__icon"><ArrowLeft /></span>Back</button>
-
-			<div className="atlas-pagehead" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, flexWrap: 'wrap', marginTop: 28 }}>
-				<div style={{ display: 'flex', gap: 20, alignItems: 'center', minWidth: 0 }}>
-					<Logo co={{ name: inv.name, website: inv.website, custom_logo_url: inv.logo_url }} size={72} radius={9} />
-					<div style={{ minWidth: 0 }}>
-						<h1 className="atlas-h1" style={{ fontSize: 30, lineHeight: 1.15 }}>{inv.name}</h1>
-						<div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, fontFamily: 'var(--a-mono)', fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--a-muted)', marginTop: 10 }}>
-							{inv.category && <span>{categoryLabel(inv.category)}</span>}
-							{inv.category && geoOf(inv) !== '—' && <span>·</span>}
-							{inv.hq_country && <Flag cc={inv.hq_country} size={15} />}
-							{geoOf(inv) !== '—' && <span>{geoOf(inv)}</span>}
+			<article className="atlas-co">
+				<header className="atlas-co__head">
+					<div className="atlas-co__id">
+						<Logo co={{ name: inv.name, website: inv.website, custom_logo_url: inv.logo_url }} size={72} radius={10} />
+						<div>
+							<h1 className="atlas-co__name">{inv.name}{inv.is_verified && <span style={{ marginLeft: 6, display: 'inline-flex', verticalAlign: 'middle' }}><VerifiedBadge size={20} /></span>}</h1>
+							{links.length > 0 && (
+								<div className="atlas-co__socials">
+									{links.map(([key, label, href, icon]) => (
+										<a key={key} href={href as string} target="_blank" rel="noopener noreferrer" className="atlas-co__social" aria-label={label} title={label}>{icon}</a>
+									))}
+								</div>
+							)}
 						</div>
 					</div>
-				</div>
-				{(record || isRaise) && (
-					<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+					<div className="atlas-co__actions">
 						{record && <Badge tone="navy">{STAGE_LABEL[record.stage] ?? record.stage}</Badge>}
 						{isRaise && <SaveInvestorToWatchlist investorId={inv.id} investorName={inv.name} align="end" />}
+						<Action icon={<ArrowUpLeft />} href={back}>Return to results</Action>
 					</div>
-				)}
-			</div>
+				</header>
 
-			{/* Keyed: the form is a draft seeded from the record, so a re-added or
-			    moved record must start a fresh draft, not keep the old values. */}
-			{record && <PipelineRecord key={`${record.id}:${record.stage}`} record={record} onChanged={() => void refreshPipeline()} />}
+				<div className="atlas-co__grid">
+					<div className="atlas-co__main">
+						{/* Keyed: the form is a draft seeded from the record, so a re-added or
+						    moved record must start a fresh draft, not keep the old values. */}
+						{record && <PipelineRecord key={`${record.id}:${record.stage}`} record={record} onChanged={() => void refreshPipeline()} />}
 
-			<div className="atlas-eyebrow" style={{ margin: record ? '32px 0 14px' : '0 0 14px' }}>{record ? 'About this investor' : ''}</div>
-			<div className="atlas-kpis" style={{ marginBottom: 24 }}>
-				<Tile label="Stages" value={stages} />
-				<Tile label="Typical cheque size" value="Not confirmed" muted />
-				<Tile label="HQ" value={place(inv.hq_city, inv.hq_country) || '—'} muted={!inv.hq_country && !inv.hq_city} />
-				<Tile label="Investment geography" value={geoText || 'Not specified'} muted={!geoText} />
-				<Tile label="Website" value={inv.website ? <a href={/^https?:\/\//i.test(inv.website) ? inv.website : `https://${inv.website}`} target="_blank" rel="noreferrer" style={{ color: 'var(--a-ink)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Visit</a> : '—'} />
-			</div>
+						<section className="atlas-card atlas-co__facts" aria-label="About the investor">
+							{inv.description && <p className="atlas-co__about">{inv.description}</p>}
+							{facts.map(([k, v, wide]) => (
+								<div key={k} className={wide ? 'atlas-co__fact--wide' : undefined}><div className="atlas-co__fact-k">{k}</div><div className="atlas-co__fact-v">{v}</div></div>
+							))}
+						</section>
 
-			{inv.description && <Section title="Overview">{inv.description}</Section>}
-
-			{(() => {
-				const rows = deals?.data ?? [];
-				const portfolio = [...new Set(rows.map((d) => d.company_name).filter(Boolean) as string[])].slice(0, 12);
-				const recent = rows.slice(0, 6);
-				return <>
-					{portfolio.length > 0 && (
-						<Card style={{ marginBottom: 20 }}>
-							<div style={{ fontSize: 17, fontFamily: 'var(--a-font)', fontWeight: 700, marginBottom: 12 }}>Portfolio</div>
-							<div style={{ fontSize: 13, color: 'var(--a-muted)', lineHeight: 1.55 }}>Includes: {portfolio.join(', ')}.</div>
-						</Card>
-					)}
-					{recent.length > 0 && (
-						<Card style={{ marginBottom: 20 }}>
-							<div style={{ fontSize: 17, fontFamily: 'var(--a-font)', fontWeight: 700, marginBottom: 6 }}>Recent investment activity</div>
-							<div>
-								{recent.map((d, i) => (
-									<div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, fontSize: 13, color: 'var(--a-muted)', padding: '14px 0', borderTop: i === 0 ? 'none' : '1px solid var(--a-border)' }}>
-										<span><span style={{ color: 'var(--a-ink)', fontFamily: 'var(--a-font)', fontWeight: 700 }}>{d.company_name ?? 'Company'}</span>{d.round_type_name ? ` · ${d.round_type_name}` : ''}{d.amount_usd ? ` · $${(Number(d.amount_usd) / 1e6).toFixed(1)}m` : ''}</span>
-										<span style={{ color: 'var(--a-faint)', whiteSpace: 'nowrap', fontFamily: 'var(--a-mono)', fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{d.announced_date ? new Date(d.announced_date).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : ''}</span>
-									</div>
-								))}
+						<section className="atlas-card atlas-chart-card atlas-co__funding">
+							<div className="atlas-co__card-head">
+								<h2 className="atlas-co__h2">Investment history</h2>
+								<span className="atlas-co__aside">Disclosed rounds</span>
 							</div>
-						</Card>
-					)}
-					{!inv.description && portfolio.length === 0 && recent.length === 0 && <Card><div style={{ fontSize: 13, color: 'var(--a-faint)' }}>No further profile detail recorded for this investor yet.</div></Card>}
-				</>;
-			})()}
+							{deals.isLoading ? <Loading /> : dealRows.length === 0 ? (
+								<p className="atlas-co__empty">No disclosed investments on record.</p>
+							) : (
+								<div className="atlas-co__deals" role="table" aria-label="Investments">
+									<div className="atlas-co__deal atlas-co__deal--head" role="row">
+										<span role="columnheader">Date</span>
+										<span role="columnheader">Company</span>
+										<span role="columnheader">Funding Type</span>
+										<span role="columnheader">Money Raised</span>
+									</div>
+									{dealRows.map((d) => (
+										<div key={d.id} className="atlas-co__deal" role="row">
+											<span role="cell">{fmtDate(d.announced_date)}</span>
+											<span className="atlas-co__investors" role="cell">
+												{d.company_slug
+													? <Link href={`/companies/${d.company_slug}`} className="atlas-co__inv-link">{d.company_name ?? 'Company'}</Link>
+													: (d.company_name ?? 'Company')}
+											</span>
+											<span role="cell">{d.round_type_name ?? 'Round'}</span>
+											<span className="atlas-co__amt" role="cell">{d.amount_usd == null ? '—' : fmtUsd(Number(d.amount_usd))}</span>
+										</div>
+									))}
+								</div>
+							)}
+						</section>
+					</div>
+
+					<aside className="atlas-co__rail">
+						<section className="atlas-card atlas-co__side">
+							<h2 className="atlas-co__h">Portfolio</h2>
+							<p className="atlas-co__sub">Companies from their recent disclosed rounds</p>
+							{portfolio.length === 0 ? <p className="atlas-co__empty">No portfolio companies on record.</p> : portfolio.map((d) => (
+								<Link key={d.company_id} href={`/companies/${d.company_slug ?? d.company_id}`} className="atlas-co__rel">
+									<span>
+										<span className="atlas-co__rel-name">{d.company_name}</span>
+										<span className="atlas-co__rel-meta">{[d.round_type_name, d.announced_date ? new Date(d.announced_date).getFullYear() : null].filter(Boolean).join(' · ')}</span>
+									</span>
+									<span className="atlas-co__rel-go" aria-hidden="true"><ArrowUpRight size={12} /></span>
+								</Link>
+							))}
+						</section>
+					</aside>
+				</div>
+			</article>
 		</Screen>
 	);
 }
@@ -200,11 +245,4 @@ function describe(a: Activity): string {
 	if (a.type === 'stage_change') return `Moved ${String(a.payload?.from ?? '')} → ${String(a.payload?.to ?? '')}`;
 	if (a.type === 'commitment') return `Amount recorded: €${Number(a.payload?.amount ?? 0).toLocaleString()}`;
 	return a.type;
-}
-
-function Tile({ label, value, muted }: { label: string; value: React.ReactNode; muted?: boolean }) {
-	return <div className="atlas-kpi"><div className="atlas-kpi__label">{label}</div><div className="atlas-kpi__value" style={{ fontSize: 18, lineHeight: 1.3, whiteSpace: 'normal', overflowWrap: 'anywhere', marginBottom: 0, color: muted ? 'var(--a-faint)' : undefined }}>{value}</div></div>;
-}
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-	return <Card style={{ marginBottom: 20 }}><div style={{ fontSize: 17, fontFamily: 'var(--a-font)', fontWeight: 700, marginBottom: 12 }}>{title}</div><p style={{ margin: 0, fontSize: 13, color: 'var(--a-muted)', lineHeight: 1.55 }}>{children}</p></Card>;
 }

@@ -2,6 +2,8 @@
 
 import { SWRConfig } from 'swr';
 import { ThemeProvider } from 'next-themes';
+import { usePathname } from 'next/navigation';
+import { AuthThemeProvider, isAuthPath, useAuthTheme } from '@/components/auth/auth-theme';
 import { Toaster } from 'sonner';
 import './toast.css';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -49,13 +51,8 @@ function AppInit() {
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SWRConfig value={swrConfig}>
-      <ThemeProvider
-        attribute="data-theme"
-        defaultTheme="dark"
-        enableSystem={false}
-        disableTransitionOnChange
-        storageKey="stx:theme"
-      >
+      <AuthThemeProvider>
+      <AppThemeProvider>
         <TooltipProvider delayDuration={300}>
           {/* AuthSessionProvider must wrap FeatureAccessProvider because the
               latter reads `sessionValid` / `loading` to gate its own queries. */}
@@ -77,7 +74,29 @@ export function Providers({ children }: { children: React.ReactNode }) {
             </FeatureAccessProvider>
           </AuthSessionProvider>
         </TooltipProvider>
-      </ThemeProvider>
+      </AppThemeProvider>
+      </AuthThemeProvider>
     </SWRConfig>
+  );
+}
+
+/**
+ * next-themes for the app. On the login/signup screens the auth theme (dark by
+ * default) is forced instead, leaving the app's stored choice alone.
+ */
+function AppThemeProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const { theme: authTheme } = useAuthTheme();
+  return (
+    <ThemeProvider
+      attribute="data-theme"
+      defaultTheme="dark"
+      enableSystem={false}
+      disableTransitionOnChange
+      storageKey="stx:theme"
+      forcedTheme={isAuthPath(pathname) ? authTheme : undefined}
+    >
+      {children}
+    </ThemeProvider>
   );
 }

@@ -21,6 +21,7 @@ import { PLANS_PATH } from '@/lib/routes';
 import { PILLARS } from '@/components/features/framework/framework-content';
 import { SectorMark } from '@/components/features/market/company-marks';
 import { useFeatureAccess } from '@/contexts/feature-access-context';
+import { useBackOr } from '@/hooks/use-back';
 import './company-profile.css';
 
 /**
@@ -140,6 +141,8 @@ export function CompanyProfile({ idOrSlug, backHref, companyHref, listHref, rail
 	const detail = useSWR<Company>(qk.companies.detail(idOrSlug));
 	// Fundraising is shown to Scout only (see useCanSeeFundraising).
 	const canSeeRaising = useCanSeeFundraising();
+	// Return: back to wherever they came from inside Atlas; the list only when opened directly.
+	const back = useBackOr();
 	const c = detail.data;
 	// These three key off `idOrSlug`, which is known on the first render, so
 	// they start alongside `detail` rather than waiting for it. They used to be
@@ -236,7 +239,7 @@ export function CompanyProfile({ idOrSlug, backHref, companyHref, listHref, rail
 						founded_year: c.founded_year ? String(c.founded_year) : '',
 						sector: c.primary_sector ?? '', business_model: c.business_model ?? '',
 					}} />
-					<Action icon={<ArrowUpLeft />} href={backHref}>Return to results</Action>
+					<Action icon={<ArrowUpLeft />} href={backHref} onClick={back}>Return to results</Action>
 				</div>
 			</header>
 

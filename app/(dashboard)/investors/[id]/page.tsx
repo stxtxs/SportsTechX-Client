@@ -10,6 +10,7 @@ import { qk } from '@/lib/query-keys';
 import { hrefOf } from '@/lib/routes';
 import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
 import { useListReturnHref } from '@/hooks/use-url-state';
+import { useBackOr } from '@/hooks/use-back';
 import type { Deal, Investor, PipelineActivity as Activity, PipelineStage, PipelineUpdate } from '@/types/api';
 import { apiRequest } from '@/lib/query-client';
 import { refreshPipeline } from '@/lib/invalidate';
@@ -68,6 +69,8 @@ export default function InvestorProfilePage() {
 	const isRaise = getUserType(profile) === 'raise';
 	// "Return to results" lands on the investor list as the user left it (filters, page).
 	const back = useListReturnHref(hrefOf('investors'));
+	// Back to wherever they came from inside Atlas; the list only when opened directly.
+	const goBack = useBackOr();
 	const { data: inv, isLoading, error } = useSWR<Investor>(qk.investors.detail(id));
 	const { data: bundle } = useSWR<ThesisBundle>(qk.investors.thesis(id));
 	const deals = useSWR<{ data: Deal[] }>(qk.deals.list({ investor_id: id, sort: '-announced_date', limit: 20 }));
@@ -130,7 +133,7 @@ export default function InvestorProfilePage() {
 					<div className="atlas-co__actions">
 						{record && <Badge tone="navy">{STAGE_LABEL[record.stage] ?? record.stage}</Badge>}
 						{isRaise && <SaveInvestorToWatchlist investorId={inv.id} investorName={inv.name} align="end" />}
-						<Action icon={<ArrowUpLeft />} href={back}>Return to results</Action>
+						<Action icon={<ArrowUpLeft />} href={back} onClick={goBack}>Return to results</Action>
 					</div>
 				</header>
 

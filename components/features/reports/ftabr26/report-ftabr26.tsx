@@ -96,8 +96,6 @@ const COVER_STRIPES = `repeating-linear-gradient(90deg, ${COVER_BG} 0, ${COVER_B
 /* Innovators: one neutral ring for everyone; the region is shown as text */
 const INNOVATOR_RING = BRAND.slate;
 const ATLAS_FRAMEWORK_URL = "https://www.atlas.sportstechx.com/framework";
-/* Startups to Watch: report partners get a "Report partner" tag linking to their feature */
-const REPORT_PARTNER_ANCHOR: Record<string, string> = { playermaker: "#featured", soccerment: "#soccerment" };
 /* Startups to Watch location: the record's HQ city when the API sends one
    (hq_city), else the HQ city from Atlas as supplied for this edition.
    English city names throughout (Cologne, Munich, Milan). */
@@ -546,6 +544,17 @@ export default function ReportFTABR26({ content, preview = false }: {
   const FTABR26_PARTNERS = pick("partners", FTABR26_PARTNERS_DEFAULT);
   const FTABR26_METHODOLOGY = pick("methodology", FTABR26_METHODOLOGY_DEFAULT);
   const FTABR26_CREDITS = pick("credits", FTABR26_CREDITS_DEFAULT);
+  /* Imprint line, shared by the web page and the PDF:
+     Published by … · email · website · Legal notice */
+  const imprintLine = (linkColor: string) => {
+    const im = FTABR26_CREDITS.imprint;
+    const site = String(im.website).replace(/^https?:\/\//, "");
+    return (<>
+      Published by {im.publisher} · <a href={`mailto:${im.contact}`} style={{ color: linkColor }}>{im.contact}</a>
+      {" · "}<a href={`https://${site}`} target="_blank" rel="noopener noreferrer" style={{ color: linkColor }}>{site}</a>
+      {" · "}<a href={im.legalNotice.href} target="_blank" rel="noopener noreferrer" style={{ color: linkColor }}>{im.legalNotice.label}</a>
+    </>);
+  };
   const FTABR26_FEATURED = pick("featured", FTABR26_FEATURED_DEFAULT);
   const FTABR26_INNOVATORS = pick("innovators", FTABR26_INNOVATORS_DEFAULT);
   const FTABR26_PLAYMAKER_COMPANIES = pick("playmakerCompanies", FTABR26_PLAYMAKER_COMPANIES_DEFAULT);
@@ -668,8 +677,8 @@ export default function ReportFTABR26({ content, preview = false }: {
     _setDataTab(tab);
     setDfOpen(o => ({ ...o, [id]: true }));
   }
-  const [chartMode, _setChartMode] = useState<"value" | "count">("value");
-  const setChartMode = (v: "value" | "count") => { _setChartMode(v); trackFT("chart_mode_switch", { mode: v }); };
+  /* The by-year and by-region charts show amounts only; the tables under them give the rounds. */
+  const chartMode = "value" as const;
   const [leaderCat, _setLeaderCat] = useState<"only" | "also">("only");
   const setLeaderCat = (v: "only" | "also") => { _setLeaderCat(v); trackFT("filter", { filter: "category", value: v }); };
   const [leaderWindow, _setLeaderWindow] = useState<"allTime" | "recent">("allTime");
@@ -764,7 +773,7 @@ export default function ReportFTABR26({ content, preview = false }: {
   );
   const dealflowCopy = useMemo(() => buildFtabr26DealflowCopy(facts), [facts]);
 
-  useReveal(`${isDark}-${insightsTab}-${watchStartups.length}-${ecoTab}-${dataTab}-${chartMode}-${leaderCat}-${leaderWindow}-${factsLoading}-${eco.isLive}`);
+  useReveal(`${isDark}-${insightsTab}-${watchStartups.length}-${ecoTab}-${dataTab}-${leaderCat}-${leaderWindow}-${factsLoading}-${eco.isLive}`);
 
   /* Freeze the page behind an open drawer. Lenis drives scrolling here, so a
      body overflow lock would not hold it. */
@@ -1551,17 +1560,6 @@ export default function ReportFTABR26({ content, preview = false }: {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <span style={{ fontSize: 16, fontWeight: 700, color: t.text, fontFamily: "'Open Sans',sans-serif", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                               {c.name}
-                              {/* Paid partners are labelled and point to their feature, so the
-                                  curated list doesn't read as pay-to-play. The card itself is a
-                                  link, so the tag is a span that jumps instead of a nested <a>. */}
-                              {REPORT_PARTNER_ANCHOR[startupMatchKey(c.name)] && (
-                                <span role="link" tabIndex={0}
-                                  onClick={e => { e.preventDefault(); e.stopPropagation(); jumpTo(REPORT_PARTNER_ANCHOR[startupMatchKey(c.name)], `partner_tag_${c.name}`); }}
-                                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); jumpTo(REPORT_PARTNER_ANCHOR[startupMatchKey(c.name)], `partner_tag_${c.name}`); } }}
-                                  style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 1.4, textTransform: "uppercase", fontWeight: 400, color: t.textMuted, border: `1px solid ${t.border}`, borderRadius: 999, padding: "3px 9px", cursor: "pointer", whiteSpace: "nowrap" }}>
-                                  Report partner ↓
-                                </span>
-                              )}
                             </span>
                             {(() => {
                               const loc = startupLocation(c);
@@ -1837,7 +1835,7 @@ export default function ReportFTABR26({ content, preview = false }: {
           {/* ══════════ INVESTMENT TAB ══════════ */}
           {(isPdf || dataTab === "investment") && (
             <div>
-              {/* Legend + amount/rounds toggle */}
+              {/* Legend */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 28 }}>
                 <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
                   {([["Football Only", ONLY_COLOR], ["Football Also", ALSO_COLOR]] as const).map(([lbl, col]) => (
@@ -1845,19 +1843,6 @@ export default function ReportFTABR26({ content, preview = false }: {
                       <span style={{ width: 10, height: 10, borderRadius: 2, background: col }} />{lbl}
                     </span>
                   ))}
-                </div>
-                <div style={{ display: "inline-flex", background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 20, padding: 3, gap: 2 }}>
-                  {([["value", "Amount"], ["count", "Rounds"]] as const).map(([key, lbl]) => {
-                    const active = chartMode === key;
-                    return (
-                      <button key={key} onClick={() => setChartMode(key)} style={{
-                        fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 1,
-                        padding: "4px 13px", borderRadius: 14, border: "none", cursor: "pointer",
-                        background: active ? BRAND.pink : "transparent", color: active ? "#fff" : t.textMuted,
-                        fontWeight: active ? 700 : 400, transition: "all 0.18s", outline: "none",
-                      }}>{lbl}</button>
-                    );
-                  })}
                 </div>
               </div>
 
@@ -2003,7 +1988,9 @@ export default function ReportFTABR26({ content, preview = false }: {
                 const sfx = isPdf && cat === "also" ? "-also" : "";
                 const showNotes = !isPdf || cat === "only";
                 return (
-                <div key={cat}>
+                /* Web: one stable key, so switching category swaps the rows in place
+                   (like the period toggle) instead of remounting and re-animating the board. */
+                <div key={isPdf ? cat : "board"}>
                 {isPdf && (
                   <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 26, letterSpacing: 2, color: BRAND.pink, margin: cat === "only" ? "8px 0 4px" : "48px 0 4px" }}>
                     {CAT_LABEL[cat]} · {facts.period.label}
@@ -2152,9 +2139,9 @@ export default function ReportFTABR26({ content, preview = false }: {
           <p style={{ fontSize: 15, color: t.text, lineHeight: 1.9, margin: "0 0 28px", maxWidth: 900 }}>{FTABR26_CREDITS.thanks}</p>
           <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase", marginBottom: 10 }}>Imprint</div>
           <p style={{ fontSize: 13, color: t.textMuted, lineHeight: 1.8, margin: 0 }}>
-            Author: {FTABR26_CREDITS.imprint.author} · {FTABR26_CREDITS.imprint.company} · <a href={`mailto:${FTABR26_CREDITS.imprint.contact}`} style={{ color: t.textMuted }}>{FTABR26_CREDITS.imprint.contact}</a> · <a href={`https://${FTABR26_CREDITS.imprint.website}`} target="_blank" rel="noopener noreferrer" style={{ color: t.textMuted }}>{FTABR26_CREDITS.imprint.website}</a>
+            {imprintLine(t.textMuted)}
           </p>
-          <p style={{ fontSize: 12, color: t.textMuted, lineHeight: 1.75, margin: "10px 0 0", opacity: 0.85 }}>{FTABR26_CREDITS.contentNote}</p>
+          <p style={{ fontSize: 13, color: t.textMuted, lineHeight: 1.8, margin: "4px 0 0" }}>{FTABR26_CREDITS.imprint.copyright}</p>
         </div>
       </div>
     </>),
@@ -2603,7 +2590,6 @@ export default function ReportFTABR26({ content, preview = false }: {
         const logo = startupLogoUrl(c);
         const href = c.website ? (/^https?:/i.test(c.website) ? c.website : `https://${c.website}`) : null;
         const col = c.sector ? SECTOR_COLOR[c.sector] : PR.border;
-        const partner = !!REPORT_PARTNER_ANCHOR[startupMatchKey(c.name)];
         return (
           <div key={c.name} style={{ ...prCard, borderTop: `3px solid ${col}`, padding: "16px 16px 18px", minHeight: 150, display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -2622,7 +2608,6 @@ export default function ReportFTABR26({ content, preview = false }: {
                 )}
               </div>
             </div>
-            {partner && <span style={{ alignSelf: "flex-start", ...prMono, fontSize: 7.5, border: `1px solid ${PR.border}`, borderRadius: 999, padding: "2px 7px" }}>Report partner</span>}
             {c.description && <p style={{ fontSize: 11, lineHeight: 1.55, color: PR.text, margin: 0 }}>{c.description}</p>}
           </div>
         );
@@ -2668,10 +2653,8 @@ export default function ReportFTABR26({ content, preview = false }: {
       <p style={{ fontSize: 11.5, lineHeight: 1.7, color: PR.text, margin: "10px 0 0" }}>{FTABR26_CREDITS.thanks}</p>
       <div style={{ ...prCard, padding: "12px 14px", marginTop: 12, fontSize: 10.5, lineHeight: 1.7, color: PR.text }}>
         <div style={{ ...prMono, marginBottom: 4 }}>Imprint</div>
-        Author: {FTABR26_CREDITS.imprint.author} · {FTABR26_CREDITS.imprint.company} ·{" "}
-        <a href={`mailto:${FTABR26_CREDITS.imprint.contact}`} style={{ color: "inherit" }}>{FTABR26_CREDITS.imprint.contact}</a> ·{" "}
-        <a href={`https://${String(FTABR26_CREDITS.imprint.website).replace(/^https?:\/\//, "")}`} target="_blank" rel="noopener noreferrer" style={{ color: "inherit" }}>{FTABR26_CREDITS.imprint.website}</a>
-        {FTABR26_CREDITS.contentNote && <p style={{ fontSize: 9.5, color: PR.muted, margin: "8px 0 0", lineHeight: 1.6 }}>{FTABR26_CREDITS.contentNote}</p>}
+        <div>{imprintLine("inherit")}</div>
+        <div>{FTABR26_CREDITS.imprint.copyright}</div>
       </div>
     </div>
     {/* Atlas banner 4: closing, pointing to all three solutions */}

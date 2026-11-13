@@ -835,17 +835,16 @@ export const FTABR26_IMPRINT = {
 
 
 /* ── Team credits and imprint (closes the page, after Methodology) ─────────
-   One thank-you line, then the imprint (content note reused from 2025). */
+   One thank-you line, then the imprint (publisher line and copyright). */
 export const FTABR26_CREDITS = {
   /** One line above the imprint */
   thanks:
-    "With thanks to the SportsTechX team, our report partners Playermaker and Soccerment, Match Ventures, and every innovator who shared their view of the game.",
+    "With thanks to the SportsTechX team, our report partners Playermaker and Soccerment, our publishing partner World Football Summit, and every innovator who shared their view of the game.",
   imprint: {
-    author: "SportsTechX",
-    company: "SportsTechX GmbH, Berlin",
+    publisher: "SportsTechX GmbH, Berlin",
     contact: "hello@sportstechx.com",
     website: "www.sportstechx.com",
+    legalNotice: { label: "Legal notice", href: "https://www.sportstechx.com/imprint" },
+    copyright: "© 2026 SportsTechX. All rights reserved.",
   },
-  contentNote:
-    "The content in this report is for general information purposes only and can change at any time. SportsTechX cannot guarantee the ultimate accuracy or completeness of the data.",
 };

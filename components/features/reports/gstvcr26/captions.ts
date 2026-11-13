@@ -34,6 +34,8 @@ export interface CaptionInput {
   regionSplit: (Named & { region: RegionCode })[];
   topCountries: (Named & { country: string })[];
   sectorFunding: (Named & { sector: string })[];
+  /** Top companies by funding, current period + funding-region filter (largest first). */
+  topCompanies: (Named & { name: string })[];
   periodGlobalFunding_m: number;
   context: CaptionContext;
 }
@@ -204,9 +206,16 @@ export function sectorSplitCaption(i: CaptionInput): string {
 }
 
 export function topFundedCaption(i: CaptionInput): string {
-  return i.fundingPeriod === "2026"
-    ? "The most-funded companies of 2026 so far (January–October), by region."
-    : "The most-funded companies of the 2021–2025 cycle, by region.";
+  const period = periodLabel(i.fundingPeriod);
+  const scope = fundingScope(i.fundingRegion);
+  const [first] = i.topCompanies;
+  if (!first) return `No funded companies recorded${scope} in ${period}.`;
+  const n = i.topCompanies.length;
+  const top = sum(i.topCompanies).total_m;
+  const total = sum(i.fundingByYear).total_m;
+  const name = first.name.replace(/\s*\(formerly [^)]+\)/, "");
+  return `The ${n} most-funded companies${scope} in ${period} raised ${money(top)} between them, ` +
+    `${pct(top, total)}% of all capital${scope} in the period. ${name} leads with ${money(first.total_m)}.`;
 }
 
 // ── M&A ─────────────────────────────────────────────────────────────────────

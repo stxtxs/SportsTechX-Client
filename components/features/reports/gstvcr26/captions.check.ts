@@ -30,6 +30,10 @@ const base: CaptionInput = {
     { sector: 'Activity & Performance', total_m: 11910, deals: 1034 },
     { sector: 'Management & Organisation', total_m: 3930, deals: 308 },
   ],
+  topCompanies: [
+    { name: 'Napster Corp. (formerly Infinite Reality)', total_m: 3350, deals: 2 }, { name: 'Fanatics', total_m: 3195, deals: 5 },
+    { name: 'OURA', total_m: 2075, deals: 5 }, { name: 'DAZN', total_m: 1827, deals: 2 },
+  ],
   periodGlobalFunding_m: 35070,
   context: {
     fundingTimeline: [yr(2021, 12979, 710), yr(2022, 8710, 526), yr(2023, 2435, 265), yr(2024, 2696, 290), yr(2025, 8247, 230), yr(2026, 2983, 204)],
@@ -81,8 +85,13 @@ check(europe.regionalShare.startsWith('Europe raised $8.8B'), 'region filter swi
 check(europe.topCountries.includes(' in Europe in 2021–2025'), 'region filter named in the country caption');
 check(europe.maByYear.includes('(acquirees in Europe)'), 'M&A filters named in the M&A caption');
 
+check(last5.topFunded.startsWith('The 4 most-funded companies in 2021–2025 raised $10.4B between them, 30% of all capital'), 'top-funded caption sums the listed companies against period funding');
+check(last5.topFunded.includes('Napster Corp. leads with $3.4B') && !last5.topFunded.includes('formerly'), 'top-funded caption names the leader without the "formerly" suffix');
+check(y2026.topFunded.includes('in January–October 2026 raised'), 'top-funded caption labels 2026 as January–October');
+check(europe.topFunded.includes(' in Europe in 2021–2025'), 'top-funded caption names the continent filter');
+
 const empty = dataInFullCaptions({
-  ...base, fundingByYear: [], regionSplit: [], topCountries: [], sectorFunding: [],
+  ...base, topCompanies: [], fundingByYear: [], regionSplit: [], topCountries: [], sectorFunding: [],
   context: { ...base.context, fundingTimeline: [], maTimeline: [], sectorTimeline: [], regionTimeline: [] },
 });
 check(Object.values(empty).every((s) => s.length > 0 && !s.includes('undefined') && !s.includes('NaN')), 'empty selections give a sentence, never undefined/NaN');

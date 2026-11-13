@@ -142,7 +142,7 @@ type ReportData = {
   topCountries:        { country: string; total_m: number; deals: number }[];
   sectorFunding:       { sector: string; total_m: number; deals: number }[];
   regionSplit:         { region: string; total_m: number; deals: number }[];
-  topCompaniesByRegion: Record<string, { name: string; total_m: number; region: string; website: string | null; description: string | null; city: string | null; country: string | null }[]>;
+  topCompanies:        { name: string; total_m: number; deals: number; region: string | null; website: string | null; description: string | null; city: string | null; country: string | null; logo_url: string | null }[];
   maByYear:            { year: number; deals: number; total_m: number }[];
   businessModel:       { model: string; count: number }[];
   sectorCompanyCount:  { sector: string; companies: number }[];
@@ -1082,6 +1082,7 @@ export default function ReportGSTVCR26({ content, preview = false }: {
     fundingRegion, acquireeRegion: maAcquireeRegion, acquirerRegion: maAcquirerRegion,
     fundingByYear: data.fundingByYear ?? [], regionSplit: data.regionSplit ?? [],
     topCountries: data.topCountries ?? [], sectorFunding: data.sectorFunding ?? [],
+    topCompanies: data.topCompanies ?? [],
     periodGlobalFunding_m: data.periodGlobalFunding_m ?? 0, context: data.captionContext,
   }) : null), [data, fundingYear, maYear, fundingRegion, maAcquireeRegion, maAcquirerRegion]);
   const isLoading = dataInFullLoading;
@@ -3552,49 +3553,62 @@ export default function ReportGSTVCR26({ content, preview = false }: {
                 isPdf={isPdf}
               />
 
-              {/* CHART-05: Top Funded Companies by Region */}
+              {/* CHART-05: Top Funded Companies — one top-20 list; follows the Equity continent filter (all continents in the PDF) */}
               <div style={{ marginTop: 72 }} className="stx-reveal">
                 {fundingHeader(DATA_HEADER.topFunded)}
-                <SourceBadge chartId="CHART-05" source="dm_test · SUM(Round_Amount_USD) GROUP BY Name, VC_Report_Region · top 5 per region" />
+                <SourceBadge chartId="CHART-05" source="dm_test · SUM(Round_Amount_USD) GROUP BY Name · top 20" />
                 <p style={{ fontSize: 14, color: t.textMuted, maxWidth: 580, lineHeight: 1.8, marginBottom: 20 }}>
                   {captions?.topFunded ?? ""}
                 </p>
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: 2, marginTop: 24 }}>
-                  {["NA","EU","APAC"].map(region => {
-                    return (
-                      <div key={region} style={{ background: t.bgCard, padding: isMobile ? 16 : 28, border: `1px solid ${t.border}` }}>
-                        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 20 : 24, marginBottom: isMobile ? 10 : 16, color: t.titleColor }}>{regionLabels[region]}</div>
-                        {(data?.topCompaniesByRegion[region] || []).map((co, i) => {
-                          const logoUrl = companyLogoSrc(co.logo_url, co.website);
-                          const displayName = co.name.replace(/\s*\(formerly [^)]+\)/, "");
-                          const logoEl = (
-                            <div style={{ width: 26, height: 26, borderRadius: 4, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-                              {logoUrl && <img src={logoUrl} alt="" width={26} height={26} style={{ objectFit: "contain", position: "absolute", top: 0, left: 0, zIndex: 1, background: "#fff", borderRadius: 4 }} onError={(e) => { e.currentTarget.style.display = "none"; }} />}
-                              <div style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", background: BRAND.teal, borderRadius: 4, color: "#fff", fontWeight: 700, fontSize: 11, fontFamily: "'Bebas Neue',sans-serif" }}>{displayName.charAt(0)}</div>
-                            </div>
-                          );
-                          return (
-                            <div key={co.name} style={{ padding: isMobile ? "10px 0" : "12px 0", borderBottom: `1px solid ${t.border}`, display: "flex", alignItems: "flex-start", gap: isMobile ? 8 : 10 }}>
-                              <div style={{ marginTop: 2, flexShrink: 0 }}>
-                                {co.website ? <a href={co.website} target="_blank" rel="noopener noreferrer">{logoEl}</a> : logoEl}
+                {(() => {
+                  const companies = data?.topCompanies ?? [];
+                  if (companies.length === 0) {
+                    return <div style={{ fontSize: 13, color: t.textMuted, marginTop: 24 }}>No funded companies for this selection.</div>;
+                  }
+                  const half = Math.ceil(companies.length / 2);
+                  const columns = isMobile ? [companies] : [companies.slice(0, half), companies.slice(half)];
+                  return (
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 2, marginTop: 24 }}>
+                      {columns.map((col, ci) => (
+                        <div key={ci} style={{ background: t.bgCard, padding: isMobile ? 16 : 28, border: `1px solid ${t.border}` }}>
+                          {col.map((co, j) => {
+                            const rank = (isMobile ? 0 : ci * half) + j + 1;
+                            const logoUrl = companyLogoSrc(co.logo_url, co.website);
+                            const displayName = co.name.replace(/\s*\(formerly [^)]+\)/, "");
+                            const href = websiteHref(co.website);
+                            const place = [co.country, co.region ? regionLabels[co.region] : null].filter(Boolean).join(" · ");
+                            const logoEl = (
+                              <div style={{ width: 26, height: 26, borderRadius: 4, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                                {logoUrl && <img src={logoUrl} alt="" width={26} height={26} style={{ objectFit: "contain", position: "absolute", top: 0, left: 0, zIndex: 1, background: "#fff", borderRadius: 4 }} onError={(e) => { e.currentTarget.style.display = "none"; }} />}
+                                <div style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", background: BRAND.teal, borderRadius: 4, color: "#fff", fontWeight: 700, fontSize: 11, fontFamily: "'Bebas Neue',sans-serif" }}>{displayName.charAt(0)}</div>
                               </div>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                  <span style={{ color: BRAND.slate, fontFamily: "'DM Mono',monospace", fontSize: 10 }}>#{i + 1}</span>
-                                  <span style={{ color: t.text, fontWeight: 600, fontSize: isMobile ? 12 : 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayName}</span>
-                                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: isMobile ? 11 : 12, color: BRAND.pink, fontWeight: 700, flexShrink: 0, marginLeft: "auto" }}>{fmt(co.total_m)}</span>
+                            );
+                            return (
+                              <div key={co.name} style={{ padding: isMobile ? "10px 0" : "12px 0", borderBottom: `1px solid ${t.border}`, display: "flex", alignItems: "flex-start", gap: isMobile ? 8 : 10, breakInside: "avoid" }}>
+                                <div style={{ marginTop: 2, flexShrink: 0 }}>
+                                  {href ? <a href={href} target="_blank" rel="noopener noreferrer">{logoEl}</a> : logoEl}
                                 </div>
-                                {co.description && (
-                                  <div style={{ fontSize: 11, color: t.textMuted, lineHeight: 1.4, marginTop: 3 }}>{co.description}</div>
-                                )}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                    <span style={{ color: BRAND.slate, fontFamily: "'DM Mono',monospace", fontSize: 10, minWidth: 22 }}>#{rank}</span>
+                                    <span style={{ color: t.text, fontWeight: 600, fontSize: isMobile ? 12 : 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayName}</span>
+                                    <span style={{ fontFamily: "'DM Mono',monospace", fontSize: isMobile ? 11 : 12, color: BRAND.pink, fontWeight: 700, flexShrink: 0, marginLeft: "auto" }}>{fmt(co.total_m)}</span>
+                                  </div>
+                                  {place && (
+                                    <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted, letterSpacing: "0.04em", textTransform: "uppercase", marginTop: 3 }}>{place}</div>
+                                  )}
+                                  {co.description && (
+                                    <div style={{ fontSize: 11, color: t.textMuted, lineHeight: 1.4, marginTop: 3 }}>{co.description}</div>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-                </div>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
 
             </div>

@@ -5,11 +5,12 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useParams } from 'next/navigation';
 import useSWR from 'swr';
 import { toast } from 'sonner';
-import { ArrowUpLeft, ArrowUpRight, Archive, Globe, Loader2, Mail } from 'lucide-react';
+import { ArrowUpLeft, ArrowUpRight, Archive, Globe, Loader2 } from 'lucide-react';
 import { qk } from '@/lib/query-keys';
 import { hrefOf } from '@/lib/routes';
 import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
 import { useListReturnHref } from '@/hooks/use-url-state';
+import { useBackOr } from '@/hooks/use-back';
 import type { Deal, Investor, PipelineActivity as Activity, PipelineStage, PipelineUpdate } from '@/types/api';
 import { apiRequest } from '@/lib/query-client';
 import { refreshPipeline } from '@/lib/invalidate';
@@ -68,6 +69,8 @@ export default function InvestorProfilePage() {
 	const isRaise = getUserType(profile) === 'raise';
 	// "Return to results" lands on the investor list as the user left it (filters, page).
 	const back = useListReturnHref(hrefOf('investors'));
+	// Back to wherever they came from inside Atlas; the list only when opened directly.
+	const goBack = useBackOr();
 	const { data: inv, isLoading, error } = useSWR<Investor>(qk.investors.detail(id));
 	const { data: bundle } = useSWR<ThesisBundle>(qk.investors.thesis(id));
 	const deals = useSWR<{ data: Deal[] }>(qk.deals.list({ investor_id: id, sort: '-announced_date', limit: 20 }));
@@ -84,7 +87,8 @@ export default function InvestorProfilePage() {
 		['instagram', 'Instagram', ext(inv.instagram_url), BRAND.instagram],
 		['facebook', 'Facebook', ext(inv.facebook_url), BRAND.facebook],
 		['youtube', 'YouTube', ext(inv.youtube_url), BRAND.youtube],
-		['email', 'Email', inv.contact_email ? `mailto:${inv.contact_email}` : null, <Mail key="email" size={15} aria-hidden="true" />],
+		// No contact email here: about a third of them are a named person's
+		// address, and the profile never showed them before this layout.
 	] as Array<[string, string, string | null, ReactNode]>).filter((l) => l[2]);
 
 	const stages = bundle?.round_types?.map((r) => r.name).join(', ');
@@ -95,7 +99,9 @@ export default function InvestorProfilePage() {
 		['Headquarters', place(inv.hq_city, inv.hq_country) || inv.hq_region || '—'],
 		['Launched', inv.year_launched ? String(inv.year_launched) : '—'],
 		['Type', inv.category ? categoryLabel(inv.category) : '—'],
-		['Actively investing', inv.actively_investing ? 'Yes' : 'Not currently'],
+		// Only when known: the column defaults to false, so false mostly means
+		// "never curated" (~1,900 investors), not "stopped investing".
+		...(inv.actively_investing ? [['Actively investing', 'Yes'] as [string, ReactNode]] : []),
 		['Stages', stages || '—', true],
 		['Investment geography', geo || '—', true],
 		['Typical cheque', chequeRange(bundle?.thesis ?? null) ?? '—'],
@@ -127,7 +133,7 @@ export default function InvestorProfilePage() {
 					<div className="atlas-co__actions">
 						{record && <Badge tone="navy">{STAGE_LABEL[record.stage] ?? record.stage}</Badge>}
 						{isRaise && <SaveInvestorToWatchlist investorId={inv.id} investorName={inv.name} align="end" />}
-						<Action icon={<ArrowUpLeft />} href={back}>Return to results</Action>
+						<Action icon={<ArrowUpLeft />} href={back} onClick={goBack}>Return to results</Action>
 					</div>
 				</header>
 

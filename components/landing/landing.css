@@ -419,14 +419,16 @@ body:has(.lp) {
 .lp-hero-lines:hover .lp-hero-line:not(:hover) { opacity: 0.6; }
 .lp-hero--compact .lp-hero-ctas { margin-top: 32px; gap: 14px; padding: 0; }
 
-/* Counter row: value above label, divided by hairlines. In the markup the
-   label (dt) comes first, as a description list requires; order flips it. */
+/* Counter row: value above label, in equal columns with each stat centred in
+   its own, so the row reads evenly edge to edge. Hairlines sit only between
+   stats. In the markup the label (dt) comes first, as a description list
+   requires; order flips it. */
 .lp-hero-stats {
 	list-style: none; width: 100%; margin: 48px 0 0; padding: 28px 0 36px;
 	display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-	border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
-.lp-hero-stat { display: flex; flex-direction: column; padding: 8px 24px; border-left: 1px solid rgba(255, 255, 255, 0.12); text-align: left; }
+.lp-hero-stat { display: flex; flex-direction: column; align-items: center; padding: 8px 24px; text-align: center; }
+.lp-hero-stat + .lp-hero-stat { border-left: 1px solid rgba(255, 255, 255, 0.12); }
 .lp-hero-stat dd { order: -1; margin: 0; font-family: var(--lp-display-stack); font-size: 52px; line-height: 1; letter-spacing: 0.04em; color: #fff; }
 .lp-hero-stat dt { margin-top: 6px; font-family: var(--lp-sans); font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
 
@@ -791,6 +793,7 @@ a.lp-plan-extra:hover { text-decoration: underline; }
 	.lp-footer-cols > :nth-child(n + 3) { border-top: 2px solid var(--lp-footer-rule); padding-top: 26px; }
 
 	.lp-hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 24px; }
+	.lp-hero-stat:nth-child(2n + 1) { border-left: 0; }
 	.lp-plans { grid-template-columns: minmax(0, 1fr); max-width: 560px; margin-left: auto; margin-right: auto; }
 
 	/* Pills wrap under the label; each takes a third of the row. */

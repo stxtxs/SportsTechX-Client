@@ -90,7 +90,9 @@ export function LandingFooter() {
 							<a href="/privacy-policy">Privacy Policy</a>
 							{' · '}
 							<a href="/terms-of-service">Terms of Service</a>
-							{''}
+							{' · '}
+							{/* Reopens the analytics consent banner (analytics-consent.tsx). */}
+							<a href="#cookie-settings">Cookie Settings</a>
 						</span>
 					</div>
 				</div>

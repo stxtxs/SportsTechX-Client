@@ -9,6 +9,7 @@ import { Pricing } from '@/components/landing/pricing';
 import { Faq } from '@/components/landing/faq';
 import { FinalHero } from '@/components/landing/final-hero';
 import { LandingFooter } from '@/components/landing/landing-footer';
+import { AnalyticsConsent } from '@/components/landing/analytics-consent';
 import { MobileMenuPanel, MobileMenuProvider, MobileMenuShell } from '@/components/landing/mobile-menu';
 import { siteContent } from '@/lib/site-content';
 import '@/components/landing/landing.css';
@@ -54,6 +55,8 @@ export default async function LandingPage() {
 					<LandingFooter />
 				</MobileMenuShell>
 			</MobileMenuProvider>
+			{/* Google Analytics for the marketing pages, only after consent. */}
+			<AnalyticsConsent />
 		</div>
 	);
 }

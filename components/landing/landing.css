@@ -661,6 +661,39 @@ a.lp-plan-extra:hover { text-decoration: underline; }
 .lp-footer-bottom { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 71px; padding-top: 22px; border-top: 2px solid rgba(186, 186, 186, 0.5); font-family: var(--lp-ui); color: var(--lp-ink-navy); font-size: 13px; line-height: 32px; letter-spacing: 0; }
 .lp-footer-bottom > :last-child { font-family: var(--lp-mono), monospace; }
 
+/* ── Analytics consent banner ──────────────────────────────────────────── */
+/* components/landing/analytics-consent.tsx. Sits above the shell and its nav
+   (20 / 40) and below the film grain (60), like the rest of the page. */
+.lp-consent {
+	position: fixed;
+	left: 12px;
+	right: 12px;
+	bottom: 12px;
+	z-index: 50;
+	max-width: 640px;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 20px;
+	border-radius: 20px;
+	background: var(--lp-panel);
+	color: var(--lp-on-dark);
+	border: 1px solid var(--lp-border-dark);
+	box-shadow: 0 4px 39px rgba(0, 0, 0, 0.3);
+}
+.lp-consent p { margin: 0; font-family: var(--lp-body); font-size: 14px; line-height: 1.6; color: var(--lp-on-dark-soft); }
+.lp-consent a { color: var(--lp-on-dark); text-decoration: underline; text-underline-offset: 2px; }
+.lp-consent-current { display: block; opacity: 0.75; }
+.lp-consent-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.lp-consent-actions .lp-btn { flex: 1; height: 40px; padding: 0 20px; font-size: 13px; }
+.lp-consent-decline { background: transparent; color: var(--lp-on-dark); border-color: var(--lp-on-dark-soft); }
+.lp-consent-decline:hover { border-color: var(--lp-on-dark); }
+@media (min-width: 640px) {
+	.lp-consent { left: 24px; right: 24px; bottom: 24px; flex-direction: row; align-items: center; gap: 24px; }
+	.lp-consent-actions .lp-btn { flex: none; }
+}
+
 /* ── Mobile drawer ─────────────────────────────────────────────────────── */
 /* The page slides right and the panel is revealed behind it. Proportions come
    from the sibling site's 402-wide phone board: a 351 panel (87.3%) with the

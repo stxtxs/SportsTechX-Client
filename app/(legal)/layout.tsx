@@ -1,6 +1,7 @@
 import { lpDisplay, lpMono, lpSerif } from '../fonts';
 import { LandingNav } from '@/components/landing/landing-nav';
 import { LandingFooter } from '@/components/landing/landing-footer';
+import { AnalyticsConsent } from '@/components/landing/analytics-consent';
 import { MobileMenuPanel, MobileMenuProvider, MobileMenuShell } from '@/components/landing/mobile-menu';
 import '@/components/landing/landing.css';
 
@@ -28,6 +29,8 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
 					<LandingFooter />
 				</MobileMenuShell>
 			</MobileMenuProvider>
+			{/* Google Analytics for the marketing pages, only after consent. */}
+			<AnalyticsConsent />
 		</div>
 	);
 }

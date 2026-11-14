@@ -419,14 +419,16 @@ body:has(.lp) {
 .lp-hero-lines:hover .lp-hero-line:not(:hover) { opacity: 0.6; }
 .lp-hero--compact .lp-hero-ctas { margin-top: 32px; gap: 14px; padding: 0; }
 
-/* Counter row: value above label, divided by hairlines. In the markup the
-   label (dt) comes first, as a description list requires; order flips it. */
+/* Counter row: value above label, in equal columns with each stat centred in
+   its own, so the row reads evenly edge to edge. Hairlines sit only between
+   stats. In the markup the label (dt) comes first, as a description list
+   requires; order flips it. */
 .lp-hero-stats {
 	list-style: none; width: 100%; margin: 48px 0 0; padding: 28px 0 36px;
 	display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-	border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
-.lp-hero-stat { display: flex; flex-direction: column; padding: 8px 24px; border-left: 1px solid rgba(255, 255, 255, 0.12); text-align: left; }
+.lp-hero-stat { display: flex; flex-direction: column; align-items: center; padding: 8px 24px; text-align: center; }
+.lp-hero-stat + .lp-hero-stat { border-left: 1px solid rgba(255, 255, 255, 0.12); }
 .lp-hero-stat dd { order: -1; margin: 0; font-family: var(--lp-display-stack); font-size: 52px; line-height: 1; letter-spacing: 0.04em; color: #fff; }
 .lp-hero-stat dt { margin-top: 6px; font-family: var(--lp-sans); font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
 
@@ -630,36 +632,42 @@ a.lp-plan-extra:hover { text-decoration: underline; }
 .lp-faq-a-inner { padding: 0; }
 
 /* ── Footer ────────────────────────────────────────────────────────────── */
-/* Light footer (design): white ground, dark ink, editorial serif links. */
-.lp-footer { background: #ffffff; color: var(--lp-ink); position: relative; }
-/* Design: top rule at y=70.5, content at y=124.5, bottom row at y=471. */
-.lp-footer-inner { position: relative; z-index: 2; padding: 54px 0 22px; }
+/* Matches the sportstechx.com footer as rendered at 1440 wide: Bebas Neue
+   column heads, New Frank links and blurb in 70% navy, a Commit Mono legal
+   row, and 2px grey rules (two horizontals, one vertical before each link
+   column that overhangs above it). */
+.lp-footer {
+	--lp-footer-rule: rgba(186, 186, 186, 0.5);
+	--lp-footer-gap: 38px;
+	background: #ffffff; color: var(--lp-ink); position: relative;
+}
+.lp-footer-inner { position: relative; z-index: 2; padding: 52px 0 40px; }
 .lp-footer-top-rule { max-width: var(--lp-shell); margin: 0 auto; padding: 70px var(--lp-pad) 0; }
-.lp-footer-top-rule::before { content: ""; display: block; height: 2px; background: rgba(186, 186, 186, 0.5); }
-/* Design columns: 451 / 200 / 200 / 200 on ~100px gaps within 1351. */
-.lp-footer-cols {
-	display: grid; grid-template-columns: 451fr 200fr 200fr 200fr; gap: 100px;
-	background-image:
-		linear-gradient(rgba(186, 186, 186, 0.5), rgba(186, 186, 186, 0.5)),
-		linear-gradient(rgba(186, 186, 186, 0.5), rgba(186, 186, 186, 0.5));
-	background-size: 2px 318px, 2px 318px;
-	background-position: 58.6% -23px, 80.3% -23px;
-	background-repeat: no-repeat;
+.lp-footer-top-rule::before { content: ""; display: block; height: 2px; background: var(--lp-footer-rule); }
+/* sportstechx.com columns: 394 / 250 / 250 / 250 on 38px gaps. */
+.lp-footer-cols { display: grid; grid-template-columns: 394fr 250fr 250fr 250fr; gap: var(--lp-footer-gap); }
+.lp-footer-cols > * { position: relative; display: flex; flex-direction: column; }
+.lp-footer-cols > :nth-child(n + 2)::before {
+	content: ""; position: absolute; top: -22px; bottom: 0; left: calc(var(--lp-footer-gap) / -2); width: 2px;
+	background: var(--lp-footer-rule);
 }
 /* The header's lockup, in footer ink: BY SPORTSTECHX centred under the mark. */
-.lp-footer-lockup { display: inline-flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 24px; }
+.lp-footer-lockup { display: inline-flex; flex-direction: column; align-items: center; align-self: flex-start; gap: 8px; margin-bottom: 18px; }
 .lp-footer-wordmark { width: 135px; } /* design Vector 135x49 */
 .lp-footer-by { margin: -6px 0; padding: 6px 0; font-family: var(--lp-display-stack); font-size: 17px; line-height: 1; letter-spacing: 0.12em; color: rgba(9, 21, 57, 0.6); text-decoration: none; transition: color 0.2s ease-out; }
 .lp-footer-by:hover, .lp-footer-by:focus-visible { color: #ed1a5e; }
-.lp-footer-desc { font-family: var(--lp-serif); color: var(--lp-ink-navy); font-size: 22px; line-height: 32px; max-width: 451px; margin-bottom: 28px; }
-.lp-footer-meta { display: grid; gap: 12px; }
-.lp-footer-meta div { display: flex; align-items: center; gap: 12px; font-family: var(--lp-serif); color: var(--lp-ink-navy); font-size: 17px; line-height: 36px; }
-.lp-footer-h { font-family: var(--lp-display-stack); font-weight: 400; font-size: 25px; line-height: 32px; letter-spacing: 0.1em; text-transform: uppercase; color: #000; margin-bottom: 22px; }
-.lp-footer-links { display: grid; gap: 0; } /* design link pitch is 31px */
-.lp-footer-links a { font-family: var(--lp-serif); color: var(--lp-ink-navy); font-size: 19px; line-height: 31px; text-decoration: none; display: inline-flex; align-items: center; gap: 11px; transition: color 0.12s ease; }
-.lp-footer-links a:hover { color: var(--lp-ink); }
-.lp-footer-bottom { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 71px; padding-top: 22px; border-top: 2px solid rgba(186, 186, 186, 0.5); font-family: var(--lp-ui); color: var(--lp-ink-navy); font-size: 13px; line-height: 32px; letter-spacing: 0; }
-.lp-footer-bottom > :last-child { font-family: var(--lp-mono), monospace; }
+.lp-footer-desc { font-family: var(--lp-sans); color: var(--lp-ink-navy); font-size: 17px; line-height: 31px; }
+.lp-footer-h { font-family: var(--lp-display-stack); font-weight: 400; font-size: 21px; line-height: 31px; letter-spacing: 0.1em; text-transform: uppercase; color: #000; margin-bottom: 20px; }
+.lp-footer-links { display: grid; gap: 0; justify-items: start; }
+.lp-footer-links a { font-family: var(--lp-sans); color: var(--lp-ink-navy); font-size: 17px; line-height: 31px; text-decoration: none; display: inline-flex; align-items: center; gap: 14px; transition: color 80ms ease-out; }
+.lp-footer-links a:hover { color: #000; }
+.lp-footer-bottom {
+	display: flex; align-items: center; justify-content: space-between; gap: 8px 20px; flex-wrap: wrap;
+	margin-top: 73px; padding-top: 22px; border-top: 2px solid var(--lp-footer-rule);
+	font-family: var(--lp-mono), ui-monospace, monospace; color: var(--lp-ink-navy); font-size: 12.5px; line-height: 31px; letter-spacing: 0;
+}
+.lp-footer-bottom a { color: inherit; text-decoration: none; transition: color 80ms ease-out; }
+.lp-footer-bottom a:hover { color: #000; }
 
 /* ── Mobile drawer ─────────────────────────────────────────────────────── */
 /* The page slides right and the panel is revealed behind it. Proportions come
@@ -776,17 +784,16 @@ a.lp-plan-extra:hover { text-decoration: underline; }
 }
 @media (max-width: 1100px) {
 	.lp { --lp-pad: 40px; }
-	.lp-footer-cols { grid-template-columns: 1fr 1fr; background-image: none; gap: 44px; }
-	/* The two vertical rules are background gradients on the grid and go with it.
-	   A rule above each link column replaces them, which is how the sibling
-	   site's mobile footer reads. The brand column is exempt so the mark stays
-	   the top of the block rather than a fourth entry in a list. */
-	.lp-footer-cols > :nth-child(n + 3) { border-top: 2px solid rgba(186, 186, 186, 0.5); padding-top: 26px; }
-	.lp-footer-desc { font-size: 19px; line-height: 29px; }
-	.lp-footer-h { font-size: 22px; line-height: 28px; }
-	.lp-footer-links a { font-size: 17px; line-height: 29px; }
+	.lp-footer-cols { grid-template-columns: 1fr 1fr; gap: 44px; }
+	/* The vertical rules go with the four-column row. A rule above each link
+	   column replaces them, which is how the sibling site's mobile footer reads.
+	   The brand column is exempt so the mark stays the top of the block rather
+	   than a fourth entry in a list. */
+	.lp-footer-cols > :nth-child(n + 2)::before { content: none; }
+	.lp-footer-cols > :nth-child(n + 3) { border-top: 2px solid var(--lp-footer-rule); padding-top: 26px; }
 
 	.lp-hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 24px; }
+	.lp-hero-stat:nth-child(2n + 1) { border-left: 0; }
 	.lp-plans { grid-template-columns: minmax(0, 1fr); max-width: 560px; margin-left: auto; margin-right: auto; }
 
 	/* Pills wrap under the label; each takes a third of the row. */
@@ -865,9 +872,7 @@ a.lp-plan-extra:hover { text-decoration: underline; }
 	.lp-closing-btn { width: 100%; max-width: 320px; justify-content: center; }
 
 	.lp-footer-cols { grid-template-columns: 1fr; gap: 32px; }
-	.lp-footer-desc { font-size: 17px; line-height: 26px; }
-	.lp-footer-h { font-size: 20px; line-height: 26px; }
-	.lp-footer-links a { font-size: 16px; line-height: 28px; }
+	.lp-footer-cols > :nth-child(2) { border-top: 2px solid var(--lp-footer-rule); padding-top: 26px; }
 	.lp-carousel { padding: 0; }
 	.lp-carousel-arrow { display: none; }
 }

@@ -422,7 +422,10 @@ body:has(.lp) {
 /* Counter row: value above label, in equal columns with each stat centred in
    its own, so the row reads evenly edge to edge. Hairlines sit only between
    stats. In the markup the label (dt) comes first, as a description list
-   requires; order flips it. */
+   requires; order flips it.
+   Twin: sportstechx.com's stats band (SportsTechX-Landing,
+   components/sections/stats.tsx) copies this row's spacing, dividers, label
+   style and breakpoints one for one. Change both together. */
 .lp-hero-stats {
 	list-style: none; width: 100%; margin: 48px 0 0; padding: 28px 0 36px;
 	display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));

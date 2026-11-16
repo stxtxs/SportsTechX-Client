@@ -5,6 +5,10 @@ import useSWR from 'swr';
 import { qk } from '@/lib/query-keys';
 import { downloadReport } from '@/lib/report-pdf';
 import type { Page, ReportListItem } from '@/types/api';
+import { ENTRY_PATH, ENTRY_TITLE, FLAGS, FTR_SLUG, RELEASE_DATE, SLUG } from '@/components/features/benchmark/config';
+import { yoursFirst } from '@/components/features/benchmark/rules';
+import { useBenchmarkAccess, useHomePins } from '@/components/features/benchmark/use-benchmark';
+import type { BenchmarkAccess, HomePin } from '@/components/features/benchmark/types';
 import { ResourceLibrary } from './resource-library';
 import type { Resource } from './resource-contract';
 
@@ -32,16 +36,75 @@ const toResource = (r: ReportListItem): Resource => ({
 	onDownload: r.can_download !== false ? () => void downloadReport(r.slug ?? r.id) : undefined,
 });
 
+const openTab = (path: string) => () => window.open(path, '_blank', 'noopener');
+
+/**
+ * The VC Benchmark's three entries in the library. R2 is a real `reports`
+ * row; R1 and R3 are new records that may not be published yet, so they are
+ * added here (from R2's metadata) when the list doesn't carry them.
+ */
+function withBenchmark(rows: ReportListItem[], items: Resource[], a: BenchmarkAccess, pins: HomePin[], pin: (key: string) => void): Resource[] {
+	const r2Row = rows.find((r) => r.slug === SLUG.r2);
+	const base: Omit<Resource, 'id' | 'title' | 'desc' | 'access'> = {
+		date: r2Row ? toResource(r2Row).date : RELEASE_DATE,
+		dateLabel: r2Row ? toResource(r2Row).dateLabel : undefined,
+		tags: r2Row?.tags ?? [],
+		cover: r2Row?.cover_url,
+	};
+	// "Pin to home" only for an unpinned card that is still featured.
+	const today = new Date().toISOString().slice(0, 10);
+	const pinFor = (entry: HomePin['entry']) => {
+		const p = pins.find((x) => x.entry === entry);
+		return p && !p.pinned && p.featured_until >= today ? () => pin(p.key) : undefined;
+	};
+	const bySlug = (slug: string) => rows.find((r) => r.slug === slug)?.id;
+
+	const out = items.map((it) => {
+		const row = rows.find((r) => r.id === it.id);
+		if (row?.slug === SLUG.r2) {
+			return {
+				...it, access: 'Premium' as const,
+				badge: a.entries.r2 === 'locked' ? 'locked' as const : undefined,
+				// A locked viewer lands on the upgrade screen, which shows R1.
+				onView: openTab(ENTRY_PATH.r2),
+				onDownload: a.entries.r2 === 'open' ? it.onDownload : undefined,
+				onPin: pinFor('r2'),
+			};
+		}
+		if (row?.slug === FTR_SLUG) return { ...it, onPin: pinFor('ftr') };
+		if (row?.slug === SLUG.r1) return { ...it, access: 'Free' as const, onView: openTab(ENTRY_PATH.r1), onPin: pinFor('r1') };
+		if (row?.slug === SLUG.r3) return { ...it, badge: 'yours' as const, featuredLabel: 'Your benchmark', onView: openTab(ENTRY_PATH.r3), onPin: pinFor('r3') };
+		return it;
+	}).filter((it) => !(rows.find((r) => r.id === it.id)?.slug === SLUG.r3 && a.entries.r3 !== 'open'));
+
+	if (!bySlug(SLUG.r2)) {
+		out.push({ ...base, id: SLUG.r2, title: ENTRY_TITLE.r2, desc: 'How sports tech investors find, screen and close deals, and where the gaps are. For Raise and Scout members and survey contributors.', access: 'Premium', badge: a.entries.r2 === 'locked' ? 'locked' : undefined, onView: openTab(ENTRY_PATH.r2), onPin: pinFor('r2') });
+	}
+	if (!bySlug(SLUG.r1)) {
+		out.push({ ...base, id: SLUG.r1, title: ENTRY_TITLE.r1, desc: 'The headline findings from the benchmark of how sports tech investors source deals. Free for every Atlas member.', access: 'Free', onView: openTab(ENTRY_PATH.r1), onPin: pinFor('r1') });
+	}
+	if (a.entries.r3 === 'open' && !bySlug(SLUG.r3)) {
+		out.push({ ...base, id: SLUG.r3, title: ENTRY_TITLE.r3, desc: 'Your fund’s answers against the 2026 benchmark: channels, ratings and the gaps worth closing. Only you can see it.', access: 'Free', badge: 'yours', featuredLabel: 'Your benchmark', onView: openTab(ENTRY_PATH.r3), onPin: pinFor('r3') });
+	}
+	return out;
+}
+
 export function ReportsLibrary() {
 	// One page covers the whole library — 33 reports today. `pageQuerySchema`
 	// caps limit at 200.
 	const res = useSWR<Page<ReportListItem>>(qk.reports.list({ limit: 100 }));
+	const { access } = useBenchmarkAccess();
+	const { all: pins, setPinned } = useHomePins();
 	// Sort on the displayed date rather than trusting the server's `-report_year`,
 	// which puts year-less rows first — wrong for a hero.
-	const items = useMemo(
-		() => (res.data?.data ?? []).map(toResource).sort((a, b) => Date.parse(b.date) - Date.parse(a.date)),
-		[res.data],
-	);
+	const items = useMemo(() => {
+		const rows = res.data?.data ?? [];
+		let list = rows.map(toResource);
+		if (FLAGS.benchmark && rows.length > 0) list = withBenchmark(rows, list, access, pins, (key) => void setPinned(key, true));
+		list.sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+		const yours = list.find((r) => r.badge === 'yours');
+		return yours ? yoursFirst(list, yours.id) : list;
+	}, [res.data, access, pins, setPinned]);
 
 	return (
 		<ResourceLibrary

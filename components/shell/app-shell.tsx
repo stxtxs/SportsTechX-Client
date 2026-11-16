@@ -18,6 +18,8 @@ import { useRealtime } from '@/hooks/use-realtime';
 import { TIER_LABEL, useUserProfile } from '@/hooks/use-user-profile';
 import type { Tier } from '@/lib/access';
 import { hrefOf } from '@/lib/routes';
+import { AnnouncementBanner } from '@/components/features/benchmark/announcement-banner';
+import { Walkthrough } from '@/components/features/benchmark/walkthrough';
 import '@/components/raise/raise.css';
 import '@/components/explore/explore.css';
 import '@/components/scout/scout.css';
@@ -88,8 +90,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 				// Interests, where it sat over the chips and the save bar.
 				overlay={!pathname.startsWith(hrefOf('chat')) ? <RaiseChat /> : undefined}
 			>
+				{/* One announcement at a time (walkthrough nudge today). */}
+				<AnnouncementBanner />
 				<RouteGate>{children}</RouteGate>
 			</AtlasShell>
+			{/* First-login tour; relaunched from the account menu and the banner. */}
+			<Walkthrough />
 			{/* The plan chooser is deliberately NOT here any more.
 			    It used to read `tier !== 'explore'`, which showed it to everyone
 			    EXCEPT the people it exists for — a new account defaults to

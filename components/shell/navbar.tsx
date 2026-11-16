@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
-import { ChevronRight, LogOut, Search, Settings, ShieldCheck, CreditCard, Sparkles } from 'lucide-react';
+import { ChevronRight, Compass, LogOut, Search, Settings, ShieldCheck, CreditCard, Sparkles } from 'lucide-react';
+import { FLAGS } from '@/components/features/benchmark/config';
+import { openWalkthrough } from '@/components/features/benchmark/walkthrough';
 import { cx, useDismiss } from '@/components/atlas';
 import { crumbsFor, type Crumb } from './breadcrumbs';
 import { initialsOf } from '@/components/atlas/shell/atlas-shell';
@@ -206,6 +208,11 @@ function AccountMenu({ tier, accountPath }: { tier: Tier; accountPath: string })
 						<Link href={hrefOf('verify')} className="atlas-menu__item atlas-menu__item--plain" onClick={() => setOpen(false)}>
 							<ShieldCheck size={13} strokeWidth={1.5} aria-hidden="true" /> Get verified
 						</Link>
+						{FLAGS.walkthrough && (
+							<button type="button" className="atlas-menu__item atlas-menu__item--plain" onClick={() => { setOpen(false); openWalkthrough(); }}>
+								<Compass size={13} strokeWidth={1.5} aria-hidden="true" /> Take the tour
+							</button>
+						)}
 					</div>
 					<div className="atlas-account-menu__foot">
 						<button

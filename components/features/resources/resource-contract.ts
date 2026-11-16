@@ -26,4 +26,10 @@ export interface Resource {
 	onView?: () => void;
 	/** Present only when the item can be downloaded. */
 	onDownload?: () => void;
+	/** `locked`: this viewer cannot open it yet (lock badge). `yours`: made for this viewer. */
+	badge?: 'locked' | 'yours';
+	/** Overrides the hero's "Latest report" label when this item is first. */
+	featuredLabel?: string;
+	/** Present when the item was unpinned from Home and can be pinned back. */
+	onPin?: () => void;
 }

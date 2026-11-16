@@ -138,6 +138,15 @@ export const qk = {
     pdfUrl: (versionId: string, mode?: 'download' | 'viewer') =>
       [`/api/reports/versions/${versionId}/pdf-url`, mode ? { [mode]: 1 } : {}] as const,
   },
+  // VC Benchmark (components/features/benchmark). Not built server-side yet:
+  // only fetched with NEXT_PUBLIC_VC_BENCHMARK_API=1, mocked with _MOCK=1.
+  benchmark: {
+    access: (edition: number) => [`/api/benchmark/${edition}/access`] as const,
+    mine: (edition: number) => [`/api/benchmark/${edition}/mine`] as const,
+    homePins: () => ['/api/home/pins'] as const,
+    tour: () => ['/api/me/onboarding-tour'] as const,
+    thesisPrefill: () => ['/api/scout/thesis/prefill'] as const,
+  },
   verifiedReports: {
     mine: () => ['/api/verified-reports/mine'] as const,
     detail: (id: string) => [`/api/verified-reports/${id}`] as const,

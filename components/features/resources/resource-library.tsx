@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo, useState, type ReactNode } from 'react';
-import { ArrowUpRight, Download, FileText, Newspaper } from 'lucide-react';
-import { Action, Empty, FeaturedPost, FilterBar, Loading, PostCard, type FilterDef } from '@/components/atlas';
+import { ArrowUpRight, Download, FileText, Lock, Newspaper, Pin } from 'lucide-react';
+import { Action, Badge, Empty, FeaturedPost, FilterBar, Loading, PostCard, type FilterDef } from '@/components/atlas';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import type { Resource } from './resource-contract';
 import './resources.css';
@@ -65,13 +65,19 @@ export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitl
 				? <Action icon={<ArrowUpRight />} onClick={r.onView}>{viewLabel}</Action>
 				: r.href ? <Action icon={<ArrowUpRight />} href={r.href} external={r.external}>{viewLabel}</Action> : null}
 			{r.onDownload && <Action icon={<Download />} onClick={r.onDownload}>Download {noun}</Action>}
+			{r.onPin && <Action icon={<Pin />} onClick={r.onPin}>Pin to home</Action>}
 		</>
 	);
+	// Lock badge for a report this viewer can't open yet; "Yours" for one made for them.
+	const badgeFor = (r: Resource) => (r.badge === 'locked'
+		? <><span aria-hidden="true">·</span><span className="is-premium" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Lock size={11} aria-hidden="true" />Locked</span></>
+		: r.badge === 'yours' ? <><span aria-hidden="true">·</span><Badge tone="navy">Yours</Badge></> : null);
 	const metaFor = (r: Resource) => (
 		<>
 			<span>{r.dateLabel ?? fmtLongDate(r.date)}</span>
 			<span aria-hidden="true">·</span>
 			<span className={r.access === 'Premium' ? 'is-premium' : undefined}>{r.access}</span>
+			{badgeFor(r)}
 		</>
 	);
 
@@ -85,7 +91,7 @@ export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitl
 			<FeaturedPost
 				cover={featured.cover}
 				metaIcon={<MetaIcon size={12} strokeWidth={1.5} aria-hidden="true" />}
-				meta={<>{featuredLabel} · Published {featured.dateLabel ?? fmtLongDate(featured.date)} · <span className={featured.access === 'Premium' ? 'is-premium' : undefined}>{featured.access}</span></>}
+				meta={<>{featured.featuredLabel ?? featuredLabel} · Published {featured.dateLabel ?? fmtLongDate(featured.date)} · <span className={featured.access === 'Premium' ? 'is-premium' : undefined}>{featured.access}</span> {badgeFor(featured)}</>}
 				title={featured.title}
 				desc={featured.desc}
 				tags={featured.tags}

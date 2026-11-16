@@ -8,7 +8,7 @@ import { useVerifyState } from '@/components/features/verify/verify-cta';
 import { FundPicker } from './fund-picker';
 import { fillEmpty } from './claim-thesis';
 import { useClaimThesis } from './use-claim-thesis';
-import { ChipSet, AddButton, PickerDialog, toggleIn, withSelected } from './thesis-fields';
+import { ChipSet, AddButton, PickerDialog, SurveyNote, toggleIn, withSelected } from './thesis-fields';
 import { PILLAR_SECTORS, THESIS_OPTIONS, type Thesis } from './sample-data';
 
 /**
@@ -16,7 +16,11 @@ import { PILLAR_SECTORS, THESIS_OPTIONS, type Thesis } from './sample-data';
  * onboarding steps (one or two groups per step). Each edits a slice of Thesis.
  */
 type Patch = (p: Partial<Thesis>) => void;
-interface Props { t: Thesis; patch: Patch }
+interface Props {
+	t: Thesis; patch: Patch;
+	/** Values pre-filled from the benchmark survey (stage, region, sub-sector). */
+	marked?: ReadonlySet<string>;
+}
 
 const text = (t: Thesis, patch: Patch, key: keyof Thesis) => ({
 	value: String(t[key] ?? ''),
@@ -73,10 +77,10 @@ export function FundFields({ t, patch }: Props) {
 	);
 }
 
-export function StageFields({ t, patch }: Props) {
+export function StageFields({ t, patch, marked }: Props) {
 	return (
 		<>
-			<FieldBlock label="Stages" hint="Select all that apply"><ChipSet options={THESIS_OPTIONS.stages} value={t.stages} onToggle={(o) => patch({ stages: toggleIn(t.stages, o) })} /></FieldBlock>
+			<FieldBlock label="Stages" hint="Select all that apply"><SurveyNote values={t.stages} marked={marked} /><ChipSet options={THESIS_OPTIONS.stages} value={t.stages} marked={marked} onToggle={(o) => patch({ stages: toggleIn(t.stages, o) })} /></FieldBlock>
 			<div className="scout-form-grid">
 				<Field label="Typical cheque — minimum (EUR)"><Input type="number" min={0} inputMode="numeric" value={String(t.chequeMin ?? '')} onChange={(e) => patch({ chequeMin: e.target.value })} placeholder="e.g. 250000" /></Field>
 				<Field label="Typical cheque — maximum (EUR)"><Input type="number" min={0} inputMode="numeric" value={String(t.chequeMax ?? '')} onChange={(e) => patch({ chequeMax: e.target.value })} placeholder="e.g. 2000000" /></Field>
@@ -86,12 +90,13 @@ export function StageFields({ t, patch }: Props) {
 	);
 }
 
-export function GeographyFields({ t, patch }: Props) {
+export function GeographyFields({ t, patch, marked }: Props) {
 	const [open, setOpen] = useState(false);
 	return (
 		<FieldBlock label="Regions" hint="Click a preset to select, or + Add for the full list">
+			<SurveyNote values={t.regions} marked={marked} />
 			<div className="scout-chips">
-				<ChipSet options={withSelected(THESIS_OPTIONS.regions, t.regions)} value={t.regions} onToggle={(o) => patch({ regions: toggleIn(t.regions, o) })} />
+				<ChipSet options={withSelected(THESIS_OPTIONS.regions, t.regions)} value={t.regions} marked={marked} onToggle={(o) => patch({ regions: toggleIn(t.regions, o) })} />
 				<AddButton onClick={() => setOpen(true)} />
 			</div>
 			{open && <PickerDialog title="Add geography" sub="Continents, regions and countries you invest in." list="regions" selected={t.regions} onToggle={(o) => patch({ regions: toggleIn(t.regions, o) })} onClose={() => setOpen(false)} />}
@@ -99,14 +104,15 @@ export function GeographyFields({ t, patch }: Props) {
 	);
 }
 
-export function SectorFields({ t, patch }: Props) {
+export function SectorFields({ t, patch, marked }: Props) {
 	return (
 		<FieldBlock label="SportsTechX sectors" hint="Select all that apply">
+			<SurveyNote values={t.sectors} marked={marked} />
 			<div className="scout-pillars">
 				{(Object.keys(PILLAR_SECTORS) as (keyof typeof PILLAR_SECTORS)[]).map((p) => (
 					<div key={p} className="scout-pillar">
 						<span className={`scout-pillar__pill scout-pillar__pill--${p.toLowerCase()}`}>{p}</span>
-						<ChipSet wide options={PILLAR_SECTORS[p]} value={t.sectors} onToggle={(o) => patch({ sectors: toggleIn(t.sectors, o) })} />
+						<ChipSet wide options={PILLAR_SECTORS[p]} value={t.sectors} marked={marked} onToggle={(o) => patch({ sectors: toggleIn(t.sectors, o) })} />
 					</div>
 				))}
 			</div>

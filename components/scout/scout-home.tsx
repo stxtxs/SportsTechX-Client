@@ -11,6 +11,7 @@ import { greetingName, useUserProfile } from '@/hooks/use-user-profile';
 import { qk } from '@/lib/query-keys';
 import { SETUP_CARD_WIZARD, openRaiseSetup, openScoutThesis } from '@/lib/setup-events';
 import { hrefOf } from '@/lib/routes';
+import { PinnedReports } from '@/components/features/benchmark/pinned-reports';
 import { listText, thesisTags, useThesis } from './use-thesis';
 
 /**
@@ -105,6 +106,8 @@ export function ScoutHome() {
 				</div>
 			</section>
 
+
+			<PinnedReports />
 
 			<section className="scout-home__attn">
 				<SectionHead title="Latest from Atlas" meta="Based on your thesis · since your last visit" />

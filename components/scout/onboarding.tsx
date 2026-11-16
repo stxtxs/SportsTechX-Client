@@ -14,6 +14,10 @@ import type { Thesis } from './sample-data';
 import { chequeRange } from './thesis-codec';
 import { claimFromThesis, fillEmpty } from './claim-thesis';
 import { useClaimThesis } from './use-claim-thesis';
+import { applyPrefill } from '@/components/features/benchmark/prefill';
+import { useThesisPrefill } from '@/components/features/benchmark/use-benchmark';
+import { Events, track } from '@/lib/analytics';
+import '@/components/features/benchmark/benchmark.css';
 // `scout.css` is imported by AppShell, which this route deliberately does NOT
 // render — the onboarding group has no shell chrome. Without this import every
 // `scout-*` rule is missing here, which is not a styling nit: `ChipSet` falls
@@ -67,6 +71,9 @@ export function Onboarding({ onClose, edit = false }: { onClose: () => void; edi
 	// Verified (or pending) first? Start from what the claim already says, so
 	// nobody types their fund, location, type, AUM, cheque or focus twice.
 	const claim = useClaimThesis();
+	// Benchmark contributors: stage and region from their survey, written only
+	// into empty fields and marked "Pre-filled from your survey" (all editable).
+	const survey = useThesisPrefill();
 	// Wait for the THESIS, not just the profile.
 	//
 	// This used to gate on `useUserProfile().isLoading` alone while reading the
@@ -74,11 +81,13 @@ export function Onboarding({ onClose, edit = false }: { onClose: () => void; edi
 	// profile usually resolves first, so the form mounted seeded with
 	// DEFAULT_THESIS, `useState` kept that seed, and a returning Scout who
 	// reopened the wizard could save an empty thesis over a real one.
-	if (profileLoading || isLoading || claim.isLoading) return <Frame><Screen width={720}><Loading /></Screen></Frame>;
-	return <OnboardingForm initial={claim.prefill ? fillEmpty(saved, claim.prefill) : saved} save={save} onClose={onClose} edit={edit} />;
+	if (profileLoading || isLoading || claim.isLoading || survey.isLoading) return <Frame><Screen width={720}><Loading /></Screen></Frame>;
+	const base = claim.prefill ? fillEmpty(saved, claim.prefill) : saved;
+	const { thesis: initial, fromSurvey } = applyPrefill(base, survey.prefill);
+	return <OnboardingForm initial={initial} marked={fromSurvey} save={save} onClose={onClose} edit={edit} />;
 }
 
-function OnboardingForm({ initial, save, onClose, edit }: { initial: Thesis; save: ThesisState['save']; onClose: () => void; edit: boolean }) {
+function OnboardingForm({ initial, marked, save, onClose, edit }: { initial: Thesis; marked: ReadonlySet<string>; save: ThesisState['save']; onClose: () => void; edit: boolean }) {
 	const [t, setT] = useState<Thesis>(initial);
 	// Resume where they left off. Every step saves as it is left, so a thesis
 	// that already satisfies steps 1–3 should not make anyone retype them —
@@ -120,6 +129,8 @@ function OnboardingForm({ initial, save, onClose, edit }: { initial: Thesis; sav
 			// looking at a finished wizard on a still-gated Scout.
 			await save(t, { complete: last });
 			if (!last) { setStep(step + 1); top(); return; }
+			// The thesis step doubles as the confirmation of the survey prefill.
+			if ([...t.stages, ...t.regions, ...t.sectors].some((v) => marked.has(v))) track(Events.thesisConfirmed, { source: 'survey' });
 			if (edit) { toast.success('Thesis updated'); onClose(); return; }
 			setDone(true);
 			top();
@@ -150,8 +161,8 @@ function OnboardingForm({ initial, save, onClose, edit }: { initial: Thesis; sav
 					)}
 					{step === 0 && <ProfileFields t={t} patch={patch} />}
 					{step === 1 && <FundFields t={t} patch={patch} />}
-					{step === 2 && <StageFields t={t} patch={patch} />}
-					{step === 3 && <><GeographyFields t={t} patch={patch} /><SectorFields t={t} patch={patch} /><AttributeFields t={t} patch={patch} /></>}
+					{step === 2 && <StageFields t={t} patch={patch} marked={marked} />}
+					{step === 3 && <><GeographyFields t={t} patch={patch} marked={marked} /><SectorFields t={t} patch={patch} marked={marked} /><AttributeFields t={t} patch={patch} /></>}
 					{step === 4 && <Review t={t} onEdit={(i) => { setStep(i); top(); }} />}
 				</Card>
 

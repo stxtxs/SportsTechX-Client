@@ -11,6 +11,7 @@ import { SETUP_CARD_WIZARD, openRaiseSetup, openScoutThesis } from '@/lib/setup-
 import { H1, Badge, SectionHead, FeedCard, Progress } from '@/components/atlas';
 import { RaiseSearch, RAISE_SUGGESTIONS } from '@/components/raise/raise-search';
 import { hrefOf } from '@/lib/routes';
+import { PinnedReports } from '@/components/features/benchmark/pinned-reports';
 
 /**
  * Atlas Raise — Home. Search-first: a centred composer as the focal point, with
@@ -131,6 +132,8 @@ export function RaiseHome() {
 					<RaiseSearch value={q} onChange={setQ} onSubmit={() => goChat(q)} suggestions={RAISE_SUGGESTIONS} onSuggestion={goChat} />
 				</div>
 			</section>
+
+			<PinnedReports />
 
 			<section className="raise-attn">
 				<SectionHead title="Latest from Atlas" />

@@ -12,6 +12,7 @@ import { qk } from '@/lib/query-keys';
 import type { NewsletterArticle, Page, ReportListItem } from '@/types/api';
 import { useInterests, type Interests } from './interests';
 import { hrefOf } from '@/lib/routes';
+import { PinnedReports } from '@/components/features/benchmark/pinned-reports';
 
 /**
  * Explore Home (Claude Design "Home"): greeting, interests count, a search bar
@@ -113,6 +114,8 @@ export function ExploreHome() {
 					/>
 				</div>
 			</section>
+
+			<PinnedReports />
 
 			<section className="explore-home__attn">
 				<SectionHead title="Latest from Atlas" meta={picked.length > 0 ? 'Based on your interests · updated today' : 'Updated today'} />

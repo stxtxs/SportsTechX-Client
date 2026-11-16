@@ -147,6 +147,8 @@ const NAV: NavSection[] = [
 const month = (ym: string) =>
   new Date(`${ym}-01T00:00:00Z`).toLocaleString("en-GB", { month: "long", timeZone: "UTC" });
 const year = (ym: string) => ym.slice(0, 4);
+/* The cover date, from the editor's Published field ("2026-11" → "November 2026"). */
+const monthYear = (ym: string) => (/^\d{4}-\d{2}$/.test(ym) ? `${month(ym)} ${year(ym)}` : ym);
 
 function fieldworkSpan(range: string) {
   const [from, to] = range.split("/");
@@ -518,7 +520,7 @@ export default function PublicReport({ data = REPORT }: { data?: PublicReportDat
       <header className="pub-cover">
         <div className="wrap pub-cover-in">
           <div>
-            <div className="pub-eyebrow">October 2026</div>
+            <div className="pub-eyebrow">{monthYear(meta.published)}</div>
             <div className="pub-rule" aria-hidden="true" />
             <h1 className="pub-h1">
               <Accented text={meta.title} tail={`Benchmark ${meta.edition}`} />

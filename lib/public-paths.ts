@@ -45,7 +45,7 @@ export const PUBLIC_PATHS = [
   '/confirm',
   '/privacy-policy',
   '/terms-of-service',
-  '/plans', // public pricing page (app/plans) — viewable signed in or out
+  '/solutions', // public pricing page (app/solutions; /plans redirects here) — viewable signed in or out
   '/report-preview', // admin editor's report preview frame — renders only content the admin panel posts in
   '/w', // /w/[token] — public read-only shared watchlist pages
 ] as const;

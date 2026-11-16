@@ -202,8 +202,8 @@ export const ROUTES: RouteDef[] = [
 
 export const ROUTE_BY_ID = new Map(ROUTES.map((r) => [r.id, r]));
 
-/** The public pricing page. Not a gated ROUTES entry — link to it directly. */
-export const PLANS_PATH = '/plans';
+/** The public pricing page ("Solutions", formerly /plans). Not a gated ROUTES entry — link to it directly. */
+export const PLANS_PATH = '/solutions';
 
 /** A sidebar group. `title: null` renders its items at the top, ungrouped. */
 export interface NavGroup {

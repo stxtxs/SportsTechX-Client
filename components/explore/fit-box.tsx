@@ -35,7 +35,7 @@ const COLOUR = Object.fromEntries(SOLUTIONS.map((s) => [s.id, s.colour])) as Rec
 
 /** `wash` is the colour fading in from the corner: Explore pink when neutral. */
 const COPY: Record<Variant, { label: string; products: SolutionId[]; link: string; href: string; wash: string }> = {
-	// atlas.sportstechx.com/plans: relative, since this app is that site.
+	// atlas.sportstechx.com/solutions: relative, since this app is that site.
 	neutral: { label: 'Looking for investors or startups?', products: ['raise', 'scout'], link: 'Explore', href: PLANS_PATH, wash: COLOUR.explore },
 	raise: { label: 'Looking for investors?', products: ['raise'], link: 'Try Atlas Raise', href: ATLAS_LINKS.founderSandbox, wash: COLOUR.raise },
 	scout: { label: 'Looking for startups?', products: ['scout'], link: 'Try Atlas Scout', href: ATLAS_LINKS.investorSandbox, wash: COLOUR.scout },

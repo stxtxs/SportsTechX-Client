@@ -99,7 +99,7 @@ html:has(.stx-report) { scroll-behavior: smooth; }
 
 .stx-report .snav {
   position: fixed; z-index: 30;
-  right: clamp(12px, 1.6vw, 24px); top: clamp(12px, 1.6vw, 24px);
+  right: clamp(12px, 1.6vw, 24px); top: calc(clamp(12px, 1.6vw, 24px) + var(--announce-vis, 0px));
   display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 10px;
   pointer-events: none;
 }
@@ -282,7 +282,8 @@ html:has(.stx-report) { scroll-behavior: smooth; }
 }
 /* The PDF gives the edition its own line. */
 .stx-report .pub-h1 .pub-pink { display: block; }
-.stx-report .pub-cover-sub { margin: 0; font-size: clamp(16px, 2.2vw, 19px); max-width: 60ch; }
+/* The byline runs the width of the cover, so it sits on one line wherever it fits. */
+.stx-report .pub-cover-sub { margin: 0; font-size: clamp(16px, 2.2vw, 19px); max-width: none; }
 .stx-report .pub-strap {
   display: flex; justify-content: space-between; gap: 8px 24px; flex-wrap: wrap;
   padding-top: 14px; border-top: 1px solid var(--rule);

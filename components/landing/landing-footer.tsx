@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowUpRight, Mail, MapPin } from 'lucide-react';
+import { ArrowUpRight, Mail } from 'lucide-react';
 import { SOLUTIONS, selectSolution, solutionHref } from '@/components/landing/atlas-solutions';
 
 /* Root-relative so the anchors also work from the legal pages. Each product
@@ -16,7 +16,15 @@ const SPORTSTECHX: [string, string][] = [
 	['About', 'https://www.sportstechx.com/about'],
 ];
 
-const Svg = ({ children }: { children: React.ReactNode }) => (
+/* The sportstechx.com footer's legal row, minus Playmakers Membership Terms.
+   The Imprint lives on the main site only. */
+const LEGAL: [string, string][] = [
+	['Privacy Policy', '/privacy-policy'],
+	['Terms of Service', '/terms-of-service'],
+	['Imprint', 'https://www.sportstechx.com/imprint'],
+];
+
+const Svg =({ children }: { children: React.ReactNode }) => (
 	<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>{children}</svg>
 );
 /* Only the two SportsTechX socials that exist — Instagram and X were removed. */
@@ -44,9 +52,6 @@ export function LandingFooter() {
 								</a>
 							</div>
 							<p className="lp-footer-desc">Your insider guide to sports tech &amp; venture. A SportsTechX product.</p>
-							<div className="lp-footer-meta">
-								<div><MapPin size={16} /> Berlin, Germany</div>
-							</div>
 						</div>
 						<div>
 							<div className="lp-footer-h">Solutions</div>
@@ -84,13 +89,16 @@ export function LandingFooter() {
 						</div>
 					</div>
 					<div className="lp-footer-bottom">
-						<span>© 2026 SportsTechX GmbH. All rights reserved.</span>
-						{/* These were a plain string; both pages exist and are public. */}
+						<span>© 2026 SportsTechX GmbH · Berlin, Germany</span>
 						<span>
-							<a href="/privacy-policy">Privacy Policy</a>
-							{' · '}
-							<a href="/terms-of-service">Terms of Service</a>
-							{''}
+							{LEGAL.map(([label, href], i) => (
+								<span key={label}>
+									{i > 0 && <span aria-hidden> · </span>}
+									<a href={href} {...(href.startsWith('http') ? { target: '_blank', rel: 'noreferrer' } : {})}>
+										{label}
+									</a>
+								</span>
+							))}
 						</span>
 					</div>
 				</div>

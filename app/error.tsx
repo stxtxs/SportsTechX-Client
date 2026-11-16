@@ -32,7 +32,7 @@ export default function GlobalError({
 	}, [error]);
 
 	return (
-		<div className="atlas" style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', padding: 24, background: 'var(--a-page)' }}>
+		<div className="atlas" style={{ minHeight: 'calc(100dvh - var(--announce-h, 0px))', display: 'grid', placeItems: 'center', padding: 24, background: 'var(--a-page)' }}>
 			<div style={{ textAlign: 'center', maxWidth: 440 }}>
 				<span style={{
 					display: 'grid', placeItems: 'center', width: 44, height: 44, margin: '0 auto 16px',

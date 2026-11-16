@@ -23,7 +23,7 @@ export default function BillingCancelPage() {
 	if (unanswered || (!profile && isLoading)) return null;
 
 	return (
-		<div className="atlas" style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', padding: 24, background: 'var(--a-page)', color: 'var(--a-ink)' }}>
+		<div className="atlas" style={{ minHeight: 'calc(100dvh - var(--announce-h, 0px))', display: 'grid', placeItems: 'center', padding: 24, background: 'var(--a-page)', color: 'var(--a-ink)' }}>
 			<Card glow="blue" style={{ width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 16, padding: '36px 28px 32px' }}>
 				<Brand variant="horizontal" height={32} />
 				<h1 style={{ fontFamily: 'var(--a-font)', fontSize: 30, fontWeight: 700, lineHeight: 1.1, color: 'var(--a-ink)', margin: '16px 0 0' }}>Checkout cancelled</h1>

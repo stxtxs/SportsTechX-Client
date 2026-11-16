@@ -281,7 +281,7 @@ body:has(.lp) {
 /* ── Hero (Intro + Final share .lp-hero) ───────────────────────────────── */
 .lp-hero { position: relative; background: var(--lp-dark); overflow: hidden; }
 /* Intro hero fills the viewport on first load, content vertically centred. */
-.lp-hero--intro { min-height: 100vh; min-height: 100svh; display: flex; align-items: center; }
+.lp-hero--intro { min-height: 100vh; min-height: calc(100svh - var(--announce-h, 0px)); display: flex; align-items: center; }
 
 /* Background stage — the design's 1512x1007 frame, scaled like `cover` and
    anchored to the hero's bottom so the off-canvas circles/rings land exactly

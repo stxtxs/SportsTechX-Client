@@ -18,8 +18,11 @@ const subscribe = (onChange: () => void) => {
  * and releasing at 8 gives it somewhere to settle (as Playmakers does).
  */
 let docked = false;
+/** The announcement banner's height / on-screen part (components/announcement-bar.tsx; 0 once closed). */
+const bannerVar = (name: '--announce-h' | '--announce-vis') => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
 const isScrolled = () => {
-	const y = window.scrollY;
+	// Measured past the banner, so the glass band never docks over a banner still on screen.
+	const y = window.scrollY - bannerVar('--announce-h');
 	if (y > 24) docked = true;
 	else if (y < 8) docked = false;
 	return docked;
@@ -48,7 +51,8 @@ export function LandingNav() {
 			// ancestor becomes the containing block for `fixed` children: anchor
 			// the bar to the captured offset instead. `top` is never transitioned
 			// (see .lp-nav), or opening the drawer would send the bar gliding.
-			style={drawerOpen ? { top: lockedY } : undefined}
+			// (+ the banner still on screen at that point, so the bar stays below it.)
+			style={drawerOpen ? { top: lockedY + bannerVar('--announce-vis') } : undefined}
 			className={`lp-nav${scrolled && !drawerOpen ? ' is-scrolled' : ''}${drawerOpen ? ' is-drawer' : ''}`}
 			aria-label="Primary"
 		>

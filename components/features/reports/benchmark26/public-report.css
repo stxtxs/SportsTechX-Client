@@ -99,7 +99,7 @@ html:has(.stx-report) { scroll-behavior: smooth; }
 
 .stx-report .snav {
   position: fixed; z-index: 30;
-  right: clamp(12px, 1.6vw, 24px); top: clamp(12px, 1.6vw, 24px);
+  right: clamp(12px, 1.6vw, 24px); top: calc(clamp(12px, 1.6vw, 24px) + var(--announce-vis, 0px));
   display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 10px;
   pointer-events: none;
 }

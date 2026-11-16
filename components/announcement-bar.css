@@ -1,0 +1,39 @@
+/* Site-wide announcement banner (components/announcement-bar.tsx). Colours and
+ * type match the sportstechx.com banner so the three sites read as one. */
+:root { --announce-h: 0px; --announce-vis: 0px; }
+html[data-announce-off] .announce { display: none; }
+/* Pages with the app shell show the in-shell copy instead of the root one. */
+body:has(.atlas-shell) .announce--root { display: none; }
+
+.announce {
+	position: relative; z-index: 45;
+	background: #091539; color: #fff;
+	font-family: var(--font-inter), system-ui, sans-serif;
+}
+.announce__inner {
+	display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+	gap: 6px 16px; min-height: 44px; padding: 8px 56px 8px 16px;
+}
+.announce__text { margin: 0; text-align: center; font-size: 14px; line-height: 1.4; }
+.announce__text strong { font-weight: 500; color: #ff5c8a; }
+.announce__cta {
+	display: inline-flex; align-items: center; height: 30px; padding: 0 16px; flex-shrink: 0;
+	border-radius: 999px; background: #fff; color: #091539; text-decoration: none;
+	font-family: var(--font-jetbrains-mono), ui-monospace, monospace; font-size: 12px; letter-spacing: 0.06em;
+	transition: background-color 0.2s ease-out, color 0.2s ease-out, scale 0.2s ease-out;
+}
+.announce__cta:hover { background: #ff5c8a; color: #fff; }
+@media (prefers-reduced-motion: no-preference) {
+	.announce__cta:hover { scale: 1.05; }
+	.announce__cta:active { scale: 0.95; }
+}
+.announce__close {
+	position: absolute; top: 50%; right: 4px; translate: 0 -50%;
+	display: grid; place-items: center; width: 44px; height: 44px;
+	border: 0; border-radius: 999px; background: none; color: rgb(255 255 255 / 0.8); cursor: pointer;
+}
+.announce__close:hover { color: #fff; }
+.announce__close:focus-visible, .announce__cta:focus-visible { outline: 2px solid #ff5c8a; outline-offset: 2px; }
+@media (max-width: 639px) { .announce__text { font-size: 13px; } }
+/* Never in a printed / exported PDF of a report. */
+@media print { .announce { display: none !important; } }

@@ -14,7 +14,7 @@ import { useUserProfile } from '@/hooks/use-user-profile';
  * signed in it also tags the viewer's current plan.
  *
  * It is also the post-signup paywall: signup, the email-confirm link and the
- * OAuth callback all land a new account on `/plans?welcome=1`. That shows the
+ * OAuth callback all land a new account on `/solutions?welcome=1`. That shows the
  * one-time plan choice (Explore / paid / "maybe later") until it is answered
  * (`paywall_shown_at`); after that the same URL is just this page. Nothing here
  * ever redirects on its own — only the user's choice moves them on.

@@ -12,7 +12,7 @@ import { callPostLogin } from '@/lib/post-login';
  * returning one `created_at` is days or months behind.
  *
  * This is deliberately NOT `paywall_shown_at IS NULL`, which is the state the
- * plan choice on /plans?welcome gates on. That column is also null for roughly 2,150
+ * plan choice on /solutions?welcome gates on. That column is also null for roughly 2,150
  * pre-existing accounts, so using it here would funnel every one of them into
  * the plan choice the next time they signed in with Google. It also needs no
  * database read.
@@ -53,9 +53,9 @@ export async function GET(request: NextRequest) {
       // just takes the same `/api/*` rewrite the browser uses.
       await callPostLogin(data.session.access_token, process.env.BACKEND_URL || origin);
 
-      // A new account goes to the plan choice (/plans?welcome) — `redirectTo`
+      // A new account goes to the plan choice (/solutions?welcome) — `redirectTo`
       // defaults to the dashboard, so OAuth signups used to skip it entirely.
-      const dest = isFirstSignIn(data.user) ? '/plans?welcome=1' : next;
+      const dest = isFirstSignIn(data.user) ? '/solutions?welcome=1' : next;
       return NextResponse.redirect(`${origin}${dest}`);
     }
   }

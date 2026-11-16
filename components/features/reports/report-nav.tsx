@@ -41,7 +41,7 @@ export const ReportNav = forwardRef<HTMLElement, Props>(function ReportNav(
 	const themeLabel = isDark ? 'Switch to light mode' : 'Switch to dark mode';
 	return (
 		<>
-			<nav ref={navRef} style={{ position: 'fixed', top: 3, left: 0, right: 0, zIndex: 100, padding: isMobile ? '12px 16px' : '16px 40px', display: hidden ? 'none' : 'flex', alignItems: 'center', justifyContent: 'space-between', backdropFilter: 'blur(20px)', background: t.navBg, borderBottom: `1px solid ${t.divider}`, gap: 16, transition: 'transform 0.4s cubic-bezier(0.16,1,0.3,1)', willChange: 'transform' }}>
+			<nav ref={navRef} style={{ position: 'fixed', top: 'calc(3px + var(--announce-vis, 0px))' /* below the site announcement while on screen */, left: 0, right: 0, zIndex: 100, padding: isMobile ? '12px 16px' : '16px 40px', display: hidden ? 'none' : 'flex', alignItems: 'center', justifyContent: 'space-between', backdropFilter: 'blur(20px)', background: t.navBg, borderBottom: `1px solid ${t.divider}`, gap: 16, transition: 'transform 0.4s cubic-bezier(0.16,1,0.3,1)', willChange: 'transform' }}>
 				<a href="https://www.atlas.sportstechx.com" target="_blank" rel="noopener noreferrer" style={{ lineHeight: 0, flexShrink: 0 }}>
 					<img src={isDark ? '/landing/atlas-wordmark-white.svg' : '/landing/atlas-wordmark-dark.svg'} alt="Atlas" style={{ height: isMobile ? 26 : 34, display: 'block' }} />
 				</a>
@@ -79,7 +79,7 @@ export const ReportNav = forwardRef<HTMLElement, Props>(function ReportNav(
 				</div>
 			</nav>
 			{isMobile && (
-				<div style={{ position: 'fixed', top: 52, left: 0, right: 0, zIndex: 99, maxHeight: mobileOpen ? 400 : 0, opacity: mobileOpen ? 1 : 0, overflow: 'hidden', background: t.navBg, backdropFilter: 'blur(20px)', borderBottom: mobileOpen ? `1px solid ${t.divider}` : 'none', transition: 'max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease', display: hidden ? 'none' : undefined }}>
+				<div style={{ position: 'fixed', top: 'calc(52px + var(--announce-vis, 0px))', left: 0, right: 0, zIndex: 99, maxHeight: mobileOpen ? 400 : 0, opacity: mobileOpen ? 1 : 0, overflow: 'hidden', background: t.navBg, backdropFilter: 'blur(20px)', borderBottom: mobileOpen ? `1px solid ${t.divider}` : 'none', transition: 'max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease', display: hidden ? 'none' : undefined }}>
 					<div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 4 }}>
 						{items.map(({ href, label }) => (
 							<a key={href} href={href}

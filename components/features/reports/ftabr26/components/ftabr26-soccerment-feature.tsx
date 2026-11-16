@@ -81,9 +81,12 @@ export function Ftabr26SoccermentFeature({ print = false, data }: { print?: bool
         </div>
 
         <div className="soc-bottom">
+          <div className="soc-founder-col">
+          {S.quote ? <h3 className="soc-quote">{S.quote}</h3> : null}
           <div className="soc-founder">
             <img src={S.founder.photo} alt={`${S.founder.name}, CEO of Soccerment`} loading={print ? "eager" : "lazy"} />
             <div><strong>{S.founder.name}</strong><span>{S.founder.role}</span></div>
+          </div>
           </div>
           <div className="soc-next">
             <h3 className="soc-label">{S.nextLabel}</h3>

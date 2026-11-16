@@ -7,7 +7,7 @@ import useSWR from 'swr';
 import { BadgeCheck, Bookmark, CalendarDays, Sparkles, Target } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { AgentComposer, FeedCard, H1, Loading, SectionHead } from '@/components/atlas';
-import { useUserProfile } from '@/hooks/use-user-profile';
+import { greetingName, useUserProfile } from '@/hooks/use-user-profile';
 import { qk } from '@/lib/query-keys';
 import { SETUP_CARD_WIZARD, openRaiseSetup, openScoutThesis } from '@/lib/setup-events';
 import { hrefOf } from '@/lib/routes';
@@ -69,7 +69,7 @@ export function ScoutHome() {
 		if (t) router.push(`${hrefOf('chat')}?q=${encodeURIComponent(t)}`);
 	};
 
-	const first = (profile?.display_name ?? profile?.full_name ?? '').split(' ')[0] || 'there';
+	const first = greetingName(profile);
 	const hour = new Date().getHours();
 	const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 	const month = new Date(new Date().getFullYear(), new Date().getMonth() - 1)
@@ -81,7 +81,7 @@ export function ScoutHome() {
 	return (
 		<div className="scout-home">
 			<section className="scout-home__hero">
-				<H1>{greeting}, {first}</H1>
+				<H1>{first ? `${greeting}, ${first}` : `${greeting}.`}</H1>
 				<p className="scout-home__sub">
 					Here&rsquo;s what has changed across {listText(thesis.sectors) || 'sports tech'} since your last visit.
 				</p>
@@ -107,7 +107,7 @@ export function ScoutHome() {
 
 
 			<section className="scout-home__attn">
-				<SectionHead title="What needs your attention" meta="Based on your thesis · since your last visit" />
+				<SectionHead title="Latest from Atlas" meta="Based on your thesis · since your last visit" />
 				<div className="atlas-feed-grid">
 					{/* Server-ranked and already capped at three. */}
 					{(data?.attention ?? []).map((c) => (

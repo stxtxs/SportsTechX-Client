@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { isPrivatePath } from '@/lib/public-paths';
+import { isLinkPreview, isPrivatePath } from '@/lib/public-paths';
 
 /**
  * Auth pages a *signed-in* user shouldn't see — visiting these redirects them
@@ -110,7 +110,7 @@ export async function updateSession(request: NextRequest) {
   // Gate on "is this private", not "is this not public". The difference is
   // what happens to a URL that is neither: it falls through to Next's 404
   // instead of redirecting. See PRIVATE_PREFIXES for why that matters.
-  if (!authed && isPrivatePath(pathname)) {
+  if (!authed && isPrivatePath(pathname) && !isLinkPreview(request.method, pathname, request.headers.get('user-agent'))) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirectTo', pathname);

@@ -33,7 +33,7 @@ export const dynamic = 'force-dynamic';
 export default function BillingLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<ProtectedRoute>
-			<div className="atlas" style={{ minHeight: '100dvh', background: 'var(--a-page)' }}>{children}</div>
+			<div className="atlas" style={{ minHeight: 'calc(100dvh - var(--announce-h, 0px))', background: 'var(--a-page)' }}>{children}</div>
 		</ProtectedRoute>
 	);
 }

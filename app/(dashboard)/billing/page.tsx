@@ -39,6 +39,8 @@ const fmtPrice = (p: PlanRow) => {
 };
 
 interface Invoice { id: string; number: string | null; status: string | null; amount_paid: number; currency: string; created: number; hosted_invoice_url: string | null; invoice_pdf: string | null }
+/** Where the plan comes from and when it ends (GET /api/billing/access). */
+interface Access { source: 'stripe' | 'granted' | 'legacy' | 'free'; ends_at: string | null; renews: boolean; portal: boolean }
 interface Sub { subscription_status?: string | null; is_trial?: boolean | null; subscription_current_period_end?: string | null; subscription_cancel_at?: string | null }
 interface SubRow { stripe_subscription_id: string; subscription_status: string; is_active: boolean; is_trial: boolean; plan_name: string | null; user_type: string; subscription_current_period_end: string | null; subscription_cancel_at: string | null; updated_at: string }
 
@@ -63,6 +65,13 @@ export default function BillingPage() {
 	const matchedPlan = (plans.data?.data ?? []).find((r) => r.tier === plan);
 	const p = { label: matchedPlan?.name ?? TIER_LABEL[plan] ?? plan, price: matchedPlan ? fmtPrice(matchedPlan) : (plan === 'explore' ? '€0' : '') };
 	const sub = useSWR<Sub | null>(['/api/billing/subscription']);
+	const access = useSWR<Access>(['/api/billing/access']);
+	// Not an Atlas Stripe subscription: set up by the STX team (admin grant /
+	// trial — nothing in Stripe), or carried over from the Intelligence Hub.
+	// No cancel here; a Hub plan whose Stripe customer we know links to the
+	// billing portal (same Stripe account), the rest show only their end date.
+	const teamPlan = access.data?.source === 'granted' || access.data?.source === 'legacy';
+	const hubBilling = access.data?.source === 'legacy' && access.data.portal;
 	const allSubs = useSWR<SubRow[]>(['/api/billing/subscriptions']);
 	const invoices = useSWR<Invoice[]>(['/api/billing/invoices']);
 	const { balance: bal } = useCreditBalance();
@@ -120,7 +129,23 @@ export default function BillingPage() {
 						{cancelling && (
 							<p style={{ ...BODY, marginTop: 10 }}>Your plan access ends on {fmtISO(sub.data?.subscription_cancel_at ?? sub.data?.subscription_current_period_end ?? null)}. You keep full access until then.</p>
 						)}
+						{hasActiveSub && !cancelling && sub.data?.subscription_current_period_end && (
+							<p style={{ ...BODY, marginTop: 10 }}>{sub.data.is_trial ? 'Trial ends' : 'Renews'} on {fmtISO(sub.data.subscription_current_period_end)}.</p>
+						)}
+						{!hasActiveSub && access.data?.source === 'legacy' && (
+							<p style={{ ...BODY, marginTop: 10 }}>
+								You’re on your <b>Intelligence Hub plan</b>, carried over to its Atlas equivalent at the price you already paid. Atlas won’t charge you anything until it ends on <b>{fmtISO(access.data.ends_at)}</b>. After that, choose an Atlas plan to keep your access.
+							</p>
+						)}
+						{!hasActiveSub && access.data?.source === 'granted' && (
+							<p style={{ ...BODY, marginTop: 10 }}>
+								Set up for you by the SportsTechX team{access.data.ends_at ? `, active until ${fmtISO(access.data.ends_at)}.` : ', with no end date.'}
+							</p>
+						)}
 					</div>
+					{!hasActiveSub && hubBilling && (
+						<Button variant="outline" size="sm" disabled={busy !== null} onClick={() => void manage()}>{busy === 'portal' ? <Loader2 className="animate-spin" size={13} /> : 'Manage billing'}</Button>
+					)}
 					{hasActiveSub && (
 						<div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
 							<Button variant="outline" size="sm" disabled={busy !== null} onClick={() => void manage()}>{busy === 'portal' ? <Loader2 className="animate-spin" size={13} /> : 'Manage billing'}</Button>
@@ -136,8 +161,18 @@ export default function BillingPage() {
 			</Card>
 
 			<Card style={{ marginBottom: 24 }}>
-				<div style={{ ...CARD_TITLE, marginBottom: 6 }}>{hasActiveSub ? 'Your subscription' : 'Choose a plan'}</div>
-				{hasActiveSub ? (
+				<div style={{ ...CARD_TITLE, marginBottom: 6 }}>{hasActiveSub || teamPlan ? 'Your subscription' : 'Choose a plan'}</div>
+				{!hasActiveSub && hubBilling ? (
+					<>
+						<p style={{ ...BODY, margin: '0 0 16px' }}>Your plan was paid through the Intelligence Hub. In the billing portal you can see what you bought, its invoices and your payment details. If your Hub plan still renews automatically, you can turn that off there, or email <a href="mailto:hello@sportstechx.com" style={{ color: 'inherit', textDecoration: 'underline' }}>hello@sportstechx.com</a> and we’ll do it for you.</p>
+						<Button size="sm" disabled={busy !== null} onClick={() => void manage()}>{busy === 'portal' ? <Loader2 className="animate-spin" size={13} /> : 'Open billing portal'}</Button>
+					</>
+				) : !hasActiveSub && teamPlan ? (
+					<>
+						<p style={{ ...BODY, margin: '0 0 16px' }}>This plan isn’t billed through Stripe, so there’s nothing to manage or cancel here. To change it, email <a href="mailto:hello@sportstechx.com" style={{ color: 'inherit', textDecoration: 'underline' }}>hello@sportstechx.com</a>. To start a paid plan of your own, see the plans.</p>
+						<Button variant="outline" size="sm" onClick={() => router.push(PLANS_PATH)}>See plans</Button>
+					</>
+				) : hasActiveSub ? (
 					<>
 						<p style={{ ...BODY, margin: '0 0 16px' }}>Update your payment method, see invoices or cancel in the billing portal. Plans can’t be switched mid-subscription: to move to another plan, cancel this one (you keep access until the end of the billing period), then subscribe to the new plan.</p>
 						<Button size="sm" disabled={busy !== null} onClick={() => void manage()}>{busy === 'portal' ? <Loader2 className="animate-spin" size={13} /> : 'Open billing portal'}</Button>

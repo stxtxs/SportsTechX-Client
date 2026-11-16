@@ -146,7 +146,8 @@ body:has(.lp) {
    desktop) and docks into a full-width glass band once the page scrolls. The
    rest offset rides on `translate`, never `top` (see .lp-nav.is-drawer). */
 .lp-nav {
-	position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+	/* top: below the announcement banner while it is on screen (0 once it scrolls away or is closed). */
+	position: fixed; top: var(--announce-vis, 0px); left: 0; right: 0; z-index: 40;
 	translate: 0 16px;
 	transition: translate 0.3s ease, padding 0.3s ease, background-color 0.3s ease, backdrop-filter 0.3s ease;
 }
@@ -280,7 +281,7 @@ body:has(.lp) {
 /* ── Hero (Intro + Final share .lp-hero) ───────────────────────────────── */
 .lp-hero { position: relative; background: var(--lp-dark); overflow: hidden; }
 /* Intro hero fills the viewport on first load, content vertically centred. */
-.lp-hero--intro { min-height: 100vh; min-height: 100svh; display: flex; align-items: center; }
+.lp-hero--intro { min-height: 100vh; min-height: calc(100svh - var(--announce-h, 0px)); display: flex; align-items: center; }
 
 /* Background stage — the design's 1512x1007 frame, scaled like `cover` and
    anchored to the hero's bottom so the off-canvas circles/rings land exactly

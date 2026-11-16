@@ -18,7 +18,6 @@ import { POPULAR_SPORTS, SPORT_FAMILIES, sportLabel } from './sport-families';
  * colours and category order) instead of a flat list. Sports open on a short
  * popular set with search, and the rest grouped into families on demand.
  */
-interface Ref { id: string; name: string | null }
 
 export function InterestsEditor({ value, onChange }: { value: Interests; onChange: (next: Interests) => void }) {
 	const toggleIn = (k: keyof Interests, v: string) =>
@@ -47,8 +46,8 @@ export function InterestsEditor({ value, onChange }: { value: Interests; onChang
 				<SportsPicker value={value.sports} onToggle={(id) => toggleIn('sports', id)} />
 			</Section>
 
-			<Section title="Technologies" hint="Coming soon: following technologies needs a small API update, so these can't be saved yet.">
-				<TechPreview />
+			<Section title="Which technologies?" count={value.techs.length}>
+				<TechPicker value={value.techs} onToggle={(id) => toggleIn('techs', id)} />
 			</Section>
 		</div>
 	);
@@ -234,15 +233,14 @@ function SportsPicker({ value, onToggle }: { value: string[]; onToggle: (id: str
 	);
 }
 
-/* ── Technologies: shown, not yet saveable ──────────────────────────────── */
+/* ── Technologies ─────────────────────────────────────────────────────────── */
 
-function TechPreview() {
-	const { data } = useSWR<Ref[] | { data: Ref[] }>(qk.reference.techTags(), { dedupingInterval: 60 * 60_000 });
-	const tags = Array.isArray(data) ? data : (data?.data ?? []);
-	if (!tags.length) return null;
+function TechPicker({ value, onToggle }: { value: string[]; onToggle: (id: string) => void }) {
+	const tags = useInterestOptions().techs.options; // [id, name]
+	if (!tags.length) return <p className="int-sec__hint">Loading…</p>;
 	return (
 		<div className="int-chips">
-			{tags.map((t) => <Chip key={t.id} disabled>{t.name}</Chip>)}
+			{tags.map(([id, name]) => <Chip key={id} on={value.includes(id)} onClick={() => onToggle(id)}>{name}</Chip>)}
 		</div>
 	);
 }

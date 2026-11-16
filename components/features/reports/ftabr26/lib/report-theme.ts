@@ -76,6 +76,9 @@ export const SECTOR_COLORS: Record<string, string> = {
   "For Athletes": BRAND.athletes,
   "For Fans": BRAND.fans,
   "For Executives": BRAND.execs,
+  "Athlete Tech": BRAND.athletes,
+  "Fan Tech": BRAND.fans,
+  "Executive Tech": BRAND.execs,
 };
 
 export const SECTOR_SECONDARY_COLORS: Record<string, string> = {
@@ -85,6 +88,9 @@ export const SECTOR_SECONDARY_COLORS: Record<string, string> = {
   "For Athletes": BRAND.athletesSec,
   "For Fans": BRAND.fansSec,
   "For Executives": BRAND.execsSec,
+  "Athlete Tech": BRAND.athletesSec,
+  "Fan Tech": BRAND.fansSec,
+  "Executive Tech": BRAND.execsSec,
 };
 
 /* World Cup 2026 tech categories. Each category owns an accent colour that
@@ -99,9 +105,9 @@ export const WORLDCUP_TECH_COLORS: Record<string, string> = {
 };
 
 export const SECTOR_LABELS: Record<string, string> = {
-  "Activity & Performance": "For Athletes",
-  "Fans & Content": "For Fans",
-  "Management & Organisation": "For Executives",
+  "Activity & Performance": "Athlete Tech",
+  "Fans & Content": "Fan Tech",
+  "Management & Organisation": "Executive Tech",
 };
 
 export function fmtB(m: number): string {

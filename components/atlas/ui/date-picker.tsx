@@ -59,6 +59,8 @@ export function DatePicker({ value, onChange, id, disabled, placeholder = 'Selec
 	const minD = parseISO(min ?? '');
 	const maxD = parseISO(max ?? '');
 	const PANEL_W = 268, PANEL_H = 316;
+	const outOfRange = (d: Date) => (!!minD && d < minD) || (!!maxD && d > maxD);
+	const pick = (d: Date) => { if (outOfRange(d)) return; onChange(toISO(d)); setOpen(false); triggerRef.current?.focus(); };
 
 	const place = () => {
 		const r = triggerRef.current?.getBoundingClientRect();
@@ -70,10 +72,13 @@ export function DatePicker({ value, onChange, id, disabled, placeholder = 'Selec
 		if (below >= PANEL_H || below >= r.top) setPos({ left, width, top: r.bottom + gap });
 		else setPos({ left, width, bottom: window.innerHeight - r.top + gap });
 	};
+	// Deliberate: opening resets the calendar to the chosen (or today's) month in
+	// one layout pass before paint, wherever the picker is opened from.
 	useLayoutEffect(() => {
 		if (!open) return;
 		place();
 		const base = parseISO(value) ?? new Date();
+		// eslint-disable-next-line react-hooks/set-state-in-effect
 		setView(base); setFocus(base); setTyped('');
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [open]);
@@ -109,8 +114,6 @@ export function DatePicker({ value, onChange, id, disabled, placeholder = 'Selec
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [open, focus]);
 
-	const outOfRange = (d: Date) => (!!minD && d < minD) || (!!maxD && d > maxD);
-	const pick = (d: Date) => { if (outOfRange(d)) return; onChange(toISO(d)); setOpen(false); triggerRef.current?.focus(); };
 	// Typed "jump to date" — a real, in-range YYYY-MM-DD (single-digit month/day ok).
 	const parseTyped = (s: string): Date | null => {
 		const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s.trim());

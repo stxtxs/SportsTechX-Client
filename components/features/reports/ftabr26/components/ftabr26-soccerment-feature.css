@@ -34,6 +34,9 @@
 .ft26-soccerment .soc-figure--lead { grid-column: 1 / -1; }
 .ft26-soccerment .soc-screen { width: 100%; height: 100%; max-width: 100%; max-height: 100%; display: block; object-fit: contain; object-position: center; }
 .ft26-soccerment .soc-founder { display: flex; align-items: center; gap: 12px; }
+/* Headline quote above the CEO, same treatment as Playermaker's tagline */
+.ft26-soccerment .soc-quote { font-family: "Bebas Neue", sans-serif; font-size: 26px; line-height: 1; color: #fff; font-weight: 400; margin: 0 0 12px; }
+@media (max-width: 767px) { .ft26-soccerment .soc-quote { font-size: 22px; } }
 .ft26-soccerment .soc-founder img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; object-position: center 20%; border: 2px solid var(--soc-blue); flex-shrink: 0; }
 .ft26-soccerment .soc-founder strong { display: block; color: #edf3f9; font-weight: 700; font-size: 13px; }
 .ft26-soccerment .soc-founder span { display: block; margin-top: 2px; font-family: "DM Mono", monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--soc-blue); }
@@ -83,10 +86,10 @@
 .ft26-soccerment.soc-print .soc-mosaic { grid-area: mosaic; }
 .ft26-soccerment.soc-print .soc-about { grid-area: about; }
 .ft26-soccerment.soc-print .soc-achievement-panel { grid-area: achievements; }
-.ft26-soccerment.soc-print .soc-founder { grid-area: founder; }
+.ft26-soccerment.soc-print .soc-founder-col { grid-area: founder; }
 .ft26-soccerment.soc-print .soc-next { grid-area: next; }
 .ft26-soccerment.soc-print .soc-achievement-panel,
-.ft26-soccerment.soc-print .soc-founder,
+.ft26-soccerment.soc-print .soc-founder-col,
 .ft26-soccerment.soc-print .soc-next { align-self: start; padding-top: 18px; border-top: 1px solid #38b7e422; }
 .ft26-soccerment.soc-print .soc-label { font-size: 8px; letter-spacing: 3px; }
 .ft26-soccerment.soc-print .soc-body { font-size: 10px; line-height: 1.65; }

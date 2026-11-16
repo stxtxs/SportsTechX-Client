@@ -14,6 +14,13 @@
 .atlas .atlas-co__social:hover { color: var(--a-ink); border-color: var(--a-border-strong); background: var(--a-inset); }
 .atlas .atlas-co__actions { display: flex; align-items: center; gap: 12px 24px; flex-wrap: wrap; }
 
+.atlas .atlas-co__notice {
+  display: flex; align-items: flex-start; gap: 10px; margin: -16px 0 28px; padding: 12px 16px;
+  border: 1px solid var(--a-border); border-radius: var(--a-radius); background: var(--a-surface);
+  font-family: var(--a-body); font-size: 13px; line-height: 1.5; color: var(--a-muted);
+}
+.atlas .atlas-co__notice svg { flex-shrink: 0; margin-top: 2px; }
+.atlas .atlas-co__notice strong { color: var(--a-ink); font-weight: 600; }
 .atlas .atlas-co__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: 36px; align-items: start; }
 @media (max-width: 1100px) { .atlas .atlas-co__grid { grid-template-columns: 1fr; } }
 .atlas .atlas-co__main, .atlas .atlas-co__rail { display: flex; flex-direction: column; gap: 26px; min-width: 0; }

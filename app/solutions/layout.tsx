@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import '@/components/atlas/styles/tokens.css';
 
-export const metadata: Metadata = { title: 'Plans & Pricing' };
+export const metadata: Metadata = { title: 'Solutions' };
 
 /**
  * Public, chrome-less pricing page: no app shell and no auth gate, so it renders
- * for signed-in and signed-out visitors alike (middleware lets `/plans` through;
+ * for signed-in and signed-out visitors alike (middleware lets `/solutions` through;
  * see lib/public-paths.ts). `.atlas` scopes the design tokens the Plans
  * component relies on — nothing above this route group mounts them.
  */

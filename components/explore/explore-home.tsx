@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Newspaper, Files, CalendarDays, UserRound, SlidersHorizontal } from 'lucide-react';
 import { AgentComposer, FeedCard, H1, SectionHead } from '@/components/atlas';
 import useSWR from 'swr';
-import { useUserProfile } from '@/hooks/use-user-profile';
+import { greetingName, useUserProfile } from '@/hooks/use-user-profile';
 import type { SectorRef } from '@/hooks/use-sector-tiers';
 import { qk } from '@/lib/query-keys';
 import type { NewsletterArticle, Page, ReportListItem } from '@/types/api';
@@ -43,16 +43,6 @@ function forYouLink(v: Interests, sectors: SectorRef[], picked: string[]): { tit
 	return { title: 'Browse the company database', href: COMPANIES };
 }
 
-/**
- * A first name fit for a greeting, or null. Profiles often carry the email
- * handle as their display name ("rohn.malhotra+121"), which reads as raw data
- * in a greeting, so only a word made of letters counts.
- */
-function firstNameOf(name: string | null | undefined): string | null {
-	const word = (name ?? '').trim().split(/\s+/)[0] ?? '';
-	return /^\p{L}[\p{L}'’-]*$/u.test(word) ? word : null;
-}
-
 export function ExploreHome() {
 	const router = useRouter();
 	const { data: profile } = useUserProfile();
@@ -75,7 +65,7 @@ export function ExploreHome() {
 	const reports = useSWR<Page<ReportListItem>>(qk.reports.list({ limit: 100 }));
 	const latestReport = [...(reports.data?.data ?? [])]
 		.sort((a, b) => (b.report_year ?? 0) - (a.report_year ?? 0) || (b.report_month ?? 0) - (a.report_month ?? 0))[0];
-	const first = firstNameOf(profile?.full_name) ?? firstNameOf(profile?.display_name);
+	const first = greetingName(profile);
 	const hour = new Date().getHours();
 	const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 	const lastMonth = new Date(new Date().getFullYear(), new Date().getMonth() - 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });

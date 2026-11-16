@@ -60,7 +60,7 @@ export function InvestorsTab() {
 		],
 	}];
 
-	const yearly = base.data?.yearly ?? [];
+	const yearly = useMemo(() => base.data?.yearly ?? [], [base.data]);
 	const chart = useMemo(() => byWindow(yearly, summaryRange).map((r) => ({ year: r.year, amt: r.total_usd, deals: r.investors })), [yearly, summaryRange]);
 	const yearOptions = useMemo(() => [...new Set((allYears.data?.yearly ?? []).map((r) => r.year))].sort((a, b) => b - a).map((y) => [String(y), String(y)] as [string, string]), [allYears.data]);
 

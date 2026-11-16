@@ -46,7 +46,7 @@ export function MaTab() {
 		] },
 	];
 
-	const yearly = base.data?.yearly ?? [];
+	const yearly = useMemo(() => base.data?.yearly ?? [], [base.data]);
 	const totalUsd = yearly.reduce((s, r) => s + r.total_usd, 0);
 	const totalDeals = yearly.reduce((s, r) => s + r.count, 0);
 	const chart = useMemo(() => byWindow(yearly, summaryRange).map((r) => ({ year: r.year, amt: r.total_usd, deals: r.count })), [yearly, summaryRange]);

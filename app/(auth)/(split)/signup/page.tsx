@@ -58,9 +58,9 @@ export default function SignupPage() {
 					},
 					// The custom auth-hook (server/src/modules/auth-hooks) treats this
 					// origin's path as the post-verify `next`, so point it straight at
-					// the plan choice (/plans?welcome). New email-confirmed users land
+					// the plan choice (/solutions?welcome). New email-confirmed users land
 					// there, same as the password/OAuth paths below.
-					emailRedirectTo: `${window.location.origin}/plans?welcome=1`,
+					emailRedirectTo: `${window.location.origin}/solutions?welcome=1`,
 				},
 			});
 			if (err) { setError(err.message); return; }
@@ -74,7 +74,7 @@ export default function SignupPage() {
 				// The plan choice always runs for a new account, so this deliberately
 				// ignores `redirectTo` — that param only steers the OAuth path, where
 				// the callback resumes wherever the user was headed.
-				router.push('/plans?welcome=1');
+				router.push('/solutions?welcome=1');
 			}
 		} finally {
 			setLoading(false);
@@ -89,7 +89,7 @@ export default function SignupPage() {
 					<h1 className="auth-form__title">Create your Atlas account</h1>
 					<p className="auth-form__sub">
 						Explore is free forever. Add Raise or Scout when you need them.{' '}
-						<Link href="/plans">Find your fit →</Link>
+						<Link href="/solutions">Find your fit →</Link>
 					</p>
 				</div>
 

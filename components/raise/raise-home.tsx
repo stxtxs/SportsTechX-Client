@@ -5,7 +5,7 @@ import useSWR from 'swr';
 import { useRouter } from 'next/navigation';
 import { Loader2, Settings, FileCheck, Bookmark, Presentation, CalendarCheck, UserRound, Hourglass, Send, Activity, FolderCheck, Sparkles } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { useUserProfile } from '@/hooks/use-user-profile';
+import { greetingName, useUserProfile } from '@/hooks/use-user-profile';
 import { qk } from '@/lib/query-keys';
 import { SETUP_CARD_WIZARD, openRaiseSetup, openScoutThesis } from '@/lib/setup-events';
 import { H1, Badge, SectionHead, FeedCard, Progress } from '@/components/atlas';
@@ -14,7 +14,7 @@ import { hrefOf } from '@/lib/routes';
 
 /**
  * Atlas Raise — Home. Search-first: a centred composer as the focal point, with
- * "What needs your attention" as elongated cards peeking from the bottom edge
+ * "Latest from Atlas" as elongated cards peeking from the bottom edge
  * (scroll to reveal more). Data unchanged (GET /api/raise/home); only `attention`
  * is used here now. The search bar is UI-only for now (see RaiseSearch).
  *
@@ -115,7 +115,7 @@ export function RaiseHome() {
 		return <div className="raise-home"><div style={{ display: 'grid', placeItems: 'center', minHeight: '60vh' }}><Loader2 className="animate-spin" size={22} /></div></div>;
 	}
 
-	const greetName = profile?.display_name?.split(' ')[0] ?? profile?.full_name?.split(' ')[0] ?? 'there';
+	const greetName = greetingName(profile);
 	const hour = new Date().getHours();
 	const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 	const showRound = !data.needs_setup && !!data.raise;
@@ -126,14 +126,14 @@ export function RaiseHome() {
 		<div className="raise-home">
 			<section className="raise-hero">
 				<div className="raise-hero-inner">
-					<H1 className="raise-hero-title">{greeting}, {greetName}</H1>
+					<H1 className="raise-hero-title">{greetName ? `${greeting}, ${greetName}` : `${greeting}.`}</H1>
 					<p className="raise-hero-sub">What would you like to work on?</p>
 					<RaiseSearch value={q} onChange={setQ} onSubmit={() => goChat(q)} suggestions={RAISE_SUGGESTIONS} onSuggestion={goChat} />
 				</div>
 			</section>
 
 			<section className="raise-attn">
-				<SectionHead title="What needs your attention" />
+				<SectionHead title="Latest from Atlas" />
 				{(showRound || attention.length > 0) && (
 					<div className="atlas-feed-grid">
 						{showRound && <RoundCard r={data.raise!} />}

@@ -86,18 +86,6 @@ export const FTABR26_INNOVATORS: FtabrInnovator[] = [
     qUnderserved: "I don't believe there's a single “underserved area” ripe for disruption. It depends on context. In the U.S., performance tech is strategic; in Europe, fan engagement dominates (though the loyalty side still feels largely underserved). Part of the opportunity lies in adapting technologies from other industries, such as retail, media, health, and real estate, since football can learn from those sectors.",
   },
   {
-    id: "charles-fremont",
-    name: "Charles Frémont",
-    company: "UEFA Innovation Hub",
-    designation: "Senior Innovation Hub Manager",
-    country: "Switzerland",
-    continent: "Europe",
-    linkedin: "https://linkedin.com/in/charles-fr%C3%A9mont-17988139",
-    photoUrl: "/reports/ftabr26/innovators/charles-fremont.webp",
-    qTech: "Sustainability tech will have the greatest impact when adapted from proven solutions in other industries. While sports-specific innovations show promise, cross-sector technologies such as energy optimization and waste management tend to offer greater scalability and maturity, making them more viable for long-term collaboration.",
-    qUnderserved: "Technology has untapped potential to strengthen football's role in building safer, more inclusive communities. Solutions that address discrimination, abuse, and accessibility can help clubs and federations foster environments where everyone feels welcome, protected, and empowered to participate. Useful tools include AI-powered moderation, anonymous reporting, and inclusive design.",
-  },
-  {
     id: "christopher-schlosser",
     name: "Christopher Schlosser",
     company: "Major League Soccer",

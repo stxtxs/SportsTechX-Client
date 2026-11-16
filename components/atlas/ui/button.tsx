@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import type { ReactNode, ButtonHTMLAttributes } from 'react';
+import type { ReactNode, ButtonHTMLAttributes, MouseEvent } from 'react';
 import { cx } from './cx';
 
 /** Button — black / outline / ghost / danger mono pills (link when `href`). Action — icon pill + mono label link. */
@@ -29,10 +29,12 @@ export function Button(props: ButtonProps | LinkBtnProps) {
 
 /** Icon pill + mono label — Figma "Action Buttons" (● VIEW COMPANY). Link when `href`, else button. */
 export function Action({ icon, children, href, external, onClick, disabled }: {
-	icon: ReactNode; children: ReactNode; href?: string; external?: boolean; onClick?: () => void; disabled?: boolean;
+	icon: ReactNode; children: ReactNode; href?: string; external?: boolean;
+	/** On a link it runs first and may preventDefault (e.g. useBackOr). */
+	onClick?: (e: MouseEvent) => void; disabled?: boolean;
 }) {
 	const inner = <><span className="atlas-action__icon">{icon}</span><span className="atlas-action__label">{children}</span></>;
 	if (href && external) return <a className="atlas-action" href={href} target="_blank" rel="noopener noreferrer">{inner}</a>;
-	if (href) return <Link className="atlas-action" href={href}>{inner}</Link>;
+	if (href) return <Link className="atlas-action" href={href} onClick={onClick}>{inner}</Link>;
 	return <button type="button" className="atlas-action" onClick={onClick} disabled={disabled}>{inner}</button>;
 }

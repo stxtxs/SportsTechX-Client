@@ -1,6 +1,10 @@
 'use client';
 
 import { Fragment, useEffect, useSyncExternalStore, type CSSProperties } from 'react';
+import useSWR from 'swr';
+import { toast } from 'sonner';
+import { qk } from '@/lib/query-keys';
+import { apiRequest } from '@/lib/query-client';
 import { ArrowUpRight, X } from 'lucide-react';
 import { ATLAS_LINKS, SOLUTIONS, type SolutionId } from '@/components/landing/atlas-solutions';
 import { getAccountType, getUserType, useUserProfile, type AccountType } from '@/hooks/use-user-profile';
@@ -20,7 +24,8 @@ import { PLANS_PATH } from '@/lib/routes';
  *
  * Only Explore members see it (the shell mounts it for the Explore tier only,
  * and this re-checks), so nobody is offered a product they already have. The
- * whole box is the link and opens in a new tab. × hides it for 14 days. It is
+ * whole box is the link and opens in a new tab. × hides it for 14 days — stored
+ * on the account (`/api/explore/fit-box`), so it holds on every device. It is
  * not rendered on screens under 720px tall. Views, clicks and dismissals are
  * tracked per variant.
  */
@@ -30,7 +35,7 @@ const COLOUR = Object.fromEntries(SOLUTIONS.map((s) => [s.id, s.colour])) as Rec
 
 /** `wash` is the colour fading in from the corner: Explore pink when neutral. */
 const COPY: Record<Variant, { label: string; products: SolutionId[]; link: string; href: string; wash: string }> = {
-	// atlas.sportstechx.com/plans: relative, since this app is that site.
+	// atlas.sportstechx.com/solutions: relative, since this app is that site.
 	neutral: { label: 'Looking for investors or startups?', products: ['raise', 'scout'], link: 'Explore', href: PLANS_PATH, wash: COLOUR.explore },
 	raise: { label: 'Looking for investors?', products: ['raise'], link: 'Try Atlas Raise', href: ATLAS_LINKS.founderSandbox, wash: COLOUR.raise },
 	scout: { label: 'Looking for startups?', products: ['scout'], link: 'Try Atlas Scout', href: ATLAS_LINKS.investorSandbox, wash: COLOUR.scout },
@@ -40,39 +45,30 @@ const NAME: Record<SolutionId, string> = Object.fromEntries(SOLUTIONS.map((s) =>
 
 const VARIANT_BY_ROLE: Record<AccountType, Variant> = { founder: 'raise', investor: 'scout', user: 'neutral' };
 
-const DISMISS_KEY = 'stx:fit-box-dismissed-until';
 const DISMISS_DAYS = 14;
-const DISMISS_EVENT = 'stx:fit-box-dismissed';
 const SHORT_SCREEN = '(max-height: 719px)';
 
-function isHidden(): boolean {
-	if (window.matchMedia(SHORT_SCREEN).matches) return true;
-	try {
-		return Number(localStorage.getItem(DISMISS_KEY) ?? 0) > Date.now();
-	} catch {
-		return false;
-	}
-}
-
-function subscribe(onChange: () => void): () => void {
+// Screen height is a device fact, not a user choice, so it stays local.
+const isShortScreen = () => window.matchMedia(SHORT_SCREEN).matches;
+function subscribeScreen(onChange: () => void): () => void {
 	const mq = window.matchMedia(SHORT_SCREEN);
 	mq.addEventListener('change', onChange);
-	window.addEventListener(DISMISS_EVENT, onChange);
-	window.addEventListener('storage', onChange);
-	return () => {
-		mq.removeEventListener('change', onChange);
-		window.removeEventListener(DISMISS_EVENT, onChange);
-		window.removeEventListener('storage', onChange);
-	};
+	return () => mq.removeEventListener('change', onChange);
 }
+
+type FitBoxState = { dismissed_until: string | null; hidden: boolean };
 
 export function FitBox() {
 	const { data: profile } = useUserProfile();
-	// Hidden on the server and until the browser is read, so it never flashes
-	// in for someone who dismissed it or on a short screen.
-	const hidden = useSyncExternalStore(subscribe, isHidden, () => true);
+	const isExplore = !!profile && getUserType(profile) === 'explore';
+	// Hidden on the server and until the account's dismissal is loaded, so it
+	// never flashes in for someone who dismissed it or on a short screen.
+	const short = useSyncExternalStore(subscribeScreen, isShortScreen, () => true);
+	const { data: state, mutate } = useSWR<FitBoxState>(isExplore ? qk.explore.fitBox() : null);
+	// The server compares the dismissal with its clock and says whether to hide.
+	const dismissed = !state || state.hidden;
 	const variant = VARIANT_BY_ROLE[getAccountType(profile)];
-	const visible = !!profile && getUserType(profile) === 'explore' && !hidden;
+	const visible = isExplore && !short && !dismissed;
 
 	useEffect(() => {
 		if (visible) track(Events.fitBoxViewed, { variant });
@@ -80,14 +76,18 @@ export function FitBox() {
 
 	if (!visible) return null;
 
-	const dismiss = () => {
-		try {
-			localStorage.setItem(DISMISS_KEY, String(Date.now() + DISMISS_DAYS * 86_400_000));
-		} catch {
-			// Can't remember it; it comes back next visit.
-		}
+	const dismiss = async () => {
 		track(Events.fitBoxDismissed, { variant });
-		window.dispatchEvent(new Event(DISMISS_EVENT));
+		// Optimistic: gone on click; the server's answer replaces the guess.
+		const until = new Date(Date.now() + DISMISS_DAYS * 86_400_000).toISOString();
+		await mutate({ dismissed_until: until, hidden: true }, { revalidate: false });
+		try {
+			const res = await apiRequest('POST', '/api/explore/fit-box/dismiss');
+			await mutate((await res.json()) as FitBoxState, { revalidate: false });
+		} catch {
+			await mutate(); // back to the server's truth
+			toast.error("Couldn't hide that box. Please try again.");
+		}
 	};
 
 	return <FitBoxView variant={variant} onOpen={() => track(Events.fitBoxClicked, { variant })} onDismiss={dismiss} />;

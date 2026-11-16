@@ -28,11 +28,13 @@ export interface Interests {
 	/** Sector ids below the top level. Same table — split for the UI only. */
 	subs: string[];
 	sports: string[];
+	/** Technologies (tech tag ids). */
+	techs: string[];
 	geos: string[];
 	goals: string[];
 }
 
-export const NO_INTERESTS: Interests = { sectors: [], subs: [], sports: [], geos: [], goals: [] };
+export const NO_INTERESTS: Interests = { sectors: [], subs: [], sports: [], techs: [], geos: [], goals: [] };
 
 /** Fixed option sets — stored as text, so the chip value is its own label. */
 export const FIXED_OPTIONS = {
@@ -80,7 +82,7 @@ export function normaliseGoals(saved: string[]): string[] {
 }
 
 interface Ref { id: string; name: string | null }
-interface StoredInterests { sectors: Ref[]; sports: Ref[]; geos: string[]; goals: string[] }
+interface StoredInterests { sectors: Ref[]; sports: Ref[]; tech_tags?: Ref[]; geos: string[]; goals: string[] }
 
 type Group = { label: string; options: [value: string, label: string][]; backed: boolean };
 
@@ -90,8 +92,10 @@ type Group = { label: string; options: [value: string, label: string][]; backed:
 export function useInterestOptions(): Record<keyof Interests, Group> & { subTop: Map<string, string> } {
 	const { data: sectorData } = useSWR<SectorRef[] | { data: SectorRef[] }>(qk.reference.sectors(), { dedupingInterval: 60 * 60_000 });
 	const { data: sportData } = useSWR<Ref[] | { data: Ref[] }>(qk.reference.sports(), { dedupingInterval: 60 * 60_000 });
+	const { data: techData } = useSWR<Ref[] | { data: Ref[] }>(qk.reference.techTags(), { dedupingInterval: 60 * 60_000 });
 	const sectorList = useMemo<SectorRef[]>(() => (Array.isArray(sectorData) ? sectorData : (sectorData?.data ?? [])), [sectorData]);
 	const sportList = useMemo<Ref[]>(() => (Array.isArray(sportData) ? sportData : (sportData?.data ?? [])), [sportData]);
+	const techList = useMemo<Ref[]>(() => (Array.isArray(techData) ? techData : (techData?.data ?? [])), [techData]);
 	const tiers = useSectorTiers(sectorList);
 
 	return useMemo(() => {
@@ -111,11 +115,12 @@ export function useInterestOptions(): Record<keyof Interests, Group> & { subTop:
 			sectors: { label: 'Sectors', backed: true, options: tiers.tops.map(pair).sort(byLabel) },
 			subs: { label: 'Sub-sectors', backed: true, options: sectorList.filter((s) => !topIds.has(s.id)).map(pair).sort(byLabel) },
 			sports: { label: 'Sports', backed: true, options: sportList.map(pair).sort(byLabel) },
+			techs: { label: 'Technologies', backed: true, options: techList.map(pair).sort(byLabel) },
 			geos: { label: FIXED_OPTIONS.geos.label, backed: true, options: FIXED_OPTIONS.geos.options.map((o) => [o, o] as [string, string]) },
 			goals: { label: FIXED_OPTIONS.goals.label, backed: true, options: FIXED_OPTIONS.goals.options.map((o) => [o, o] as [string, string]) },
 			subTop,
 		};
-	}, [tiers, sectorList, sportList]);
+	}, [tiers, sectorList, sportList, techList]);
 }
 
 /**
@@ -141,6 +146,7 @@ export function useInterests(): {
 			sectors: stored.filter((id) => topIds.has(id)),
 			subs: stored.filter((id) => !topIds.has(id)),
 			sports: (data?.sports ?? []).map((s) => s.id),
+			techs: (data?.tech_tags ?? []).map((t) => t.id),
 			geos: data?.geos ?? [],
 			goals: normaliseGoals(data?.goals ?? []),
 		};
@@ -151,6 +157,7 @@ export function useInterests(): {
 		const res = await apiRequest('PUT', qk.explore.interests()[0], {
 			sector_ids: [...next.sectors, ...next.subs],
 			sport_ids: next.sports,
+			tech_tag_ids: next.techs,
 			geos: next.geos,
 			// An "Other" ticked but left blank isn't a goal.
 			goals: next.goals.filter((g) => !(g.startsWith(OTHER_GOAL_PREFIX) && !g.slice(OTHER_GOAL_PREFIX.length).trim())),
@@ -166,6 +173,7 @@ export function useInterests(): {
 			...value.sectors.map((id) => name('sectors', id)),
 			...value.subs.map((id) => name('subs', id)),
 			...value.sports.map((id) => name('sports', id)),
+			...value.techs.map((id) => name('techs', id)),
 			...value.geos,
 		];
 	}, [value, opts]);

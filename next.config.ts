@@ -42,7 +42,12 @@ const nextConfig: NextConfig = {
     }];
   },
   async redirects() {
-    return [{ source: "/onboarding", destination: "/plans?welcome=1", permanent: false }];
+    return [
+      { source: "/onboarding", destination: "/solutions?welcome=1", permanent: false },
+      // The pricing page moved from /plans to /solutions; old links, emails and the
+      // FTABR26 PDF/QR still point at /plans (the query string carries over).
+      { source: "/plans", destination: "/solutions", permanent: true },
+    ];
   },
   async rewrites() {
     return [

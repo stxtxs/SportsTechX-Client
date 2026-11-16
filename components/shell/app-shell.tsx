@@ -98,7 +98,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 			    that and broke something worse: 2,769 existing accounts have never
 			    been stamped, 126 of them paying for Raise, and every one would have
 			    been met by a full-screen "choose your plan" overlay.
-			    It now lives on `/plans?welcome`, which is where the flow actually
+			    It now lives on `/solutions?welcome`, which is where the flow actually
 			    puts it — right after email confirmation — and which an existing
 			    account never passes through again. */}
 		</>

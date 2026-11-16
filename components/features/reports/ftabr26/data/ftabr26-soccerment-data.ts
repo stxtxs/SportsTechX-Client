@@ -10,6 +10,8 @@ export const FTABR26_SOCCERMENT = {
   headline: "Building the Intelligence Layer of Football",
   logo: asset("logo"),
   founder: { name: "Aldo Comi", role: "CEO, Soccerment", photo: asset("aldo-comi-ceo") },
+  /** Headline quote shown above the CEO. TBC from Soccerment; hidden while empty. */
+  quote: "",
   problemLabel: "The problem & solution",
   about: [
     "Football clubs buy event data, video, GPS tracking and scouting software from different vendors, at prices only elite clubs afford, and analysts still turn it all into decisions by hand.",

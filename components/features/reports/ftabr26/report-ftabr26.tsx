@@ -2690,7 +2690,7 @@ export default function ReportFTABR26({ content, preview = false }: {
   return (
     <div ref={reportContainerRef} className="ft26-root" style={{ background: t.bg, color: t.text, fontFamily: "'Open Sans','system-ui',sans-serif", overflowX: "hidden", minHeight: "100vh", transition: "background 0.35s, color 0.35s" }}>
       {/* ── READING PROGRESS ────────────────────────────────────────────── */}
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 3, zIndex: 101, background: "transparent", display: (authGateActive || isPdf) ? "none" : "block" }}>
+      <div style={{ position: "fixed", top: "var(--announce-vis, 0px)", left: 0, right: 0, height: 3, zIndex: 101, background: "transparent", display: (authGateActive || isPdf) ? "none" : "block" }}>
         <div ref={progressBarRef} style={{ height: "100%", background: BRAND.pink, transform: "scaleX(0)", transformOrigin: "left center" }} />
       </div>
 

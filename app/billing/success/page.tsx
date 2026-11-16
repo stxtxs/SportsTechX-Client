@@ -87,7 +87,7 @@ export default function BillingSuccessPage() {
 	};
 
 	return (
-		<div className="atlas" style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', padding: 24, background: 'var(--a-page)', color: 'var(--a-ink)' }}>
+		<div className="atlas" style={{ minHeight: 'calc(100dvh - var(--announce-h, 0px))', display: 'grid', placeItems: 'center', padding: 24, background: 'var(--a-page)', color: 'var(--a-ink)' }}>
 			<Card glow="blue" style={{ width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 16, padding: '36px 28px 32px' }}>
 				<Brand variant="horizontal" height={32} />
 				<span style={{ width: 48, height: 48, borderRadius: '50%', background: confirmed ? 'var(--a-ok-bg)' : 'var(--a-surface-2, transparent)', color: confirmed ? 'var(--a-ok)' : 'var(--a-muted)', border: '1px solid color-mix(in srgb, var(--a-ok) 25%, transparent)', display: 'grid', placeItems: 'center', marginTop: 12 }}>

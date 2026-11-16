@@ -18,7 +18,7 @@ import { AtlasLogo } from '@/components/atlas/brand/atlas-logo';
  */
 export default function NotFound() {
 	return (
-		<div className="atlas" style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', padding: 24, background: 'var(--a-page)' }}>
+		<div className="atlas" style={{ minHeight: 'calc(100dvh - var(--announce-h, 0px))', display: 'grid', placeItems: 'center', padding: 24, background: 'var(--a-page)' }}>
 			<div style={{ textAlign: 'center', maxWidth: 480, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 				{/* Brand lockup — the Atlas wordmark + byline, same as the auth screens. */}
 				<div style={{ display: 'flex', alignItems: 'baseline', gap: 9, color: 'var(--a-ink)', marginBottom: 44 }}>

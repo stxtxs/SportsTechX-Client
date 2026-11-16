@@ -181,7 +181,7 @@ export function AuthSessionProvider({ children }: { children: React.ReactNode })
 				// Only a real sign-out has someone's data to drop. Supabase also lands
 				// here for a visitor who was never signed in (INITIAL_SESSION, no
 				// session), and wiping then threw away public data already loaded —
-				// the logged-out /plans page lost its prices.
+				// the logged-out /solutions (then /plans) page lost its prices.
 				const wasSignedIn = authedUserId !== null;
 				authedUserId = null;
 				if (wasSignedIn && !logoutState.isLoggingOut()) void globalMutate(() => true, undefined, { revalidate: false });

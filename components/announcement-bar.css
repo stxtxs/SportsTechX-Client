@@ -3,7 +3,9 @@
 :root { --announce-h: 0px; --announce-vis: 0px; }
 html[data-announce-off] .announce { display: none; }
 /* Pages with the app shell show the in-shell copy instead of the root one. */
-body:has(.atlas-shell) .announce--root { display: none; }
+body:has(.atlas-shell) .announce--root, body:has(.lp-shell) .announce--root { display: none; }
+/* In the app column it scrolls under the sticky phone / tablet top bar (z 40), never over it. */
+.announce--shell { z-index: auto; }
 
 .announce {
 	position: relative; z-index: 45;

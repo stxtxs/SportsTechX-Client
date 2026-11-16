@@ -22,13 +22,13 @@ import './plans.css';
 /**
  * Every tier, side by side — the single plan surface, in three contexts:
  *
- *   - **app** (default): a signed-in user on /plans. Tags their current plan,
+ *   - **app** (default): a signed-in user on /solutions. Tags their current plan,
  *     checks out a paid one, or cancels at period end.
- *   - **onboarding** (`onboarding` prop): /plans?welcome after signup. Explore is
+ *   - **onboarding** (`onboarding` prop): /solutions?welcome after signup. Explore is
  *     chosen directly (no payment, stamps the paywall); a paid plan hands off to
  *     Stripe; "maybe later" keeps the current plan. Same API calls the old
  *     PaywallGate made, so signup behaviour is unchanged — only the UI unifies.
- *   - **public** (logged-out on /plans): the same page — prices and the full
+ *   - **public** (logged-out on /solutions): the same page — prices and the full
  *     comparison, both public endpoints. Every CTA goes to signup.
  *
  * Nothing here is hardcoded that the system already knows: prices come from
@@ -191,7 +191,7 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 	return (
 		<>
 			<PageHead
-				title={onboarding ? 'Choose your plan' : 'Plans'}
+				title={onboarding ? 'Choose your plan' : 'Solutions'}
 				sub={onboarding
 					? 'Pick the plan that fits how you use SportsTechX — you can change it later.'
 					: 'Atlas Explore is free and stays free. Raise and Scout are separate products on top of it — pick the one that matches what you do.'}

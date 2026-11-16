@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { AnnouncementBar } from '@/components/announcement-bar';
 
 /**
  * The landing page's mobile drawer, ported from the sibling `landing/` site.
@@ -184,7 +185,11 @@ export function MobileMenuShell({ nav, children }: { nav: React.ReactNode; child
 		<div className={`lp-shell${open ? ' is-open' : ''}`}>
 			{nav}
 
-			<div className="lp-shell-page">{children}</div>
+			<div className="lp-shell-page">
+				{/* The site announcement, inside the page so it slides with it (the root copy is hidden here). */}
+				<AnnouncementBar placement="page" />
+				{children}
+			</div>
 
 			{/* Click-away target, only while the drawer is out. Below the nav in
 			    the stack so the close button stays clickable. */}

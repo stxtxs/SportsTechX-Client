@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import { Providers } from './providers';
+import { AnnouncementBar, ANNOUNCE_PREPAINT } from '@/components/announcement-bar';
 // Bebas Neue for the "BY SPORTSTECHX" byline (`.stx-byline`), on every page.
 import { lpDisplay } from './fonts';
 import './globals.css';
@@ -112,9 +113,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://use.typekit.net" crossOrigin="" />
         <link rel="preconnect" href="https://p.typekit.net" crossOrigin="" />
         <link rel="stylesheet" href="https://use.typekit.net/jyx6vei.css" />
+        {/* Before paint: an announcement this visitor already closed stays hidden (no flash). */}
+        <script dangerouslySetInnerHTML={{ __html: ANNOUNCE_PREPAINT }} />
       </head>
       <body className="min-h-full bg-background text-foreground antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          {/* Top of every page until closed (the app shell renders its own copy). */}
+          <AnnouncementBar />
+          {children}
+        </Providers>
       </body>
     </html>
   );

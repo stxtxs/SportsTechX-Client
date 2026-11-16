@@ -42,7 +42,7 @@ export const ATLAS_CTAS = {
       "Filter the deals, companies and investors behind these charts, and go beyond football. Atlas Explore is free and includes all 30+ SportsTechX reports.",
       "Currently fundraising or startup hunting? Atlas Raise and Atlas Scout are built for you.",
     ],
-    button: { label: "Find your fit →", href: "https://www.atlas.sportstechx.com/plans" },
+    button: { label: "Find your fit →", href: "https://www.atlas.sportstechx.com/solutions" },
   },
 
   /* PDF 1: About page, below the partners, above the contents */
@@ -85,7 +85,7 @@ export const ATLAS_CTAS = {
     body: [
       "Atlas Explore is free for everyone. Atlas Raise is built for founders preparing a round. Atlas Scout is built for investors and accelerators finding their next deal.",
     ],
-    button: { label: "Find your fit →", href: withPdfUtm("https://www.atlas.sportstechx.com/plans") },
+    button: { label: "Find your fit →", href: withPdfUtm("https://www.atlas.sportstechx.com/solutions") },
     qr: "/reports/ftabr26/qr/atlas-plans.svg",
   },
 } satisfies Record<string, Omit<Ftabr26AtlasCtaProps, "isMobile" | "compact">>;

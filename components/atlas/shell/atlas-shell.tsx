@@ -11,6 +11,7 @@ import { AtlasLogo, AtlasMark, productColour } from '../brand/atlas-logo';
 import { FigmaIcon } from '../icons/figma-icons';
 import { isSection, pickActive, type ShellNavEntry, type ShellNavItem } from './nav';
 import './atlas-shell.css';
+import { AnnouncementBar } from '@/components/announcement-bar';
 
 /**
  * AtlasShell — the product-agnostic app frame (Atlas Product UX v3 "Side Bar"):
@@ -169,6 +170,8 @@ export function AtlasShell({ product, productColor, homePath, nav, topbar, overl
 					<Link href={homePath} aria-label={homeLabel} style={{ color: 'var(--a-ink)' }}><AtlasLogo height={26} product={product} productColor={productColor} /></Link>
 					<button className="atlas-hamburger" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}><MenuIcon /></button>
 				</header>
+				{/* The site-wide announcement, inside the column so the full-height shell never overflows. */}
+				<AnnouncementBar placement="shell" />
 				{topbar}
 				<div className="atlas-content">{children}</div>
 			</div>

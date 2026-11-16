@@ -19,8 +19,8 @@ export const ATLAS_LINKS = {
 	login: '/login',
 	founderSandbox: 'https://www.sandbox.sportstechx.com/preview/raise',
 	investorSandbox: 'https://www.sandbox.sportstechx.com/preview/scout',
-	raiseCheckout: '/plans', // TBC: Raise checkout
-	scoutCheckout: '/plans', // TBC: Scout checkout
+	raiseCheckout: '/solutions', // TBC: Raise checkout
+	scoutCheckout: '/solutions', // TBC: Scout checkout
 	stxHome: 'https://www.sportstechx.com',
 } as const;
 

@@ -13,7 +13,7 @@
  */
 
 .atlas .auth-split {
-	min-height: 100dvh;
+	min-height: calc(100dvh - var(--announce-h, 0px));
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
 	background: var(--a-page);
@@ -206,7 +206,7 @@
 
 /* ── Centred single-card screens (forgot / reset) ────────────────────────── */
 
-.atlas .auth-centred { min-height: 100dvh; display: grid; place-items: center; padding: 24px; background: var(--a-page); }
+.atlas .auth-centred { min-height: calc(100dvh - var(--announce-h, 0px)); display: grid; place-items: center; padding: 24px; background: var(--a-page); }
 .atlas .auth-centred__card { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 18px; padding: 34px 32px 30px; }
 
 /* Status medallion on /confirm — same shape billing/success uses. */

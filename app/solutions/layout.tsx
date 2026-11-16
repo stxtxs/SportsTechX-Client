@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import '@/components/atlas/styles/tokens.css';
 
-export const metadata: Metadata = { title: 'Plans & Pricing' };
+export const metadata: Metadata = { title: 'Solutions' };
 
 /**
  * Public, chrome-less pricing page: no app shell and no auth gate, so it renders

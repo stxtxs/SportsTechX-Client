@@ -28,7 +28,7 @@ const OFF = 'data-announce-off';
 
 /** Runs in <head> before paint, so a visitor who closed it never sees it flash in. */
 export const ANNOUNCE_PREPAINT = announcement
-	? `(function(){try{if(localStorage.getItem(${JSON.stringify(KEY)})===${JSON.stringify(announcement.id)})document.documentElement.setAttribute(${JSON.stringify(OFF)},'')}catch(e){}})();`
+	? `(function(){try{if(/[?&]pdf=true(&|$)/.test(location.search)||localStorage.getItem(${JSON.stringify(KEY)})===${JSON.stringify(announcement.id)})document.documentElement.setAttribute(${JSON.stringify(OFF)},'')}catch(e){}})();`
 	: `document.documentElement.setAttribute(${JSON.stringify(OFF)},'');`;
 
 /**
@@ -39,10 +39,13 @@ export const ANNOUNCE_PREPAINT = announcement
  * nav, the auth theme toggle, the benchmark report menu): `--announce-h` (its
  * height) and `--announce-vis` (how much of it is still on screen as the page
  * scrolls). Hidden by CSS on pages that render the shell.
+ * `page` (landing MobileMenuShell): inside the sliding landing page, so it moves
+ * with the page when the mobile drawer opens (as on sportstechx.com); the root
+ * copy is hidden there.
  * `shell` (AtlasShell): inside the app's main column, under the phone top bar
  * and above the navbar, so it never adds to the shell's full-height layout.
  */
-export function AnnouncementBar({ placement = 'root' }: { placement?: 'root' | 'shell' }) {
+export function AnnouncementBar({ placement = 'root' }: { placement?: 'root' | 'page' | 'shell' }) {
 	const ref = useRef<HTMLDivElement>(null);
 	const pathname = usePathname();
 	const [closed, setClosed] = useState(false);
@@ -51,21 +54,24 @@ export function AnnouncementBar({ placement = 'root' }: { placement?: 'root' | '
 
 	useEffect(() => {
 		const el = ref.current;
-		if (placement !== 'root' || !el) return;
+		if (placement === 'shell' || !el) return;
 		const root = document.documentElement;
 		let frame = 0;
 		const sync = () => {
 			frame = 0;
+			// A copy hidden by CSS (the root one on landing / shell pages) has no boxes: leave the vars to the one showing.
+			if (!root.hasAttribute(OFF) && el.getClientRects().length === 0) return;
 			const h = root.hasAttribute(OFF) ? 0 : el.offsetHeight;
 			root.style.setProperty('--announce-h', `${h}px`);
-			root.style.setProperty('--announce-vis', `${Math.max(0, h - window.scrollY)}px`);
+			// From its own box, not window.scrollY: on most pages <body> is the scroller, not the window.
+			root.style.setProperty('--announce-vis', `${h ? Math.max(0, Math.min(h, el.getBoundingClientRect().bottom)) : 0}px`);
 		};
 		const onScroll = () => { if (!frame) frame = requestAnimationFrame(sync); };
 		sync();
 		const ro = new ResizeObserver(sync);
 		ro.observe(el);
-		window.addEventListener('scroll', onScroll, { passive: true });
-		return () => { ro.disconnect(); window.removeEventListener('scroll', onScroll); if (frame) cancelAnimationFrame(frame); };
+		document.addEventListener('scroll', onScroll, { capture: true, passive: true });
+		return () => { ro.disconnect(); document.removeEventListener('scroll', onScroll, { capture: true }); if (frame) cancelAnimationFrame(frame); };
 	}, [placement, hidden]);
 
 	if (hidden) return null;

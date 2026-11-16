@@ -191,7 +191,7 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 	return (
 		<>
 			<PageHead
-				title={onboarding ? 'Choose your plan' : 'Plans'}
+				title={onboarding ? 'Choose your plan' : 'Solutions'}
 				sub={onboarding
 					? 'Pick the plan that fits how you use SportsTechX — you can change it later.'
 					: 'Atlas Explore is free and stays free. Raise and Scout are separate products on top of it — pick the one that matches what you do.'}

@@ -27,14 +27,12 @@
 .atlas .atlas-fw-block__title { margin: 0; font-family: var(--a-font); font-size: 18px; font-weight: 700; line-height: 1.25; }
 .atlas .atlas-fw-block__title a { color: var(--a-ink); text-decoration: none; }
 .atlas .atlas-fw-block__title a:hover { text-decoration: underline; text-underline-offset: 3px; }
-/* Figma: a filled black circle with the arrow, matching the post-card action. */
-.atlas .atlas-fw-block__go {
-	flex-shrink: 0; text-decoration: none;
-	display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
-	background: var(--a-primary); color: var(--a-primary-ink);
-	transition: transform 0.12s, opacity 0.12s;
-}
-.atlas .atlas-fw-block__go:hover { transform: translateY(-1px); opacity: 0.9; }
+/* Open: the icon-only action of the report and guide cards (17 Nov) — an
+   outline at rest, filled only while it is itself hovered or focused. */
+.atlas .atlas-fw-block__head .atlas-action { flex-shrink: 0; }
+.atlas .atlas-fw-block .atlas-action__icon { background: var(--a-field); color: var(--a-ink); border-color: var(--a-border-strong); }
+.atlas .atlas-fw-block .atlas-action:hover .atlas-action__icon,
+.atlas .atlas-fw-block .atlas-action:focus-visible .atlas-action__icon { background: var(--a-primary); color: var(--a-primary-ink); border-color: var(--a-primary); }
 .atlas .atlas-fw-count {
 	display: flex; align-items: center; gap: 8px; margin-top: 8px;
 	font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--a-faint);

@@ -27,14 +27,22 @@ export function Button(props: ButtonProps | LinkBtnProps) {
 	return <button className={cls} {...rest}>{children}</button>;
 }
 
-/** Icon pill + mono label — Figma "Action Buttons" (● VIEW COMPANY). Link when `href`, else button. */
-export function Action({ icon, children, href, external, onClick, disabled }: {
+/**
+ * Icon pill + mono label — Figma "Action Buttons" (● VIEW COMPANY). Link when
+ * `href`, else button. `iconOnly`: the pill alone, its words shown on hover
+ * (report and newsletter cards, 17 Nov) — `children` must then be plain text.
+ */
+export function Action({ icon, children, href, external, onClick, disabled, iconOnly }: {
 	icon: ReactNode; children: ReactNode; href?: string; external?: boolean;
 	/** On a link it runs first and may preventDefault (e.g. useBackOr). */
 	onClick?: (e: MouseEvent) => void; disabled?: boolean;
+	iconOnly?: boolean;
 }) {
-	const inner = <><span className="atlas-action__icon">{icon}</span><span className="atlas-action__label">{children}</span></>;
-	if (href && external) return <a className="atlas-action" href={href} target="_blank" rel="noopener noreferrer">{inner}</a>;
-	if (href) return <Link className="atlas-action" href={href} onClick={onClick}>{inner}</Link>;
-	return <button type="button" className="atlas-action" onClick={onClick} disabled={disabled}>{inner}</button>;
+	const inner = iconOnly
+		? <span className="atlas-action__icon">{icon}</span>
+		: <><span className="atlas-action__icon">{icon}</span><span className="atlas-action__label">{children}</span></>;
+	const tip = iconOnly && typeof children === 'string' ? { 'data-tip': children, 'aria-label': children } : {};
+	if (href && external) return <a className="atlas-action" href={href} target="_blank" rel="noopener noreferrer" {...tip}>{inner}</a>;
+	if (href) return <Link className="atlas-action" href={href} onClick={onClick} {...tip}>{inner}</Link>;
+	return <button type="button" className="atlas-action" onClick={onClick} disabled={disabled} {...tip}>{inner}</button>;
 }

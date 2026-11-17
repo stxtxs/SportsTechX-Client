@@ -6,7 +6,7 @@ import type { LucideIcon } from 'lucide-react';
 import { qk } from '@/lib/query-keys';
 import { SETUP_CARD_WIZARD, openRaiseSetup, openScoutThesis } from '@/lib/setup-events';
 import { Badge, SectionHead, FeedCard, Progress } from '@/components/atlas';
-import { PinnedFeedCards } from '@/components/features/benchmark/pinned-reports';
+import { PinnedFeedCards } from '@/components/features/pins/pinned-feed-cards';
 import { fmtAmount, fmtFullDate } from '@/lib/format';
 import { HomeHero } from '@/components/features/home/home-hero';
 import { raisePct, setupDone } from '@/lib/profile-completion';

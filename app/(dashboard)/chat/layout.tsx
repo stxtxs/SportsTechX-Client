@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import useSWR, { mutate } from 'swr';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Plus } from 'lucide-react';
-import { useChat, chatSessionId, chatSessionStreaming, AI_MD_CSS, type ConversationListItem } from '@/components/chat/chat-core';
+import { useChat, chatSessionId, chatSessionStreaming, AI_MD_CSS, AdminModelPicker, type ConversationListItem } from '@/components/chat/chat-core';
 import { qk } from '@/lib/query-keys';
 import { hrefOf } from '@/lib/routes';
 import {
@@ -165,6 +165,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
 					<Button variant="primary" className="raise-chatpage-new" onClick={newChat}>
 						<Plus strokeWidth={1.5} /> New chat
 					</Button>
+					<AdminModelPicker />
 				</div>
 				<div className="raise-chatpage-convos">
 					{(conversations?.length ?? 0) === 0 ? (

@@ -60,7 +60,7 @@ export const RELEASE_DATE = process.env.NEXT_PUBLIC_VC_BENCHMARK_RELEASE ?? '202
 export const SURVEY_URL = process.env.NEXT_PUBLIC_VC_BENCHMARK_SURVEY_URL ?? '';
 
 /** Where an upgrade goes: the public pricing page. */
-export const UPGRADE_PATH = '/plans';
+export const UPGRADE_PATH = '/solutions';
 
 /**
  * Feature flags. Read at build time (NEXT_PUBLIC_*), so each environment opts in.
@@ -79,11 +79,18 @@ export const UPGRADE_PATH = '/plans';
  * user) and nothing else changes.
  */
 const on = (v: string | undefined) => v === '1' || v === 'true';
+/** The first-login tour is off until it is rewritten (see FLAGS.walkthrough). */
+const TOUR_PAUSED = true;
 export const FLAGS = {
 	benchmark: on(process.env.NEXT_PUBLIC_VC_BENCHMARK),
 	mock: on(process.env.NEXT_PUBLIC_VC_BENCHMARK_MOCK),
 	api: on(process.env.NEXT_PUBLIC_VC_BENCHMARK_API),
-	walkthrough: on(process.env.NEXT_PUBLIC_WALKTHROUGH),
+	// Paused on every environment until the tour is rewritten (fix list
+	// 17 Nov, 1.1): its copy names pages that no longer exist. Off here, not in
+	// .env, so preview and production cannot switch it back on by accident.
+	// This turns off the automatic tour, the "New on Atlas" banner and the
+	// account menu's "Take the tour". Delete `TOUR_PAUSED &&` to restore.
+	walkthrough: !TOUR_PAUSED && on(process.env.NEXT_PUBLIC_WALKTHROUGH),
 } as const;
 
 /** Which source answers the new endpoints. */

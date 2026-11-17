@@ -11,6 +11,7 @@ import {
 	useHubOptions, sel, flag, asParams, isActive, byWindow, fmtM,
 	type FilterState, type Win, type WinOrCustom,
 } from './kit';
+import { fmtAmount } from '@/lib/format';
 
 interface Investors {
 	summary: { total_investors: number; total_usd: number };
@@ -21,7 +22,7 @@ interface Investors {
 const PAGE = 10;
 const monthYear = (d: string | null) => (d ? new Date(`${d}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' }) : '—');
 /** The hub's investor-tab funding format: `$1.2B`, else `$340M`. */
-const fmtFunding = (usd: number) => (usd >= 1e9 ? `$${(usd / 1e9).toFixed(1).replace(/\.0$/, '')}B` : `$${Math.round(usd / 1e6)}M`);
+const fmtFunding = (usd: number) => fmtAmount(usd, 'USD', '$0.00M');
 
 /** Hub Investors Deep Dive (investors-analytics-tab.tsx): two stats, yearly
  *  funding vs unique investors, and the top-50 investors table (10 per page). */

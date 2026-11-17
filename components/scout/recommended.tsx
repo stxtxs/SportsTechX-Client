@@ -3,14 +3,18 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import useSWR, { mutate } from 'swr';
-import { ArrowUpRight, Check, Minus } from 'lucide-react';
-import { Empty, Loading, Logo, ViewToggle, type ViewMode, cx } from '@/components/atlas';
+import { ArrowUpRight, Check, Minus, X } from 'lucide-react';
+import { Action, Button, Empty, Flag, Loading, Logo, ViewToggle, type ViewMode, cx } from '@/components/atlas';
+import { RefreshList, useRecommendedWindow } from '@/components/features/recommended/recommended-window';
+import { useSavedCompanyIds } from '@/components/features/watchlists/use-company-watchlists';
+import '@/components/features/market/market.css';
 import { SaveToWatchlist } from '@/components/features/watchlists/save-to-watchlist';
 import { apiRequest } from '@/lib/query-client';
 import { qk } from '@/lib/query-keys';
 import { companyHref, hrefOf } from '@/lib/routes';
 import { fmtUsd } from '@/components/features/market/format';
-import './recommended.css';
+import './recommended.css';
+
 import { toast } from 'sonner';
 
 /**
@@ -62,11 +66,21 @@ const CHIPS: [label: string, key: MatchKey][] = [
 	['Cheque', 'match_cheque'],
 ];
 
+/**
+ * Match as a percentage, as Raise shows it (fix list 17 Nov, 3.3): the share of
+ * the four thesis dimensions this company matches. The raw "4/4" read the same
+ * on every row because the list only holds companies matching all four.
+ */
+const matchPct = (c: Recommendation) => Math.round((CHIPS.filter(([, k]) => c[k]).length / CHIPS.length) * 100);
+
 const place = (c: Recommendation) => [c.city, c.country].filter(Boolean).join(', ');
 
 export function Recommended() {
-	const [view, setView] = useState<ViewMode>('cards');
-	const { data, isLoading, error } = useSWR<{ data: Recommendation[] }>(qk.scout.recommended({ limit: 24 }));
+	const [view, setView] = useState<ViewMode>('table');
+	// A pool to queue from; Recommended shows it 10 at a time, A to Z. 50 is
+	// the endpoint's maximum `limit` (a larger one is a 400).
+	const { data, isLoading, error } = useSWR<{ data: Recommendation[] }>(qk.scout.recommended({ limit: 50 }));
+	const saved = useSavedCompanyIds();
 	// Recommending against a thesis that does not exist is meaningless, so this
 	// is the one Discover surface that stays gated — but "set yours up" is the
 	// answer, not an error. Browsing and Signals work without one.
@@ -74,6 +88,7 @@ export function Recommended() {
 	const [lastDismissed, setLastDismissed] = useState<{ id: string; name: string } | null>(null);
 
 	const rows = data?.data ?? [];
+	const win = useRecommendedWindow(rows, saved, 'scout-companies');
 
 	const refresh = () => mutate((k: unknown) => Array.isArray(k) && typeof k[0] === 'string' && k[0].startsWith('/api/scout/recommended'));
 	const dismiss = async (id: string, name: string) => {
@@ -94,17 +109,6 @@ export function Recommended() {
 
 	return (
 		<>
-			<div className="scout-subhead">
-				<div>
-					<h2 className="atlas-h2">Recommended for you</h2>
-					<p className="scout-muted">Companies matching your investment thesis.</p>
-				</div>
-				<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-					<ViewToggle value={view} onChange={setView} />
-					<Link href={hrefOf('thesis')} className="scout-link">Edit thesis</Link>
-				</div>
-			</div>
-
 			{lastDismissed && (
 				<div className="scout-undo">
 					<span>{lastDismissed.name} marked not relevant.</span>
@@ -113,22 +117,21 @@ export function Recommended() {
 			)}
 
 			{isLoading ? <Loading />
-				: needsThesis ? (
-					<Empty>
-						Set up your investment thesis and Atlas will match companies to it.{' '}
-						<Link href={hrefOf('thesis')} className="scout-link">Set up thesis</Link>
-					</Empty>
+				// A real failure says so; only "no thesis" or "no matches" is the
+				// setup empty state.
+				: error && !needsThesis ? <Empty>Couldn&apos;t load your recommendations. Please try again.</Empty>
+				: needsThesis || rows.length === 0 ? (
+					<Empty>No recommendations yet. Finish your setup to see matches.{' '}<Button size="sm" href={hrefOf('thesis')}>Open settings</Button></Empty>
 				)
-				: error ? <Empty>Couldn&apos;t load your recommendations. Please try again.</Empty>
-				: rows.length === 0 ? (
-					<Empty>
-						No companies match your thesis yet. <Link href={hrefOf('thesis')} className="scout-link">Widen it</Link> — a narrow
-						thesis can match nothing at all.
-					</Empty>
-				) : (
-					view === 'cards' ? (
-					<div className="atlas-rec-list">
-						{rows.map((c) => (
+				: (
+				<div className="atlas-card atlas-chart-card" style={{ marginTop: 10 }}>
+					<div className="atlas-dt__top">
+						<span>Matched to your scouting thesis · {win.page.length} of {rows.length}</span>
+						<div><ViewToggle value={view} onChange={setView} /><Button href={hrefOf('thesis')} variant="outline" size="sm">Edit thesis</Button></div>
+					</div>
+					{view === 'cards' ? (
+					<div className="atlas-rec-list" style={{ padding: 20 }}>
+						{win.page.map((c) => (
 							<article key={c.id} className="atlas-rec">
 								<div className="atlas-rec__top">
 									<Logo co={{ name: c.name, website: c.website, custom_logo_url: c.custom_logo_url }} size={72} radius={9} />
@@ -163,49 +166,55 @@ export function Recommended() {
 											</span>
 										)}
 									</div>
-									<p className="atlas-rec__reason">
-										Matches {CHIPS.filter(([, key]) => c[key]).length} of {CHIPS.length} thesis dimensions{c.match_activity ? ' · in line with your recent activity' : ''}.
-									</p>
 								</div>
 
 								<div className="atlas-rec__actions">
-									<button type="button" className="atlas-rec__dismiss" onClick={() => void dismiss(c.id, c.name)}>Not relevant</button>
+									{/* One "Not relevant" style everywhere (handover v1 A7). */}
+									<Action icon={<X />} onClick={() => void dismiss(c.id, c.name)}>Not relevant</Action>
 									<SaveToWatchlist companyId={c.id} companyName={c.name} />
-									<Link className="atlas-action" href={companyHref(c.slug ?? c.id)}>
-										<span className="atlas-action__icon"><ArrowUpRight /></span><span className="atlas-action__label">View company</span>
-									</Link>
+									<Action icon={<ArrowUpRight />} href={companyHref(c.slug ?? c.id)}>View company</Action>
 								</div>
 							</article>
 						))}
 					</div>
 					) : (
-					<div className="atlas-table" role="table">
+					<div className="atlas-table mkt-table" role="table">
 						<div className="atlas-table__head">
 							<span className="atlas-table__name">Company</span>
-							<span className="atlas-table__col hide-sm" style={{ width: 110 }}>Sector</span>
-							<span className="atlas-table__col hide-sm" style={{ width: 110 }}>Location</span>
-							<span className="atlas-table__col" style={{ width: 90 }}>Funding</span>
-							<span className="atlas-table__col hide-sm" style={{ width: 80 }}>Round</span>
-							<span className="atlas-table__col" style={{ width: 70 }}>Match</span>
+							<span className="atlas-table__col hide-sm mkt-sector">Sector</span>
+							<span className="atlas-table__col hide-sm" style={{ width: 170 }}>Location</span>
+							<span className="atlas-table__col" style={{ width: 96, textAlign: 'right' }}>Funding</span>
+							<span className="atlas-table__col" style={{ width: 60, textAlign: 'right' }}>Match</span>
+							<span className="atlas-table__col" style={{ width: 120 }}><span className="sr-only">Not relevant</span></span>
+							<span className="atlas-table__col" style={{ width: 32 }}><span className="sr-only">Save</span></span>
 						</div>
-						{rows.map((c) => (
-							<Link key={c.id} className="atlas-table__row" href={companyHref(c.slug ?? c.id)}>
-								<div className="atlas-table__name">
-									<Logo co={{ name: c.name, website: c.website, custom_logo_url: c.custom_logo_url }} size={28} radius={5} />
-									<div className="atlas-table__name-main">
-										<div className="atlas-ellipsis" style={{ fontWeight: 600 }}>{c.name}</div>
-										{c.description && <div style={{ fontSize: 11, color: 'var(--a-muted)' }} className="atlas-ellipsis">{c.description}</div>}
+						{win.page.map((c) => {
+							const funding = c.total_funding_usd != null ? fmtUsd(Number(c.total_funding_usd)) : null;
+							return (
+								<div key={c.id} className="atlas-table__row mkt-row">
+									<div className="atlas-table__name">
+										<Logo co={{ name: c.name, website: c.website, custom_logo_url: c.custom_logo_url }} size={30} radius={6} />
+										<div className="atlas-table__name-main">
+											<Link href={companyHref(c.slug ?? c.id)} className="atlas-ellipsis mkt-row-link" style={{ fontWeight: 600, minWidth: 0 }}>{c.name}</Link>
+										</div>
 									</div>
+									<span className="atlas-table__col hide-sm mkt-sector atlas-ellipsis">{c.sector ?? '—'}</span>
+									<span className="atlas-table__col hide-sm mkt-icontext" style={{ width: 170 }} title={place(c) || undefined}>
+										{c.country || c.city ? <>{c.country && <span className="mkt-flag"><Flag cc={c.country} size={13} /></span>}<span className="atlas-ellipsis">{c.city || c.country}</span></> : '—'}
+									</span>
+									<span className="atlas-table__col" style={{ width: 96, textAlign: 'right', fontWeight: funding ? 600 : 400, color: funding ? 'var(--a-ink)' : undefined }}>{funding ?? '—'}</span>
+									<span className="atlas-table__col" style={{ width: 60, textAlign: 'right', fontWeight: 600, color: 'var(--a-ink)' }}>{matchPct(c)}%</span>
+									<span className="atlas-table__col mkt-save" style={{ width: 120 }}><Action icon={<X />} onClick={() => void dismiss(c.id, c.name)}>Not relevant</Action></span>
+									<span className="atlas-table__col mkt-save" style={{ width: 32 }}>
+										<SaveToWatchlist companyId={c.id} companyName={c.name} compact saved={saved.has(c.id)} />
+									</span>
 								</div>
-								<span className="atlas-table__col hide-sm" style={{ width: 110 }}>{c.sector ?? '—'}</span>
-								<span className="atlas-table__col hide-sm" style={{ width: 110 }}>{place(c) || '—'}</span>
-								<span className="atlas-table__col" style={{ width: 90 }}>{c.total_funding_usd != null ? fmtUsd(Number(c.total_funding_usd)) : '—'}</span>
-								<span className="atlas-table__col hide-sm" style={{ width: 80 }}>{c.latest_round ?? '—'}</span>
-								<span className="atlas-table__col" style={{ width: 70 }}>{c.match_count}/{CHIPS.length}</span>
-							</Link>
-						))}
+							);
+						})}
 					</div>
-					)
+					)}
+					{win.canRefresh && <RefreshList onRefresh={win.refresh} />}
+				</div>
 				)}
 		</>
 	);

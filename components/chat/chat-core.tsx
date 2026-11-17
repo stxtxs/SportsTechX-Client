@@ -177,7 +177,7 @@ export interface UseChatOptions {
 	insufficientCreditsMd?: string;
 }
 
-const DEFAULT_INSUFFICIENT_CREDITS = "_⚠️ You're out of AI credits._ Top up or upgrade to keep chatting.";
+const DEFAULT_INSUFFICIENT_CREDITS = "_⚠️ You're out of AI credits._ Top up, or switch to Raise or Scout, to keep chatting.";
 
 export function useChat({ greeting, actionFromTool, pageContext, onClientAction, insufficientCreditsMd }: UseChatOptions) {
 	useEffect(clearOnSignOut, []);

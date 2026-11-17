@@ -49,11 +49,11 @@ function UpgradeScreen({ access }: { access: BenchmarkAccess }) {
 				<div className="bm-lockbar__text">
 					<span className="bm-lockbar__icon"><Lock size={16} aria-hidden="true" /></span>
 					<div>
-						<h2>The full benchmark is part of Raise and Scout</h2>
+						<h2>Available with Raise or Scout.</h2>
 						<p>Every chart, the channel-by-channel ratings and the methodology. Survey contributors get it free. Here is the summary in the meantime.</p>
 					</div>
 				</div>
-				<Link href={UPGRADE_PATH} className="atlas-btn atlas-btn--primary" onClick={() => track(Events.upgradeClicked, { source: 'r2_locked' })}>See plans</Link>
+				<Link href={UPGRADE_PATH} className="atlas-btn atlas-btn--primary" onClick={() => track(Events.upgradeClicked, { source: 'r2_locked' })}>See solutions</Link>
 			</Card>
 			<SummaryReport access={access} embedded />
 		</ReportFrame>

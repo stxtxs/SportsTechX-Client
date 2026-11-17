@@ -8,6 +8,7 @@ import { Badge, Button, Card, Field, Input, Loading } from '@/components/atlas';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { apiRequest } from '@/lib/query-client';
 import { qk } from '@/lib/query-keys';
+import { fmtFullDate } from '@/lib/format';
 
 /**
  * Personal API keys for the public read API.
@@ -123,7 +124,7 @@ export function ApiKeysCard() {
 								<span style={{ display: 'block', fontFamily: 'var(--a-mono)', fontSize: 11, color: 'var(--a-faint)', marginTop: 2 }}>
 									{k.api_key_prefix}…
 									{k.last_used_at
-										? ` · last used ${new Date(k.last_used_at).toLocaleDateString()}`
+										? ` · last used ${fmtFullDate(new Date(k.last_used_at))}`
 										: ' · never used'}
 								</span>
 							</span>

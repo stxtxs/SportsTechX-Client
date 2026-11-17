@@ -1,17 +1,16 @@
 'use client';
 
-import { useState } from 'react';
 import useSWR from 'swr';
-import { useRouter } from 'next/navigation';
 import { Loader2, Settings, FileCheck, Bookmark, Presentation, CalendarCheck, UserRound, Hourglass, Send, Activity, FolderCheck, Sparkles } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { greetingName, useUserProfile } from '@/hooks/use-user-profile';
 import { qk } from '@/lib/query-keys';
 import { SETUP_CARD_WIZARD, openRaiseSetup, openScoutThesis } from '@/lib/setup-events';
-import { H1, Badge, SectionHead, FeedCard, Progress } from '@/components/atlas';
-import { RaiseSearch, RAISE_SUGGESTIONS } from '@/components/raise/raise-search';
-import { hrefOf } from '@/lib/routes';
-import { PinnedReports } from '@/components/features/benchmark/pinned-reports';
+import { Badge, SectionHead, FeedCard, Progress } from '@/components/atlas';
+import { PinnedFeedCards } from '@/components/features/benchmark/pinned-reports';
+import { fmtAmount, fmtFullDate } from '@/lib/format';
+import { HomeHero } from '@/components/features/home/home-hero';
+import { raisePct, setupDone } from '@/lib/profile-completion';
+import { currentNames } from '@/lib/atlas-copy';
 
 /**
  * Atlas Raise — Home. Search-first: a centred composer as the focal point, with
@@ -31,10 +30,7 @@ interface Round {
 interface Home { needs_setup?: boolean; raise?: Round | null; attention: Attention[] }
 
 const ROUND_NAME: Record<string, string> = { pre_seed: 'Pre-seed', seed: 'Seed', series_a: 'Series A', series_b_plus: 'Series B+', bridge: 'Bridge' };
-const money = (v: number, ccy: string) => {
-	try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: ccy, notation: 'compact', maximumFractionDigits: 1 }).format(v); }
-	catch { return `${ccy} ${v.toLocaleString()}`; } // unknown currency code
-};
+const money = (v: number, ccy: string) => fmtAmount(v, ccy);
 /** Whole days from today to a YYYY-MM-DD date, in the viewer's own calendar. */
 const daysUntil = (ymd: string) => {
 	const [y, m, d] = ymd.slice(0, 10).split('-').map(Number);
@@ -51,10 +47,10 @@ function RoundCard({ r }: { r: Round }) {
 	const committed = Number(r.committed_amount) || 0;
 	const ended = r.status === 'funded' || r.status === 'closed';
 	const days = r.target_close_date ? daysUntil(r.target_close_date) : null;
-	const closeOn = r.target_close_date ? new Date(`${r.target_close_date.slice(0, 10)}T00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : null;
+	const closeOn = r.target_close_date ? fmtFullDate(new Date(`${r.target_close_date.slice(0, 10)}T00:00`)) : null;
 	const name = ROUND_NAME[r.round_type ?? ''] ?? (r.round_type === 'other' && r.round_type_other?.trim() ? r.round_type_other.trim() : undefined);
 	// "Angel round" (typed for an "Other" round) is already a round name.
-	const roundName = name ? (/round$/i.test(name) ? name : `${name} round`) : null;
+	const roundName = name ? (/\bround$/i.test(name) ? name : `${name} round`) : null;
 	const plural = (n: number) => `${n} ${n === 1 ? 'day' : 'days'}`;
 
 	const title = ended ? `${roundName ?? 'Your round'} ${r.status}`
@@ -106,39 +102,31 @@ const ATTENTION_TAG: Record<string, { tag: string; icon: LucideIcon }> = {
 const DEFAULT_TAG = { tag: 'For you', icon: UserRound };
 
 export function RaiseHome() {
-	const router = useRouter();
-	const { data: profile } = useUserProfile();
 	const { data, isLoading } = useSWR<Home>(qk.raise.home());
-	const [q, setQ] = useState('');
-	const goChat = (text: string) => { const t = text.trim(); if (t) router.push(`${hrefOf('chat')}?q=${encodeURIComponent(t)}`); };
+	// Same key as Raise settings, so no extra request once either has loaded.
+	const current = useSWR<{ raise: Record<string, unknown> | null; criteria: Record<string, unknown> | null }>(qk.raise.current());
+	const setupComplete = setupDone(raisePct(current.data?.raise, current.data?.criteria));
 
 	if (isLoading || !data) {
 		return <div className="raise-home"><div style={{ display: 'grid', placeItems: 'center', minHeight: '60vh' }}><Loader2 className="animate-spin" size={22} /></div></div>;
 	}
 
-	const greetName = greetingName(profile);
-	const hour = new Date().getHours();
-	const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 	const showRound = !data.needs_setup && !!data.raise;
 	// The Investor Circle is "Coming soon", so its opt-in nudge is held back.
-	const attention = data.attention.filter((a) => a.id !== 'dealflow');
+	// A setup task stops showing once the setup is 80% complete (handover v1 §7).
+	const attention = data.attention.filter((a) => a.id !== 'dealflow' && !(SETUP_CARD_WIZARD[a.id] && setupComplete));
 
 	return (
 		<div className="raise-home">
-			<section className="raise-hero">
-				<div className="raise-hero-inner">
-					<H1 className="raise-hero-title">{greetName ? `${greeting}, ${greetName}` : `${greeting}.`}</H1>
-					<p className="raise-hero-sub">What would you like to work on?</p>
-					<RaiseSearch value={q} onChange={setQ} onSubmit={() => goChat(q)} suggestions={RAISE_SUGGESTIONS} onSuggestion={goChat} />
-				</div>
-			</section>
-
-			<PinnedReports />
+			<HomeHero tier="raise" />
 
 			<section className="raise-attn">
 				<SectionHead title="Latest from Atlas" />
-				{(showRound || attention.length > 0) && (
+				{/* Always rendered: pinned reports lead the feed even when there is
+				    nothing else to show (fix list 1.15). */}
+				{(
 					<div className="atlas-feed-grid">
+						<PinnedFeedCards />
 						{showRound && <RoundCard r={data.raise!} />}
 						{attention.map((a) => {
 							const t = ATTENTION_TAG[a.id] ?? DEFAULT_TAG;
@@ -147,8 +135,8 @@ export function RaiseHome() {
 									key={a.id}
 									tag={t.tag}
 									icon={t.icon}
-									title={a.title}
-									body={a.why}
+									title={currentNames(a.title)}
+									body={currentNames(a.why)}
 									// Setup cards open the wizard in place; everything else keeps
 									// its server-built link. Keyed on the card's stable `id`, not
 									// on `cta_href` — the hrefs are the thing being retired.

@@ -33,11 +33,12 @@
 }
 .atlas-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
 .atlas-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.atlas-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--a-ink) 18%, transparent); }
+.atlas-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--atlas-product, var(--a-ink)) 35%, transparent); }
 .atlas-btn--primary { background: var(--a-primary); color: var(--a-primary-ink); border-color: var(--a-border); }
-.atlas-btn--primary:hover:not(:disabled) { opacity: 0.85; }
+/* Hover swaps primary and secondary (handover v1 §4 Buttons). */
+.atlas-btn--primary:hover:not(:disabled) { background: var(--a-field); color: var(--a-ink); border-color: var(--a-border-strong); }
 .atlas-btn--outline { background: var(--a-field); color: var(--a-ink); border-color: var(--a-border-strong); }
-.atlas-btn--outline:hover:not(:disabled) { background: var(--a-inset); }
+.atlas-btn--outline:hover:not(:disabled) { background: var(--a-primary); color: var(--a-primary-ink); border-color: var(--a-primary); }
 .atlas-btn--ghost { background: transparent; color: var(--a-faint); }
 .atlas-btn--ghost:hover:not(:disabled) { color: var(--a-ink); }
 .atlas-btn--danger { background: transparent; color: var(--a-danger); border-color: color-mix(in srgb, var(--a-danger) 45%, transparent); }
@@ -132,8 +133,8 @@
 .atlas-select:hover:not(:focus):not(:disabled),
 .atlas-textarea:hover:not(:focus):not(:disabled) { border-color: var(--a-ink-2); }
 .atlas-input:focus-visible, .atlas-select:focus-visible, .atlas-textarea:focus-visible {
-  border-color: var(--a-ink);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--a-ink) 10%, transparent);
+  border-color: var(--atlas-product, var(--a-ink));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--atlas-product, var(--a-ink)) 18%, transparent);
 }
 .atlas-input:disabled, .atlas-select:disabled, .atlas-textarea:disabled { opacity: 0.55; cursor: not-allowed; }
 /* Native selects keep the OS arrow and look unstyled; give them the kit chevron. */
@@ -275,8 +276,7 @@
 
 /* ── Progress (Figma "Line graph": 6px track, gradient fill) ────────────── */
 .atlas-progress { height: 6px; border-radius: 3px; background: var(--a-track); overflow: hidden; }
-.atlas-progress__fill { height: 100%; background: linear-gradient(90deg, #3E157E, var(--a-purple)); border-radius: 3px; }
-[data-theme="dark"] .atlas .atlas-progress__fill { background: linear-gradient(90deg, #7A5BC4, var(--a-purple)); }
+.atlas-progress__fill { height: 100%; background: var(--atlas-product, var(--a-purple)); border-radius: 3px; }
 
 /* ── Filter toolbar (Figma "Toolbar": search · pills · + ADD FILTER · × CLEAR · SORT BY) ── */
 .atlas-fbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
@@ -508,7 +508,7 @@ span.atlas-fbar__pill-main { cursor: default; }
 .atlas .atlas-table__head .atlas-table__rank { height: auto; background: none; border: none; place-items: center start; padding-left: 4px; }
 .atlas .atlas-table__row { border-bottom: 1px solid var(--a-border); transition: background .15s; text-decoration: none; color: inherit; }
 .atlas .atlas-table__row:last-child { border-bottom: none; }
-.atlas .atlas-table__row:hover { background: linear-gradient(180deg, transparent, var(--a-navy-soft)); }
+.atlas .atlas-table__row:hover { background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--atlas-product, var(--a-navy)) 9%, transparent)); }
 .atlas .atlas-table__rank {
 	width: 44px; height: 44px; flex: none; display: inline-grid; place-items: center;
 	background: var(--a-field); border: 1px solid var(--a-border); border-radius: var(--a-radius-sm);
@@ -634,12 +634,12 @@ span.atlas-fbar__pill-main { cursor: default; }
   position: relative; cursor: pointer;
   display: flex; flex-direction: column; min-height: 156px; padding: 22px 24px 24px;
   background-color: var(--a-surface);
-  background-image: linear-gradient(160deg, transparent 50%, color-mix(in srgb, var(--a-pink) 14%, transparent) 100%);
+  background-image: linear-gradient(160deg, transparent 50%, color-mix(in srgb, var(--atlas-product, var(--a-pink)) 14%, transparent) 100%);
   border: 1px solid var(--a-card-border); border-radius: var(--a-radius);
   transition: border-color 0.15s;
 }
 .atlas-feed-card:hover { border-color: var(--a-border-strong); }
-.atlas-feed-card:has(.atlas-feed-card__action:focus-visible) { outline: 2px solid var(--a-ink); outline-offset: 2px; }
+.atlas-feed-card:has(.atlas-feed-card__action:focus-visible) { outline: 2px solid var(--atlas-product, var(--a-ink)); outline-offset: 2px; }
 .atlas-feed-card__top { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 26px; }
 .atlas-feed-card__tag {
   display: inline-flex; align-items: center; gap: 7px; min-width: 0;
@@ -810,14 +810,14 @@ h1 .atlas-soon--inline, h2 .atlas-soon--inline, .atlas-h1 .atlas-soon--inline, .
      narrow block floating left with dead space on its right. Body text still
      caps its own line length via .atlas-post__desc. */
   padding: 16px 24px 16px 16px; width: 100%;
-  background-image: linear-gradient(165deg, transparent 55%, color-mix(in srgb, var(--a-pink) 16%, transparent) 100%);
+  background-image: linear-gradient(165deg, transparent 55%, color-mix(in srgb, var(--atlas-product, var(--a-pink)) 16%, transparent) 100%);
 }
 .atlas-post--card {
   flex-direction: column; gap: 0; padding: 0; overflow: hidden;
 }
 .atlas-post--card:hover {
   border-color: var(--a-border-strong);
-  background-image: linear-gradient(165deg, transparent 55%, color-mix(in srgb, var(--a-pink) 16%, transparent) 100%);
+  background-image: linear-gradient(165deg, transparent 55%, color-mix(in srgb, var(--atlas-product, var(--a-pink)) 16%, transparent) 100%);
 }
 
 .atlas-post__cover {
@@ -852,7 +852,7 @@ h1 .atlas-soon--inline, h2 .atlas-soon--inline, .atlas-h1 .atlas-soon--inline, .
   color: var(--a-muted);
 }
 .atlas-post__meta svg { flex: none; color: var(--a-muted); }
-.atlas-post__meta .is-premium { color: var(--a-pink); }
+.atlas-post__meta .is-premium { color: var(--atlas-product, var(--a-pink)); }
 
 .atlas-post__title { margin: 6px 0 0; font-family: var(--a-font); font-size: 16px; font-weight: 700; line-height: 1.25; color: var(--a-ink); }
 .atlas-post__title--lg { margin-top: 12px; font-size: 22px; line-height: 1.2; }
@@ -993,3 +993,55 @@ h1 .atlas-soon--inline, h2 .atlas-soon--inline, .atlas-h1 .atlas-soon--inline, .
 	70%  { box-shadow: 0 0 0 6px color-mix(in oklch, var(--pos), transparent 100%); }
 	100% { box-shadow: 0 0 0 0   color-mix(in oklch, var(--pos), transparent 100%); }
 }
+
+/* ── Lock marker (handover v1 §4 Access) ─────────────────────────────────────
+   One icon, no word. The hover text comes from `data-tip`, drawn in CSS so it
+   works inside clipped containers without a portal. */
+.atlas-lock { position: relative; display: inline-flex; align-items: center; justify-content: center; color: var(--a-muted); text-decoration: none; cursor: pointer; }
+.atlas-lock:hover, .atlas-lock:focus-visible { color: var(--atlas-product, var(--a-ink)); }
+.atlas-lock[data-tip]:hover::after, .atlas-lock[data-tip]:focus-visible::after {
+  content: attr(data-tip); position: absolute; z-index: 60; left: 50%; bottom: calc(100% + 6px); transform: translateX(-50%);
+  white-space: nowrap; padding: 5px 8px; border-radius: 6px;
+  background: var(--a-ink); color: var(--a-page);
+  font-family: var(--a-body); font-size: 11px; font-weight: 500; letter-spacing: 0; text-transform: none; line-height: 1.2;
+  pointer-events: none;
+}
+
+.atlas-tab .atlas-tab__lock { margin-left: 6px; vertical-align: -1px; }
+
+/* ── Master table top row (handover v1 A6): the count on the left, view
+   switch and Export on the right — the Companies list's card head, shared. */
+.atlas .atlas-dt__top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 17px 25px 16px; font-size: 13px; color: var(--a-muted); }
+.atlas .atlas-dt__top > div { display: flex; align-items: center; gap: 8px; }
+.atlas .atlas-dt__flex { flex: 1 1 160px; min-width: 0; }
+
+/* Recommended: "Refresh list" sits under the 10 (handover v1 §4 Recommended). */
+.atlas .atlas-rec-refresh { display: flex; justify-content: center; margin: 18px 0 8px; }
+/* Text columns in the master table clip with an ellipsis. `.mkt-table` lets
+   cells overflow (for the bookmark menu), which let long rounds and investor
+   lists run into their neighbours. */
+.atlas .mkt-table .atlas-table__col.atlas-dt__clip,
+.atlas .mkt-table .atlas-table__col.atlas-dt__flex { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+
+/* Generated report cover (post-card.tsx `Cover`), for reports with no image. */
+.atlas-post__gencover {
+  position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;
+  padding: 18px 20px; color: var(--a-ink);
+  background-color: var(--a-surface);
+  background-image: linear-gradient(150deg, transparent 30%, color-mix(in srgb, var(--atlas-product, var(--a-pink)) 34%, transparent) 100%);
+}
+.atlas-post__gencover-title { font-family: var(--a-font); font-weight: 700; font-size: 20px; line-height: 1.15; max-width: 16ch; }
+.atlas-post__cover--banner .atlas-post__gencover-title { font-size: 16px; }
+.atlas-post__gencover-by { font-family: var(--a-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--a-muted); }
+.atlas-post__cover:has(> .atlas-post__gencover) { position: relative; aspect-ratio: 16 / 9; }
+
+/* Sector colours as text (fix list 1.14). On the dark theme Athlete Tech's
+   deep purple (and the other sector hues) sink into the page, so text and
+   icons are lifted toward white there; the hue stays the sector's. */
+.atlas-sector-ink { color: var(--fw-color); }
+[data-theme="dark"] .atlas .atlas-sector-ink { color: color-mix(in srgb, var(--fw-color) 55%, #fff); }
+[data-theme="dark"] .atlas .int-pillar__badge { color: color-mix(in srgb, var(--fw-color) 55%, #fff); border-color: color-mix(in srgb, var(--fw-color) 55%, #fff); }
+
+/* A locked-state line above a partly open list (Explore's Investors). */
+.atlas .atlas-locked-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 16px; margin-bottom: 14px; font-size: 13px; color: var(--a-muted); }
+.atlas .atlas-locked-line > span { flex: 1; min-width: 200px; }

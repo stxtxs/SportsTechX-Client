@@ -24,13 +24,16 @@ export function NavSectionHeader({ nav, homePath, subs, actions }: {
 	const pathname = usePathname();
 	const params = useSearchParams();
 	const active = pickActive(flattenNav(nav), homePath, pathname, params);
-	const section = nav.filter(isSection).find((s) => s.items.some((i) => i.path === active));
+	// A "Soon" page is skipped by `pickActive` (it is not a link), but when it
+	// is opened directly it still belongs in its group's frame (fix list 3.1).
+	const section = nav.filter(isSection).find((s) => s.items.some((i) => i.path === active))
+		?? nav.filter(isSection).find((s) => s.items.some((i) => i.soon && i.path.split('?')[0] === pathname));
 	if (!section) return null;
 	return (
 		<TabbedPageHeader
 			title={section.title}
 			sub={subs?.[section.title]}
-			tabs={section.items.map((i) => ({ label: i.name, href: i.path, soon: i.soon, placeholder: i.placeholder, active: i.path === active }))}
+			tabs={section.items.map((i) => ({ label: i.name, href: i.path, soon: i.soon, placeholder: i.placeholder, locked: i.locked, active: i.path === active }))}
 			actions={actions}
 		/>
 	);

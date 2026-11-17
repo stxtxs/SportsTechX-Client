@@ -48,7 +48,7 @@ export const FIXED_OPTIONS = {
 		'Stay on top of news and deals',
 		'Raise funding for my startup',
 		'Source deals and startups to invest in',
-		'Discover events and programmes',
+		'Discover events and programs',
 	] },
 };
 
@@ -62,7 +62,7 @@ const LEGACY_GOALS: Record<string, string> = {
 	'Read research': 'Understand the market',
 	'Track companies': 'Track companies and competitors',
 	'Follow developments': 'Stay on top of news and deals',
-	'Discover events': 'Discover events and programmes',
+	'Discover events': 'Discover events and programs',
 };
 
 /**

@@ -53,7 +53,7 @@ export default function GlobalError({
 				)}
 				<div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 24 }}>
 					<button type="button" className="atlas-btn atlas-btn--primary" onClick={reset}>Try again</button>
-					<Link href="/" className="atlas-btn atlas-btn--outline">Go to homepage</Link>
+					<Link href="/" className="atlas-btn atlas-btn--outline">Go to Home</Link>
 				</div>
 			</div>
 		</div>

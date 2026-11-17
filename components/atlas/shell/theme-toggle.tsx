@@ -3,6 +3,8 @@
 import { useSyncExternalStore } from 'react';
 import { useTheme } from 'next-themes';
 import { Sun, Moon } from 'lucide-react';
+import type { MouseEvent } from 'react';
+import { sweepTheme } from '@/lib/theme-sweep';
 
 /** Nothing to subscribe to: "are we in the browser?" never changes. */
 const noSubscribe = () => () => undefined;
@@ -21,7 +23,8 @@ export function ThemeToggle({ compact, menu, collapsed, header }: { compact?: bo
 	const { resolvedTheme, setTheme } = useTheme();
 	const mounted = useSyncExternalStore(noSubscribe, () => true, () => false);
 	const isDark = resolvedTheme === 'dark';
-	const toggle = () => setTheme(isDark ? 'light' : 'dark');
+	// The landing page's circular reveal, grown from the switch (handover v1 A2).
+	const toggle = (e: MouseEvent<HTMLElement>) => { const next = isDark ? 'light' : 'dark'; sweepTheme(e.currentTarget, () => setTheme(next)); };
 	const Icon = isDark ? Sun : Moon;
 
 	if (header) {

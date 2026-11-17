@@ -10,7 +10,7 @@ import { ArrowUpRight } from 'lucide-react';
  * with icon, title, short body and a black action pill top-right, on the pink
  * glow surface. Lay several out with `.atlas-feed-grid` (two columns).
  */
-export function FeedCard({ tag, icon: Icon, title, body, href, onAction, actionLabel = 'View', extra }: {
+export function FeedCard({ tag, icon: Icon, title, body, href, onAction, actionLabel = 'Open', extra }: {
 	tag: string;
 	icon?: LucideIcon;
 	title: ReactNode;

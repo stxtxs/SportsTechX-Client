@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { Tag } from 'lucide-react';
 import { cx } from '../ui/cx';
+import { AtlasLogo } from '../brand/atlas-logo';
 
 /**
  * The two content cards from the Figma component sheet, shared by every
@@ -26,13 +27,24 @@ import { cx } from '../ui/cx';
  *  image that finished before hydration, whose load event React never sees. */
 const markLoaded = (img: HTMLImageElement | null) => { if (img?.complete && img.naturalWidth) img.dataset.loaded = ''; };
 
-/** Cover image, or the blank white frame the design shows when there is none. */
-function Cover({ src, alt, className, eager }: { src?: string | null; alt: string; className: string; eager?: boolean }) {
+/**
+ * Cover image. With none, a generated cover — the title on the solution-colour
+ * gradient under the Atlas wordmark — rather than the blank frame, which read
+ * as a broken image (fix list 17 Nov, 1.12). A real cover replaces it as soon
+ * as one is uploaded.
+ */
+function Cover({ src, alt, className, eager, title }: { src?: string | null; alt: string; className: string; eager?: boolean; title?: ReactNode }) {
 	return (
 		<div className={className}>
 			{src ? (
 				// eslint-disable-next-line @next/next/no-img-element
 				<img key={src} src={src} alt={alt} loading={eager ? 'eager' : 'lazy'} ref={markLoaded} onLoad={(e) => markLoaded(e.currentTarget)} />
+			) : title ? (
+				<div className="atlas-post__gencover" aria-hidden="true">
+					<AtlasLogo height={18} />
+					<span className="atlas-post__gencover-title">{title}</span>
+					<span className="atlas-post__gencover-by">SportsTechX research</span>
+				</div>
 			) : null}
 		</div>
 	);
@@ -50,7 +62,7 @@ export function FeaturedPost({ cover, meta, metaIcon, title, desc, tags, actions
 	return (
 		<article className="atlas-post atlas-post--featured">
 			{/* The hero sits at the top of the page — don't lazy-load it. */}
-			<Cover src={cover} alt="" className="atlas-post__cover atlas-post__cover--tall" eager />
+			<Cover src={cover} alt="" className="atlas-post__cover atlas-post__cover--tall" eager title={title} />
 			<div className="atlas-post__body">
 				<div className="atlas-post__meta">{metaIcon}{meta}</div>
 				<h2 className="atlas-post__title atlas-post__title--lg">{title}</h2>
@@ -75,7 +87,7 @@ export function PostCard({ cover, meta, title, desc, tags, actions, className }:
 }) {
 	return (
 		<article className={cx('atlas-post atlas-post--card', className)}>
-			<Cover src={cover} alt="" className="atlas-post__cover atlas-post__cover--banner" />
+			<Cover src={cover} alt="" className="atlas-post__cover atlas-post__cover--banner" title={title} />
 			<div className="atlas-post__cardbody">
 				<div className="atlas-post__meta">{meta}</div>
 				<h3 className="atlas-post__title">{title}</h3>

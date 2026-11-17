@@ -48,7 +48,7 @@ export function SectorMark({ slug, size = 15 }: { slug: string | null | undefine
 	const Icon = SECTOR_ICONS[key];
 	if (!pillar || !Icon) return null;
 	return (
-		<span className="co-mark has-tip" style={{ color: pillar.color }} data-tip={pillar.badge} aria-label={pillar.badge} role="img">
+		<span className="co-mark has-tip atlas-sector-ink" style={{ '--fw-color': pillar.color } as React.CSSProperties} data-tip={pillar.badge} aria-label={pillar.badge} role="img">
 			<Icon size={size} />
 		</span>
 	);

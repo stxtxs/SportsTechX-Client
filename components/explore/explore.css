@@ -170,3 +170,8 @@
 .atlas .explore-access__row:first-of-type { border-top: none; }
 .atlas .explore-access__name { font-family: var(--a-font); font-size: 14px; font-weight: 700; color: var(--a-ink); margin-bottom: 3px; }
 
+
+/* Currency setting at the top of Preferences (fix list 1.5). */
+.atlas .int-currency { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 0 0 22px; margin-bottom: 26px; border-bottom: 1px solid var(--a-border); }
+.atlas .int-currency__title { margin: 0 0 4px; font-family: var(--a-font); font-size: 16px; font-weight: 700; color: var(--a-ink); }
+.atlas .int-currency__sub { margin: 0; font-family: var(--a-body); font-size: 13px; color: var(--a-muted); }

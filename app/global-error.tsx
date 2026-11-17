@@ -58,7 +58,7 @@ export default function GlobalError({
 							    the React tree is broken, so a soft navigation would try to reuse
 							    it. A full document load is the recovery. */}
 							{/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-							<a href="/" className="atlas-btn atlas-btn--outline">Go to homepage</a>
+							<a href="/" className="atlas-btn atlas-btn--outline">Go to Home</a>
 						</div>
 					</div>
 				</div>

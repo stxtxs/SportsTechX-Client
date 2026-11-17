@@ -13,7 +13,7 @@
    Vite project (asset imports and `?url`).
 
    Content is text-identical to the published PDF
-   (assets/sports-tech-vc-deal-sourcing-benchmark-2026.pdf); do not hand-edit
+   (assets/sports tech-vc-deal-sourcing-benchmark-2026.pdf); do not hand-edit
    the copy in data/public-report.json.
    --------------------------------------------------------------------------- */
 

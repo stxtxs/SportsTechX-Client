@@ -10,9 +10,14 @@
  * this browser):
  *
  *   explore           free Explore, not a contributor
- *   trial             contributor in the 30-day Scout trial  (default)
+ *   trial             contributor in the 30-day Scout trial
  *   after-trial       contributor whose trial ended (back on Explore)
  *   paid              Raise or Scout subscriber, not a contributor
+ *
+ * With no scenario chosen, the account's own plan decides: `explore` or
+ * `paid`, i.e. NOT a contributor. The default used to be `trial`, which made
+ * every local account a survey contributor, so "Your benchmark" showed for
+ * everyone in local testing (fix list 17 Nov, 1.8).
  *   paid-contributor  subscriber who also took the survey
  *   thin              contributor with under two investments, small peer group
  */
@@ -24,9 +29,10 @@ export type MockScenario = (typeof MOCK_SCENARIOS)[number];
 
 const KEY = 'stx-benchmark-mock';
 
-/** The active scenario: URL param first (and remembered), then storage, then `trial`. */
-export function mockScenario(): MockScenario {
-	if (typeof window === 'undefined') return 'trial';
+/** The active scenario: URL param first (and remembered), then storage, then the plan's non-contributor default. */
+export function mockScenario(tier?: string): MockScenario {
+	const byPlan: MockScenario = tier === 'raise' || tier === 'scout' ? 'paid' : 'explore';
+	if (typeof window === 'undefined') return byPlan;
 	const isScenario = (v: string | null): v is MockScenario => !!v && (MOCK_SCENARIOS as readonly string[]).includes(v);
 	try {
 		const fromUrl = new URLSearchParams(window.location.search).get('benchmark_mock');
@@ -34,7 +40,7 @@ export function mockScenario(): MockScenario {
 		const stored = localStorage.getItem(KEY);
 		if (isScenario(stored)) return stored;
 	} catch { /* storage blocked: default */ }
-	return 'trial';
+	return byPlan;
 }
 
 const daysFromNow = (d: number) => new Date(Date.now() + d * 864e5).toISOString();

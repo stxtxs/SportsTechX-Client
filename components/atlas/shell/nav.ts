@@ -13,6 +13,10 @@ export interface ShellNavItem {
 	soon?: boolean;
 	/** Built to the design but no backend yet — clickable, with a "Not connected" pill. */
 	placeholder?: boolean;
+	/** Other paths that count as this item (e.g. the Investor Watchlist board under Watchlists). */
+	also?: string[];
+	/** Belongs to Raise or Scout: listed with a lock, the page behind it sells. */
+	locked?: boolean;
 	/** Active when the page is open without this item's query (the page's default tab). */
 	isDefault?: boolean;
 }
@@ -29,10 +33,10 @@ export const isSection = (e: ShellNavEntry): e is ShellNavSection => 'items' in 
  * (e.g. /app/investors/123) to that page's `isDefault` item.
  */
 export function pickActive(items: ShellNavItem[], homePath: string, pathname: string, params: { get(k: string): string | null; has(k: string): boolean }): string | null {
-	const parsed = items.filter((i) => !i.soon).map((i) => {
-		const [p, q] = i.path.split('?');
+	const parsed = items.filter((i) => !i.soon).flatMap((i) => [i.path, ...(i.also ?? [])].map((path) => {
+		const [p, q] = path.split('?');
 		return { item: i, p, q: new URLSearchParams(q ?? '') };
-	});
+	}));
 	const pathMatches = (p: string, hasQuery: boolean) =>
 		p === homePath ? pathname === homePath : pathname === p || (!hasQuery && pathname.startsWith(p + '/'));
 	// Most specific first: exact path, then the longest parent — so

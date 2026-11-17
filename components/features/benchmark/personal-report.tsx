@@ -11,6 +11,7 @@ import { EDITION, ENTRY_PATH, PEER_GROUP_MIN, SOURCE } from './config';
 import { GAP_FLAG, gapOf, peerOrSample } from './rules';
 import { usePersonalBenchmark } from './use-benchmark';
 import type { BenchmarkAccess, Compare, PersonalBenchmark } from './types';
+import { fmtFullDate } from '@/lib/format';
 
 /**
  * R3 — "Your benchmark": one fund's answers against the frozen 2026
@@ -220,7 +221,7 @@ export function PersonalReport({ access }: { access: BenchmarkAccess }) {
 			</Block>
 
 			<footer className="bm-footer">
-				<span>Benchmark baseline v{pb.baseline_version} · generated {new Date(pb.generated_at).toLocaleDateString()} · <Link href={ENTRY_PATH.r2}>Full report</Link></span>
+				<span>Benchmark baseline v{pb.baseline_version} · generated {fmtFullDate(new Date(pb.generated_at))} · <Link href={ENTRY_PATH.r2}>Full report</Link></span>
 				<CorrectionLink />
 			</footer>
 		</>

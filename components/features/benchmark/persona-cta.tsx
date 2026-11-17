@@ -57,11 +57,11 @@ export function PersonaCta({ access, source }: { access: BenchmarkAccess; source
 	if (persona === 'founder') {
 		return (
 			<Card glow="pink" className="bm-cta">
-				<h2 className="bm-cta__title">Upgrade to Raise for the full report</h2>
+				<h2 className="bm-cta__title">Switch to Raise or Scout for the full report</h2>
 				<p className="bm-cta__body">Learn which channels investors trust most and how they screen, so you reach the right funds the way they prefer to be reached.</p>
 				{access.entries.r2 === 'open'
 					? <Button href={ENTRY_PATH.r2}>Read the full report</Button>
-					: <UpgradeButton source={source} label="Upgrade to Raise" />}
+					: <UpgradeButton source={source} label="See solutions" />}
 			</Card>
 		);
 	}
@@ -80,10 +80,10 @@ export function PersonaCta({ access, source }: { access: BenchmarkAccess; source
 	return (
 		<Card className="bm-cta">
 			<h2 className="bm-cta__title">Go further</h2>
-			<p className="bm-cta__body">Investors: take the survey for your personal benchmark and a free month of Scout. Founders: upgrade to Raise for the full report.</p>
+			<p className="bm-cta__body">Investors: take the survey for your personal benchmark and a free month of Scout. Founders: switch to Raise or Scout for the full report.</p>
 			<div className="bm-actions">
 				<SurveyButton source={source} />
-				{access.entries.r2 !== 'open' && <UpgradeButton source={source} label="See plans" />}
+				{access.entries.r2 !== 'open' && <UpgradeButton source={source} label="See solutions" />}
 			</div>
 		</Card>
 	);

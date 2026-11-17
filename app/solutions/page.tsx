@@ -8,6 +8,7 @@ import { AuthBrand } from '@/components/auth/auth-shell';
 import { Plans } from '@/components/features/plans/plans';
 import { useAuthSession } from '@/hooks/use-auth-session';
 import { useUserProfile } from '@/hooks/use-user-profile';
+import { ArrowLeft } from 'lucide-react';
 
 /**
  * Every tier side by side, for everyone — signed out it is the pricing page,
@@ -33,6 +34,10 @@ function PlansView() {
 			<Link href={sessionValid ? '/home' : '/'} className="plans-brand" aria-label="Atlas home">
 				<AuthBrand />
 			</Link>
+			{/* Back arrow under the logo (handover v1 B10). */}
+			<button type="button" className="plans-back" onClick={() => (window.history.length > 1 ? router.back() : router.push(sessionValid ? '/home' : '/'))}>
+				<ArrowLeft size={14} aria-hidden="true" /> Back
+			</button>
 			{deciding ? <Loading /> : <Plans onboarding={onboarding ? { onDone: () => router.replace('/home') } : undefined} />}
 		</Screen>
 	);

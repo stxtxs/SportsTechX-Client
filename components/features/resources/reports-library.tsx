@@ -11,6 +11,7 @@ import { useBenchmarkAccess, useHomePins } from '@/components/features/benchmark
 import type { BenchmarkAccess, HomePin } from '@/components/features/benchmark/types';
 import { ResourceLibrary } from './resource-library';
 import type { Resource } from './resource-contract';
+import { fmtMonth } from '@/lib/format';
 
 const toResource = (r: ReportListItem): Resource => ({
 	id: r.id,
@@ -21,7 +22,7 @@ const toResource = (r: ReportListItem): Resource => ({
 		: r.created_at,
 	// Reports are dated by month (or only year) — never show an invented day.
 	dateLabel: r.report_year
-		? (r.report_month ? new Date(r.report_year, r.report_month - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : String(r.report_year))
+		? (r.report_month ? fmtMonth(new Date(r.report_year, r.report_month - 1, 1)) : String(r.report_year))
 		: undefined,
 	access: r.has_pro_version ? 'Premium' : 'Free',
 	tags: r.tags ?? [],
@@ -47,7 +48,9 @@ function withBenchmark(rows: ReportListItem[], items: Resource[], a: BenchmarkAc
 	const r2Row = rows.find((r) => r.slug === SLUG.r2);
 	const base: Omit<Resource, 'id' | 'title' | 'desc' | 'access'> = {
 		date: r2Row ? toResource(r2Row).date : RELEASE_DATE,
-		dateLabel: r2Row ? toResource(r2Row).dateLabel : undefined,
+		// Month only, like every report: the release day sits a week ahead and
+		// showed as a future publish date (handover v1 B7).
+		dateLabel: r2Row ? toResource(r2Row).dateLabel : fmtMonth(RELEASE_DATE),
 		tags: r2Row?.tags ?? [],
 		cover: r2Row?.cover_url,
 	};
@@ -72,15 +75,21 @@ function withBenchmark(rows: ReportListItem[], items: Resource[], a: BenchmarkAc
 			};
 		}
 		if (row?.slug === FTR_SLUG) return { ...it, onPin: pinFor('ftr') };
-		if (row?.slug === SLUG.r1) return { ...it, access: 'Free' as const, onView: openTab(ENTRY_PATH.r1), onPin: pinFor('r1') };
-		if (row?.slug === SLUG.r3) return { ...it, badge: 'yours' as const, featuredLabel: 'Your benchmark', onView: openTab(ENTRY_PATH.r3), onPin: pinFor('r3') };
+		// The benchmark's summary and personal report share the full report's
+		// cover when they have none of their own — they rendered blank.
+		if (row?.slug === SLUG.r1) return { ...it, cover: it.cover ?? base.cover, access: 'Free' as const, onView: openTab(ENTRY_PATH.r1), onPin: pinFor('r1') };
+		if (row?.slug === SLUG.r3) return { ...it, cover: it.cover ?? base.cover, badge: 'yours' as const, featuredLabel: 'Your benchmark', onView: openTab(ENTRY_PATH.r3), onPin: pinFor('r3') };
 		return it;
-	}).filter((it) => !(rows.find((r) => r.id === it.id)?.slug === SLUG.r3 && a.entries.r3 !== 'open'));
+	})
+		.filter((it) => !(rows.find((r) => r.id === it.id)?.slug === SLUG.r3 && a.entries.r3 !== 'open'))
+		// Whoever can open the full report sees it alone, without the Summary
+		// (handover v1 §4 Access; fix list 1.9). Explore keeps Summary + locked Full.
+		.filter((it) => !(a.entries.r2 === 'open' && rows.find((r) => r.id === it.id)?.slug === SLUG.r1));
 
 	if (!bySlug(SLUG.r2)) {
 		out.push({ ...base, id: SLUG.r2, title: ENTRY_TITLE.r2, desc: 'How sports tech investors find, screen and close deals, and where the gaps are. For Raise and Scout members and survey contributors.', access: 'Premium', badge: a.entries.r2 === 'locked' ? 'locked' : undefined, onView: openTab(ENTRY_PATH.r2), onPin: pinFor('r2') });
 	}
-	if (!bySlug(SLUG.r1)) {
+	if (!bySlug(SLUG.r1) && a.entries.r2 !== 'open') {
 		out.push({ ...base, id: SLUG.r1, title: ENTRY_TITLE.r1, desc: 'The headline findings from the benchmark of how sports tech investors source deals. Free for every Atlas member.', access: 'Free', onView: openTab(ENTRY_PATH.r1), onPin: pinFor('r1') });
 	}
 	if (a.entries.r3 === 'open' && !bySlug(SLUG.r3)) {
@@ -115,7 +124,7 @@ export function ReportsLibrary() {
 			featuredLabel="Latest report"
 			libraryTitle="Reports library"
 			noun="report"
-			viewLabel="View report"
+			viewLabel="Open"
 		/>
 	);
 }

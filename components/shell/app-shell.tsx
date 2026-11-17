@@ -23,6 +23,8 @@ import { Walkthrough } from '@/components/features/benchmark/walkthrough';
 import '@/components/raise/raise.css';
 import '@/components/explore/explore.css';
 import '@/components/scout/scout.css';
+import { useSyncExternalStore } from 'react';
+import { displayCurrency, subscribeCurrency } from '@/lib/currency';
 
 /**
  * The one app frame, for every product.
@@ -50,6 +52,7 @@ const COLOR: Record<Tier, string | undefined> = {
 };
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+	const currency = useSyncExternalStore(subscribeCurrency, displayCurrency, () => 'USD');
 	const pathname = usePathname() ?? '';
 
 	const { ready, tier, nav, homePath, accountPath } = useNav();
@@ -92,7 +95,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 			>
 				{/* One announcement at a time (walkthrough nudge today). */}
 				<AnnouncementBanner />
-				<RouteGate>{children}</RouteGate>
+				{/* Keyed on the display currency: switching USD/EUR re-renders every
+				    amount on the page (fix list 1.5). */}
+				<RouteGate key={currency}>{children}</RouteGate>
 			</AtlasShell>
 			{/* First-login tour; relaunched from the account menu and the banner. */}
 			<Walkthrough />

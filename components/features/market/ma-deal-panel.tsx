@@ -10,6 +10,8 @@ import { canonicalCountry } from '@/lib/catalog-options';
 import { companyHref } from '@/lib/routes';
 import { fmtUsd } from '@/components/features/market/format';
 import { partyLogo, type MaDeal } from '@/components/features/market/ma-deals';
+import { fmtMonth } from '@/lib/format';
+import { yearOf } from '@/lib/format';
 
 /**
  * M&A detail — a right-side slide-over for one acquisition, opened from a table
@@ -23,8 +25,7 @@ import { partyLogo, type MaDeal } from '@/components/features/market/ma-deals';
 
 const TYPE_LABEL: Record<string, string> = { acquisition: 'Acquisition', merger: 'Merger', asset_purchase: 'Asset purchase' };
 const bmLabel = (b: string | null) => (!b ? null : b === 'other' ? 'Other' : b.toUpperCase());
-const fmtMonth = (d?: string | null) => (d ? new Date(d).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : '—');
-const fmtValue = (n: MaDeal['amount_usd']) => (n == null || Number(n) === 0 ? 'Undisclosed' : fmtUsd(Number(n)));
+const fmtValue = (n: MaDeal['amount_usd'], date?: string | null) => (n == null || Number(n) === 0 ? 'Undisclosed' : fmtUsd(Number(n), yearOf(date)));
 const withHttp = (u: string) => (/^https?:\/\//.test(u) ? u : `https://${u}`);
 
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
@@ -92,7 +93,7 @@ export function MaDealPanel({ deal, onClose }: { deal: MaDeal | null; onClose: (
 					}}
 				>
 					{deal && (() => {
-						const value = fmtValue(deal.amount_usd);
+						const value = fmtValue(deal.amount_usd, deal.acquisition_date);
 						return <>
 							<div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, padding: '18px 20px', borderBottom: '1px solid var(--a-border)' }}>
 								<DialogPrimitive.Title style={{ fontFamily: 'var(--a-font)', fontSize: 17, fontWeight: 700, margin: 0, lineHeight: 1.3 }}>

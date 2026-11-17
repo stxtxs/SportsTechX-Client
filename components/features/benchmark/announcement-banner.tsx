@@ -2,6 +2,8 @@
 
 import type { ReactNode } from 'react';
 import { X } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { hrefOf } from '@/lib/routes';
 import { Button } from '@/components/atlas';
 import { FLAGS } from './config';
 import { useWalkthroughState } from './use-benchmark';
@@ -40,8 +42,10 @@ function useAnnouncements(): { list: Announcement[]; dismiss: (id: string) => vo
 
 export function AnnouncementBanner() {
 	const { list, dismiss } = useAnnouncements();
+	// The "New on Atlas" tour banner shows on Home only (handover v1 §4 Home).
+	const onHome = usePathname() === hrefOf('home');
 	const a = list[0];
-	if (!a) return null;
+	if (!a || !onHome) return null;
 	return (
 		<div className="bm-banner-wrap">
 			<div className="bm-banner" role="status">

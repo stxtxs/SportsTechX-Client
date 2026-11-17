@@ -63,7 +63,8 @@ check(committedPct(row({ committed_amount: null })) === null, 'no committed figu
 check(committedPct(row({ committed_amount: '99000000' })) === 100, 'over-subscribed clamps to 100');
 check(money(null, 'EUR') === null, 'no amount formats to nothing, not "€0"');
 check(money('abc', 'EUR') === null, 'a non-numeric string does not render as NaN');
-check((money('8000000', null) ?? '').includes('8'), 'a missing currency still formats');
+// Converted into the display currency (USD outside a browser), so test the shape, not the digits.
+check(/^[$€]\d+\.\d{2}M$/.test(money('8000000', null) ?? ''), 'a missing currency still formats');
 check(closeLabel('2026-12-01')?.includes('2026') === true, 'a date renders as month + year');
 check(closeLabel(null) === null, 'no close date renders nothing');
 

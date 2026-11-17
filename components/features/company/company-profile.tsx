@@ -8,7 +8,7 @@ import { VerifiedBadge } from '@/components/atlas/icons/verified-badge';
 import { SaveToWatchlist } from '@/components/features/watchlists/save-to-watchlist';
 import { qk } from '@/lib/query-keys';
 import type { Company, Deal } from '@/types/api';
-import { Action, Empty, Loading, Logo, ProductWord } from '@/components/atlas';
+import { Action, Empty, Loading, Logo } from '@/components/atlas';
 import { RaisingPill } from '@/components/ui/atoms';
 import { ago, fmtUsd, place } from '@/components/features/market/format';
 import { VerifyButton } from '@/components/features/verify/verify-cta';
@@ -23,6 +23,7 @@ import { SectorMark } from '@/components/features/market/company-marks';
 import { useFeatureAccess } from '@/contexts/feature-access-context';
 import { useBackOr } from '@/hooks/use-back';
 import './company-profile.css';
+import { fmtMonth, yearOf } from '@/lib/format';
 
 /**
  * Company profile page (Figma "Company" view): header with save / website /
@@ -54,7 +55,8 @@ export const BRAND = {
 
 const BUSINESS_MODELS: Record<string, string> = { b2b: 'B2B', b2c: 'B2C', b2b2c: 'B2B2C', d2c: 'D2C', b2g: 'B2G', other: 'Other' };
 const asList = <T,>(d: unknown): T[] => (Array.isArray(d) ? d : ((d as { data?: T[] } | null)?.data ?? [])) as T[];
-export const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
+/** Deal dates (funding history, portfolio rounds): month only, "May 2026" (handover v1 §4 Formats; fix list 1.7). */
+export const fmtDate = (d?: string | null) => fmtMonth(d, '—');
 
 /**
  * The Framework tiers as one connected line: Sector › Sub-Sector › Sub-sub
@@ -81,7 +83,7 @@ function SectorPath({ path, fallback, listHref }: {
 					<span key={s.id} className="atlas-co__tier">
 						{i > 0 && <ChevronRight size={14} strokeWidth={1.75} className="atlas-co__tier-sep" aria-hidden="true" />}
 						{i === 0 || canFilterDeeper
-							? <Link href={listHref(filter)} style={i === 0 && pillar ? { color: pillar.color } : undefined}>{name}</Link>
+							? <Link href={listHref(filter)} className={i === 0 && pillar ? 'atlas-sector-ink' : undefined} style={i === 0 && pillar ? { '--fw-color': pillar.color } as React.CSSProperties : undefined}>{name}</Link>
 							: <span>{name}</span>}
 					</span>
 				);
@@ -96,7 +98,11 @@ function SectorPath({ path, fallback, listHref }: {
  * an honest empty state. Uses the profile's own card classes: the drawer's
  * styles live in company-detail.css, which this page doesn't load.
  */
-function ContactCard({ companyId }: { companyId: string }) {
+/**
+ * No email is shown unless the company is verified (handover v1 §4 Access);
+ * LinkedIn is fine. `verified` comes from the company record.
+ */
+function ContactCard({ companyId, verified }: { companyId: string; verified: boolean }) {
 	const { access, contact, isLoading } = usePrimaryContact(companyId);
 	if (access.isLoading) return null;
 	const linkedin = contact?.linkedin_url ? (/^https?:/.test(contact.linkedin_url) ? contact.linkedin_url : `https://${contact.linkedin_url}`) : null;
@@ -106,8 +112,8 @@ function ContactCard({ companyId }: { companyId: string }) {
 			{access.isLocked ? (
 				<>
 					{/* Matches the `company_contacts` entitlement: Raise and Scout, not Explore. */}
-					<p className="atlas-co__sub" style={{ display: 'flex', gap: 6, alignItems: 'center' }}><Lock size={13} aria-hidden="true" /> <span>Founder name, email and LinkedIn are included in Atlas <ProductWord product="Raise" /> and Atlas <ProductWord product="Scout" />.</span></p>
-					<Link href={PLANS_PATH} className="atlas-co__pill atlas-co__more">Explore <ArrowUpRight size={12} strokeWidth={1.75} aria-hidden="true" /></Link>
+					<p className="atlas-co__sub" style={{ display: 'flex', gap: 6, alignItems: 'center' }}><Lock size={13} aria-hidden="true" /> <span>Founder name and LinkedIn are available with Raise or Scout.</span></p>
+					<Link href={PLANS_PATH} className="atlas-co__pill atlas-co__more">See solutions <ArrowUpRight size={12} strokeWidth={1.75} aria-hidden="true" /></Link>
 				</>
 			) : isLoading ? <Loading /> : contact ? (
 				<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 12 }}>
@@ -117,7 +123,7 @@ function ContactCard({ companyId }: { companyId: string }) {
 					</span>
 					<span className="atlas-co__socials" style={{ margin: 0, flexShrink: 0 }}>
 						{linkedin && <a href={linkedin} target="_blank" rel="noopener noreferrer" className="atlas-co__social" aria-label="LinkedIn" title="LinkedIn">{BRAND.linkedin}</a>}
-						{contact.email && <a href={`mailto:${contact.email}`} className="atlas-co__social" aria-label={`Email ${contact.email}`} title={contact.email}><Mail size={15} aria-hidden="true" /></a>}
+						{verified && contact.email && <a href={`mailto:${contact.email}`} className="atlas-co__social" aria-label={`Email ${contact.email}`} title={contact.email}><Mail size={15} aria-hidden="true" /></a>}
 					</span>
 				</div>
 			) : (
@@ -183,7 +189,7 @@ export function CompanyProfile({ idOrSlug, backHref, companyHref, listHref, rail
 		['instagram', 'Instagram', ext(c.instagram_url), BRAND.instagram],
 		['facebook', 'Facebook', ext(c.facebook_url), BRAND.facebook],
 		['youtube', 'YouTube', ext(c.youtube_url), BRAND.youtube],
-		['email', 'Email', c.contact_email ? `mailto:${c.contact_email}` : null, <Mail key="email" size={15} aria-hidden="true" />],
+		['email', 'Email', c.is_verified && c.contact_email ? `mailto:${c.contact_email}` : null, <Mail key="email" size={15} aria-hidden="true" />],
 	] as Array<[string, string, string | null, ReactNode]>).filter((s) => s[2]);
 	const sportNames = asList<Sport>(sports.data).map((s) => s.name);
 	const tagNames = asList<{ name: string }>(techTags.data).map((t) => t.name);
@@ -239,7 +245,7 @@ export function CompanyProfile({ idOrSlug, backHref, companyHref, listHref, rail
 						founded_year: c.founded_year ? String(c.founded_year) : '',
 						sector: c.primary_sector ?? '', business_model: c.business_model ?? '',
 					}} />
-					<Action icon={<ArrowUpLeft />} href={backHref} onClick={back}>Return to results</Action>
+					<Action icon={<ArrowUpLeft />} href={backHref} onClick={back}>Back to results</Action>
 				</div>
 			</header>
 
@@ -282,7 +288,7 @@ export function CompanyProfile({ idOrSlug, backHref, companyHref, listHref, rail
 									<div key={d.id} className="atlas-co__deal" role="row">
 										<span role="cell">{fmtDate(d.announced_date)}</span>
 										<span role="cell">{d.round_type_name ?? 'Round'}</span>
-										<span className="atlas-co__amt" role="cell">{d.amount_usd == null ? '—' : fmtUsd(Number(d.amount_usd))}</span>
+										<span className="atlas-co__amt" role="cell">{d.amount_usd == null ? '—' : fmtUsd(Number(d.amount_usd), yearOf(d.announced_date))}</span>
 										{/* All participants in the round, each linked to its investor page
 										    when the investor is in our DB (slug present); the lead is
 										    marked. Falls back to the flat name string for older rows that
@@ -310,7 +316,7 @@ export function CompanyProfile({ idOrSlug, backHref, companyHref, listHref, rail
 
 				<aside className="atlas-co__rail">
 					{railTop}
-					<ContactCard companyId={c.id} />
+					<ContactCard companyId={c.id} verified={!!c.is_verified} />
 					<CompanyPrograms companyId={c.id} />
 					{/* Only when there is news: an empty card at the top of the rail
 					    pushed the useful ones (related companies) down on most pages. */}

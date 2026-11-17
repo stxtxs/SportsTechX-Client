@@ -1,3 +1,5 @@
+import { fmtAmount } from '../../lib/format.ts';
+
 /**
  * The shape the Deal Flow API actually returns, plus the three pieces of logic
  * that must agree with the server exactly.
@@ -104,11 +106,8 @@ export const relationshipLabel = (v: string | null) => (v ? RELATIONSHIP_LABEL[v
 export function money(amount: string | number | null, ccy: string | null): string | null {
 	if (amount === null || amount === undefined || amount === '') return null;
 	const n = Number(amount);
-	if (!Number.isFinite(n)) return null;
-	return new Intl.NumberFormat(undefined, {
-		style: 'currency', currency: (ccy || 'EUR').toUpperCase(),
-		notation: n >= 1_000_000 ? 'compact' : 'standard', maximumFractionDigits: n >= 1_000_000 ? 1 : 0,
-	}).format(n);
+	if (!Number.isFinite(n) || n <= 0) return null;
+	return fmtAmount(n, ccy || 'EUR');
 }
 
 /** `2026-12-01` → `Dec 2026`, matching the designed card copy. */

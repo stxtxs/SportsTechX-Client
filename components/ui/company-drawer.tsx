@@ -29,6 +29,7 @@ import {
 } from './atoms';
 import { WatchlistPicker } from './watchlist-picker';
 import '@/app/company-detail.css';
+import { fmtMonth } from '@/lib/format';
 
 interface Acquisition {
 	id: string;
@@ -627,10 +628,9 @@ function formatDollars(value: number | string | null | undefined): string {
 	return `$${n.toFixed(0)}`;
 }
 
+/** Deal tables show the month only (handover v1 §4 Formats). */
 function formatShortDate(iso: string): string {
-	const d = new Date(iso);
-	if (Number.isNaN(d.getTime())) return iso;
-	return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+	return fmtMonth(iso, iso);
 }
 
 function countryCode(countryName: string): string {

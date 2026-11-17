@@ -6,7 +6,7 @@ import { ArrowUpRight, Calendar, LayoutGrid, List, ChevronLeft, ChevronRight } f
 import { ExportButton } from '@/components/features/exports/export-button';
 import { qk } from '@/lib/query-keys';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
-import { Loading, Empty, Action, FilterBar, type FilterDef, Logo, Flag, Pager, CardGrid, ViewToggle as AtlasViewToggle, type ViewMode, lockedFiltersNote } from '@/components/atlas';
+import { Loading, Empty, FilterBar, type FilterDef, Logo, Flag, Pager, CardGrid, ViewToggle as AtlasViewToggle, type ViewMode, lockedFiltersNote } from '@/components/atlas';
 import { ResultCapNote } from '../market/result-cap-note';
 import { MONTHS } from '@/lib/catalog-options';
 import { useSportOptions, useLocationFacetOptions, useCountryOptions } from '@/hooks/use-catalog-options';
@@ -15,6 +15,8 @@ import { useUrlModal } from '@/hooks/use-url-state';
 import { EventDrawer } from './event-drawer';
 import { ProgramDrawer } from './program-drawer';
 import './events-calendar.css';
+import '@/components/features/market/market.css';
+import { fmtFullDate } from '@/lib/format';
 
 /** Opens an event's details drawer — provided by EventsList to its table, cards and calendar. */
 const OpenEvent = createContext<((id: string) => void) | null>(null);
@@ -41,7 +43,7 @@ const PROGRAM_CATEGORIES: [string, string][] = [
 const EVENT_MODES: [string, string][] = [['in_person', 'In person'], ['virtual', 'Virtual'], ['hybrid', 'Hybrid']];
 const MODE_LABEL: Record<string, string> = { in_person: 'In person', virtual: 'Virtual', hybrid: 'Hybrid' };
 
-const fmtDate = (d: string) => new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+const fmtDate = (d: string) => fmtFullDate(d);
 const fmtShortDate = (d: string) => new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 const extUrl = (u: string | null | undefined) => u ? (/^https?:\/\//i.test(u) ? u : `https://${u}`) : undefined;
 
@@ -113,42 +115,46 @@ export function ProgramsList() {
 				]}
 				canClear={anyFilter}
 				onClear={() => { setQ(''); setCategory(''); setSport(''); setCountry(''); setCity(''); setContinent(''); setRegion(''); setEntriesOpen(false); reset(); }}
-				count={`${(res.data?.total ?? 0).toLocaleString()} program${(res.data?.total ?? 0) === 1 ? '' : 's'}`}
-				actions={<><AtlasViewToggle value={view} onChange={setView} /><ExportButton entity="programs" search={dq} params={params} /></>}
 			/>
 			<Divider />
 			{res.isLoading && rows.length === 0 ? <Loading />
-				: rows.length === 0 ? <Empty>No programs match your filters.</Empty>
-				: view === 'cards'
-					? <CardGrid>{rows.map((e) => <EcoCard key={e.id} e={e} onOpen={() => setProgramId(e.id)} />)}</CardGrid>
-					: (
-					<div className="atlas-table" role="table">
-						<div className="atlas-table__head">
-							<span className="atlas-table__name">Program</span>
-							<span className="atlas-table__col hide-sm" style={{ width: 120 }}>Type</span>
-							<span className="atlas-table__col hide-sm" style={{ width: 120 }}>Location</span>
-							<span className="atlas-table__col" style={{ width: 70 }}>Website</span>
-						</div>
-						{rows.map((e) => {
-							const loc = [e.hq_city, e.hq_country].filter(Boolean).join(', ');
-							const href = extUrl(e.website);
-							return (
-								<div key={e.id} className="atlas-table__row" style={{ cursor: 'pointer' }} onClick={() => setProgramId(e.id)} {...activate(() => setProgramId(e.id))} aria-label={`${e.name} — view details`}>
-									<div className="atlas-table__name">
-										<Logo co={{ name: e.name, website: e.website }} size={28} radius={5} />
-										<div className="atlas-table__name-main">
-											<div className="atlas-ellipsis" style={{ fontWeight: 600 }}>{e.name}</div>
-											{e.description && <div style={{ fontSize: 11, color: 'var(--a-muted)' }} className="atlas-ellipsis">{e.description}</div>}
-										</div>
-									</div>
-									<span className="atlas-table__col hide-sm" style={{ width: 120 }}>{e.category ?? '—'}</span>
-									<span className="atlas-table__col hide-sm" style={{ width: 120 }}>{e.hq_country ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Flag cc={e.hq_country} size={11} />{loc}</span> : loc || '—'}</span>
-									<span className="atlas-table__col" style={{ width: 70 }}>{href ? <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--a-navy)' }} onClick={(ev) => ev.stopPropagation()}><ArrowUpRight size={13} /></a> : '—'}</span>
-								</div>
-							);
-						})}
+				: rows.length === 0 ? <Empty>No results for these filters. Remove one, or clear them all.</Empty>
+				: (
+				<div className="atlas-card atlas-chart-card" style={{ marginTop: 10 }}>
+					<div className="atlas-dt__top">
+						<span>{(res.data?.total ?? 0).toLocaleString()} program{(res.data?.total ?? 0) === 1 ? '' : 's'}</span>
+						<div><AtlasViewToggle value={view} onChange={setView} /><ExportButton entity="programs" search={dq} params={params} /></div>
 					</div>
-					)}
+					{view === 'cards'
+						? <div style={{ padding: 20 }}><CardGrid>{rows.map((e) => <EcoCard key={e.id} e={e} onOpen={() => setProgramId(e.id)} />)}</CardGrid></div>
+						: (
+						<div className="atlas-table mkt-table" role="table">
+							<div className="atlas-table__head">
+								<span className="atlas-table__name">Program</span>
+								<span className="atlas-table__col hide-sm" style={{ width: 140 }}>Type</span>
+								<span className="atlas-table__col hide-sm" style={{ width: 170 }}>Location</span>
+								<span className="atlas-table__col" style={{ width: 70, textAlign: 'right' }}>Website</span>
+							</div>
+							{rows.map((e) => {
+								const href = extUrl(e.website);
+								return (
+									<div key={e.id} className="atlas-table__row" style={{ cursor: 'pointer' }} onClick={() => setProgramId(e.id)} {...activate(() => setProgramId(e.id))} aria-label={`${e.name} — view details`}>
+										<div className="atlas-table__name">
+											<Logo co={{ name: e.name, website: e.website }} size={30} radius={6} />
+											<div className="atlas-table__name-main">
+												<div className="atlas-ellipsis" style={{ fontWeight: 600 }}>{e.name}</div>
+											</div>
+										</div>
+										<span className="atlas-table__col hide-sm atlas-ellipsis" style={{ width: 140 }}>{e.category ?? '—'}</span>
+										<LocationCell e={e} />
+										<span className="atlas-table__col" style={{ width: 70, textAlign: 'right' }}>{href ? <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--a-ink)' }} aria-label={`${e.name} website`} onClick={(ev) => ev.stopPropagation()}><ArrowUpRight size={13} /></a> : '—'}</span>
+									</div>
+								);
+							})}
+						</div>
+						)}
+				</div>
+				)}
 			<Pager page={page} totalPages={res.data?.totalPages ?? 1} onPage={setPage} />
 			<ProgramDrawer id={programId} row={rows.find((r) => r.id === programId)} onClose={() => setProgramId(null)} />
 		</>
@@ -274,13 +280,15 @@ export function EventsList() {
 				]}
 				canClear={anyFilter}
 				onClear={() => { setQ(''); setMode(''); setSport(''); setMonth(''); setCountry(''); setCity(''); setContinent(''); setRegion(''); setUpcoming(true); reset(); }}
-				count={`${totalCount.toLocaleString()} event${totalCount === 1 ? '' : 's'}`}
-				actions={
+				// The table shows its count in its own top row (fix list 1.10).
+				count={view === 'table' ? undefined : `${totalCount.toLocaleString()} event${totalCount === 1 ? '' : 's'}`}
+				// The table carries its own top row (count, views, Export).
+				actions={view === 'table' ? undefined : (
 					<>
 						<ExportButton entity="events" search={dq} params={view === 'calendar' ? calParams : listParams} />
 						<ViewToggle view={view} onChange={setView} />
 					</>
-				}
+				)}
 			/>
 			<Divider />
 
@@ -296,8 +304,8 @@ export function EventsList() {
 			{view === 'table' && (
 				<>
 					{listRes.isLoading && listRows.length === 0 ? <Loading />
-						: listRows.length === 0 ? <Empty>No events match your filters.</Empty>
-							: <EventsTable rows={listRows} />}
+						: listRows.length === 0 ? <Empty>No results for these filters. Remove one, or clear them all.</Empty>
+							: <EventsTable rows={listRows} total={listRes.data?.total ?? 0} actions={<><ViewToggle view={view} onChange={setView} /><ExportButton entity="events" search={dq} params={listParams} /></>} />}
 					<Pager page={page} totalPages={listRes.data?.totalPages ?? 1} onPage={setPage} />
 				</>
 			)}
@@ -305,7 +313,7 @@ export function EventsList() {
 			{view === 'cards' && (
 				<>
 					{listRes.isLoading && listRows.length === 0 ? <Loading />
-						: listRows.length === 0 ? <Empty>No events match your filters.</Empty>
+						: listRows.length === 0 ? <Empty>No results for these filters. Remove one, or clear them all.</Empty>
 							: <CardGrid>{listRows.map((e) => <EcoCard key={e.id} e={e} isEvent />)}</CardGrid>}
 					<ResultCapNote cap={listRes.data?.cap} total={listRes.data?.total ?? 0} noun="events" />
 					<Pager page={page} totalPages={listRes.data?.totalPages ?? 1} onPage={setPage} />
@@ -464,49 +472,57 @@ function CalendarEvent({ event }: { event: Eco }) {
 
 /* ── Table view ─────────────────────────────────────────────────────────── */
 
-function EventsTable({ rows }: { rows: Eco[] }) {
+function EventsTable({ rows, total, actions }: { rows: Eco[]; total: number; actions: React.ReactNode }) {
 	const open = useContext(OpenEvent);
 	return (
-		<div className="ecal-table-wrap">
-			<table className="ecal-table">
-				<thead>
-					<tr>
-						<th>Date</th>
-						<th>Event</th>
-						<th>Location</th>
-						<th>Format</th>
-						<th>Website</th>
-					</tr>
-				</thead>
-				<tbody>
-					{rows.map((e) => {
-						const loc = [e.hq_city, e.hq_country].filter(Boolean).join(', ');
-						const dateRange = e.start_date
-							? e.end_date && e.end_date !== e.start_date
-								? `${fmtShortDate(e.start_date)} – ${fmtShortDate(e.end_date)}`
-								: fmtDate(e.start_date)
-							: '—';
-						return (
-							<tr key={e.id} onClick={() => open?.(e.id)} {...(open ? activate(() => open(e.id)) : {})} style={{ cursor: 'pointer' }} title="View details" aria-label={`${e.name} — view details`}>
-								<td className="ecal-table__date">{dateRange}</td>
-								<td>
-									<div className="ecal-table__event">
-										<Logo co={{ name: e.name, website: e.website }} size={28} radius={5} />
-										<div>
-											<div className="ecal-table__name">{e.name}</div>
-											{e.description && <div className="ecal-table__desc">{e.description}</div>}
-										</div>
-									</div>
-								</td>
-								<td>{e.hq_country ? <span className="ecal-table__loc"><Flag cc={e.hq_country} size={12} /> {loc}</span> : loc || '—'}</td>
-								<td>{e.mode ? <span className={`ecal-table__mode ecal-table__mode--${e.mode}`}>{MODE_LABEL[e.mode] ?? e.mode}</span> : '—'}</td>
-								<td>{e.website ? <a href={extUrl(e.website)} target="_blank" rel="noopener noreferrer" className="ecal-table__link" onClick={(ev) => ev.stopPropagation()}><ArrowUpRight size={13} /> Visit</a> : '—'}</td>
-							</tr>
-						);
-					})}
-				</tbody>
-			</table>
+		<div className="atlas-card atlas-chart-card" style={{ marginTop: 10 }}>
+			<div className="atlas-dt__top">
+				<span>{total.toLocaleString()} event{total === 1 ? '' : 's'}</span>
+				<div>{actions}</div>
+			</div>
+			<div className="atlas-table mkt-table" role="table">
+				<div className="atlas-table__head">
+					<span className="atlas-table__name">Event</span>
+					<span className="atlas-table__col" style={{ width: 170 }}>Date</span>
+					<span className="atlas-table__col hide-sm" style={{ width: 170 }}>Location</span>
+					<span className="atlas-table__col hide-sm" style={{ width: 96 }}>Format</span>
+					<span className="atlas-table__col" style={{ width: 70, textAlign: 'right' }}>Website</span>
+				</div>
+				{rows.map((e) => {
+					const dateRange = e.start_date
+						? e.end_date && e.end_date !== e.start_date
+							? `${fmtShortDate(e.start_date)} – ${fmtDate(e.end_date)}`
+							: fmtDate(e.start_date)
+						: '—';
+					const href = extUrl(e.website);
+					return (
+						<div key={e.id} className="atlas-table__row" onClick={() => open?.(e.id)} {...(open ? activate(() => open(e.id)) : {})} style={{ cursor: 'pointer' }} aria-label={`${e.name} — view details`}>
+							<div className="atlas-table__name">
+								<Logo co={{ name: e.name, website: e.website }} size={30} radius={6} />
+								<div className="atlas-table__name-main"><div className="atlas-ellipsis" style={{ fontWeight: 600 }}>{e.name}</div></div>
+							</div>
+							<span className="atlas-table__col" style={{ width: 170 }}>{dateRange}</span>
+							<LocationCell e={e} />
+							{/* nowrap: "In person" wrapped onto two lines in its pill. */}
+							<span className="atlas-table__col hide-sm" style={{ width: 96 }}>{e.mode ? <span className={`ecal-table__mode ecal-table__mode--${e.mode}`} style={{ whiteSpace: 'nowrap' }}>{MODE_LABEL[e.mode] ?? e.mode}</span> : '—'}</span>
+							<span className="atlas-table__col" style={{ width: 70, textAlign: 'right' }}>{href ? <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--a-ink)' }} aria-label={`${e.name} website`} onClick={(ev) => ev.stopPropagation()}><ArrowUpRight size={13} /></a> : '—'}</span>
+						</div>
+					);
+				})}
+			</div>
 		</div>
+	);
+}
+
+/** Flag + city, as on the Companies table; the country when there is no city. */
+function LocationCell({ e }: { e: Eco }) {
+	const full = [e.hq_city, e.hq_country].filter(Boolean).join(', ');
+	return (
+		<span className="atlas-table__col hide-sm mkt-icontext" style={{ width: 170 }} title={full || undefined}>
+			{e.hq_country || e.hq_city
+				? <>{e.hq_country && <span className="mkt-flag"><Flag cc={e.hq_country} size={13} /></span>}<span className="atlas-ellipsis">{e.hq_city || e.hq_country}</span></>
+				: '—'}
+		</span>
 	);
 }
 

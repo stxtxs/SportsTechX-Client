@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Field, Input, Select } from '@/components/atlas';
+import { Field, Input, ReadOnly, Select } from '@/components/atlas';
+import { useUserProfile } from '@/hooks/use-user-profile';
 import { LocationSelect } from '@/components/features/location/location-select';
 import { CityInput } from '@/components/features/location/city-input';
 import { useVerifyState } from '@/components/features/verify/verify-cta';
@@ -28,9 +29,14 @@ const text = (t: Thesis, patch: Patch, key: keyof Thesis) => ({
 });
 
 export function ProfileFields({ t, patch }: Props) {
+	// The name comes from the account (handover v1 A11): nothing asks for it a
+	// second time. Falls back to what the thesis held when the account has none.
+	const { data: profile } = useUserProfile();
+	const accountName = (profile?.full_name ?? '').trim();
+	const name = accountName && !accountName.includes('@') ? accountName : t.name;
 	return (
 		<div className="scout-form-grid">
-			<Field label="Full name"><Input {...text(t, patch, 'name')} placeholder="Your name" /></Field>
+			<ReadOnly label="Full name" value={name || '—'} note="From your account" />
 			<Field label="Work email"><Input type="email" {...text(t, patch, 'email')} placeholder="you@fund.com" /></Field>
 			<Field label="Role"><Select value={String(t.role ?? '')} onChange={(e) => patch({ role: e.target.value })} options={[['', 'Select…'], ['Partner', 'Partner'], ['Managing Partner', 'Managing Partner'], ['Managing Director', 'Managing Director'], ['Principal', 'Principal'], ['Vice President', 'Vice President'], ['Associate', 'Associate'], ['Analyst', 'Analyst'], ['Venture Partner', 'Venture Partner'], ['Director', 'Director'], ['General Partner', 'General Partner']]} /></Field>
 			<Field label="LinkedIn profile URL"><Input type="url" {...text(t, patch, 'linkedin')} placeholder="https://linkedin.com/in/…" /></Field>

@@ -2,17 +2,15 @@
  * Builds a product's sidebar from the route manifest.
  *
  * Replaces `EXPLORE_NAV` / `useRaiseNav()` / `useScoutNav()`. Keeping this a
- * plain function of (tier, isAdmin, watchlists) rather than a hook is what lets
+ * plain function of (tier, isAdmin) rather than a hook is what lets
  * the nav be diffed against the old arrays without rendering anything — see
  * `lib/nav.check.ts`.
  */
 
 import type { ShellNavEntry, ShellNavItem } from '@/components/atlas/shell/nav';
 import { access, type Tier } from './access.ts';
-import { NAV_LAYOUT, ROUTE_BY_ID, forTier, pathOf, type RouteDef } from './routes.ts';
+import { NAV_LAYOUT, ROUTE_BY_ID, forTier, type RouteDef } from './routes.ts';
 
-/** A user watchlist, spliced into the Watchlists section at runtime. */
-export interface NavWatchlist { id: string; name: string }
 
 /**
  * Can this viewer actually be *sent* to `routeId`?
@@ -30,12 +28,12 @@ export interface NavWatchlist { id: string; name: string }
  */
 export function navigable(routeId: string, tier: Tier): boolean {
 	const r = ROUTE_BY_ID.get(routeId);
-	if (!r || !forTier(r.path, tier) || forTier(r.placeholder, tier) || r.soon) return false;
+	if (!r || !forTier(r.path, tier) || forTier(r.placeholder, tier) || forTier(r.soon, tier)) return false;
 	return access(r.tier, tier, false) === 'allow';
 }
 
 
-function toItem(r: RouteDef, tier: Tier): ShellNavItem | null {
+function toItem(r: RouteDef, tier: Tier, locked: boolean): ShellNavItem | null {
 	const path = forTier(r.path, tier);
 	const name = forTier(r.name, tier);
 	// A route with no path for this tier simply does not exist here.
@@ -43,28 +41,14 @@ function toItem(r: RouteDef, tier: Tier): ShellNavItem | null {
 	return {
 		name, path, icon: r.icon,
 		...(forTier(r.placeholder, tier) ? { placeholder: true } : {}),
-		...(r.soon ? { soon: true } : {}),
+		...(forTier(r.soon, tier) ? { soon: true } : {}),
+		...(locked ? { locked: true } : {}),
 		...(r.isDefault ? { isDefault: true } : {}),
+		...(r.also ? { also: r.also } : {}),
 	};
 }
 
-/**
- * The user's own watchlists, immediately before "All watchlists".
- *
- * Raise used to insert them after "Main watchlist" and Scout before its only
- * item, with two different slices — but both reduce to this one rule, so the
- * positional `const [main, ...rest] = e.items` that depended on "Main
- * watchlist" being index 0 is gone.
- */
-function withWatchlists(items: ShellNavItem[], tier: Tier, lists: NavWatchlist[], icon: RouteDef['icon']): ShellNavItem[] {
-	if (lists.length === 0) return items;
-	const anchor = pathOf('watchlists', tier);
-	const at = items.findIndex((i) => i.path === anchor);
-	const dynamic = lists.map((l) => ({ name: l.name, icon, path: `${anchor}/${l.id}` }));
-	return at === -1 ? [...items, ...dynamic] : [...items.slice(0, at), ...dynamic, ...items.slice(at)];
-}
-
-export function buildNav(tier: Tier, isAdmin: boolean, lists: NavWatchlist[] = [], watchlistIcon?: RouteDef['icon']): {
+export function buildNav(tier: Tier, isAdmin: boolean): {
 	nav: ShellNavEntry[];
 	bottomNav: ShellNavItem[];
 } {
@@ -80,24 +64,17 @@ export function buildNav(tier: Tier, isAdmin: boolean, lists: NavWatchlist[] = [
 			// behind it renders the TierGate, which is how the design wants
 			// Explore's "Investors" to behave.
 			.filter((r): r is RouteDef => !!r && access(r.tier, tier, isAdmin) !== 'hidden')
-			.map((r) => toItem(r, tier))
+			// `upsell` items stay listed, marked locked: the lock icon and its
+			// hover text say what unlocks them (handover v1 §4 Access).
+			.map((r) => toItem(r, tier, access(r.tier, tier, isAdmin) === 'upsell'))
 			.filter((i): i is ShellNavItem => i !== null);
 		if (items.length === 0) continue;
 
 		if (group.bottom) { bottomNav.push(...items); continue; }
 		if (group.title === null) { nav.push(...items); continue; }
-		// Splice the viewer's saved lists into whichever section holds the
-		// "All watchlists" anchor — Raise's dedicated Watchlists section, or
-		// Scout's Discover section (which now owns the single watchlist link).
-		const hasWatchlistAnchor = !!watchlistIcon && items.some((i) => i.path === pathOf('watchlists', tier));
-		const sectionItems = hasWatchlistAnchor
-			? withWatchlists(items, tier, lists, watchlistIcon!)
-			: items;
-		// A heading over a single link reads as a mistake — it is Scout's
-		// "Watchlists" before the user has saved any list (then the section is
-		// just "All watchlists"). Render it as a plain top-level item, the way
-		// the heading-less Home group already renders. The section reappears the
-		// moment a second item does (a saved list splices in above the anchor).
+		// Watchlists are listed once, as "Watchlists" — never one entry per list
+		// (handover v1 §2).
+		const sectionItems = items;
 		if (sectionItems.length === 1) { nav.push(sectionItems[0]); continue; }
 		nav.push({ title: group.title, items: sectionItems });
 	}

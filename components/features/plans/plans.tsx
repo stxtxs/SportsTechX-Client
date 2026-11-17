@@ -18,6 +18,7 @@ import type { Feature } from '@/contexts/feature-access-context';
 import { PRODUCT } from '@/components/features/tier-gate/tier-gate';
 import type { Tier } from '@/lib/access';
 import './plans.css';
+import { fmtFullDate } from '@/lib/format';
 
 /**
  * Every tier, side by side — the single plan surface, in three contexts:
@@ -125,7 +126,7 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 	 * start another.
 	 */
 	const fmtDay = (iso: string | null) =>
-		iso ? new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) : null;
+		iso ? fmtFullDate(new Date(iso)) : null;
 	const downgrade = async () => {
 		setBusy('explore');
 		try {
@@ -165,7 +166,8 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 		const copy = tier === 'explore' ? null : PRODUCT[tier];
 		const name = copy?.name ?? (tier === 'explore' ? 'Explore' : tier);
 		const spin = <Loader2 className="animate-spin" size={13} />;
-		if (isCurrent) return <Button variant="outline" size="sm" disabled>Your plan</Button>;
+		// The current solution is marked once, by its badge (handover v1 B10).
+		if (isCurrent) return null;
 		if (loggedOut) {
 			return tier === 'explore'
 				? <Button size="sm" variant="outline" onClick={goSignup}>Start free</Button>
@@ -183,7 +185,7 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 			}
 			return hasPaidPlan
 				? <Button size="sm" variant="outline" disabled={busy !== null} onClick={() => void downgrade()}>{busy === 'explore' ? spin : 'Switch to Explore'}</Button>
-				: <span className="plans-muted">Included with every plan</span>;
+				: <span className="plans-muted">Included with every solution</span>;
 		}
 		return <Button size="sm" variant={tier === 'raise' ? 'primary' : 'outline'} disabled={busy !== null} onClick={() => void checkout(tier)}>{busy === tier ? spin : `Get ${name}`}</Button>;
 	};
@@ -191,10 +193,10 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 	return (
 		<>
 			<PageHead
-				title={onboarding ? 'Choose your plan' : 'Solutions'}
+				title={onboarding ? 'Choose your solution' : 'Solutions'}
 				sub={onboarding
-					? 'Pick the plan that fits how you use SportsTechX — you can change it later.'
-					: 'Atlas Explore is free and stays free. Raise and Scout are separate products on top of it — pick the one that matches what you do.'}
+					? 'Pick the solution that fits how you use SportsTechX. You can change it later.'
+					: 'Atlas Explore is free and stays free. Raise and Scout are separate solutions. Pick the one that matches what you do.'}
 			/>
 
 			<div className="plans-grid">
@@ -206,7 +208,7 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 						<Card key={tier} glow={isCurrent ? 'blue' : undefined} focus={isCurrent} className="plans-card">
 							<div className="plans-card__head">
 								<AtlasLogo height={24} product={TIER_LABEL[tier]} />
-								{isCurrent && <Badge tone="ok">Current plan</Badge>}
+								{isCurrent && <Badge tone="ok">Current solution</Badge>}
 							</div>
 							<div className="plans-card__price">
 								{plan ? money(plan.price_amount, plan.currency_code) : '—'}
@@ -226,7 +228,7 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 								</div>
 							)}
 							<p className="plans-card__blurb">
-								{copy?.tagline ?? 'Understand and explore the sports-tech market.'}
+								{copy?.tagline ?? 'Understand and explore the sports tech market.'}
 							</p>
 							{copy && (
 								<ul className="plans-card__points">
@@ -248,15 +250,14 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 			{onboarding && (
 				<div className="plans-later">
 					<button type="button" onClick={() => void chooseExplore(true)} disabled={busy !== null}>
-						{busy === 'dismiss' ? 'Saving…' : 'Maybe later — keep my current plan'}
+						{busy === 'dismiss' ? 'Saving…' : 'Maybe later'}
 					</button>
 				</div>
 			)}
 
 			<Card className="plans-table-card">
 				<div className="plans-table-head">
-					<div className="atlas-section-title">What each plan includes</div>
-					<span className="atlas-section-aside">Data access, straight from the entitlement matrix. Raise and Scout differ by workspace, not by data.</span>
+					<div className="atlas-section-title">What each solution includes</div>
 				</div>
 				{featuresLoading ? <Loading /> : features.length === 0 ? (
 					<p className="plans-muted">The comparison couldn&rsquo;t be loaded. Please refresh.</p>

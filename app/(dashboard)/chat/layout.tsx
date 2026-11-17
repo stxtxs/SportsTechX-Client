@@ -15,6 +15,7 @@ import { RaiseSearch, RAISE_SUGGESTIONS, SCOUT_SUGGESTIONS, EXPLORE_SUGGESTIONS 
 import { useNav } from '@/hooks/use-nav';
 import { Button } from '@/components/atlas';
 import '@/components/raise/chat/raise-chatpage.css';
+import { fmtFullDate } from '@/lib/format';
 
 /**
  * Atlas — full chat page (Claude/ChatGPT layout): transcript above, composer
@@ -177,7 +178,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
 								title={c.title ?? 'Untitled conversation'}
 							>
 								<span className="raise-convo-title">{c.title || 'Untitled conversation'}</span>
-								<span className="raise-convo-date">{new Date(c.last_message_at).toLocaleDateString()}</span>
+								<span className="raise-convo-date">{fmtFullDate(new Date(c.last_message_at))}</span>
 							</button>
 						))
 					)}

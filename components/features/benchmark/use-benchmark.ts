@@ -35,7 +35,7 @@ const OPEN_ALL: BenchmarkAccess = { edition: EDITION, entries: { r1: 'none', r2:
 
 export function useBenchmarkAccess(): { access: BenchmarkAccess; isLoading: boolean } {
 	const { data: profile, isLoading: profileLoading } = useUserProfile();
-	const res = useSource(FLAGS.benchmark && profile ? qk.benchmark.access(EDITION) : null, () => mockAccess(mockScenario()));
+	const res = useSource(FLAGS.benchmark && profile ? qk.benchmark.access(EDITION) : null, () => mockAccess(mockScenario(getUserType(profile))));
 	const fallback = useMemo(
 		() => fallbackAccess(getUserType(profile), profile?.user_role === 'admin'),
 		[profile],
@@ -94,7 +94,9 @@ export function useHomePins(): PinsState {
 		if (SOURCE === 'api') return api.data ?? [];
 		return withChoices(defaultPins(access, RELEASE_DATE), choices);
 	}, [access, choices, api.data]);
-	const visible = useMemo(() => visiblePins(all, new Date().toISOString()), [all]);
+	// "Your benchmark" is for contributors only (handover v1 §4 Access), whatever
+	// the pin source returns.
+	const visible = useMemo(() => visiblePins(all, new Date().toISOString()).filter((p) => p.entry !== 'r3' || access.entries.r3 === 'open'), [all, access]);
 
 	const { mutate } = api;
 	const setPinned = useCallback(async (key: string, pinned: boolean) => {

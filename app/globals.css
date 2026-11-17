@@ -294,7 +294,10 @@ body {
 /* Theme switch (lib/theme-sweep.ts): the landing page's circular reveal. The
    default cross-fade is off on both halves — fading them together dips the
    page through a washed-out midpoint, which the reveal is meant to avoid. */
-html[data-theme-sweep]::view-transition-old(root),
-html[data-theme-sweep]::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
-html[data-theme-sweep]::view-transition-old(root) { z-index: 0; }
-html[data-theme-sweep]::view-transition-new(root) { z-index: 1; }
+/* Unscoped, as on the landing page: the theme switch is the only view
+   transition in Atlas, and tying these to a marker attribute let the default
+   cross-fade replay for a frame after the reveal (the "double flash"). */
+::view-transition-old(root),
+::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-old(root) { z-index: 0; }
+::view-transition-new(root) { z-index: 1; }

@@ -39,10 +39,13 @@ export function sweepTheme(from: HTMLElement | null, apply: () => void): void {
 	// capturing, which deadlocks the callback until the browser times it out.
 	const t = doc.startViewTransition(() => { flushSync(apply); });
 	t.ready
-		.then(() => root.animate(grow, { ...TIMING, pseudoElement: '::view-transition-new(root)' }).finished)
+		.then(() => root.animate(grow, { ...TIMING, pseudoElement: '::view-transition-new(root)' }))
 		// A second toggle mid-flight aborts the running transition.
-		.catch(() => {})
-		.finally(done);
-	t.finished.catch(() => {});
+		.catch(() => {});
+	// The "no cross-fade" rule in globals.css hangs off `data-theme-sweep`, so
+	// it must stay until the whole transition is over. Removing it when the
+	// circle finished (a frame before the pseudo-elements go) let the browser's
+	// default cross-fade replay old → new: the "double flash" after the switch.
+	t.finished.catch(() => {}).finally(done);
 	t.updateCallbackDone.catch(() => {});
 }

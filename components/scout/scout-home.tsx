@@ -87,6 +87,8 @@ export function ScoutHome() {
 							icon={CARD_ICON[c.id] ?? Sparkles}
 							title={currentNames(c.title)}
 							body={currentNames(c.why)}
+							// Task cards keep their own action (fix list 1.16).
+							actionLabel={c.cta_label}
 							// Setup cards open the wizard in place; everything else keeps
 							// its server-built link. Keyed on the card's stable `id`, not
 							// on `cta_href` — the hrefs are the thing being retired.

@@ -62,6 +62,9 @@ export const SURVEY_URL = process.env.NEXT_PUBLIC_VC_BENCHMARK_SURVEY_URL ?? '';
 /** Where an upgrade goes: the public pricing page. */
 export const UPGRADE_PATH = '/solutions';
 
+/** Hover text on the locked full report. */
+export const LOCKED_HINT = 'Unlocked with Raise or Scout';
+
 /**
  * Feature flags. Read at build time (NEXT_PUBLIC_*), so each environment opts in.
  *

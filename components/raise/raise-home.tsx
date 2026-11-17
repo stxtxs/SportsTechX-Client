@@ -78,6 +78,7 @@ function RoundCard({ r }: { r: Round }) {
 			title={title}
 			body={body || undefined}
 			onAction={() => openRaiseSetup({ edit: true })}
+			actionLabel={days != null && days < 0 && !ended ? 'Update date' : 'Edit round'}
 			extra={showBar ? <Progress pct={(committed / target) * 100} /> : undefined}
 		/>
 	);
@@ -138,6 +139,8 @@ export function RaiseHome() {
 									icon={t.icon}
 									title={currentNames(a.title)}
 									body={currentNames(a.why)}
+									// Task cards keep their own action (fix list 1.16).
+									actionLabel={a.cta_label}
 									// Setup cards open the wizard in place; everything else keeps
 									// its server-built link. Keyed on the card's stable `id`, not
 									// on `cta_href` — the hrefs are the thing being retired.

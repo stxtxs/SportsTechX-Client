@@ -88,7 +88,7 @@ export function PostCard({ cover, meta, title, desc, tags, actions, className, h
 	hint?: string;
 }) {
 	return (
-		<article className={cx('atlas-post atlas-post--card', className)}>
+		<article className={cx('atlas-post atlas-post--card', className)} data-hint={hint}>
 			<Cover src={cover} alt="" className="atlas-post__cover atlas-post__cover--banner" title={title} />
 			<div className="atlas-post__cardbody">
 				<div className="atlas-post__meta">{meta}</div>

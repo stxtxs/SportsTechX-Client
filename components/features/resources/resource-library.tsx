@@ -98,15 +98,25 @@ export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitl
 		<>
 			{intro && <p className="atlas-res-intro">{intro}</p>}
 
-			<FeaturedPost
-				cover={featured.cover}
-				metaIcon={<MetaIcon size={12} strokeWidth={1.5} aria-hidden="true" />}
-				meta={<>{featured.featuredLabel ?? featuredLabel} · Published {featured.dateLabel ?? fmtLongDate(featured.date)} {badgeFor(featured)}</>}
-				title={featured.title}
-				desc={featured.desc}
-				tags={featured.tags}
-				actions={actionsFor(featured)}
-			/>
+			{/* Explore: the summary and its locked full report side by side at the
+			    top (both must show — handover v1 §4 Access); otherwise one hero. */}
+			{pair ? (
+				<div className="atlas-post-grid atlas-post-grid--pair">
+					{[featured, pair].map((r) => (
+						<PostCard key={r.id} className="is-paired" cover={r.cover} meta={metaFor(r)} title={r.title} desc={r.desc} tags={r.tags} actions={actionsFor(r)} hint={r.hint} />
+					))}
+				</div>
+			) : (
+				<FeaturedPost
+					cover={featured.cover}
+					metaIcon={<MetaIcon size={12} strokeWidth={1.5} aria-hidden="true" />}
+					meta={<>{featured.featuredLabel ?? featuredLabel} · Published {featured.dateLabel ?? fmtLongDate(featured.date)} {badgeFor(featured)}</>}
+					title={featured.title}
+					desc={featured.desc}
+					tags={featured.tags}
+					actions={actionsFor(featured)}
+				/>
+			)}
 
 			<div className="atlas-res-head">
 				<h2 className="atlas-h2">{libraryTitle}</h2>

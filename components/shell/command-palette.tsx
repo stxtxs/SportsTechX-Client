@@ -87,7 +87,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
 		if (tier === 'raise') extra.push({ label: 'Raise settings', href: hrefOf('raise-settings'), group: 'Account', icon: 'nav-thesis' });
 		if (tier === 'scout') extra.push({ label: 'Scouting thesis', href: hrefOf('thesis'), group: 'Account', icon: 'nav-thesis' });
 		if (tier !== 'explore') extra.push({ label: 'Subscription', href: hrefOf('billing'), group: 'Account', icon: 'nav-subscription' });
-		else extra.push({ label: 'Compare plans', href: PLANS_PATH, group: 'Account', icon: 'nav-subscription' });
+		else extra.push({ label: 'Compare solutions', href: PLANS_PATH, group: 'Account', icon: 'nav-subscription' });
 
 		const seen = new Set<string>();
 		return [...fromNav, ...extra].filter((p) => {

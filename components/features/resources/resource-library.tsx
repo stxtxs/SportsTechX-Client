@@ -44,7 +44,11 @@ export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitl
 	/** Right-hand note on the library heading, e.g. the publishing cadence. */
 	aside?: ReactNode;
 }) {
-	const [featured, ...rest] = items;
+	// A featured item can bring a partner (the summary and its locked full
+	// report): the two sit side by side at the top instead of one hero.
+	const pair = items[0]?.pairWith ? items.find((i) => i.id === items[0].pairWith) : undefined;
+	const featured = items[0];
+	const rest = items.slice(1).filter((i) => i !== pair);
 	const [q, setQ] = useState('');
 	const [tag, setTag] = useState('');
 	const [access, setAccess] = useState('');
@@ -119,7 +123,7 @@ export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitl
 			{rows.length === 0 ? <Empty>No {noun}s match your filters.</Empty> : (
 				<div className="atlas-post-grid">
 					{rows.map((r) => (
-						<PostCard key={r.id} cover={r.cover} meta={metaFor(r)} title={r.title} desc={r.desc} tags={r.tags} actions={actionsFor(r)} />
+						<PostCard key={r.id} cover={r.cover} meta={metaFor(r)} title={r.title} desc={r.desc} tags={r.tags} actions={actionsFor(r)} hint={r.hint} />
 					))}
 				</div>
 			)}

@@ -72,12 +72,12 @@ function RoundCard({ r }: { r: Round }) {
 
 	return (
 		<FeedCard
+			id="round"
 			tag={roundName ?? 'Your round'}
 			icon={Hourglass}
 			title={title}
 			body={body || undefined}
 			onAction={() => openRaiseSetup({ edit: true })}
-			actionLabel={days != null && days < 0 && !ended ? 'Update date' : 'Edit round'}
 			extra={showBar ? <Progress pct={(committed / target) * 100} /> : undefined}
 		/>
 	);
@@ -133,6 +133,7 @@ export function RaiseHome() {
 							return (
 								<FeedCard
 									key={a.id}
+									id={a.id}
 									tag={t.tag}
 									icon={t.icon}
 									title={currentNames(a.title)}
@@ -145,7 +146,6 @@ export function RaiseHome() {
 										// Readiness lives in the raise wizard: re-open it to edit.
 										: a.id === 'readiness' ? { onAction: () => openRaiseSetup({ edit: true }) }
 										: { href: a.cta_href })}
-									actionLabel={a.cta_label}
 									extra={a.count != null ? <Badge tone="danger">{a.count} overdue</Badge> : undefined}
 								/>
 							);

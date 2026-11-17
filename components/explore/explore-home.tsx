@@ -90,6 +90,7 @@ export function ExploreHome() {
 						<FeedCard tag="For you" icon={UserRound} title="Set up your preferences" body="Set up your preferences and Atlas tunes Home to them." href={hrefOf('interests')} actionLabel="Set up your preferences" />
 					) : forYou && (
 						<FeedCard
+							id="for-you"
 							tag="For you" icon={UserRound}
 							title={forYou.title}
 							body={`Because you follow ${picked.slice(0, 3).join(', ')}${picked.length > 3 ? ` and ${picked.length - 3} more` : ''}.`}

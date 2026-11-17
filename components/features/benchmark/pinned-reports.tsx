@@ -8,7 +8,6 @@ import { hrefOf } from '@/lib/routes';
 import { ENTRY_PATH, ENTRY_TITLE, FLAGS } from './config';
 import { useHomePins } from './use-benchmark';
 import type { HomePin } from './types';
-import './benchmark.css';
 
 /** What each pin says. Reuses the "Latest from Atlas" card (label, title, one line, action). */
 export const PIN_CARD: Record<HomePin['entry'], { tag: string; title: string; body: string; action: string; href: string; mine?: boolean }> = {
@@ -17,6 +16,11 @@ export const PIN_CARD: Record<HomePin['entry'], { tag: string; title: string; bo
 	r1: { tag: 'Report', title: ENTRY_TITLE.r2, body: 'How sports tech investors find, screen and close deals, and where the gaps are.', action: 'Open', href: ENTRY_PATH.r1 },
 	ftr: { tag: 'Report', title: 'Football Tech & Business Report 2026', body: 'The companies, money and people shaping football’s business and technology.', action: 'Open', href: '/reports/ftabr26' },
 };
+
+/** Whether Home has any pinned cards (Raise only draws its grid when there's something in it). */
+export function useHasPins(): boolean {
+	return useHomePins().visible.length > 0;
+}
 
 /**
  * Pinned report cards for Home. They are not a section of their own any more

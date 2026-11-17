@@ -76,7 +76,7 @@ export function FeaturedPost({ cover, meta, metaIcon, title, desc, tags, actions
 	);
 }
 
-export function PostCard({ cover, meta, title, desc, tags, actions, className }: {
+export function PostCard({ cover, meta, title, desc, tags, actions, className, hint }: {
 	cover?: string | null;
 	meta: ReactNode;
 	title: ReactNode;
@@ -84,6 +84,8 @@ export function PostCard({ cover, meta, title, desc, tags, actions, className }:
 	tags?: string[];
 	actions?: ReactNode;
 	className?: string;
+	/** A note shown on hover, e.g. what opens a locked report. */
+	hint?: string;
 }) {
 	return (
 		<article className={cx('atlas-post atlas-post--card', className)}>

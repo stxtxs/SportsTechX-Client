@@ -1,21 +1,32 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import useSWR from 'swr';
+import { usePathname, useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button, Eyebrow } from '@/components/atlas';
-import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
+import { firstNameOf, getUserType, useUserProfile } from '@/hooks/use-user-profile';
 import { hrefOf } from '@/lib/routes';
+import { qk } from '@/lib/query-keys';
+import { openRaiseSetup } from '@/lib/setup-events';
 import { ENTRY_PATH, FLAGS } from './config';
 import { useBenchmarkAccess, useThesisPrefill, useWalkthroughState } from './use-benchmark';
+import { useTourLayout } from './tour-targets';
+import { deviceOf, welcomeName } from './tour-layout';
+import { TOURS, textOf, type TourCopy } from './tour-steps';
 import './benchmark.css';
 
 /**
- * First-login walkthrough: five skippable steps that end on thesis setup.
+ * First-login walkthrough: skippable steps (tour-steps.ts, per product) that
+ * end on setting up the thesis, the raise or interests. Step 1 is a centred
+ * welcome; each later step highlights what it explains (sidebar sections, a
+ * Home section, a top-bar button) and its card sits beside it. With nothing
+ * on screen to point at (the sidebar is a closed drawer on phones and
+ * tablets) the card is centred.
  * Relaunch it from anywhere with `openWalkthrough()` (the account menu and
  * the banner do). Started / completed / skipped are stored per user.
  *
- * Steps are the spec's proposal, still to confirm with product.
+ * The copy is product's (tour-steps.ts).
  */
 const TOUR_EVENT = 'stx:open-walkthrough';
 
@@ -23,15 +34,8 @@ export function openWalkthrough(): void {
 	if (typeof window !== 'undefined') window.dispatchEvent(new Event(TOUR_EVENT));
 }
 
-interface Step { eyebrow: string; title: string; body: string; points?: string[] }
-
-const STEPS: Step[] = [
-	{ eyebrow: 'Home', title: 'Start from Home', body: 'Home shows what changed in sports tech since your last visit. Ask Atlas answers questions about companies, funding, events and sectors in plain language.', points: ['Pinned research sits at the top of Home', 'Ask Atlas is in the search bar and the button at the bottom right'] },
-	{ eyebrow: 'Discover', title: 'Find companies', body: 'Search the company database, see companies matched to your thesis in Recommended, and follow funding and product news in Signals.', points: ['Companies: the full database with filters', 'Recommended: matches for your thesis', 'Signals: what the companies you follow are doing'] },
-	{ eyebrow: 'Ecosystem and Intelligence', title: 'Read the market', body: 'Investors, programs and events make up the ecosystem. Analytics, the Monthly Roundup and M&A show where money and attention are going.' },
-	{ eyebrow: 'Reports', title: 'Read the research', body: 'SportsTechX reports live in Reports, including the VC Deal Sourcing Benchmark 2026. Unpin anything from Home and you’ll still find it there.' },
-	{ eyebrow: 'Your thesis', title: 'Set up your thesis', body: 'Tell Atlas your stages, regions and sectors, and it tunes recommendations, signals and Home to them. It takes a couple of minutes and you can change it any time.' },
-];
+/** Room around the highlighted element. */
+const SPOT_PAD = 6;
 
 /** Mounted in AppShell for everyone; its hooks (and requests) only run when the flag is on. */
 export function Walkthrough() {
@@ -40,7 +44,11 @@ export function Walkthrough() {
 
 function WalkthroughInner() {
 	const router = useRouter();
+	const pathname = usePathname();
 	const { data: profile } = useUserProfile();
+	const tier = getUserType(profile);
+	const STEPS = TOURS[tier];
+	const setUp = useSetUp(tier);
 	const { ready, state, record } = useWalkthroughState();
 	const { access } = useBenchmarkAccess();
 	const { prefill } = useThesisPrefill();
@@ -54,6 +62,8 @@ function WalkthroughInner() {
 	const fresh = ready && state.first_login && state.status === 'not_started';
 	const auto = fresh || (ready && state.status === 'started');
 	const open = manual ?? auto;
+	const cardRef = useRef<HTMLDivElement>(null);
+	const { boxes, card } = useTourLayout(open, STEPS[step].target, cardRef);
 
 	// A first-login open is recorded as started (an external write, once).
 	useEffect(() => {
@@ -71,15 +81,20 @@ function WalkthroughInner() {
 	if (!FLAGS.walkthrough || !open) return null;
 
 	const s = STEPS[step];
+	const copy: TourCopy = { name: tourName(profile), device: browserDevice(), setUp };
 	const last = step === STEPS.length - 1;
 	const contributor = access.entries.r3 === 'open';
 	const prefilled = !!prefill && (prefill.stages.length > 0 || prefill.regions.length > 0);
 
+	// The welcome leads to Home, where the next stops are.
+	const forward = () => {
+		if (step === 0 && pathname !== hrefOf('home')) router.push(hrefOf('home'));
+		setStep(step + 1);
+	};
 	const skip = () => { record('skipped'); setManual(false); };
 	const finish = () => {
 		record('completed');
 		setManual(false);
-		const tier = getUserType(profile);
 		if (tier === 'scout' || profile?.user_role === 'admin') {
 			// The thesis wizard is a global modal that `?setup=thesis` opens on any
 			// page, so it opens over where they land: a contributor's benchmark
@@ -89,31 +104,66 @@ function WalkthroughInner() {
 			router.push(`${dest}${dest.includes('?') ? '&' : '?'}setup=thesis`);
 			return;
 		}
-		// Raise and Explore set their focus on a page of its own.
-		router.push(hrefOf(tier === 'raise' ? 'raise-settings' : 'interests'));
+		// The tour ends on Home's setup prompt: Raise opens its setup there,
+		// Explore goes to Interests.
+		if (tier === 'raise') { openRaiseSetup(setUp ? { edit: true } : undefined); return; }
+		router.push(hrefOf('interests'));
 	};
 
 	return (
-		<div className="bm-tour-overlay" role="presentation">
-			<div className="atlas bm-tour" role="dialog" aria-modal="true" aria-labelledby="bm-tour-title">
+		<div className="bm-tour-layer" role="presentation">
+			<svg className="bm-tour-mask" aria-hidden="true">
+				<defs>
+					<mask id="bm-tour-holes">
+						<rect width="100%" height="100%" fill="white" />
+						{boxes.map((b, i) => <rect key={i} x={b.left - SPOT_PAD} y={b.top - SPOT_PAD} width={b.width + SPOT_PAD * 2} height={b.height + SPOT_PAD * 2} rx={10} fill="black" />)}
+					</mask>
+				</defs>
+				<rect width="100%" height="100%" mask="url(#bm-tour-holes)" />
+			</svg>
+			{boxes.map((b, i) => (
+				<div key={i} className="bm-tour-spot" style={{ top: b.top - SPOT_PAD, left: b.left - SPOT_PAD, width: b.width + SPOT_PAD * 2, height: b.height + SPOT_PAD * 2 }} />
+			))}
+			<div ref={cardRef} className={`atlas bm-tour${card ? ' is-anchored' : ''}`} style={card ? { top: card.top, left: card.left } : undefined} role="dialog" aria-modal="true" aria-labelledby="bm-tour-title">
 				<div className="bm-tour__steps" aria-label={`Step ${step + 1} of ${STEPS.length}`}>
-					{STEPS.map((x, i) => <span key={x.title} className={i <= step ? 'on' : undefined} />)}
+					{STEPS.map((x, i) => <span key={x.eyebrow} className={i <= step ? 'on' : undefined} />)}
 				</div>
 				<Eyebrow>{s.eyebrow} · {step + 1} of {STEPS.length}</Eyebrow>
-				<h2 id="bm-tour-title">{s.title}</h2>
-				<p>{s.body}</p>
+				<h2 id="bm-tour-title">{textOf(s.title, copy)}</h2>
+				<p>{textOf(s.body, copy)}</p>
 				{last && prefilled && <p style={{ marginTop: 12 }}>We’ve pre-filled your stage and region from your survey answers. Check them and change anything that’s off.</p>}
-				{s.points && <ul>{s.points.map((x) => <li key={x}>{x}</li>)}</ul>}
 				<div className="bm-tour__nav">
 					<button type="button" className="bm-linkbtn" onClick={skip}>Skip the tour</button>
 					<div className="bm-actions">
 						{step > 0 && <Button variant="ghost" onClick={() => setStep(step - 1)}><ArrowLeft size={13} /> Back</Button>}
-						{last
-							? <Button onClick={finish}>Set up your thesis <ArrowRight size={13} /></Button>
-							: <Button onClick={() => setStep(step + 1)}>Next <ArrowRight size={13} /></Button>}
+						<Button onClick={last ? finish : forward}>{s.next ? textOf(s.next, copy) : 'Next'} <ArrowRight size={13} /></Button>
 					</div>
 				</div>
 			</div>
 		</div>
 	);
+}
+
+/** First name for the welcome; never the email handle. */
+function tourName(profile: { full_name?: string | null; display_name?: string | null; email?: string | null } | null | undefined): string | null {
+	const full = firstNameOf(profile?.full_name);
+	return full ?? welcomeName(firstNameOf(profile?.display_name), true, profile?.email);
+}
+
+/** The device's shortcut keys, from the browser (client only: the tour never renders on the server). */
+function browserDevice() {
+	const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
+	return deviceOf(nav.userAgentData?.platform || nav.platform);
+}
+
+/**
+ * Whether the last step's subject is already set up: a Raise round, or
+ * Explore interests. Same keys as the Home pages, so no extra requests there.
+ */
+function useSetUp(tier: string): boolean {
+	const raise = useSWR<{ needs_setup?: boolean }>(tier === 'raise' ? qk.raise.home() : null);
+	const explore = useSWR<{ sectors?: unknown[]; sports?: unknown[] }>(tier === 'explore' ? qk.explore.interests() : null);
+	if (tier === 'raise') return !!raise.data && !raise.data.needs_setup;
+	if (tier === 'explore') return (explore.data?.sectors?.length ?? 0) + (explore.data?.sports?.length ?? 0) > 0;
+	return false;
 }

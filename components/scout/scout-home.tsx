@@ -93,7 +93,6 @@ export function ScoutHome() {
 							{...(SETUP_CARD_WIZARD[c.id]
 								? { onAction: SETUP_CARD_WIZARD[c.id] === 'raise' ? openRaiseSetup : openScoutThesis }
 								: { href: c.cta_href })}
-							actionLabel={c.cta_label}
 						/>
 					))}
 					{/* Two standing entry points the read-model does not emit. */}

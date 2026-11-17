@@ -86,7 +86,7 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 		const plan = byTier.get(tier);
 		// The slug, not the tier: `subscription_plans.slug` is what the server
 		// resolves to a Stripe price, and Explore's slug is still 'free'.
-		if (!plan?.stripe_price_id) { toast.error('That plan is not available to buy right now.'); return; }
+		if (!plan?.stripe_price_id) { toast.error('That solution is not available to buy right now.'); return; }
 		setBusy(tier);
 		setErr('');
 		track(Events.billingCheckoutStarted, { plan: plan.slug });
@@ -137,10 +137,10 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 				? 'Within 30 days of your first Atlas Raise payment? Email hello@sportstechx.com for a full refund under our 30-day money-back guarantee.'
 				: 'No refund is issued.';
 			const ok = await confirm({
-				title: 'Cancel your plan?',
+				title: 'Cancel your solution?',
 				description: until
-					? `Your plan stays active with full access until ${until}. It won't renew — you'll move to Atlas Explore then, and you can't start a different plan until it ends. ${refund} To cancel sooner, contact the SportsTechX team.`
-					: `Your plan won't renew and you'll move to Atlas Explore at the end of the current billing period. ${refund} To cancel sooner, contact the SportsTechX team.`,
+					? `Your solution stays active with full access until ${until}. It won't renew — you'll move to Atlas Explore then, and you can't start a different solution until it ends. ${refund} To cancel sooner, contact the SportsTechX team.`
+					: `Your solution won't renew and you'll move to Atlas Explore at the end of the current billing period. ${refund} To cancel sooner, contact the SportsTechX team.`,
 				confirmLabel: 'Cancel at period end',
 				destructive: true,
 			});
@@ -150,11 +150,11 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 			const body = (await done.json()) as { access_until: string | null };
 			const end = fmtDay(body.access_until);
 			toast.success(end
-				? `Plan set to cancel on ${end}. You keep full access until then.`
-				: 'Plan set to cancel at the end of your billing period. You keep full access until then.');
+				? `Solution set to cancel on ${end}. You keep full access until then.`
+				: 'Solution set to cancel at the end of your billing period. You keep full access until then.');
 			await Promise.all([refreshProfile(), noteCancellation(body.access_until)]);
 		} catch {
-			toast.error("Couldn't cancel your plan. Please try again or contact support.");
+			toast.error("Couldn't cancel your solution. Please try again or contact support.");
 		} finally { setBusy(null); }
 	};
 

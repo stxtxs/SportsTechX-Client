@@ -15,7 +15,7 @@ export const announcement: { id: string; label: string; text: string; cta: strin
 	id: 'football-tech-business-report-2026',
 	label: 'New Report Alert!',
 	text: 'Our Football Tech & Business Report 2026 is out now.',
-	cta: 'Access on Atlas →',
+	cta: 'Access Now →',
 	href: '/reports/ftabr26',
 };
 
@@ -49,13 +49,18 @@ export function AnnouncementBar({ placement = 'root' }: { placement?: 'root' | '
 	const ref = useRef<HTMLDivElement>(null);
 	const pathname = usePathname();
 	const [closed, setClosed] = useState(false);
-	// The admin editor's preview frame shows the report alone.
-	const hidden = !announcement || closed || pathname?.startsWith('/report-preview');
+	// The admin editor's preview frame shows the report alone, and the page
+	// the announcement points to doesn't advertise itself.
+	const onTarget = !!announcement && (pathname === announcement.href || !!pathname?.startsWith(`${announcement.href}/`));
+	const hidden = !announcement || closed || onTarget || pathname?.startsWith('/report-preview');
 
 	useEffect(() => {
 		const el = ref.current;
-		if (placement === 'shell' || !el) return;
+		if (placement === 'shell') return;
 		const root = document.documentElement;
+		// Hidden here (e.g. arrived on the report by client-side navigation):
+		// zero the vars so nothing pinned to the top keeps a gap for it.
+		if (!el) { root.style.setProperty('--announce-h', '0px'); root.style.setProperty('--announce-vis', '0px'); return; }
 		let frame = 0;
 		const sync = () => {
 			frame = 0;

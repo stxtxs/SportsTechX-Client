@@ -96,7 +96,7 @@ export default function BillingPage() {
 			if (body.url) { window.location.assign(body.url); return; }
 			throw new Error('no url');
 		} catch {
-			toast.error("Couldn't open the billing portal. If you don't have an active plan yet, start one first.");
+			toast.error("Couldn't open the billing portal. If you don't have an active solution yet, start one first.");
 			setBusy(null);
 		}
 	};

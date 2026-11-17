@@ -39,6 +39,6 @@ export async function downloadReport(slug: string, versionId?: string): Promise<
 		a.click();
 		a.remove();
 	} catch {
-		toast.error('This report could not be downloaded. It may need a higher plan.');
+		toast.error('This report could not be downloaded. It may need another solution.');
 	}
 }

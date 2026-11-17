@@ -5,9 +5,11 @@ import { X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { hrefOf } from '@/lib/routes';
 import { Button } from '@/components/atlas';
+import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
 import { FLAGS } from './config';
 import { useWalkthroughState } from './use-benchmark';
 import { openWalkthrough } from './walkthrough';
+import { TOUR_ENDING } from './tour-steps';
 import './benchmark.css';
 
 /**
@@ -28,12 +30,13 @@ const TOUR_BANNER = 'walkthrough-2026';
 
 function useAnnouncements(): { list: Announcement[]; dismiss: (id: string) => void } {
 	const { ready, state, dismissBanner } = useWalkthroughState();
+	const { data: profile } = useUserProfile();
 	const list: Announcement[] = [];
 	// Users who skipped, and existing users who never ran it — never on a first login.
 	if (FLAGS.walkthrough && ready && !state.first_login && (state.status === 'skipped' || state.status === 'not_started')) {
 		list.push({
 			id: TOUR_BANNER,
-			text: <><strong>New on Atlas:</strong> a two-minute tour of what’s here, ending with setting up your thesis.</>,
+			text: <><strong>New on Atlas:</strong> a two-minute tour of what’s here, ending with {TOUR_ENDING[getUserType(profile)]}.</>,
 			action: { label: 'Take the tour', onClick: openWalkthrough },
 		});
 	}

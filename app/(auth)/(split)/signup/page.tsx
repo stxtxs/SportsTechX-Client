@@ -35,13 +35,14 @@ export default function SignupPage() {
 	const [fullName, setFullName] = useState('');
 	const [error, setError] = useState('');
 	const [message, setMessage] = useState('');
+	const [exists, setExists] = useState(false);
 	const [loading, setLoading] = useState(false);
 
 	const supabase = getSupabaseBrowser();
 
 	const handleSignup = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setError('');
+		setError(''); setMessage(''); setExists(false);
 		if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
 		if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
 		setLoading(true);
@@ -64,6 +65,9 @@ export default function SignupPage() {
 				},
 			});
 			if (err) { setError(err.message); return; }
+			// Email already registered (and confirmed): Supabase returns no error and sends no email —
+			// just a placeholder user with no identities. Tell them to sign in instead.
+			if (data.user && !data.session && (data.user.identities?.length ?? 0) === 0) { setExists(true); return; }
 			if (data.user && !data.session) {
 				setMessage('Check your email for a confirmation link!');
 			} else if (data.session) {
@@ -94,6 +98,13 @@ export default function SignupPage() {
 				</div>
 
 				{error && <AuthNotice tone="error">{error}</AuthNotice>}
+				{exists && (
+					<AuthNotice tone="error">
+						An account with this email already exists.{' '}
+						<Link href={redirectTo ? `/login?redirectTo=${encodeURIComponent(redirectTo)}` : '/login'}>Log in</Link> instead, or{' '}
+						<Link href="/forgot-password">reset your password</Link> if you’ve forgotten it. If you signed up with Google or LinkedIn, use that button.
+					</AuthNotice>
+				)}
 				{message && <AuthNotice tone="ok">{message}</AuthNotice>}
 
 				<OAuthButtons redirectTo={redirectTo} onError={setError} disabled={loading} />

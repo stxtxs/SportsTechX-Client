@@ -8,6 +8,7 @@ import { getAuthHeaders } from '@/lib/query-client';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
 import { refreshCredits, refreshPaths } from '@/lib/invalidate';
 import { qk } from '@/lib/query-keys';
+import { useIsAdmin } from '@/hooks/use-user-profile';
 
 /**
  * Shared chat mechanics for the streaming agent, used by both the legacy
@@ -101,6 +102,28 @@ interface ChatSession {
 	input: string;
 	/** Opening a conversation that isn't cached yet: its id is current, its turns are on the way. */
 	loading: boolean;
+}
+
+/** Admin-only model comparison (the server ignores it for everyone else). null = the default model. */
+const ADMIN_MODELS = [
+	{ value: '', label: 'Sonnet 4.6 (default)' },
+	{ value: 'claude-opus-4-8', label: 'Opus 4.8' },
+] as const;
+let adminModel = '';
+
+/** Lets an admin run the next questions on another model to compare answers. Renders nothing for other users. */
+export function AdminModelPicker({ className }: { className?: string }) {
+	const { isAdmin } = useIsAdmin();
+	const [value, setValue] = useState(adminModel);
+	if (!isAdmin) return null;
+	return (
+		<label className={className} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--fg-muted, inherit)' }}>
+			Model (admin)
+			<select value={value} onChange={(e) => { adminModel = e.target.value; setValue(e.target.value); }} style={{ fontSize: 11 }} aria-label="Chat model (admin comparison)">
+				{ADMIN_MODELS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+			</select>
+		</label>
+	);
 }
 
 const EMPTY: Omit<ChatSession, 'input'> = { thread: [], withGreeting: true, conversationId: null, streaming: false, stage: '', loading: false };
@@ -288,7 +311,7 @@ export function useChat({ greeting, actionFromTool, pageContext, onClientAction,
 			const res = await fetch('/api/chat', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', ...auth },
-				body: JSON.stringify({ conversation_id: conversationId, message, page: pageContext() }),
+				body: JSON.stringify({ conversation_id: conversationId, message, page: pageContext(), ...(adminModel ? { model: adminModel } : {}) }),
 				credentials: 'include',
 				signal: ac.signal,
 			});

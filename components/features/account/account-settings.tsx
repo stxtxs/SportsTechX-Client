@@ -10,7 +10,7 @@ import { useLogout } from '@/hooks/use-logout';
 import { apiRequest } from '@/lib/query-client';
 import { qk } from '@/lib/query-keys';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
-import { Screen, PageHead, Card, ReadOnly, Button } from '@/components/atlas';
+import { Screen, Card, ReadOnly, Button } from '@/components/atlas';
 import { PasswordField } from '@/components/auth/auth-shell';
 import { VerifyButton } from '@/components/features/verify/verify-cta';
 
@@ -58,7 +58,7 @@ const NOTIFICATIONS: { key: NotificationKey; label: string; sub: string }[] = [
 	{ key: 'notification_newsletter', label: 'Newsletter and digests', sub: 'Saved-search digests and the SportsTechX newsletter.' },
 ];
 
-export function AccountSettings({ sub, extra }: { sub?: string; /** Product-specific cards before Log out (e.g. Explore's product access). */ extra?: React.ReactNode }) {
+export function AccountSettings({ extra }: { /** @deprecated The Account header has no byline. */ sub?: string; /** Product-specific cards before Log out (e.g. Explore's product access). */ extra?: React.ReactNode }) {
 	const { data: profile } = useUserProfile();
 	const [busy, setBusy] = useState(false);
 	const { logout, signingOut } = useLogout();
@@ -181,7 +181,6 @@ export function AccountSettings({ sub, extra }: { sub?: string; /** Product-spec
 
 	return (
 		<Screen>
-			<PageHead title="Account" sub={sub} />
 			<AccountTabs />
 
 			<div style={{ display: 'grid', gap: 18 }}>
@@ -196,7 +195,7 @@ export function AccountSettings({ sub, extra }: { sub?: string; /** Product-spec
 						</div>
 						<div style={{ minWidth: 0 }}>
 							<div style={{ fontSize: 15, fontFamily: 'var(--a-font)', fontWeight: 700 }}>{name || '—'}</div>
-							<div style={{ fontFamily: 'var(--a-mono)', fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--a-muted)', marginTop: 4 }}>{profile?.account_type === 'founder' ? 'Founder' : profile?.account_type === 'investor' ? 'Investor' : profile?.account_type ?? ''}{profile?.company_name ? `, ${profile.company_name}` : ''}</div>
+							<div style={{ fontFamily: 'var(--a-mono)', fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--a-muted)', marginTop: 4 }}>{roleLine(profile?.account_type, profile?.company_name)}</div>
 							<div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
 								<input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" style={{ display: 'none' }}
 									onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadAvatar(f); e.target.value = ''; }} />
@@ -294,4 +293,15 @@ function Toggle({ label, sub, on, set }: { label: string; sub?: string; on: bool
 			<span style={{ position: 'absolute', top: 2.5, left: on ? 19.5 : 2.5, width: 16, height: 16, borderRadius: '50%', background: on ? 'var(--a-primary-ink)' : 'var(--a-field)', boxShadow: '0 1px 2px rgba(0,0,0,0.18)', transition: 'left 0.15s, background 0.15s' }} />
 		</button>
 	</div>;
+}
+
+/**
+ * "Founder, Acme" under the profile name. The role comes from `account_type`,
+ * which is empty on some profiles; the line then read ", SPORTSTECHX GMBH".
+ * Shown only when both parts exist (handover v1 C4).
+ */
+function roleLine(accountType: string | null | undefined, company: string | null | undefined): string {
+	const role = accountType === 'founder' ? 'Founder' : accountType === 'investor' ? 'Investor' : (accountType ?? '').trim();
+	const co = (company ?? '').trim();
+	return role && co ? `${role}, ${co}` : '';
 }

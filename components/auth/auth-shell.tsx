@@ -6,6 +6,7 @@ import { Eye, EyeOff, Loader2, Moon, Sun } from 'lucide-react';
 import { AtlasLogo } from '@/components/atlas';
 import type { ReactNode } from 'react';
 import './auth.css';
+import { sweepTheme } from '@/lib/theme-sweep';
 
 /**
  * The split frame for login and signup: the left panel, then the page.
@@ -146,7 +147,7 @@ export function AuthThemeToggle() {
 			type="button"
 			className="auth-theme"
 			aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
-			onClick={() => setTheme(isDark ? 'light' : 'dark')}
+			onClick={(e) => { const next = isDark ? 'light' : 'dark'; sweepTheme(e.currentTarget, () => setTheme(next)); }}
 		>
 			{isDark ? <Sun size={15} /> : <Moon size={15} />}
 		</button>

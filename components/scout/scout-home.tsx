@@ -1,17 +1,17 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import useSWR from 'swr';
 import { BadgeCheck, Bookmark, CalendarDays, Sparkles, Target } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { AgentComposer, FeedCard, H1, Loading, SectionHead } from '@/components/atlas';
-import { greetingName, useUserProfile } from '@/hooks/use-user-profile';
+import { FeedCard, Loading, SectionHead } from '@/components/atlas';
 import { qk } from '@/lib/query-keys';
 import { SETUP_CARD_WIZARD, openRaiseSetup, openScoutThesis } from '@/lib/setup-events';
 import { hrefOf } from '@/lib/routes';
-import { listText, thesisTags, useThesis } from './use-thesis';
+import { PinnedFeedCards } from '@/components/features/benchmark/pinned-reports';
+import { thesisTags, useThesis } from './use-thesis';
+import { HomeHero } from '@/components/features/home/home-hero';
+import { setupDone, thesisPct } from '@/lib/profile-completion';
+import { currentNames } from '@/lib/atlas-copy';
 
 /**
  * Scout Home, from `GET /api/scout/home`.
@@ -56,22 +56,8 @@ const CARD_ICON: Record<string, LucideIcon> = {
 };
 
 export function ScoutHome() {
-	const { data: profile } = useUserProfile();
 	const [thesis] = useThesis();
 	const { data, isLoading } = useSWR<ScoutHomeData>(qk.scout.home());
-	const [q, setQ] = useState('');
-	const router = useRouter();
-	// Same hand-off as the founder's home (raise-home.tsx): the composer seeds the
-	// full chat page via ?q=. Scout now reaches the same agent, gated to the paid
-	// tiers server-side, so this is no longer a placeholder.
-	const goChat = (text: string) => {
-		const t = text.trim();
-		if (t) router.push(`${hrefOf('chat')}?q=${encodeURIComponent(t)}`);
-	};
-
-	const first = greetingName(profile);
-	const hour = new Date().getHours();
-	const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 	const month = new Date(new Date().getFullYear(), new Date().getMonth() - 1)
 		.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 	const tags = thesisTags(thesis);
@@ -80,50 +66,35 @@ export function ScoutHome() {
 
 	return (
 		<div className="scout-home">
-			<section className="scout-home__hero">
-				<H1>{first ? `${greeting}, ${first}` : `${greeting}.`}</H1>
-				<p className="scout-home__sub">
-					Here&rsquo;s what has changed across {listText(thesis.sectors) || 'sports tech'} since your last visit.
-				</p>
-				{data?.thesis_set && tags.length > 0 && (
-					<div className="scout-home__thesis">
-						<span className="atlas-eyebrow">Tuned to your thesis</span>
-						<div className="scout-tags">{tags.map((t) => <span key={t} className="scout-tag">{t}</span>)}</div>
-						<Link href={hrefOf('thesis')} className="scout-link">Edit thesis</Link>
-					</div>
-				)}
-				<div className="scout-home__composer">
-					<AgentComposer
-						value={q}
-						onChange={setQ}
-						onSubmit={() => goChat(q)}
-						placeholder="Ask Atlas about companies, deals, your thesis…"
-						// Server-supplied, and written against the real thesis.
-						suggestions={data?.prompts ?? []}
-						onSuggestion={goChat}
-					/>
+			<HomeHero tier="scout" below={data?.thesis_set && tags.length > 0 ? (
+				<div className="scout-home__thesis">
+					<span className="atlas-eyebrow">Tuned to your thesis</span>
+					<div className="scout-tags">{tags.map((t) => <span key={t} className="scout-tag">{t}</span>)}</div>
 				</div>
-			</section>
-
+			) : undefined} />
 
 			<section className="scout-home__attn">
-				<SectionHead title="Latest from Atlas" meta="Based on your thesis · since your last visit" />
+				<SectionHead title="Latest from Atlas" meta="Based on your thesis" />
 				<div className="atlas-feed-grid">
+					{/* Pinned reports first, with the pin marker and Unpin (fix list 1.15). */}
+					<PinnedFeedCards />
 					{/* Server-ranked and already capped at three. */}
-					{(data?.attention ?? []).map((c) => (
+					{/* A setup task stops showing at 80% complete (handover v1 §7). */}
+					{(data?.attention ?? []).filter((c) => !(SETUP_CARD_WIZARD[c.id] && setupDone(thesisPct(thesis)))).map((c) => (
 						<FeedCard
 							key={c.id}
 							tag={c.count != null ? `${c.count}` : 'Scout'}
 							icon={CARD_ICON[c.id] ?? Sparkles}
-							title={c.title}
-							body={c.why}
+							title={currentNames(c.title)}
+							body={currentNames(c.why)}
+							// Task cards keep their own action (fix list 1.16).
+							actionLabel={c.cta_label}
 							// Setup cards open the wizard in place; everything else keeps
 							// its server-built link. Keyed on the card's stable `id`, not
 							// on `cta_href` — the hrefs are the thing being retired.
 							{...(SETUP_CARD_WIZARD[c.id]
 								? { onAction: SETUP_CARD_WIZARD[c.id] === 'raise' ? openRaiseSetup : openScoutThesis }
 								: { href: c.cta_href })}
-							actionLabel={c.cta_label}
 						/>
 					))}
 					{/* Two standing entry points the read-model does not emit. */}

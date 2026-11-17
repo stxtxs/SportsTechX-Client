@@ -9,11 +9,13 @@ import { qk } from '@/lib/query-keys';
 import type { PipelineActivity as Activity, PipelineStage, PipelineUpdate } from '@/types/api';
 import { apiRequest } from '@/lib/query-client';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
-import { Button, Eyebrow, Field, Flag, Input, Loading, Logo, SectionHeader, Select, Textarea } from '@/components/atlas';
+import { hrefOf } from '@/lib/routes';
+import { Button, Empty, Eyebrow, Field, Flag, Input, Loading, Logo, SectionHeader, Select, Textarea } from '@/components/atlas';
 import { DatePicker } from '@/components/atlas/ui/date-picker';
 import { isInvestorList, useCompanyWatchlists } from '@/components/features/watchlists/use-company-watchlists';
 import { refreshPipeline } from './save-investor-to-watchlist';
 import './investor-board.css';
+import { fmtAmount, fmtFullDate } from '@/lib/format';
 
 /**
  * One Raise investor watchlist — `listId` 'main' is the Main watchlist (investors
@@ -45,7 +47,7 @@ const FILTERS: [string, string][] = [['', 'All'], ['overdue', 'Overdue next step
 const PAD_X = 'clamp(16px, 4vw, 56px)';
 const PAD_TOP = 'clamp(24px, 4vw, 57px)';
 const nameOf = (p: Pipe) => p.investor_name ?? p.custom_name ?? 'Investor';
-const money = (v: string | null) => (v == null ? null : `€${Number(v).toLocaleString()}`);
+const money = (v: string | null) => (v == null ? null : fmtAmount(v, 'EUR'));
 const overdue = (d: string | null) => !!d && new Date(d) < new Date(new Date().toDateString());
 
 export function InvestorBoard({ listId }: { listId: 'main' | string }) {
@@ -98,7 +100,14 @@ export function InvestorBoard({ listId }: { listId: 'main' | string }) {
 				</div>
 			</div>
 
-			{isLoading ? <Loading /> : (
+			{isLoading ? <Loading /> : rows.length === 0 && !filter && listId === 'main' ? (
+				<div style={{ padding: `0 ${PAD_X} 20px` }}>
+					<Empty>
+						Your Investor Watchlist is empty. Add investors and track each one from Target to Closed.{' '}
+						<Button size="sm" href={hrefOf('investors')}>Find investors</Button>
+					</Empty>
+				</div>
+			) : (
 				<div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: `0 ${PAD_X} 20px` }}>
 					<div className="pipe-board">
 						{STAGES.map(([s, label]) => (
@@ -149,7 +158,7 @@ function DetailPanel({ row, onClose, onSaved }: { row: Pipe; onClose: () => void
 	const { data: act } = useSWR<{ data: Activity[] }>(qk.raise.pipelineActivity(row.id));
 	const set = (k: keyof Pipe, v: unknown) => setF((x) => ({ ...x, [k]: v }));
 	const { lists } = useCompanyWatchlists();
-	const listOptions: [string, string][] = [['', 'Main watchlist'], ...lists.filter(isInvestorList).map((l) => [l.id, l.name] as [string, string])];
+	const listOptions: [string, string][] = [['', 'Investor Watchlist'], ...lists.filter(isInvestorList).map((l) => [l.id, l.name] as [string, string])];
 
 	const save = async (patch: PipelineUpdate) => {
 		setBusy(true);
@@ -184,7 +193,7 @@ function DetailPanel({ row, onClose, onSaved }: { row: Pipe; onClose: () => void
 				<div className="atlas-card" style={{ padding: 0, overflow: 'hidden' }}>
 					{(act?.data ?? []).map((a, i) => (
 						<div key={i} style={{ fontSize: 12, color: 'var(--a-muted)', lineHeight: 1.55, display: 'flex', justifyContent: 'space-between', gap: 10, padding: '11px 16px', borderTop: i === 0 ? 'none' : '1px solid var(--a-border)' }}>
-							<span>{describe(a)}</span><span style={{ fontFamily: 'var(--a-mono)', fontSize: 10, letterSpacing: '0.05em', color: 'var(--a-faint)', whiteSpace: 'nowrap' }}>{new Date(a.occurred_at).toLocaleDateString()}</span>
+							<span>{describe(a)}</span><span style={{ fontFamily: 'var(--a-mono)', fontSize: 10, letterSpacing: '0.05em', color: 'var(--a-faint)', whiteSpace: 'nowrap' }}>{fmtFullDate(new Date(a.occurred_at))}</span>
 						</div>
 					))}
 					{(act?.data?.length ?? 0) === 0 && <div style={{ fontSize: 12, color: 'var(--a-faint)', padding: '11px 16px' }}>No activity yet.</div>}

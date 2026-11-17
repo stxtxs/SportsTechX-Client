@@ -124,8 +124,8 @@ export function PdfReportView({ slug, report }: { slug: string; report: ReportDe
 		body = (
 			<div className="pdfv-msg">
 				<h2>This report is part of a paid plan</h2>
-				<p>Upgrade to read {report.title}.</p>
-				<div className="pdfv-msg-actions"><Link className="atlas-btn atlas-btn--primary" href="/billing">See plans</Link><Link className="atlas-btn atlas-btn--ghost" href="/reports">Back to reports</Link></div>
+				<p>{report.title}: available with Raise or Scout.</p>
+				<div className="pdfv-msg-actions"><Link className="atlas-btn atlas-btn--primary" href="/solutions">See solutions</Link><Link className="atlas-btn atlas-btn--ghost" href="/reports">Back to reports</Link></div>
 			</div>
 		);
 	} else if (versions.error || file.error) {

@@ -10,11 +10,14 @@ import { useSectorTierData, useCountryOptions, useSportOptions, useLocationFacet
 import { useFeatureAccess } from '@/contexts/feature-access-context';
 
 import { BUSINESS_MODELS, MONTHS, SINCE_YEARS, canonicalCountry } from '@/lib/catalog-options';
-import { Empty, FilterBar, Loading, Logo, Flag, Pager, Stat, type FilterDef, lockedFiltersNote, BAR_ACCENT } from '@/components/atlas';
-import { fmtUsd, fmtCount, place } from '@/components/features/market/format';
+import { Empty, FilterBar, Loading, Logo, Flag, Pager, Stat, type FilterDef, lockedFiltersNote } from '@/components/atlas';
+import { fmtUsd, fmtCount } from '@/components/features/market/format';
 import { companyHref } from '@/lib/routes';
 import { MaDealPanel } from '@/components/features/market/ma-deal-panel';
 import { useUrlSync, useUrlReader, useUrlModal, isUuid } from '@/hooks/use-url-state';
+import { fmtMonth } from '@/lib/format';
+import './market.css';
+import { yearOf } from '@/lib/format';
 
 /**
  * M&A — a tabulated list of acquisitions (GET /api/acquisitions), newest first.
@@ -74,8 +77,7 @@ const TYPE_LABEL = new Map(TYPE_OPTIONS);
 const VALUE_MIN: [string, string][] = [['10000000', '$10M+'], ['50000000', '$50M+'], ['100000000', '$100M+'], ['500000000', '$500M+'], ['1000000000', '$1B+']];
 const VALUE_MAX: [string, string][] = [['10000000', 'Up to $10M'], ['50000000', 'Up to $50M'], ['100000000', 'Up to $100M'], ['500000000', 'Up to $500M'], ['1000000000', 'Up to $1B']];
 const SORTS: [string, string][] = [['-acquisition_date', 'Newest'], ['-amount_usd', 'Largest value'], ['acquiree_name', 'Company A–Z']];
-const fmtMonth = (d?: string | null) => (d ? new Date(d).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : '—');
-const fmtValue = (n: MaDeal['amount_usd']) => (n == null || Number(n) === 0 ? 'Undisclosed' : fmtUsd(Number(n)));
+const fmtValue = (n: MaDeal['amount_usd'], date?: string | null) => (n == null || Number(n) === 0 ? 'Undisclosed' : fmtUsd(Number(n), yearOf(date)));
 
 /**
  * The filters one side of a deal carries — the acquired company and the
@@ -218,21 +220,25 @@ export function MaDeals() {
 				sort={{ value: sort, options: SORTS, onChange: (v) => { setSort(v); reset(); } }}
 				canClear={anyFilter}
 				onClear={() => { setQ(''); setType(''); setTarget(NO_SIDE); setBuyer(NO_SIDE); setYear(''); setMonth(''); setValueMin(''); setValueMax(''); setDisclosed(false); setSort('-acquisition_date'); reset(); }}
-				count={`${total.toLocaleString()} deal${total === 1 ? '' : 's'}`}
-				actions={<ExportButton entity="acquisitions" search={dq} params={params} />}
 			/>
-			<div style={{ borderTop: '1px solid var(--a-border)', margin: '6px 0 30px' }} />
 
 			{(res.isLoading || !filtersReady) && rows.length === 0 ? <Loading />
-				: rows.length === 0 ? <Empty>No acquisitions match your filters.</Empty>
+				: rows.length === 0 ? <Empty>No results for these filters. Remove one, or clear them all.</Empty>
 				: (
-				<div className="atlas-table" role="table">
+				// The master table (handover v1 A6): the Companies list's card with
+				// the count and Export on top, plain amounts, month-only dates.
+				<div className="atlas-card atlas-chart-card" style={{ marginTop: 10 }}>
+				<div className="atlas-dt__top">
+					<span>{total.toLocaleString()} M&amp;A deal{total === 1 ? '' : 's'}</span>
+					<ExportButton entity="acquisitions" search={dq} params={params} />
+				</div>
+				<div className="atlas-table mkt-table" role="table">
 					<div className="atlas-table__head">
 						<span className="atlas-table__name">Company</span>
 						<span className="atlas-table__col hide-sm" style={{ width: 150 }}>Sector</span>
 						<span className="atlas-table__col hide-sm" style={{ width: 150 }}>Location</span>
 						<span className="atlas-table__col hide-sm" style={{ width: 200 }}>Acquirer</span>
-						<span className="atlas-table__col hide-sm" style={{ width: 90 }}>Announced</span>
+						<span className="atlas-table__col hide-sm" style={{ width: 90 }}>Date</span>
 						<span className="atlas-table__col" style={{ width: 100, textAlign: 'right' }}>Value</span>
 					</div>
 					{rows.map((d) => {
@@ -247,15 +253,15 @@ export function MaDeals() {
 									<Logo co={{ name, ...partyLogo(d, 'acquiree') }} size={28} radius={5} />
 									<div className="atlas-table__name-main">
 										{d.acquiree_slug
-											? <Link href={companyHref(d.acquiree_slug)} className="atlas-ellipsis" style={{ fontWeight: 600 }}>{name}</Link>
+											? <Link href={companyHref(d.acquiree_slug)} className="atlas-ellipsis" style={{ fontWeight: 600, minWidth: 0 }}>{name}</Link>
 											: <div className="atlas-ellipsis" style={{ fontWeight: 600 }}>{name}</div>}
 										{d.acquisition_type && <div style={{ fontSize: 11, color: 'var(--a-muted)' }} className="atlas-ellipsis">{TYPE_LABEL.get(d.acquisition_type) ?? d.acquisition_type}</div>}
 									</div>
 								</div>
-								<span className="atlas-table__col hide-sm atlas-ellipsis" style={{ width: 150 }}>{d.primary_sector ?? '—'}</span>
+								<span className="atlas-table__col hide-sm atlas-dt__clip" style={{ width: 150 }} title={d.primary_sector ?? undefined}>{d.primary_sector ?? '—'}</span>
 								<span className="atlas-table__col hide-sm" style={{ width: 150, display: 'flex', alignItems: 'center', gap: 6 }}>
 									{d.hq_country || d.hq_city
-										? <>{d.hq_country && <Flag cc={d.hq_country} size={11} />}<span className="atlas-ellipsis">{place(d.hq_city, d.hq_country ? canonicalCountry(d.hq_country) : null)}</span></>
+										? <>{d.hq_country && <span className="mkt-flag"><Flag cc={d.hq_country} size={13} /></span>}<span className="atlas-ellipsis">{d.hq_city || (d.hq_country ? canonicalCountry(d.hq_country) : '')}</span></>
 										: '—'}
 								</span>
 								<span className="atlas-table__col hide-sm" style={{ width: 200, display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
@@ -267,10 +273,11 @@ export function MaDeals() {
 									</> : '—'}
 								</span>
 								<span className="atlas-table__col hide-sm" style={{ width: 90 }}>{fmtMonth(d.acquisition_date)}</span>
-								<span className="atlas-table__col" style={{ width: 100, textAlign: 'right', fontWeight: 600 }}>{fmtValue(d.amount_usd)}</span>
+								{(() => { const v = fmtValue(d.amount_usd, d.acquisition_date); const known = v !== 'Undisclosed'; return <span className="atlas-table__col" style={{ width: 100, textAlign: 'right', fontWeight: known ? 600 : 400, color: known ? 'var(--a-ink)' : undefined }}>{v}</span>; })()}
 							</div>
 						);
 					})}
+				</div>
 				</div>
 				)}
 
@@ -317,7 +324,7 @@ function MaStatsStrip() {
 					style={{ display: 'block', width: '100%', height: 30 }}>
 					{quarters.map((x, i) => {
 						const h = Math.max(x.n ? 2 : 0.5, (x.n / max) * 30);
-						return <rect key={x.label} x={i * 10 + 1.5} y={30 - h} width={7} height={h} rx={1} fill={BAR_ACCENT} opacity={i === quarters.length - 1 ? 0.5 : 1}><title>{`${x.label}: ${x.n} deal${x.n === 1 ? '' : 's'}${i === quarters.length - 1 ? ' (so far)' : ''}`}</title></rect>;
+						return <rect key={x.label} x={i * 10 + 1.5} y={30 - h} width={7} height={h} rx={1} fill="var(--atlas-product, #F32163)" opacity={i === quarters.length - 1 ? 0.5 : 1}><title>{`${x.label}: ${x.n} deal${x.n === 1 ? '' : 's'}${i === quarters.length - 1 ? ' (so far)' : ''}`}</title></rect>;
 					})}
 				</svg>
 			} />

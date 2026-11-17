@@ -10,6 +10,27 @@
   color: var(--a-ink);
 }
 
+/* One colour per solution (handover v1 §4 Colour): every accent glow, chip
+   and hover inside the app takes the solution colour (--atlas-product, set on
+   this element), so Scout never shows Explore pink or a purple chip. Sector
+   colours are separate tokens and are untouched.
+   The selector has to outrank the theme blocks in tokens.css (`.atlas` and
+   `[data-theme="dark"] .atlas`, which redefine these tokens): with a bare
+   `.atlas-shell` the dark theme won and Scout rows still hovered blue. */
+.atlas.atlas-shell,
+[data-theme="dark"] .atlas.atlas-shell {
+  --a-glow-product: linear-gradient(172deg, transparent 45%, color-mix(in srgb, var(--atlas-product) 20%, transparent) 100%);
+  --a-glow-blue: var(--a-glow-product);
+  --a-glow-pink: var(--a-glow-product);
+  --a-accent-soft: color-mix(in srgb, var(--atlas-product) 10%, transparent);
+  --a-accent-line: color-mix(in srgb, var(--atlas-product) 38%, transparent);
+  /* The old "navy" accent (list hovers, links, drag targets, navy badges) was a
+     fixed blue, so Scout and Explore rows hovered blue (fix list 1.11). Inside
+     the app it now follows the solution colour; text uses are mixed with ink
+     so a light colour (Scout teal) stays readable. */
+  --a-navy: color-mix(in srgb, var(--atlas-product) 72%, var(--a-ink));
+  --a-navy-soft: color-mix(in srgb, var(--atlas-product) 11%, transparent);
+}
 .atlas-main { min-width: 0; display: flex; flex-direction: column; height: 100dvh; }
 /* `flex: 1` + `min-height: 0`, never `height: 100dvh`. The fixed height was fine
    while this was the only row in the column, but the navbar now sits above it —
@@ -53,7 +74,7 @@
   padding: 0 0 0 16px; min-height: 30px; flex-shrink: 0;
   /* Figma specifies 55px here. At the real wordmark size that reads as a hole
      between the brand and the first item, so it is tightened. */
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 .atlas-rail-close { display: none; }
 .atlas-brand { display: inline-flex; text-decoration: none; color: var(--a-ink); }
@@ -116,7 +137,9 @@
 .atlas-nav-section { display: flex; flex-direction: column; }
 .atlas-nav-section__head {
   display: flex; align-items: center; justify-content: space-between; width: 100%;
-  height: 24px; padding: 0 5px; margin: 25px 0 5px;
+  /* 14px above, not 25: with three groups open the Raise panel has to fit an
+     800px-tall window without scrolling (handover v1 §2). */
+  height: 24px; padding: 0 5px; margin: 14px 0 4px;
   background: none; border: none; cursor: pointer; text-align: left;
   font-family: var(--a-font); font-size: 11px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase;
   color: color-mix(in srgb, var(--a-ink) 45%, transparent);
@@ -126,13 +149,22 @@
 .atlas-nav-caret { display: inline-flex; color: currentColor; transition: transform 0.15s; }
 /* Open points up, matching the mockup's `transform: isOpen ? rotate(180deg)`. */
 .atlas-nav-section:not(.is-closed) .atlas-nav-caret { transform: rotate(180deg); }
-.atlas-nav-section__items { display: flex; flex-direction: column; }
+.atlas-nav-section__items {
+  display: grid; grid-template-rows: 1fr;
+  transition: grid-template-rows 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* The group slides open and shut (handover v1 §2): the row animates between
+   0fr and 1fr while the inner box clips. `display: none` made it pop. */
+.atlas-nav-section__inner { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { .atlas-nav-section__items { transition: none; } }
 /* Sub-items are one size down from a top-level row, per `navStyle(active, sub)`. */
-.atlas-nav-section__items .atlas-nav-item { height: 28px; padding: 2px 5px; margin-bottom: 4px; }
-.atlas-nav-section.is-closed .atlas-nav-section__items { display: none; }
+.atlas-nav-section__items .atlas-nav-item { height: 28px; padding: 2px 5px; margin-bottom: 2px; }
+.atlas-nav-section.is-closed .atlas-nav-section__items { grid-template-rows: 0fr; }
 .atlas-nav-item.is-soon { cursor: default; color: var(--a-faint); }
 .atlas-nav-item.is-soon:hover { background: none; color: var(--a-faint); }
 .atlas-nav-item .atlas-soon { margin-left: auto; }
+.atlas-nav-item .atlas-nav-lock { margin-left: auto; margin-right: 2px; }
+.is-collapsed .atlas-nav-lock { display: none; }
 
 /* ── Rail footer: the account ──────────────────────────────────────────────*/
 /* Negative margins pull the rule out to the rail's edges; the padding puts the
@@ -229,7 +261,8 @@
   background: var(--a-border); pointer-events: none; overflow: hidden;
 }
 .is-collapsed .atlas-nav-section__head > * { display: none; }
-.is-collapsed .atlas-nav-section.is-closed .atlas-nav-section__items { display: flex; }
+.is-collapsed .atlas-nav-section.is-closed .atlas-nav-section__items { grid-template-rows: 1fr; }
+.is-collapsed .atlas-nav-section__inner { align-items: center; }
 .is-collapsed .atlas-nav-item.is-soon, .is-collapsed .atlas-soon { display: none; }
 .is-collapsed .atlas-rail-account { padding: 10px 0 0; margin-left: 0; margin-right: 0; }
 .is-collapsed .atlas-acct { justify-content: center; gap: 0; }
@@ -296,7 +329,8 @@
     background: none; pointer-events: auto;
   }
   .is-collapsed .atlas-nav-section__head > * { display: block; }
-  .is-collapsed .atlas-nav-section.is-closed .atlas-nav-section__items { display: none; }
+  .is-collapsed .atlas-nav-section.is-closed .atlas-nav-section__items { grid-template-rows: 0fr; }
+  .is-collapsed .atlas-nav-section__inner { align-items: stretch; }
   .is-collapsed .atlas-rail-account { padding: 10px 19px 0 17px; margin-left: -17px; margin-right: -19px; }
   .is-collapsed .atlas-acct { justify-content: flex-start; gap: 6px; }
   .is-collapsed .atlas-acct__who { display: flex; flex: 1; }

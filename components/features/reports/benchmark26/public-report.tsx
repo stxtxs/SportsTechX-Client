@@ -13,14 +13,13 @@
    Vite project (asset imports and `?url`).
 
    Content is text-identical to the published PDF
-   (assets/sports-tech-vc-deal-sourcing-benchmark-2026.pdf); do not hand-edit
+   (assets/sports tech-vc-deal-sourcing-benchmark-2026.pdf); do not hand-edit
    the copy in data/public-report.json.
    --------------------------------------------------------------------------- */
 
 import { Fragment, type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useReveal } from "./use-reveal";
-import reportJson from "./data/public-report.json";
 import { BENCHMARK26_PART_ORDER } from "./content-defaults";
 import { ReportNav } from "../report-nav";
 import { DARK as NAV_DARK, LIGHT as NAV_LIGHT } from "../ftabr26/lib/report-theme";
@@ -83,9 +82,6 @@ export interface PublicReportData {
   partOrder?: string[];
 }
 
-/* JSON imports widen string literals (chart `type`) to string, so the bundled
-   data is asserted to the declared shape here, once. */
-const REPORT = reportJson as unknown as PublicReportData;
 
 /* ----------------------------------------------------------- theme
 
@@ -413,7 +409,7 @@ function ChartFor({ chart, meta }: { chart: Chart; meta: PublicReportData["meta"
 
 /* -------------------------------------------------------------- page */
 
-export default function PublicReport({ data = REPORT }: { data?: PublicReportData }) {
+export default function PublicReport({ data }: { data: PublicReportData }) {
   const { meta, intro, sections, closing, methodology } = data;
   /* Page order: the saved one, then anything it doesn't name, in the published order. */
   const orderKey = JSON.stringify(data.partOrder ?? null);

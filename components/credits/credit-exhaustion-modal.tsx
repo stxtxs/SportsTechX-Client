@@ -64,8 +64,8 @@ export function CreditExhaustionHost() {
 				? `This needs ${detail.required.toLocaleString()} ${label}, but you have ${available.toLocaleString()} left. `
 				: `You don’t have enough ${label} for this. `}
 			{isExport
-				? 'Each exported row costs 1 credit. Top up with a credit pack or upgrade your plan for a larger monthly allowance.'
-				: 'Top up with a credit pack or upgrade your plan for a larger monthly allowance.'}
+				? 'Each exported row costs 1 credit. Top up with a credit pack, or switch to Raise or Scout for a larger monthly allowance.'
+				: 'Top up with a credit pack, or switch to Raise or Scout for a larger monthly allowance.'}
 		</Modal>
 	);
 }

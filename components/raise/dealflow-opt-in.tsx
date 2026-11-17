@@ -9,6 +9,7 @@ import { apiRequest } from '@/lib/query-client';
 import { refreshRaise } from '@/lib/invalidate';
 import { qk } from '@/lib/query-keys';
 import { openRaiseSetup } from '@/lib/setup-events';
+import { fmtFullDate } from '@/lib/format';
 
 /**
  * Share your round with the Investor Circle.
@@ -120,7 +121,7 @@ export function DealflowOptIn() {
 			{(live || pending) && (
 				<p style={{ ...BODY, fontSize: 12, color: 'var(--a-faint)' }}>
 					Withdrawing takes the listing down straight away.
-					{data.submitted_at && ` Shared on ${new Date(data.submitted_at).toLocaleDateString()}.`}
+					{data.submitted_at && ` Shared on ${fmtFullDate(new Date(data.submitted_at))}.`}
 				</p>
 			)}
 		</div>

@@ -26,4 +26,16 @@ export interface Resource {
 	onView?: () => void;
 	/** Present only when the item can be downloaded. */
 	onDownload?: () => void;
+	/** `locked`: this viewer cannot open it yet (lock badge). `yours`: made for this viewer. */
+	badge?: 'locked' | 'yours';
+	/** Overrides the hero's "Latest report" label when this item is first. */
+	featuredLabel?: string;
+	/** Present when the item was unpinned from Home and can be pinned back. */
+	onPin?: () => void;
+	/** Overrides the library's "View" label (a locked report says "Access"). */
+	actionLabel?: string;
+	/** Shown on hover over the card (a locked report: what opens it). */
+	hint?: string;
+	/** Shown side by side with this item at the top, instead of one hero (the summary and its locked full report). */
+	pairWith?: string;
 }

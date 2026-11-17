@@ -29,7 +29,7 @@ export default function Page() {
 				<ul style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--a-muted)', margin: '0 0 18px', paddingLeft: 18 }}>
 					<li>Correct your own description, funding history and team</li>
 					<li>Show a verified badge on your profile</li>
-					<li>Available on every plan, including the free one</li>
+					<li>Available with every solution, including the free one</li>
 				</ul>
 				<VerifyButton label="Start verification" />
 			</Card>

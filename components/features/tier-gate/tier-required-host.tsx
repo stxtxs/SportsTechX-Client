@@ -6,10 +6,10 @@ import { Lock } from 'lucide-react';
 import { Button } from '@/components/atlas';
 import { Modal } from '@/components/atlas/patterns/modal';
 import { upgradeTarget, type Tier } from '@/lib/access';
-import { hrefOf } from '@/lib/routes';
+import { PLANS_PATH } from '@/lib/routes';
 import { TIER_EVENT, type TierRequiredDetail } from '@/lib/tier-events';
 import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
-import { PRODUCT } from './tier-gate';
+import { PRODUCT, lockedLine } from './tier-gate';
 
 /**
  * Global "your plan doesn't include this" modal. Mounted once
@@ -49,19 +49,17 @@ export function TierRequiredHost() {
 			open={open}
 			onOpenChange={setOpen}
 			icon={<Lock size={18} />}
-			title={product ? `This is part of ${product.name}` : 'This needs a different plan'}
+			title={sell && sell !== 'explore' ? lockedLine(sell, Array.isArray(detail.requiredTiers) && detail.requiredTiers.length > 1) : 'Available with Raise or Scout.'}
 			footer={
 				<>
 					<Button variant="ghost" onClick={() => setOpen(false)}>Not now</Button>
-					<Button onClick={() => { setOpen(false); router.push(hrefOf('billing')); }}>
-						{product ? `Get ${product.name}` : 'See plans'}
-					</Button>
+					<Button onClick={() => { setOpen(false); router.push(PLANS_PATH); }}>See solutions</Button>
 				</>
 			}
 		>
 			{/* Falls back to the server's own sentence when the tier can't be
 			    named — better a plain message than a confidently wrong pitch. */}
-			{product?.blurb ?? detail.message ?? 'Your current plan does not include this.'}
+			{product?.blurb ?? detail.message ?? 'Your current solution does not include this.'}
 		</Modal>
 	);
 }

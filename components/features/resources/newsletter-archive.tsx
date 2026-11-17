@@ -6,6 +6,7 @@ import { qk } from '@/lib/query-keys';
 import type { NewsletterArticle } from '@/types/api';
 import { ResourceLibrary } from './resource-library';
 import type { Resource } from './resource-contract';
+import { NEWSLETTER_INTRO } from '@/lib/atlas-copy';
 
 /**
  * Newsletter — latest edition + archive. Live against the Beehiiv feed via
@@ -43,12 +44,11 @@ export function NewsletterArchive() {
 			items={items}
 			kind="edition"
 			isLoading={res.isLoading}
-			intro="The SportsTechX briefing: funding, deals and the developments that matter across sports tech, published fortnightly."
+			intro={NEWSLETTER_INTRO}
 			featuredLabel="Latest edition"
 			libraryTitle="Edition archive"
 			noun="edition"
-			viewLabel="View edition"
-			aside={`Published fortnightly · ${items.length} edition${items.length === 1 ? '' : 's'}`}
+			viewLabel="Open"
 		/>
 	);
 }

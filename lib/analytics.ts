@@ -109,4 +109,14 @@ export const Events = {
 	fitBoxViewed: 'fit_box_viewed',
 	fitBoxClicked: 'fit_box_clicked',
 	fitBoxDismissed: 'fit_box_dismissed',
+	// VC Benchmark 2026. `report_opened` carries `entry` (r1 | r2 | r3). The
+	// server-side funnel events (invite_sent, trial_started, …) are the API's.
+	reportLockedView: 'report_locked_view',
+	upgradeClicked: 'upgrade_clicked',
+	pinRemoved: 'pin_removed',
+	pinAdded: 'pin_added',
+	walkthroughStarted: 'walkthrough_started',
+	walkthroughCompleted: 'walkthrough_completed',
+	walkthroughSkipped: 'walkthrough_skipped',
+	thesisConfirmed: 'thesis_confirmed',
 } as const;

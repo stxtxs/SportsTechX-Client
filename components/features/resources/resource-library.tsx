@@ -1,11 +1,14 @@
 'use client';
 
 import { useMemo, useState, type ReactNode } from 'react';
-import { ArrowUpRight, Download, FileText, Newspaper } from 'lucide-react';
-import { Action, Empty, FeaturedPost, FilterBar, Loading, PostCard, type FilterDef } from '@/components/atlas';
+import { ArrowUpRight, Download, FileText, Lock, Newspaper, Pin } from 'lucide-react';
+import { PLANS_PATH } from '@/lib/routes';
+import { Action, Badge, Empty, FeaturedPost, FilterBar, Loading, PostCard, type FilterDef } from '@/components/atlas';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import type { Resource } from './resource-contract';
 import './resources.css';
+import { fmtFullDate } from '@/lib/format';
+import { LockMark } from '@/components/atlas/patterns/lock-mark';
 
 /**
  * Featured item + filterable library, shared by Reports and Newsletter in every
@@ -17,10 +20,10 @@ import './resources.css';
  * the `'old'` sort is a positional `reverse()`, not a date comparison.
  */
 const SORTS: [string, string][] = [['new', 'Newest'], ['old', 'Oldest'], ['az', 'Title A–Z']];
-const ACCESS: [string, string][] = [['Free', 'Free'], ['Premium', 'Premium']];
+// Filter values stay as stored; the labels never say "Premium" (handover v1 §4 Access).
+const ACCESS: [string, string][] = [['Free', 'Open to all'], ['Premium', 'Raise and Scout']];
 
-export const fmtLongDate = (d?: string | null) =>
-	(d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) : '');
+export const fmtLongDate = (d?: string | null) => fmtFullDate(d, '');
 
 export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitle, noun, viewLabel, isLoading, aside }: {
 	items: Resource[];
@@ -41,7 +44,11 @@ export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitl
 	/** Right-hand note on the library heading, e.g. the publishing cadence. */
 	aside?: ReactNode;
 }) {
-	const [featured, ...rest] = items;
+	// A featured item can bring a partner (the summary and its locked full
+	// report): the two sit side by side at the top instead of one hero.
+	const pair = items[0]?.pairWith ? items.find((i) => i.id === items[0].pairWith) : undefined;
+	const featured = items[0];
+	const rest = items.slice(1).filter((i) => i !== pair);
 	const [q, setQ] = useState('');
 	const [tag, setTag] = useState('');
 	const [access, setAccess] = useState('');
@@ -61,17 +68,26 @@ export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitl
 	const MetaIcon = kind === 'report' ? FileText : Newspaper;
 	const actionsFor = (r: Resource) => (
 		<>
-			{r.onView
+			{/* A locked report's action is the lock and the way to unlock it, not
+			    "Open" (handover v1 §4 Access): it leads to the Solutions page. */}
+			{r.badge === 'locked'
+				? <Action icon={<Lock />} href={PLANS_PATH}>See solutions</Action>
+				: r.onView
 				? <Action icon={<ArrowUpRight />} onClick={r.onView}>{viewLabel}</Action>
 				: r.href ? <Action icon={<ArrowUpRight />} href={r.href} external={r.external}>{viewLabel}</Action> : null}
-			{r.onDownload && <Action icon={<Download />} onClick={r.onDownload}>Download {noun}</Action>}
+			{r.badge !== 'locked' && r.onDownload && <Action icon={<Download />} onClick={r.onDownload}>Download {noun}</Action>}
+			{r.onPin && <Action icon={<Pin />} onClick={r.onPin}>Pin to home</Action>}
 		</>
 	);
+	// Lock badge for a report this viewer can't open yet; "Yours" for one made for them.
+	// The one lock marker, with the §5 locked-report label.
+	const badgeFor = (r: Resource) => (r.badge === 'locked'
+		? <><span aria-hidden="true">·</span><span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><LockMark size={11} />Unlocked with Raise and Scout</span></>
+		: r.badge === 'yours' ? <><span aria-hidden="true">·</span><Badge tone="navy">Yours</Badge></> : null);
 	const metaFor = (r: Resource) => (
 		<>
 			<span>{r.dateLabel ?? fmtLongDate(r.date)}</span>
-			<span aria-hidden="true">·</span>
-			<span className={r.access === 'Premium' ? 'is-premium' : undefined}>{r.access}</span>
+			{badgeFor(r)}
 		</>
 	);
 
@@ -82,15 +98,25 @@ export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitl
 		<>
 			{intro && <p className="atlas-res-intro">{intro}</p>}
 
-			<FeaturedPost
-				cover={featured.cover}
-				metaIcon={<MetaIcon size={12} strokeWidth={1.5} aria-hidden="true" />}
-				meta={<>{featuredLabel} · Published {featured.dateLabel ?? fmtLongDate(featured.date)} · <span className={featured.access === 'Premium' ? 'is-premium' : undefined}>{featured.access}</span></>}
-				title={featured.title}
-				desc={featured.desc}
-				tags={featured.tags}
-				actions={actionsFor(featured)}
-			/>
+			{/* Explore: the summary and its locked full report side by side at the
+			    top (both must show — handover v1 §4 Access); otherwise one hero. */}
+			{pair ? (
+				<div className="atlas-post-grid atlas-post-grid--pair">
+					{[featured, pair].map((r) => (
+						<PostCard key={r.id} className="is-paired" cover={r.cover} meta={metaFor(r)} title={r.title} desc={r.desc} tags={r.tags} actions={actionsFor(r)} hint={r.hint} />
+					))}
+				</div>
+			) : (
+				<FeaturedPost
+					cover={featured.cover}
+					metaIcon={<MetaIcon size={12} strokeWidth={1.5} aria-hidden="true" />}
+					meta={<>{featured.featuredLabel ?? featuredLabel} · Published {featured.dateLabel ?? fmtLongDate(featured.date)} {badgeFor(featured)}</>}
+					title={featured.title}
+					desc={featured.desc}
+					tags={featured.tags}
+					actions={actionsFor(featured)}
+				/>
+			)}
 
 			<div className="atlas-res-head">
 				<h2 className="atlas-h2">{libraryTitle}</h2>
@@ -107,7 +133,7 @@ export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitl
 			{rows.length === 0 ? <Empty>No {noun}s match your filters.</Empty> : (
 				<div className="atlas-post-grid">
 					{rows.map((r) => (
-						<PostCard key={r.id} cover={r.cover} meta={metaFor(r)} title={r.title} desc={r.desc} tags={r.tags} actions={actionsFor(r)} />
+						<PostCard key={r.id} cover={r.cover} meta={metaFor(r)} title={r.title} desc={r.desc} tags={r.tags} actions={actionsFor(r)} hint={r.hint} />
 					))}
 				</div>
 			)}

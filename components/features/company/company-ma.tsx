@@ -10,6 +10,8 @@ import { Logo } from '@/components/atlas';
 import { fmtUsd } from '@/components/features/market/format';
 import { MaDealPanel } from '@/components/features/market/ma-deal-panel';
 import { partyLogo, type MaDeal } from '@/components/features/market/ma-deals';
+import { fmtMonth } from '@/lib/format';
+import { yearOf } from '@/lib/format';
 
 /**
  * M&A activity for one company — the hub's M&A Tracker, scoped to deals this
@@ -21,8 +23,7 @@ import { partyLogo, type MaDeal } from '@/components/features/market/ma-deals';
  */
 
 const TYPE_LABEL: Record<string, string> = { acquisition: 'Acquisition', merger: 'Merger', asset_purchase: 'Asset purchase' };
-const fmtMonth = (d?: string | null) => (d ? new Date(d).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : '—');
-const fmtValue = (n: MaDeal['amount_usd']) => (n == null || Number(n) === 0 ? 'Undisclosed' : fmtUsd(Number(n)));
+const fmtValue = (n: MaDeal['amount_usd'], date?: string | null) => (n == null || Number(n) === 0 ? 'Undisclosed' : fmtUsd(Number(n), yearOf(date)));
 
 // Cap matches the hub page size; a single company's deal count sits well under it.
 const LIMIT = 25;
@@ -77,7 +78,7 @@ export function CompanyMa({ companyId }: { companyId: string }) {
 								<ArrowRight size={12} style={{ color: 'var(--a-faint)' }} aria-hidden="true" />
 								{d.acquisition_type ? (TYPE_LABEL[d.acquisition_type] ?? d.acquisition_type) : ''}
 							</span>
-							<span className="atlas-co__amt" role="cell">{fmtValue(d.amount_usd)}</span>
+							<span className="atlas-co__amt" role="cell">{fmtValue(d.amount_usd, d.acquisition_date)}</span>
 							<span role="cell" style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
 								<Logo co={{ name: cpName ?? '—', website: cpWebsite, custom_logo_url: cpLogo }} size={24} radius={5} />
 								{cpSlug

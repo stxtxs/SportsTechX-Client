@@ -10,6 +10,7 @@ import { apiRequest } from '@/lib/query-client';
 import { Card, Tabs, Button, Loading, Empty, Logo, Flag, ComboBarLine } from '@/components/atlas';
 import { companyHref, hrefOf } from '@/lib/routes';
 import { fmtUsdB } from '@/components/features/market/format';
+import { fmtAmount } from '@/lib/format';
 
 /**
  * Market → My market. The founder's OWN market: LLM-estimated TAM/SAM plus
@@ -30,14 +31,17 @@ interface Market {
 	methodology: Methodology | null; competitors: Competitor[] | null; updated_at?: string;
 }
 
-// One decimal, dropping a trailing ".0" so round values stay clean (2.3m / 340m).
-const d1 = (x: number) => x.toFixed(1).replace(/\.0$/, '');
-const eur = (v: string | null) => {
-	if (v == null) return '—';
-	const n = Number(v);
-	return n >= 1e9 ? `EUR ${d1(n / 1e9)}bn` : n >= 1e6 ? `EUR ${d1(n / 1e6)}m` : `EUR ${n.toLocaleString()}`;
+// Atlas amount format in the viewer's currency (fix list 17 Nov, 2.4): TAM/SAM
+// are estimated in euros and funding is in dollars; both show as e.g. "$42.00B".
+const eur = (v: string | null) => (v == null ? '—' : fmtAmount(Number(v), 'EUR'));
+const usd = (n?: number | null) => fmtAmount(n, 'USD');
+/** Competitor funding arrives as a number or a pre-formatted "$1.3bn"; both end in the Atlas format. */
+const competitorFunding = (raw: string): string => {
+	const m = /^\s*([$€])?\s*([\d.,]+)\s*(bn|b|m|k)?\b/i.exec(raw ?? '');
+	if (!m) return raw;
+	const n = Number(m[2]!.replace(/,/g, '')) * ({ bn: 1e9, b: 1e9, m: 1e6, k: 1e3 }[(m[3] ?? '').toLowerCase() as 'bn'] ?? 1);
+	return Number.isFinite(n) && n > 0 ? `${fmtAmount(n, m[1] === '€' ? 'EUR' : 'USD')} raised` : raw;
 };
-const usd = (n?: number | null) => (n == null ? '—' : n >= 1e9 ? `$${d1(n / 1e9)}bn` : n >= 1e6 ? `$${d1(n / 1e6)}m` : n > 0 ? `$${n.toLocaleString()}` : '—');
 
 export function MyMarket() {
 	const [tab, setTab] = useState<'size' | 'competitors'>('size');
@@ -73,7 +77,7 @@ export function MyMarket() {
 	if (isLoading) return <Loading />;
 	if (!data || data.unavailable) return (
 		<Empty>Atlas needs your company category to map your market. Set it under{' '}
-			<Link href={hrefOf('raise-settings')} style={{ color: 'var(--a-navy)' }}>Thesis settings → Category</Link>.</Empty>
+			<Link href={hrefOf('raise-settings')} style={{ color: 'var(--a-navy)' }}>Raise settings</Link>.</Empty>
 	);
 
 	return (
@@ -105,7 +109,7 @@ export function MyMarket() {
 					{data.classification && (
 						<Card glow="blue">
 							<div className="atlas-eyebrow">Your market classification</div>
-							<div style={{ fontSize: 18, fontFamily: 'var(--a-font)', fontWeight: 700, marginTop: 12 }}>{data.classification}</div>
+							<div style={{ fontSize: 18, fontFamily: 'var(--a-font)', fontWeight: 700, marginTop: 12 }}>{data.classification.replace(/\s*(→|->|>)\s*/g, ' › ')}</div>
 						</Card>
 					)}
 					{byYear.length > 0 && (
@@ -168,7 +172,7 @@ export function MyMarket() {
 											{c.hq_country && <div className="atlas-entity-card__meta"><Flag cc={c.hq_country} size={11} />{c.hq_country}</div>}
 										</div>
 									</div>
-									<div className="atlas-entity-card__actions" style={{ fontFamily: 'var(--a-mono)', fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--a-muted)' }}>{c.funding}</div>
+									<div className="atlas-entity-card__actions" style={{ fontFamily: 'var(--a-mono)', fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--a-muted)' }}>{competitorFunding(c.funding)}</div>
 								</Link>
 							))}
 						</div>

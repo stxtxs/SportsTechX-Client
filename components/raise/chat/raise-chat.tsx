@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ArrowUp, ArrowUpRight, X, Download, Plus, History, Maximize2 } from 'lucide-react';
-import { useChat, AI_MD_CSS } from '@/components/chat/chat-core';
+import { useChat, AI_MD_CSS, AdminModelPicker } from '@/components/chat/chat-core';
 import { AtlasMark } from '@/components/atlas/brand/atlas-logo';
 import {
 	chatCopy, founderPageContext, founderActionFromTool, founderRewritePath, scoutRewritePath,
@@ -227,6 +227,7 @@ export function RaiseChat() {
 					<div className="raise-chat-hint">
 						<span><kbd>↵</kbd> send</span>
 						<span><kbd>⇧</kbd><kbd>↵</kbd> new line</span>
+						<AdminModelPicker />
 					</div>
 				</footer>
 			</aside>

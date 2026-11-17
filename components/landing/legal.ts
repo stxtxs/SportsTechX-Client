@@ -507,7 +507,13 @@ export const privacyPolicy: LegalDoc = {
 			level: 3,
 			heading: 'Website Analytics',
 			blocks: [
-				{ kind: 'p', text: 'We use PostHog (hosted in the European Union, Frankfurt) to understand how the platform is used. For visitors who are not signed in, usage is measured without cookies or other storage on your device. Once you sign in, PostHog stores an identifier in a cookie and local storage so we can link your usage to your account, and may record your sessions to help us improve the product; text you type into forms is masked and never recorded.' },
+				{ kind: 'p', text: 'We use PostHog to understand how our website and platform are used and to improve them. We do not use Google Analytics. PostHog is provided by PostHog Inc., 2261 Market St., #4008, San Francisco, CA 94114, USA, and acts as our processor under a data processing agreement pursuant to Art. 28 GDPR. We use PostHog\'s EU Cloud, so analytics data is stored on servers in the European Union (Frankfurt, Germany).' },
+				{ kind: 'p', text: 'Data processed: pages viewed, clicks and other interactions, referring page, approximate location derived from your IP address, browser, device and operating system information, and timestamps. For signed-in users, this data is linked to your account identifier.' },
+				{ kind: 'p', label: 'Visitors who are not signed in:', text: 'Usage is measured without cookies, local storage or any other information stored on or read from your device; the data is held only in your browser\'s memory for the current tab and cannot be used to recognise you on a later visit. The legal basis is our legitimate interest in understanding and improving our website (Art. 6(1)(f) GDPR).' },
+				{ kind: 'p', label: 'Signed-in users:', text: 'Once you sign in, PostHog stores an identifier in a cookie and in local storage so we can link your usage to your account, and records your sessions (session replay) to help us find and fix usability problems. All text you type into form fields is masked and never recorded. Storing and reading this information on your device is based on the consent you give when creating your account (§ 25(1) TDDDG, Art. 6(1)(a) GDPR). You can withdraw this consent at any time with effect for the future by emailing hello@sportstechx.com; withdrawal does not affect the lawfulness of processing before it. Signing out removes the analytics identifier from persistent storage.' },
+				{ kind: 'p', label: 'Retention:', text: 'Session recordings are deleted automatically after 30 days. Analytics events are deleted automatically after 12 months at the latest.' },
+				{ kind: 'p', label: 'Transfers:', text: 'Because PostHog Inc. is based in the USA, access to data from outside the EEA cannot be fully excluded. Any such transfer is safeguarded by the EU Standard Contractual Clauses (Art. 46(2)(c) GDPR). For more information, see PostHog\'s privacy policy at https://posthog.com/privacy.' },
+				{ kind: 'p', text: 'You can also prevent analytics at any time by using a browser extension that blocks tracking scripts; the website remains fully usable.' },
 			],
 		},
 		{
@@ -835,8 +841,10 @@ export const privacyPolicy: LegalDoc = {
 			level: 2,
 			heading: 'Cookies',
 			blocks: [
-				{ kind: 'p', text: 'Our website uses cookies to improve your browsing experience. Cookies are small text files that are stored on your device when you visit a website. You can configure your browser to refuse cookies or to indicate when cookies are being sent.' },
-				{ kind: 'p', text: 'Essential cookies are necessary for the website to function properly, while analytics cookies help us understand how visitors interact with our website.' },
+				{ kind: 'p', text: 'Cookies are small text files stored on your device when you visit a website; local storage works similarly. We use them only as described below.' },
+				{ kind: 'p', label: 'Strictly necessary:', text: 'When you sign in, we store an authentication session (provided by our hosting and database provider, Supabase) so that you stay logged in. This is strictly necessary to provide the service you requested and does not require consent (§ 25(2) no. 2 TDDDG); the related processing is based on Art. 6(1)(b) GDPR. It is removed when you sign out or the session expires.' },
+				{ kind: 'p', label: 'Analytics:', text: 'For signed-in users only, PostHog stores an identifier in a cookie and in local storage (see "Website Analytics" above). Visitors who are not signed in receive no analytics cookies.' },
+				{ kind: 'p', text: 'We do not use advertising or cross-site tracking cookies. You can delete cookies or configure your browser to refuse them at any time; if you block strictly necessary cookies, you will not be able to sign in.' },
 			],
 		},
 		{
@@ -853,9 +861,12 @@ export const privacyPolicy: LegalDoc = {
 						{ text: 'Right to restriction of processing' },
 						{ text: 'Right to data portability' },
 						{ text: 'Right to object to processing' },
-						{ text: 'Right to withdraw consent' },
+						{ text: 'Right to withdraw consent at any time, with effect for the future (Art. 7(3) GDPR)' },
+						{ text: 'Right to lodge a complaint with a supervisory authority (Art. 77 GDPR)' },
 					],
 				},
+				{ kind: 'p', label: 'Right to object (Art. 21 GDPR):', text: 'Where we process your data on the basis of our legitimate interests (Art. 6(1)(f) GDPR), you may object at any time on grounds relating to your particular situation. Where we process your data for direct marketing, you may object at any time without giving reasons.' },
+				{ kind: 'p', text: 'To exercise any of these rights, contact us at hello@sportstechx.com. The supervisory authority responsible for us is the Berlin Commissioner for Data Protection and Freedom of Information (Berliner Beauftragte für Datenschutz und Informationsfreiheit, Alt-Moabit 59-61, 10555 Berlin, www.datenschutz-berlin.de); you may also contact the authority in your EU country of residence or work.' },
 			],
 		},
 		{
@@ -944,7 +955,7 @@ export const privacyPolicy: LegalDoc = {
 			heading: 'Third-Party Services',
 			blocks: [
 				{ kind: 'p', text: 'Our website and services may contain links to third-party websites or services. We are not responsible for the privacy practices of these external sites. We encourage you to read the privacy policies of any third-party sites you visit.' },
-				{ kind: 'p', text: 'We use third-party services including Google Analytics for website analytics, email service providers for newsletter distribution, social media platforms for content sharing, payment processors for fee processing, communication platforms for member community features, and event management platforms for organizing member events.' },
+				{ kind: 'p', text: 'We use third-party services including PostHog for website and product analytics, email service providers for newsletter distribution, social media platforms for content sharing, payment processors for fee processing, communication platforms for member community features, and event management platforms for organizing member events.' },
 				{ kind: 'p', text: 'For benchmark surveys, we use Fillout as our survey platform provider. Fillout processes survey response data on our behalf under a data processing agreement and in compliance with GDPR.' },
 			],
 		},

@@ -59,8 +59,11 @@ export const RELEASE_DATE = process.env.NEXT_PUBLIC_VC_BENCHMARK_RELEASE ?? '202
  */
 export const SURVEY_URL = process.env.NEXT_PUBLIC_VC_BENCHMARK_SURVEY_URL ?? '';
 
-/** Where an upgrade goes: the public pricing page. */
-export const UPGRADE_PATH = '/plans';
+/** Where an upgrade goes: the Solutions page, to take a paid plan (`PLANS_PATH` in lib/routes.ts). */
+export const UPGRADE_PATH = '/solutions';
+
+/** Hover text on the locked full report. */
+export const LOCKED_HINT = 'Available with Raise & Scout';
 
 /**
  * Feature flags. Read at build time (NEXT_PUBLIC_*), so each environment opts in.

@@ -104,7 +104,7 @@ export default function BillingPage() {
 			if (body.url) { window.location.assign(body.url); return; }
 			throw new Error('no url');
 		} catch {
-			toast.error("Couldn't open the billing portal. If you don't have an active plan yet, start one first.");
+			toast.error("Couldn't open the billing portal. If you don't have an active solution yet, start one first.");
 			setBusy(null);
 		}
 	};
@@ -120,21 +120,21 @@ export default function BillingPage() {
 			<Card focus glow="blue" style={{ marginBottom: 24, padding: '24px 26px' }}>
 				<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
 					<div>
-						<div className="atlas-eyebrow">Current plan</div>
+						<div className="atlas-eyebrow">Current solution</div>
 						<div style={{ ...CARD_TITLE, fontSize: 18, marginTop: 12 }}>{p.label}</div>
 						<div style={{ ...PRICE, marginTop: 10 }}>{p.price}</div>
 						{sub.data?.subscription_status && (
 							<div style={{ marginTop: 14 }}><Badge tone={cancelling ? 'neutral' : sub.data.subscription_status === 'active' ? 'ok' : 'neutral'}>{cancelling ? 'Cancels' : sub.data.is_trial ? 'Trial' : sub.data.subscription_status}</Badge></div>
 						)}
 						{cancelling && (
-							<p style={{ ...BODY, marginTop: 10 }}>Your plan access ends on {fmtISO(sub.data?.subscription_cancel_at ?? sub.data?.subscription_current_period_end ?? null)}. You keep full access until then.</p>
+							<p style={{ ...BODY, marginTop: 10 }}>Your access ends on {fmtISO(sub.data?.subscription_cancel_at ?? sub.data?.subscription_current_period_end ?? null)}. You keep full access until then.</p>
 						)}
 						{hasActiveSub && !cancelling && sub.data?.subscription_current_period_end && (
 							<p style={{ ...BODY, marginTop: 10 }}>{sub.data.is_trial ? 'Trial ends' : 'Renews'} on {fmtISO(sub.data.subscription_current_period_end)}.</p>
 						)}
 						{!hasActiveSub && access.data?.source === 'legacy' && (
 							<p style={{ ...BODY, marginTop: 10 }}>
-								You’re on your <b>Intelligence Hub plan</b>, carried over to its Atlas equivalent at the price you already paid. Atlas won’t charge you anything until it ends on <b>{fmtISO(access.data.ends_at)}</b>. After that, choose an Atlas plan to keep your access.
+								You’re on your <b>Intelligence Hub subscription</b>, carried over to its Atlas equivalent at the price you already paid. Atlas won’t charge you anything until it ends on <b>{fmtISO(access.data.ends_at)}</b>. After that, choose an Atlas solution to keep your access.
 							</p>
 						)}
 						{!hasActiveSub && access.data?.source === 'granted' && (
@@ -161,29 +161,29 @@ export default function BillingPage() {
 			</Card>
 
 			<Card style={{ marginBottom: 24 }}>
-				<div style={{ ...CARD_TITLE, marginBottom: 6 }}>{hasActiveSub || teamPlan ? 'Your subscription' : 'Choose a plan'}</div>
+				<div style={{ ...CARD_TITLE, marginBottom: 6 }}>{hasActiveSub || teamPlan ? 'Your subscription' : 'Choose a solution'}</div>
 				{!hasActiveSub && hubBilling ? (
 					<>
-						<p style={{ ...BODY, margin: '0 0 16px' }}>Your plan was paid through the Intelligence Hub. In the billing portal you can see what you bought, its invoices and your payment details. If your Hub plan still renews automatically, you can turn that off there, or email <a href="mailto:hello@sportstechx.com" style={{ color: 'inherit', textDecoration: 'underline' }}>hello@sportstechx.com</a> and we’ll do it for you.</p>
+						<p style={{ ...BODY, margin: '0 0 16px' }}>Your subscription was paid through the Intelligence Hub. In the billing portal you can see what you bought, its invoices and your payment details. If your Hub subscription still renews automatically, you can turn that off there, or email <a href="mailto:hello@sportstechx.com" style={{ color: 'inherit', textDecoration: 'underline' }}>hello@sportstechx.com</a> and we’ll do it for you.</p>
 						<Button size="sm" disabled={busy !== null} onClick={() => void manage()}>{busy === 'portal' ? <Loader2 className="animate-spin" size={13} /> : 'Open billing portal'}</Button>
 					</>
 				) : !hasActiveSub && teamPlan ? (
 					<>
-						<p style={{ ...BODY, margin: '0 0 16px' }}>This plan isn’t billed through Stripe, so there’s nothing to manage or cancel here. To change it, email <a href="mailto:hello@sportstechx.com" style={{ color: 'inherit', textDecoration: 'underline' }}>hello@sportstechx.com</a>. To start a paid plan of your own, see the plans.</p>
-						<Button variant="outline" size="sm" onClick={() => router.push(PLANS_PATH)}>See plans</Button>
+						<p style={{ ...BODY, margin: '0 0 16px' }}>This solution isn’t billed through Stripe, so there’s nothing to manage or cancel here. To change it, email <a href="mailto:hello@sportstechx.com" style={{ color: 'inherit', textDecoration: 'underline' }}>hello@sportstechx.com</a>. To start a paid solution of your own, see the solutions.</p>
+						<Button variant="outline" size="sm" onClick={() => router.push(PLANS_PATH)}>See solutions</Button>
 					</>
 				) : hasActiveSub ? (
 					<>
-						<p style={{ ...BODY, margin: '0 0 16px' }}>Update your payment method, see invoices or cancel in the billing portal. Plans can’t be switched mid-subscription: to move to another plan, cancel this one (you keep access until the end of the billing period), then subscribe to the new plan.</p>
+						<p style={{ ...BODY, margin: '0 0 16px' }}>Update your payment method, see invoices or cancel in the billing portal. Solutions can’t be switched mid-subscription: to move to another solution, cancel this one (you keep access until the end of the billing period), then subscribe to the new one.</p>
 						<Button size="sm" disabled={busy !== null} onClick={() => void manage()}>{busy === 'portal' ? <Loader2 className="animate-spin" size={13} /> : 'Open billing portal'}</Button>
 					</>
 				) : (
 					<>
-						<p style={{ ...BODY, margin: '0 0 18px' }}>Compare what each plan includes and pick one.</p>
+						<p style={{ ...BODY, margin: '0 0 18px' }}>Compare what each solution includes and pick one.</p>
 					{/* One plan picker, not two. These cards duplicated the tier list with
 						    hardcoded prices, so a price change in the admin left them lying.
 						    The plans page reads `subscription_plans` and the live matrix. */}
-					<Button size="sm" onClick={() => router.push(PLANS_PATH)}>See plans</Button>
+					<Button size="sm" onClick={() => router.push(PLANS_PATH)}>See solutions</Button>
 					</>
 				)}
 			</Card>

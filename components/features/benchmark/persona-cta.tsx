@@ -83,7 +83,7 @@ export function PersonaCta({ access, source }: { access: BenchmarkAccess; source
 			<p className="bm-cta__body">Investors: take the survey for your personal benchmark and a free month of Scout. Founders: upgrade to Raise for the full report.</p>
 			<div className="bm-actions">
 				<SurveyButton source={source} />
-				{access.entries.r2 !== 'open' && <UpgradeButton source={source} label="See plans" />}
+				{access.entries.r2 !== 'open' && <UpgradeButton source={source} label="See solutions" />}
 			</div>
 		</Card>
 	);

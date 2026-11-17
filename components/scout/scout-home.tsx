@@ -11,7 +11,7 @@ import { greetingName, useUserProfile } from '@/hooks/use-user-profile';
 import { qk } from '@/lib/query-keys';
 import { SETUP_CARD_WIZARD, openRaiseSetup, openScoutThesis } from '@/lib/setup-events';
 import { hrefOf } from '@/lib/routes';
-import { PinnedReports } from '@/components/features/benchmark/pinned-reports';
+import { PinnedFeedCards } from '@/components/features/benchmark/pinned-reports';
 import { listText, thesisTags, useThesis } from './use-thesis';
 
 /**
@@ -86,13 +86,20 @@ export function ScoutHome() {
 				<p className="scout-home__sub">
 					Here&rsquo;s what has changed across {listText(thesis.sectors) || 'sports tech'} since your last visit.
 				</p>
-				{data?.thesis_set && tags.length > 0 && (
+				{/* Always there (the walkthrough ends on it): the thesis, or an empty state that sets one up. */}
+				{data && (data.thesis_set && tags.length > 0 ? (
 					<div className="scout-home__thesis">
 						<span className="atlas-eyebrow">Tuned to your thesis</span>
 						<div className="scout-tags">{tags.map((t) => <span key={t} className="scout-tag">{t}</span>)}</div>
 						<Link href={hrefOf('thesis')} className="scout-link">Edit thesis</Link>
 					</div>
-				)}
+				) : (
+					<div className="scout-home__thesis">
+						<span className="atlas-eyebrow">Your thesis</span>
+						<span className="scout-muted">No thesis yet</span>
+						<button type="button" className="scout-link" onClick={() => openScoutThesis()}>Set up your thesis</button>
+					</div>
+				))}
 				<div className="scout-home__composer">
 					<AgentComposer
 						value={q}
@@ -107,11 +114,11 @@ export function ScoutHome() {
 			</section>
 
 
-			<PinnedReports />
-
 			<section className="scout-home__attn">
 				<SectionHead title="Latest from Atlas" meta="Based on your thesis · since your last visit" />
 				<div className="atlas-feed-grid">
+					{/* Pinned research first (the 2026 benchmark, the football report). */}
+					<PinnedFeedCards />
 					{/* Server-ranked and already capped at three. */}
 					{(data?.attention ?? []).map((c) => (
 						<FeedCard
@@ -126,7 +133,6 @@ export function ScoutHome() {
 							{...(SETUP_CARD_WIZARD[c.id]
 								? { onAction: SETUP_CARD_WIZARD[c.id] === 'raise' ? openRaiseSetup : openScoutThesis }
 								: { href: c.cta_href })}
-							actionLabel={c.cta_label}
 						/>
 					))}
 					{/* Two standing entry points the read-model does not emit. */}

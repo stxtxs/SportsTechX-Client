@@ -75,18 +75,6 @@
 .atlas .bm-linkbtn:hover { color: var(--a-ink); }
 .atlas .bm-textarea { width: 100%; min-height: 90px; margin: 10px 0; }
 
-/* Home pin card: the remove control sits above the card-wide action link. */
-.atlas .bm-pin { position: relative; }
-.atlas .bm-pin__remove {
-	position: absolute; z-index: 2; bottom: 14px; right: 14px;
-	display: inline-flex; align-items: center; gap: 4px;
-	background: none; border: none; padding: 4px 6px; border-radius: 6px;
-	font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase;
-	color: var(--a-faint); cursor: pointer;
-}
-.atlas .bm-pin__remove:hover, .atlas .bm-pin__remove:focus-visible { color: var(--a-ink); background: var(--a-inset); }
-.atlas .bm-pins { margin-bottom: 36px; }
-
 /* Announcement banner (one at a time), above the page, on .atlas-screen's gutters. */
 .atlas .bm-banner-wrap { padding: 20px 56px 0; }
 @media (max-width: 1100px) { .atlas .bm-banner-wrap { padding: 16px 32px 0; } }
@@ -103,19 +91,33 @@
 .atlas .bm-banner__close:hover { color: var(--a-ink); background: color-mix(in srgb, var(--a-ink) 6%, transparent); }
 
 /* Walkthrough modal. */
-.bm-tour-overlay { position: fixed; inset: 0; z-index: 80; background: rgba(0, 0, 0, 0.45); display: grid; place-items: center; padding: 16px; }
-.bm-tour {
-	width: min(520px, 100%); background: var(--a-page); color: var(--a-ink);
-	border: 1px solid var(--a-border); border-radius: var(--a-radius); padding: 26px;
-	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+/* Walkthrough: a dimmed page with a hole over what the step explains, and the
+   card beside it (walkthrough.tsx, tour-targets.ts). Outside .atlas, so no tokens here. */
+.bm-tour-layer { position: fixed; inset: 0; z-index: 80; }
+/* The dimmed page, with a hole per highlighted element (an SVG mask, so a step can light up several). */
+.bm-tour-mask { position: absolute; inset: 0; width: 100%; height: 100%; }
+.bm-tour-mask > rect { fill: rgba(0, 0, 0, 0.5); }
+.bm-tour-spot {
+	position: fixed; border-radius: 10px; pointer-events: none;
+	box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+	transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
 }
+.bm-tour {
+	position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+	width: min(380px, calc(100vw - 32px)); background: var(--a-page); color: var(--a-ink);
+	border: 1px solid var(--a-border); border-radius: var(--a-radius); padding: 22px;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.bm-tour.is-anchored { transform: none; transition: top 0.25s ease, left 0.25s ease; }
+@media (prefers-reduced-motion: reduce) { .bm-tour-spot, .bm-tour.is-anchored { transition: none; } }
 .bm-tour__steps { display: grid; grid-auto-flow: column; gap: 6px; margin-bottom: 20px; }
 .bm-tour__steps span { height: 5px; border-radius: 3px; background: var(--a-track); }
 .bm-tour__steps span.on { background: var(--a-ink); }
-.bm-tour h2 { margin: 6px 0 8px; font-family: var(--a-font); font-size: 22px; font-weight: 700; }
+.bm-tour h2 { margin: 6px 0 8px; font-family: var(--a-font); font-size: 20px; font-weight: 700; }
 .bm-tour p { margin: 0; font-size: 14px; color: var(--a-muted); line-height: 1.6; }
 .bm-tour ul { margin: 14px 0 0; padding-left: 18px; font-size: 13px; color: var(--a-ink-2); line-height: 1.7; }
-.bm-tour__nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 24px; }
+.bm-tour__nav { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-top: 20px; }
+.bm-tour__nav .bm-linkbtn { white-space: nowrap; }
 
 /* "Pre-filled from your survey" marker on thesis chips. */
 .bm-survey-note { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 10px; font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--a-navy); }

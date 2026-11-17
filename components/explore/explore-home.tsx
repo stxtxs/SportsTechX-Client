@@ -12,7 +12,7 @@ import { qk } from '@/lib/query-keys';
 import type { NewsletterArticle, Page, ReportListItem } from '@/types/api';
 import { useInterests, type Interests } from './interests';
 import { hrefOf } from '@/lib/routes';
-import { PinnedReports } from '@/components/features/benchmark/pinned-reports';
+import { PinnedFeedCards } from '@/components/features/benchmark/pinned-reports';
 
 /**
  * Explore Home (Claude Design "Home"): greeting, interests count, a search bar
@@ -115,27 +115,28 @@ export function ExploreHome() {
 				</div>
 			</section>
 
-			<PinnedReports />
 
 			<section className="explore-home__attn">
 				<SectionHead title="Latest from Atlas" meta={picked.length > 0 ? 'Based on your interests · updated today' : 'Updated today'} />
 				<div className="atlas-feed-grid">
+					{/* Pinned research first (the 2026 benchmark, the football report). */}
+					<PinnedFeedCards />
 					{latestNews && (
-						<FeedCard tag="Newsletter" icon={Newspaper} title={latestNews.title} body={`${fmt(latestNews.pubDate)} · ${latestNews.description}`} href={hrefOf('newsletter')} actionLabel="Read" />
+						<FeedCard tag="Newsletter" icon={Newspaper} title={latestNews.title} body={`${fmt(latestNews.pubDate)} · ${latestNews.description}`} href={hrefOf('newsletter')} />
 					)}
 					{latestReport && (
-						<FeedCard tag="Report" icon={Files} title={latestReport.title} body={`${latestReport.report_year ?? ''} · ${latestReport.description ?? ''}`.trim()} href={hrefOf('reports')} actionLabel="Open" />
+						<FeedCard tag="Report" icon={Files} title={latestReport.title} body={`${latestReport.report_year ?? ''} · ${latestReport.description ?? ''}`.trim()} href={hrefOf('reports')} />
 					)}
 					<FeedCard tag="Monthly roundup" icon={CalendarDays} title={`${lastMonth} market roundup`} body="The month’s most relevant funding rounds, acquisitions and industry developments in one read." href={hrefOf('roundup')} />
 					{picked.length === 0 ? (
-						<FeedCard tag="For you" icon={UserRound} title="Your market view is broad" body="Select sectors, sports or countries to make these recommendations sharper." href={hrefOf('interests')} actionLabel="Choose" />
+						<FeedCard id="for-you" tag="For you" icon={UserRound} title="Your market view is broad" body="Select sectors, sports or countries to make these recommendations sharper." href={hrefOf('interests')} />
 					) : forYou && (
 						<FeedCard
+							id="for-you"
 							tag="For you" icon={UserRound}
 							title={forYou.title}
 							body={`Because you follow ${picked.slice(0, 3).join(', ')}${picked.length > 3 ? ` and ${picked.length - 3} more` : ''}.`}
 							href={forYou.href}
-							actionLabel="Explore"
 						/>
 					)}
 				</div>

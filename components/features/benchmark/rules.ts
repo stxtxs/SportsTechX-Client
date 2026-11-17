@@ -11,17 +11,22 @@ import type { BenchmarkAccess, Compare, EntryAccess, HomePin, PersonalBenchmark 
 type Tier = 'explore' | 'raise' | 'scout';
 
 /**
- * What to show while the access endpoint does not exist (404) or failed.
+ * Who sees which entry (the server's rule; see the backend page):
  *
- * Plan-only, the same rule R2 will have minus the allowlist: Raise/Scout/admin
- * open R2, everyone else gets the upgrade screen. R3 stays hidden — without
- * the server there is no way to know who is a contributor.
+ *   Explore              summary open, full report locked (to Solutions)
+ *   Raise, Scout, admin  full report only — no summary
+ *   contributors         full report only, plus "Your benchmark" — and they
+ *                        keep the full report after a downgrade to Explore
+ *
+ * This is the fallback while the access endpoint does not exist (404) or
+ * failed: plan only. A downgraded contributor looks like any Explore user
+ * here, and R3 stays hidden — only the server knows who contributed.
  */
 export function fallbackAccess(tier: Tier, isAdmin: boolean): BenchmarkAccess {
 	const paid = isAdmin || tier === 'raise' || tier === 'scout';
 	return {
 		edition: EDITION,
-		entries: { r1: 'open', r2: paid ? 'open' : 'locked', r3: 'none' },
+		entries: { r1: paid ? 'none' : 'open', r2: paid ? 'open' : 'locked', r3: 'none' },
 		contributor: null,
 		trial: null,
 	};

@@ -9,17 +9,18 @@ import {
 	peerOrSample, visiblePins, withChoices, yoursFirst,
 } from './rules.ts';
 import { applyPrefill, mapSurvey } from './prefill.ts';
+import { CARD_GAP, VIEW_MARGIN, deviceOf, placeCard, shortcut, unionBox, welcomeName } from './tour-layout.ts';
 import type { BenchmarkAccess, Compare } from './types.ts';
 
-// ── Access fallback: plan decides R2, R3 never shows without the server ─────
+// ── Access fallback: Explore gets summary + locked full; paid get the full only ─
 assert.deepEqual(fallbackAccess('explore', false).entries, { r1: 'open', r2: 'locked', r3: 'none' });
-assert.deepEqual(fallbackAccess('raise', false).entries, { r1: 'open', r2: 'open', r3: 'none' });
-assert.deepEqual(fallbackAccess('scout', false).entries, { r1: 'open', r2: 'open', r3: 'none' });
-assert.deepEqual(fallbackAccess('explore', true).entries, { r1: 'open', r2: 'open', r3: 'none' });
+assert.deepEqual(fallbackAccess('raise', false).entries, { r1: 'none', r2: 'open', r3: 'none' });
+assert.deepEqual(fallbackAccess('scout', false).entries, { r1: 'none', r2: 'open', r3: 'none' });
+assert.deepEqual(fallbackAccess('explore', true).entries, { r1: 'none', r2: 'open', r3: 'none' });
 
 const contributor: BenchmarkAccess = {
 	...fallbackAccess('explore', false),
-	entries: { r1: 'open', r2: 'open', r3: 'open' },
+	entries: { r1: 'none', r2: 'open', r3: 'open' },
 };
 assert.equal(benchmarkCardAction(fallbackAccess('explore', false)), 'Read the summary');
 assert.equal(benchmarkCardAction(contributor), 'Read the full report');
@@ -34,6 +35,9 @@ assert.equal(featuredUntil('2026-11-23', 9), '2027-01-04'); // clamped down to 6
 const free = defaultPins(fallbackAccess('explore', false), '2026-11-23');
 assert.deepEqual(free.map((p) => p.entry), ['r1', 'ftr'], 'free user: summary + FTR');
 assert.equal(free[0].slug, SLUG.r1);
+
+// Paid: the full report on Home, never the summary.
+assert.deepEqual(defaultPins(fallbackAccess('scout', false), '2026-11-23').map((p) => p.entry), ['r2', 'ftr'], 'paid: full report + FTR');
 
 const mine = defaultPins(contributor, '2026-11-23');
 assert.deepEqual(mine.map((p) => p.entry), ['r3', 'r2', 'ftr'], 'contributor: yours first');
@@ -97,5 +101,36 @@ assert.equal(own.fromSurvey.has('Series A'), true, 'filled stage is marked');
 // Server-applied (applied_at set): survey values still in the thesis are marked.
 const server = applyPrefill({ ...empty, stages: ['Series A'], regions: ['Europe'] }, { ...p, applied_at: '2026-11-13' });
 assert.deepEqual([...server.fromSurvey].sort(), ['Europe', 'Series A']);
+
+// ── Walkthrough card placement ─────────────────────────────────────────────
+const view = { width: 1280, height: 800 };
+const cardSize = { width: 380, height: 220 };
+// A sidebar item: card to its right, top-aligned.
+assert.deepEqual(placeCard({ top: 200, left: 12, width: 220, height: 36 }, cardSize, view), { top: 200, left: 232 + CARD_GAP, side: 'right' });
+// A top-bar button at the right edge: card below it, kept on screen.
+const topRight = placeCard({ top: 14, left: 1100, width: 120, height: 32 }, cardSize, view);
+assert.equal(topRight.side, 'below');
+assert.equal(topRight.left, view.width - cardSize.width - VIEW_MARGIN);
+// Near the bottom: the card moves up to stay inside the viewport.
+assert.equal(placeCard({ top: 760, left: 12, width: 220, height: 30 }, cardSize, view).top, view.height - cardSize.height - VIEW_MARGIN);
+// Two sections → one box around both.
+assert.deepEqual(unionBox([{ top: 100, left: 10, width: 200, height: 50 }, { top: 170, left: 10, width: 220, height: 80 }]), { top: 100, left: 10, width: 220, height: 150 });
+assert.equal(unionBox([]), null);
+
+// ── Tour copy: shortcuts per device, first name only ───────────────────────
+assert.equal(deviceOf('MacIntel'), 'mac');
+assert.equal(deviceOf('macOS'), 'mac');
+assert.equal(deviceOf('Win32'), 'windows');
+assert.equal(deviceOf('Windows'), 'windows');
+assert.equal(deviceOf('Linux x86_64'), 'windows', 'Linux uses Ctrl');
+assert.equal(deviceOf('Linux armv8l Android'), 'unknown');
+assert.equal(deviceOf(''), 'unknown');
+assert.equal(shortcut('J', 'mac'), '⌘J');
+assert.equal(shortcut('K', 'windows'), 'Ctrl+K');
+assert.equal(shortcut('K', 'unknown'), '⌘K (Mac) or Ctrl+K (Windows)');
+assert.equal(welcomeName('Rohn', false, 'rohn@x.com'), 'Rohn', 'a real full name that matches the handle stays');
+assert.equal(welcomeName('rohnm', true, 'rohnm@x.com'), null, 'display name = email handle is dropped');
+assert.equal(welcomeName('Alex', true, 'rohnm@x.com'), 'Alex');
+assert.equal(welcomeName(null, false, 'a@b.com'), null);
 
 console.log('benchmark rules: ok');

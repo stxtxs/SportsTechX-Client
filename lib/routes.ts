@@ -178,13 +178,14 @@ export const ROUTES: RouteDef[] = [
 	// public endpoint), so Explore lists it under Market beside Events.
 	{ id: 'programs', icon: 'nav-dealflow', name: 'Programs', path: '/programs' },
 	{ id: 'my-market', icon: 'nav-market', name: 'My Market', path: '/my-market', tier: 'raise' },
-	{ id: 'pipeline', icon: 'nav-list', name: 'Main watchlist', path: '/pipeline', tier: 'raise' },
+	// "Pipeline" in the sidebar: founders think in pipeline terms (product, Nov 2026).
+	{ id: 'pipeline', icon: 'nav-list', name: 'Pipeline', path: '/pipeline', tier: 'raise' },
 	{ id: 'raise-settings', icon: 'nav-thesis', name: 'Thesis Settings', path: '/settings', tier: 'raise' },
 	// No tier: every plan gets the assistant, bounded by credits rather than by a
 	// locked door (see chat.controller.ts). Still unlisted in NAV_LAYOUT — it is
 	// reached from the home composer and the FAB.
 	{ id: 'chat', icon: 'nav-chat', name: 'Ask Atlas', path: '/chat' },
-	{ id: 'strategy', icon: 'nav-onboarding', name: 'Strategy', path: '/strategy', tier: 'raise' },
+	{ id: 'strategy', icon: 'nav-onboarding', name: 'Strategy Session', path: '/strategy', tier: 'raise' },
 	// Guides, templates and checklists across Prepare → Connect → Close (content in
 	// raise_resources, edited in admin). Back with real content after the October
 	// removal of the "Coming soon" placeholder.
@@ -244,7 +245,7 @@ export const NAV_LAYOUT: Record<Tier, NavGroup[]> = {
 		{ title: 'Discover', items: ['companies', 'recommended', 'signals'] },
 		{ title: 'Intelligence', items: ['analytics', 'roundup', 'my-market', 'recently-funded', 'ma'] },
 		{ title: 'Watchlists', items: ['pipeline', 'watchlists'] },
-		{ title: 'Resources', items: ['guide', 'framework', 'reports', 'events', 'newsletter'] },
+		{ title: 'Resources', items: ['guide', 'strategy', 'framework', 'reports', 'events', 'newsletter'] },
 	],
 	scout: [
 		{ title: null, items: ['home', 'chat'] },

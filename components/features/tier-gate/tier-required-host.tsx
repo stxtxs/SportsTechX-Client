@@ -49,19 +49,19 @@ export function TierRequiredHost() {
 			open={open}
 			onOpenChange={setOpen}
 			icon={<Lock size={18} />}
-			title={product ? `This is part of ${product.name}` : 'This needs a different plan'}
+			title={product ? `This is part of ${product.name}` : 'This needs a different solution'}
 			footer={
 				<>
 					<Button variant="ghost" onClick={() => setOpen(false)}>Not now</Button>
 					<Button onClick={() => { setOpen(false); router.push(hrefOf('billing')); }}>
-						{product ? `Get ${product.name}` : 'See plans'}
+						{product ? `Get ${product.name}` : 'See solutions'}
 					</Button>
 				</>
 			}
 		>
 			{/* Falls back to the server's own sentence when the tier can't be
 			    named — better a plain message than a confidently wrong pitch. */}
-			{product?.blurb ?? detail.message ?? 'Your current plan does not include this.'}
+			{product?.blurb ?? detail.message ?? 'Your current solution does not include this.'}
 		</Modal>
 	);
 }

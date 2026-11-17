@@ -45,7 +45,9 @@ export function mockAccess(s: MockScenario): BenchmarkAccess {
 	const inTrial = s === 'trial' || s === 'thin';
 	return {
 		edition: EDITION,
-		entries: { r1: 'open', r2: s === 'explore' ? 'locked' : 'open', r3: contributor ? 'open' : 'none' },
+		// Explore: summary + locked full report. Everyone else (paid, or a
+		// contributor after a downgrade — `after-trial`) gets the full report only.
+		entries: { r1: s === 'explore' ? 'open' : 'none', r2: s === 'explore' ? 'locked' : 'open', r3: contributor ? 'open' : 'none' },
 		contributor: contributor
 			? { status: s === 'after-trial' ? 'trial_ended' : 'active', fund_name: s === 'thin' ? null : 'Sample Ventures', respondent_name: 'Alex Sample' }
 			: null,

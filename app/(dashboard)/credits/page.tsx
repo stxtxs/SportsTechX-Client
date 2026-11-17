@@ -104,7 +104,7 @@ export default function CreditsPage() {
 
 			<Card style={{ marginBottom: 8 }}>
 				<div style={{ ...CARD_TITLE, marginBottom: 6 }}>Buy credits</div>
-				<p style={{ ...BODY, margin: '0 0 20px' }}>Top-ups never expire. Monthly plan credits renew each month; top-ups stack on whatever is left.</p>
+				<p style={{ ...BODY, margin: '0 0 20px' }}>Top-ups never expire. Your solution’s monthly credits renew each month; top-ups stack on whatever is left.</p>
 				{packs.isLoading ? <Loading />
 					: packList.length === 0 ? <div style={{ fontSize: 12, color: 'var(--a-faint)' }}>No credit packs available right now.</div>
 						: (

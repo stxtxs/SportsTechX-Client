@@ -41,7 +41,11 @@ export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitl
 	/** Right-hand note on the library heading, e.g. the publishing cadence. */
 	aside?: ReactNode;
 }) {
-	const [featured, ...rest] = items;
+	// A featured item can bring a partner (the summary and its locked full
+	// report): the two sit side by side at the top instead of one hero.
+	const pair = items[0]?.pairWith ? items.find((i) => i.id === items[0].pairWith) : undefined;
+	const featured = items[0];
+	const rest = items.slice(1).filter((i) => i !== pair);
 	const [q, setQ] = useState('');
 	const [tag, setTag] = useState('');
 	const [access, setAccess] = useState('');
@@ -62,8 +66,8 @@ export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitl
 	const actionsFor = (r: Resource) => (
 		<>
 			{r.onView
-				? <Action icon={<ArrowUpRight />} onClick={r.onView}>{viewLabel}</Action>
-				: r.href ? <Action icon={<ArrowUpRight />} href={r.href} external={r.external}>{viewLabel}</Action> : null}
+				? <Action icon={<ArrowUpRight />} onClick={r.onView}>{r.actionLabel ?? viewLabel}</Action>
+				: r.href ? <Action icon={<ArrowUpRight />} href={r.href} external={r.external}>{r.actionLabel ?? viewLabel}</Action> : null}
 			{r.onDownload && <Action icon={<Download />} onClick={r.onDownload}>Download {noun}</Action>}
 			{r.onPin && <Action icon={<Pin />} onClick={r.onPin}>Pin to home</Action>}
 		</>
@@ -88,15 +92,23 @@ export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitl
 		<>
 			{intro && <p className="atlas-res-intro">{intro}</p>}
 
-			<FeaturedPost
-				cover={featured.cover}
-				metaIcon={<MetaIcon size={12} strokeWidth={1.5} aria-hidden="true" />}
-				meta={<>{featured.featuredLabel ?? featuredLabel} · Published {featured.dateLabel ?? fmtLongDate(featured.date)} · <span className={featured.access === 'Premium' ? 'is-premium' : undefined}>{featured.access}</span> {badgeFor(featured)}</>}
-				title={featured.title}
-				desc={featured.desc}
-				tags={featured.tags}
-				actions={actionsFor(featured)}
-			/>
+			{pair ? (
+				<div className="atlas-post-grid atlas-post-grid--pair">
+					{[featured, pair].map((r) => (
+						<PostCard key={r.id} className="is-paired" cover={r.cover} meta={metaFor(r)} title={r.title} desc={r.desc} tags={r.tags} actions={actionsFor(r)} hint={r.hint} />
+					))}
+				</div>
+			) : (
+				<FeaturedPost
+					cover={featured.cover}
+					metaIcon={<MetaIcon size={12} strokeWidth={1.5} aria-hidden="true" />}
+					meta={<>{featured.featuredLabel ?? featuredLabel} · Published {featured.dateLabel ?? fmtLongDate(featured.date)} · <span className={featured.access === 'Premium' ? 'is-premium' : undefined}>{featured.access}</span> {badgeFor(featured)}</>}
+					title={featured.title}
+					desc={featured.desc}
+					tags={featured.tags}
+					actions={actionsFor(featured)}
+				/>
+			)}
 
 			<div className="atlas-res-head">
 				<h2 className="atlas-h2">{libraryTitle}</h2>
@@ -113,7 +125,7 @@ export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitl
 			{rows.length === 0 ? <Empty>No {noun}s match your filters.</Empty> : (
 				<div className="atlas-post-grid">
 					{rows.map((r) => (
-						<PostCard key={r.id} cover={r.cover} meta={metaFor(r)} title={r.title} desc={r.desc} tags={r.tags} actions={actionsFor(r)} />
+						<PostCard key={r.id} cover={r.cover} meta={metaFor(r)} title={r.title} desc={r.desc} tags={r.tags} actions={actionsFor(r)} hint={r.hint} />
 					))}
 				</div>
 			)}

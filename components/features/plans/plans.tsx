@@ -85,7 +85,7 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 		const plan = byTier.get(tier);
 		// The slug, not the tier: `subscription_plans.slug` is what the server
 		// resolves to a Stripe price, and Explore's slug is still 'free'.
-		if (!plan?.stripe_price_id) { toast.error('That plan is not available to buy right now.'); return; }
+		if (!plan?.stripe_price_id) { toast.error('That solution is not available to buy right now.'); return; }
 		setBusy(tier);
 		setErr('');
 		track(Events.billingCheckoutStarted, { plan: plan.slug });
@@ -136,10 +136,10 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 				? 'Within 30 days of your first Atlas Raise payment? Email hello@sportstechx.com for a full refund under our 30-day money-back guarantee.'
 				: 'No refund is issued.';
 			const ok = await confirm({
-				title: 'Cancel your plan?',
+				title: 'Cancel your solution?',
 				description: until
-					? `Your plan stays active with full access until ${until}. It won't renew — you'll move to Atlas Explore then, and you can't start a different plan until it ends. ${refund} To cancel sooner, contact the SportsTechX team.`
-					: `Your plan won't renew and you'll move to Atlas Explore at the end of the current billing period. ${refund} To cancel sooner, contact the SportsTechX team.`,
+					? `Your solution stays active with full access until ${until}. It won't renew — you'll move to Atlas Explore then, and you can't start a different solution until it ends. ${refund} To cancel sooner, contact the SportsTechX team.`
+					: `Your solution won't renew and you'll move to Atlas Explore at the end of the current billing period. ${refund} To cancel sooner, contact the SportsTechX team.`,
 				confirmLabel: 'Cancel at period end',
 				destructive: true,
 			});
@@ -149,11 +149,11 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 			const body = (await done.json()) as { access_until: string | null };
 			const end = fmtDay(body.access_until);
 			toast.success(end
-				? `Plan set to cancel on ${end}. You keep full access until then.`
-				: 'Plan set to cancel at the end of your billing period. You keep full access until then.');
+				? `Solution set to cancel on ${end}. You keep full access until then.`
+				: 'Solution set to cancel at the end of your billing period. You keep full access until then.');
 			await Promise.all([refreshProfile(), noteCancellation(body.access_until)]);
 		} catch {
-			toast.error("Couldn't cancel your plan. Please try again or contact support.");
+			toast.error("Couldn't cancel your solution. Please try again or contact support.");
 		} finally { setBusy(null); }
 	};
 
@@ -165,7 +165,7 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 		const copy = tier === 'explore' ? null : PRODUCT[tier];
 		const name = copy?.name ?? (tier === 'explore' ? 'Explore' : tier);
 		const spin = <Loader2 className="animate-spin" size={13} />;
-		if (isCurrent) return <Button variant="outline" size="sm" disabled>Your plan</Button>;
+		if (isCurrent) return <Button variant="outline" size="sm" disabled>Your solution</Button>;
 		if (loggedOut) {
 			return tier === 'explore'
 				? <Button size="sm" variant="outline" onClick={goSignup}>Start free</Button>
@@ -183,7 +183,7 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 			}
 			return hasPaidPlan
 				? <Button size="sm" variant="outline" disabled={busy !== null} onClick={() => void downgrade()}>{busy === 'explore' ? spin : 'Switch to Explore'}</Button>
-				: <span className="plans-muted">Included with every plan</span>;
+				: <span className="plans-muted">Included with every solution</span>;
 		}
 		return <Button size="sm" variant={tier === 'raise' ? 'primary' : 'outline'} disabled={busy !== null} onClick={() => void checkout(tier)}>{busy === tier ? spin : `Get ${name}`}</Button>;
 	};
@@ -191,9 +191,9 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 	return (
 		<>
 			<PageHead
-				title={onboarding ? 'Choose your plan' : 'Solutions'}
+				title={onboarding ? 'Choose your solution' : 'Solutions'}
 				sub={onboarding
-					? 'Pick the plan that fits how you use SportsTechX — you can change it later.'
+					? 'Pick the solution that fits how you use SportsTechX — you can change it later.'
 					: 'Atlas Explore is free and stays free. Raise and Scout are separate products on top of it — pick the one that matches what you do.'}
 			/>
 
@@ -206,7 +206,7 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 						<Card key={tier} glow={isCurrent ? 'blue' : undefined} focus={isCurrent} className="plans-card">
 							<div className="plans-card__head">
 								<AtlasLogo height={24} product={TIER_LABEL[tier]} />
-								{isCurrent && <Badge tone="ok">Current plan</Badge>}
+								{isCurrent && <Badge tone="ok">Current solution</Badge>}
 							</div>
 							<div className="plans-card__price">
 								{plan ? money(plan.price_amount, plan.currency_code) : '—'}
@@ -248,14 +248,14 @@ export function Plans({ onboarding }: { onboarding?: { onDone: () => void } } = 
 			{onboarding && (
 				<div className="plans-later">
 					<button type="button" onClick={() => void chooseExplore(true)} disabled={busy !== null}>
-						{busy === 'dismiss' ? 'Saving…' : 'Maybe later — keep my current plan'}
+						{busy === 'dismiss' ? 'Saving…' : 'Maybe later — keep my current solution'}
 					</button>
 				</div>
 			)}
 
 			<Card className="plans-table-card">
 				<div className="plans-table-head">
-					<div className="atlas-section-title">What each plan includes</div>
+					<div className="atlas-section-title">What each solution includes</div>
 					<span className="atlas-section-aside">Data access, straight from the entitlement matrix. Raise and Scout differ by workspace, not by data.</span>
 				</div>
 				{featuresLoading ? <Loading /> : features.length === 0 ? (

@@ -11,7 +11,7 @@ import { SETUP_CARD_WIZARD, openRaiseSetup, openScoutThesis } from '@/lib/setup-
 import { H1, Badge, SectionHead, FeedCard, Progress } from '@/components/atlas';
 import { RaiseSearch, RAISE_SUGGESTIONS } from '@/components/raise/raise-search';
 import { hrefOf } from '@/lib/routes';
-import { PinnedReports } from '@/components/features/benchmark/pinned-reports';
+import { PinnedFeedCards, useHasPins } from '@/components/features/benchmark/pinned-reports';
 
 /**
  * Atlas Raise — Home. Search-first: a centred composer as the focal point, with
@@ -76,12 +76,12 @@ function RoundCard({ r }: { r: Round }) {
 
 	return (
 		<FeedCard
+			id="round"
 			tag={roundName ?? 'Your round'}
 			icon={Hourglass}
 			title={title}
 			body={body || undefined}
 			onAction={() => openRaiseSetup({ edit: true })}
-			actionLabel={days != null && days < 0 && !ended ? 'Update date' : 'Edit round'}
 			extra={showBar ? <Progress pct={(committed / target) * 100} /> : undefined}
 		/>
 	);
@@ -110,6 +110,7 @@ export function RaiseHome() {
 	const { data: profile } = useUserProfile();
 	const { data, isLoading } = useSWR<Home>(qk.raise.home());
 	const [q, setQ] = useState('');
+	const hasPins = useHasPins();
 	const goChat = (text: string) => { const t = text.trim(); if (t) router.push(`${hrefOf('chat')}?q=${encodeURIComponent(t)}`); };
 
 	if (isLoading || !data) {
@@ -133,18 +134,20 @@ export function RaiseHome() {
 				</div>
 			</section>
 
-			<PinnedReports />
 
 			<section className="raise-attn">
 				<SectionHead title="Latest from Atlas" />
-				{(showRound || attention.length > 0) && (
+				{(hasPins || showRound || attention.length > 0) && (
 					<div className="atlas-feed-grid">
+						{/* Pinned research first (the 2026 benchmark, the football report). */}
+						<PinnedFeedCards />
 						{showRound && <RoundCard r={data.raise!} />}
 						{attention.map((a) => {
 							const t = ATTENTION_TAG[a.id] ?? DEFAULT_TAG;
 							return (
 								<FeedCard
 									key={a.id}
+									id={a.id}
 									tag={t.tag}
 									icon={t.icon}
 									title={a.title}
@@ -157,7 +160,6 @@ export function RaiseHome() {
 										// Readiness lives in the raise wizard: re-open it to edit.
 										: a.id === 'readiness' ? { onAction: () => openRaiseSetup({ edit: true }) }
 										: { href: a.cta_href })}
-									actionLabel={a.cta_label}
 									extra={a.count != null ? <Badge tone="danger">{a.count} overdue</Badge> : undefined}
 								/>
 							);

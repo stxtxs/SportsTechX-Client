@@ -10,11 +10,11 @@
  *   - RATES is a client table of yearly averages. Values up to 2024 are the ECB
  *     annual reference averages; 2025 and 2026 are provisional and must be
  *     replaced with the published figures.
- *   - The choice is stored in this browser, not on the account, so it does not
- *     follow the user to another device.
  *
- * Pure apart from the storage helpers, which no-op outside a browser, so the
- * node self-checks keep the USD default.
+ * The choice lives on the account (`profiles.display_currency`, GET/PATCH
+ * /api/me), so it follows the user to every device. This module only holds the
+ * value for the current page: the app shell loads it from the profile, and
+ * Preferences sets it and saves it. Nothing is kept in the browser.
  */
 
 export type DisplayCurrency = 'USD' | 'EUR';
@@ -46,21 +46,18 @@ export function convert(amount: number, from: string, to: string, year?: number 
 	return amount;
 }
 
-// ── The viewer's choice ────────────────────────────────────────────────────
-const KEY = 'stx:display-currency';
+// ── The viewer's choice (from the account) ──────────────────────────────────
 const listeners = new Set<() => void>();
-let cached: DisplayCurrency | null = null;
+let current: DisplayCurrency = 'USD';
 
 export function displayCurrency(): DisplayCurrency {
-	if (cached) return cached;
-	if (typeof window === 'undefined') return 'USD';
-	try { cached = localStorage.getItem(KEY) === 'EUR' ? 'EUR' : 'USD'; } catch { cached = 'USD'; }
-	return cached;
+	return current;
 }
 
+/** Apply a choice to this page: from the profile on load, or optimistically from Preferences. */
 export function setDisplayCurrency(c: DisplayCurrency): void {
-	cached = c;
-	try { localStorage.setItem(KEY, c); } catch { /* not persisted: this session only */ }
+	if (c === current) return;
+	current = c;
 	listeners.forEach((l) => l());
 }
 

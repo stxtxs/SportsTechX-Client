@@ -23,8 +23,8 @@ import { Walkthrough } from '@/components/features/benchmark/walkthrough';
 import '@/components/raise/raise.css';
 import '@/components/explore/explore.css';
 import '@/components/scout/scout.css';
-import { useSyncExternalStore } from 'react';
-import { displayCurrency, subscribeCurrency } from '@/lib/currency';
+import { useEffect, useSyncExternalStore } from 'react';
+import { displayCurrency, setDisplayCurrency, subscribeCurrency } from '@/lib/currency';
 
 /**
  * The one app frame, for every product.
@@ -63,7 +63,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 	// (logo, nav, home) until their profile landed — for as long as a slow
 	// network took. `isLoading`, not `!ready`, so a failed profile request
 	// falls through to the frame instead of spinning forever.
-	const { isLoading: profileLoading, error: profileError } = useUserProfile();
+	const { data: profile, isLoading: profileLoading, error: profileError } = useUserProfile();
+	// The display currency is an account setting: apply it on every page once the profile is in.
+	useEffect(() => { if (profile?.display_currency) setDisplayCurrency(profile.display_currency); }, [profile?.display_currency]);
 	if (!ready && profileLoading && !profileError) return <AuthPlaceholder label="Loading…" />;
 
 	return (

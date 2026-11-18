@@ -4,6 +4,8 @@ import { useState, useSyncExternalStore } from 'react';
 import { toast } from 'sonner';
 import { Button, Seg } from '@/components/atlas';
 import { displayCurrency, setDisplayCurrency, subscribeCurrency, type DisplayCurrency } from '@/lib/currency';
+import { apiRequest } from '@/lib/query-client';
+import { refreshAccount } from '@/lib/invalidate';
 import { AccountTabs, CompletionBadge } from '@/components/features/account/account-tabs';
 import { preferencesPct } from '@/lib/profile-completion';
 import { NO_INTERESTS, useInterests, type Interests } from './interests';
@@ -50,8 +52,22 @@ export function InterestsPage() {
 /**
  * USD or EUR for every amount on the platform (handover v1 §4 Formats; fix
  * list 1.5). Default USD. Saved at once, like a toggle, with the Preferences
- * toast. Stored in this browser until the account can hold it (backend note).
+ * toast. Saved on the account (PATCH /api/me), so it follows the user to every device.
  */
+/** Apply at once, save to the account, and put the old value back if the save fails. */
+async function saveCurrency(next: DisplayCurrency, prev: DisplayCurrency): Promise<void> {
+	if (next === prev) return;
+	setDisplayCurrency(next);
+	try {
+		await apiRequest('PATCH', '/api/me', { display_currency: next });
+		toast.success('Preferences saved.');
+		void refreshAccount();
+	} catch {
+		setDisplayCurrency(prev);
+		toast.error('Couldn’t save your currency. Try again.');
+	}
+}
+
 function CurrencySetting() {
 	const currency = useSyncExternalStore(subscribeCurrency, displayCurrency, () => 'USD' as DisplayCurrency);
 	return (
@@ -63,7 +79,7 @@ function CurrencySetting() {
 			<Seg<DisplayCurrency>
 				ariaLabel="Currency"
 				value={currency}
-				onChange={(c) => { setDisplayCurrency(c); toast.success('Preferences saved.'); }}
+				onChange={(c) => void saveCurrency(c, currency)}
 				options={[{ key: 'USD', label: 'USD $' }, { key: 'EUR', label: 'EUR €' }]}
 			/>
 		</section>

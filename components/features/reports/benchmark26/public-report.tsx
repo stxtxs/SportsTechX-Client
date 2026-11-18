@@ -29,8 +29,7 @@ import "./public-report.css";
 
 type NavSection = { id: string; n: string; title: string };
 const contributorsUrl = "/reports/benchmark26/contributors.webp";
-// The published PDF, in Supabase storage (public_bucket) like the other reports' PDFs.
-const pdfUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""}/storage/v1/object/public/public_bucket/reports/VCDSB26.pdf?download=VCDSB26.pdf`;
+// The PDF is private: ReportNav fetches a signed link per download (signed-in readers only).
 
 /* ------------------------------------------------------------ types
    Mirrors the `stx.public-report/1` JSON in data/public-report.json. Change
@@ -533,7 +532,7 @@ export default function PublicReport({ data }: { data: PublicReportData }) {
       <ReportNav
         items={nav.map((n) => ({ href: `#${n.id}`, label: n.title }))}
         activeIndex={active} isDark={dark} isMobile={isMobile} theme={dark ? NAV_DARK : NAV_LIGHT}
-        pdf={{ url: pdfUrl, file: pdfName }}
+        pdf={{ url: '#', file: pdfName, slug: 'investors-survey26' }}
         mobileOpen={menuOpen} onToggleMobile={() => setMenuOpen((o) => !o)} onToggleDark={toggle}
         onNavigate={(href, _label, mobile) => {
           if (mobile) setMenuOpen(false);

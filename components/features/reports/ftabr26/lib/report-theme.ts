@@ -80,9 +80,6 @@ export const SECTOR_COLORS: Record<string, string> = {
   "Athlete Tech": BRAND.athletes,
   "Fan Tech": BRAND.fans,
   "Executive Tech": BRAND.execs,
-  "Athlete Tech": BRAND.athletes,
-  "Fan Tech": BRAND.fans,
-  "Executive Tech": BRAND.execs,
 };
 
 export const SECTOR_SECONDARY_COLORS: Record<string, string> = {

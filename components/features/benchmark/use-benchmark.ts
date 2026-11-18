@@ -7,6 +7,7 @@ import { apiRequest } from '@/lib/query-client';
 import { qk } from '@/lib/query-keys';
 import { Events, track } from '@/lib/analytics';
 import { EDITION, FLAGS, SLUG, SOURCE } from './config';
+import { useBenchmarkSettings } from './settings';
 import { mockAccess, mockPersonal, mockPrefill, mockScenario } from './mock';
 import { fallbackAccess } from './rules';
 import { useLocalValue } from './local-store';
@@ -34,14 +35,14 @@ const OPEN_ALL: BenchmarkAccess = { edition: EDITION, entries: { r1: 'none', r2:
 
 export function useBenchmarkAccess(): { access: BenchmarkAccess; isLoading: boolean } {
 	const { data: profile, isLoading: profileLoading } = useUserProfile();
-	const res = useSource(FLAGS.benchmark && profile ? qk.benchmark.access(EDITION) : null, () => mockAccess(mockScenario(getUserType(profile))));
+	const { enabled } = useBenchmarkSettings();
+	const res = useSource(enabled && profile ? qk.benchmark.access(EDITION) : null, () => mockAccess(mockScenario(getUserType(profile))));
 	const fallback = useMemo(
 		() => fallbackAccess(getUserType(profile), profile?.user_role === 'admin'),
 		[profile],
 	);
-	// Flag off: today's behaviour — R2 open to every signed-in user, no R1/R3.
-	if (!FLAGS.benchmark) return { access: OPEN_ALL, isLoading: false };
-	if (SOURCE === 'none') return { access: fallback, isLoading: profileLoading };
+	// Switched off in site settings: the report open to every signed-in user, no personal report.
+	if (!enabled) return { access: OPEN_ALL, isLoading: false };
 	return { access: res.data ?? fallback, isLoading: profileLoading || (res.isLoading && !res.data) };
 }
 
@@ -62,7 +63,8 @@ export function usePersonalBenchmark(enabled: boolean) {
 export function useThesisPrefill(): { prefill: ThesisPrefill | null; isLoading: boolean } {
 	const { data: profile } = useUserProfile();
 	const scout = getUserType(profile) === 'scout' || profile?.user_role === 'admin';
-	const { data, isLoading } = useSource<ThesisPrefill | null>(FLAGS.benchmark && scout ? qk.benchmark.thesisPrefill() : null, () => mockPrefill(mockScenario()));
+	const { enabled } = useBenchmarkSettings();
+	const { data, isLoading } = useSource<ThesisPrefill | null>(enabled && scout ? qk.benchmark.thesisPrefill() : null, () => mockPrefill(mockScenario()));
 	return { prefill: data ?? null, isLoading };
 }
 

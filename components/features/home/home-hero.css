@@ -1,0 +1,18 @@
+/* Home hero, shared by Explore, Raise and Scout (handover v1 B1). */
+.atlas .home-hero__sub {
+	display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 18px;
+	margin: 18px 0 27px; padding-bottom: 22px; border-bottom: 1px solid var(--a-border);
+	font-family: var(--a-body); font-size: 14px; color: var(--a-muted);
+}
+.atlas .home-hero__settings {
+	display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: var(--a-radius-pill); text-decoration: none;
+	box-shadow: inset 0 0 0 1px var(--a-border-strong); color: var(--a-ink);
+	font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+	transition: box-shadow 0.12s;
+}
+.atlas .home-hero__settings:hover { box-shadow: inset 0 0 0 1px var(--atlas-product, var(--a-ink)); }
+.atlas .home-hero__settings b { font-weight: 400; padding: 1px 6px; border-radius: var(--a-radius-pill); background: var(--a-primary); color: var(--a-primary-ink); }
+/* Three suggestions on one line (handover v1 §4 Home); they scroll sideways
+   on a narrow window rather than wrapping to a second row. */
+.atlas .home-hero__composer .atlas-composer-suggest { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.atlas .home-hero__composer .atlas-composer-suggest::-webkit-scrollbar { display: none; }

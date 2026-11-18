@@ -16,6 +16,7 @@ import { Screen, Card, Button, Badge, Loading, StagedLoader } from '@/components
 import { hrefOf } from '@/lib/routes';
 import { rating } from './score-tone';
 import { DECK_ANALYSIS_STAGES } from './deck-stages';
+import { fmtFullDate } from '@/lib/format';
 
 /**
  * Deck analysis — upload + latest summary (canvas: deckEmpty / deckProcessing /
@@ -183,7 +184,7 @@ export function DeckSummary({ header, copy = FOUNDER_DECK_COPY, mode = 'founder'
 					<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
 						<Badge>latest</Badge><span style={{ fontSize: 15, fontFamily: 'var(--a-font)', fontWeight: 700 }}>{latest.filename ?? copy.fallbackName}</span>
 					</div>
-					<span style={{ fontFamily: 'var(--a-mono)', fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--a-muted)' }}>Analysed {new Date(latest.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+					<span style={{ fontFamily: 'var(--a-mono)', fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--a-muted)' }}>Analysed {fmtFullDate(new Date(latest.created_at))}</span>
 				</div>
 				<div style={{ display: 'flex', gap: 40, marginTop: 26, alignItems: 'flex-start', flexWrap: 'wrap' }}>
 					<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>

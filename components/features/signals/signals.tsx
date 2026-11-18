@@ -10,7 +10,8 @@ import { useSectorTierData, useLocationFacetOptions } from '@/hooks/use-catalog-
 import { ago, place } from '@/components/features/market/format';
 import { SaveToWatchlist } from '@/components/features/watchlists/save-to-watchlist';
 import type { Signal, SignalType } from '@/types/api';
-import { useCanSeeFundraising } from '@/hooks/use-user-profile';
+import { getUserType, useCanSeeFundraising, useUserProfile } from '@/hooks/use-user-profile';
+import { hrefOf } from '@/lib/routes';
 import './signals.css';
 
 const FILTERS: { key: 'All' | SignalType; label: string }[] = [
@@ -26,6 +27,7 @@ export function Signals({ companiesHref }: { companiesHref: string }) {
 	const [type, setType] = useState<'All' | SignalType>('All');
 	// Fundraising signals are Scout-only (the server leaves them out for everyone else).
 	const filters = useCanSeeFundraising() ? FILTERS : FILTERS.filter((f) => f.key !== 'fundraising');
+	const { data: profile } = useUserProfile();
 	const [view, setView] = useState<ViewMode>('cards');
 	const [sector, setSector] = useState('');
 	const [country, setCountry] = useState('');
@@ -49,9 +51,13 @@ export function Signals({ companiesHref }: { companiesHref: string }) {
 
 	return (
 		<>
-			<div className="atlas-sig-head">
-				<h2 className="atlas-h2">Signals</h2>
-				<p className="atlas-sig-lede">Companies showing activity worth watching.</p>
+			<div className="atlas-sig-head scout-subhead">
+				<div>
+					<h2 className="atlas-h2">Signals</h2>
+					<p className="atlas-sig-lede">Companies showing activity worth watching.</p>
+				</div>
+				{/* Same place as Recommended's: Scout's thesis drives both. */}
+				{getUserType(profile) === 'scout' && <Link href={hrefOf('thesis')} className="scout-link">Edit thesis</Link>}
 			</div>
 			<div className="atlas-sig-filter atlas-sig-filter--top">
 				<PillTabs ariaLabel="Signal type" value={type} onChange={setType} options={filters} />

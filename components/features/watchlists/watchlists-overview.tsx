@@ -4,7 +4,10 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { ArrowUpRight, Pencil, Plus, Trash2 } from 'lucide-react';
+import useSWR from 'swr';
 import { Action, Button, Empty, Input, Loading, Seg } from '@/components/atlas';
+import { qk } from '@/lib/query-keys';
+import { hrefOf } from '@/lib/routes';
 import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
 import { useCompanyWatchlists, createWatchlist, renameWatchlist, deleteWatchlist, isInvestorList } from './use-company-watchlists';
 import './watchlists.css';
@@ -16,7 +19,12 @@ const count = (n: number, investors: boolean) => `${n} ${investors ? `investor${
 export function WatchlistsOverview({ watchlistHref }: { watchlistHref: (id: string) => string }) {
 	const { lists: all, isLoading } = useCompanyWatchlists();
 	const { data: profile } = useUserProfile();
-	const isRaise = getUserType(profile) === 'raise';
+	const tier = getUserType(profile);
+	const isRaise = tier === 'raise';
+	// Raise's default list is the Investor Watchlist: the investors not filed in
+	// a named list, tracked on the stage board at /pipeline (handover v1 B9).
+	const pipe = useSWR<{ data: Array<{ watchlist_id: string | null }> }>(isRaise ? qk.raise.pipeline() : null);
+	const mainCount = (pipe.data?.data ?? []).filter((r) => !r.watchlist_id).length;
 	// Investor lists only mean something on Raise (see use-nav).
 	const lists = isRaise ? all : all.filter((l) => !isInvestorList(l));
 	const [kind, setKind] = useState<'investors' | 'companies'>('investors');
@@ -39,10 +47,26 @@ export function WatchlistsOverview({ watchlistHref }: { watchlistHref: (id: stri
 				<Button type="submit" disabled={!name.trim() || busy}><Plus /> New watchlist</Button>
 			</form>
 
-			{isLoading ? <Loading /> : lists.length === 0 ? (
-				<Empty>No watchlists yet. Create one above, or use “Add to watchlist” on any company page.</Empty>
+			{isLoading ? <Loading /> : lists.length === 0 && !isRaise ? (
+				<Empty>
+					{tier === 'scout'
+						? 'Your Startup Watchlist is empty. Save companies to follow them here.'
+						: 'No watchlists yet. Save a company or an investor and it shows up here.'}{' '}
+					<Button size="sm" href={hrefOf('companies')}>{tier === 'scout' ? 'Find companies' : 'Browse companies'}</Button>
+				</Empty>
 			) : (
 				<div className="atlas-rowlist">
+					{isRaise && (
+						<div className="atlas-rowlist__row">
+							<div className="atlas-rowlist__main">
+								<Link href={hrefOf('pipeline')} className="atlas-rowlist__title atlas-wl-title">Investor Watchlist</Link>
+								<div className="atlas-rowlist__desc">{count(mainCount, true)} · Board from Target to Closed</div>
+							</div>
+							<div className="atlas-wl-actions">
+								<Action icon={<ArrowUpRight />} href={hrefOf('pipeline')}>Open</Action>
+							</div>
+						</div>
+					)}
 					{lists.map((l) => (
 						<div key={l.id} className="atlas-rowlist__row">
 							<div className="atlas-rowlist__main">
@@ -63,7 +87,7 @@ export function WatchlistsOverview({ watchlistHref }: { watchlistHref: (id: stri
 								<div className="atlas-wl-actions">
 									<Action icon={<ArrowUpRight />} href={watchlistHref(l.id)}>Open</Action>
 									<Action icon={<Pencil />} onClick={() => { setEditing(l.id); setEditName(l.name); }}>Rename</Action>
-									<Action icon={<Trash2 />} disabled={busy} onClick={() => { if (window.confirm(isInvestorList(l) ? `Delete “${l.name}”? Its investors move back to your Main watchlist.` : `Delete “${l.name}”? Companies stay in the database.`)) void run(() => deleteWatchlist(l.id), `Deleted ${l.name}`); }}>Delete</Action>
+									<Action icon={<Trash2 />} disabled={busy} onClick={() => { if (window.confirm(isInvestorList(l) ? `Delete “${l.name}”? Its investors move back to your Investor Watchlist.` : `Delete “${l.name}”? Companies stay in the database.`)) void run(() => deleteWatchlist(l.id), `Deleted ${l.name}`); }}>Delete</Action>
 								</div>
 							)}
 						</div>

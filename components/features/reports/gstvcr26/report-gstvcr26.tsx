@@ -41,6 +41,7 @@ import { ReportNav } from "../report-nav";
 import { dataInFullCaptions } from "./captions";
 import { companyLogoSrc, websiteHref } from "./logos";
 import { SubSectorSnapshotSection } from "./sub-sector-snapshot";
+import { toReportSectorKeys } from "./sector-keys";
 
 // The downloadable "lite" PDF lives in Supabase storage (public_bucket), not in
 // the repo. `?download` makes Supabase serve it as an attachment — the HTML
@@ -1073,7 +1074,9 @@ export default function ReportGSTVCR26({ content, preview = false }: {
     acquirerRegion: maAcquirerRegion ?? undefined,
   }] as const, [fundingYear, maYear, fundingRegion, maAcquireeRegion, maAcquirerRegion]);
   const { data: liveFull, error: dataInFullError, isLoading: dataInFullLoading } = useSWR<LiveDataInFull>(dataInFullKey, { keepPreviousData: true });
-  const data = liveFull as (ReportData & LiveDataInFull) | undefined;
+  // The live API returns Atlas's current top-sector names (Athlete Tech / Fan Tech / Executive Tech);
+  // this report keys its colours and "For …" labels on the names it was written with.
+  const data = useMemo(() => (liveFull ? toReportSectorKeys(liveFull) : undefined) as (ReportData & LiveDataInFull) | undefined, [liveFull]);
   const trendsData = GSTER25_FACTS["global_last5_last5"] as ReportData;
   /* Chart captions are written from the live numbers (see ./captions.ts), so they
      stay true for every period / region filter and explain 2026 = Jan–Oct. */

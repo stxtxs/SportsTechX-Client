@@ -13,6 +13,9 @@ import './watchlists.css';
  * search, the user's watchlists as toggles (✓ = company is in it), and
  * "+ New watchlist" with a name field (creates the list and adds the company).
  */
+/** The default company list's name, on every solution (handover v1 §3). */
+export const DEFAULT_COMPANY_LIST = 'Startup Watchlist';
+
 export function SaveToWatchlist({ companyId, companyName, compact, saved }: {
 	companyId: string;
 	companyName: string;
@@ -47,19 +50,19 @@ export function SaveToWatchlist({ companyId, companyName, compact, saved }: {
 	const toggle = async (id: string, name: string) => {
 		setBusy(id);
 		try {
-			if (ids.includes(id)) { await removeFromWatchlist(id, companyId); toast.success(`Removed from ${name}`); }
-			else { await addToWatchlist(id, companyId); toast.success(`Added ${companyName} to ${name}`); }
+			if (ids.includes(id)) { await removeFromWatchlist(id, companyId); toast.success(`Removed from ${name}.`); }
+			else { await addToWatchlist(id, companyId); toast.success(`Added to ${name}.`); }
 		} catch (e) { toast.error((e as Error).message); }
 		finally { setBusy(null); }
 	};
-	const create = async () => {
-		const name = newName.trim();
+	const create = async (preset?: string) => {
+		const name = (preset ?? newName).trim();
 		if (!name) return;
 		setBusy('new');
 		try {
 			const w = await createWatchlist(name);
 			await addToWatchlist(w.id, companyId);
-			toast.success(`Created ${name} and added ${companyName}`);
+			toast.success(`Added to ${name}.`);
 			setCreating(false); setNewName('');
 		} catch (e) { toast.error((e as Error).message); }
 		finally { setBusy(null); }
@@ -95,7 +98,14 @@ export function SaveToWatchlist({ companyId, companyName, compact, saved }: {
 					)}
 					<div className="atlas-menu__list atlas-menu__list--scroll">
 						{isLoading && <div className="atlas-menu__empty">Loading…</div>}
-						{!isLoading && lists.length === 0 && <div className="atlas-menu__empty">No watchlists yet — create one below.</div>}
+						{/* The default list (handover v1 §3): a user's first save lands in
+						    "Startup Watchlist", created on that first save. */}
+						{!isLoading && lists.length === 0 && (
+							<button type="button" className="atlas-menu__item atlas-menu__item--plain" disabled={busy !== null} onClick={() => void create(DEFAULT_COMPANY_LIST)}>
+								<span className="atlas-wl-check" aria-hidden="true">{busy === 'new' ? <Loader2 className="animate-spin" size={10} /> : null}</span>
+								<span className="atlas-switcher__name">{DEFAULT_COMPANY_LIST}</span>
+							</button>
+						)}
 						{!isLoading && lists.length > 0 && shown.length === 0 && <div className="atlas-menu__empty">No watchlists match</div>}
 						{shown.map((l) => {
 							const on = ids.includes(l.id);

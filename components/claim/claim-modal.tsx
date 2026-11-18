@@ -146,7 +146,7 @@ export function ClaimModal({
   prefill?: Partial<ClaimForm>;
   /**
    * Which roles the chooser may offer, by tier — Explore gets all three, Raise
-   * gets founder + operator (it owns events and programmes), Scout gets
+   * gets founder + operator (it owns events and programs), Scout gets
    * investor only. Omitted means all three.
    */
   allowedRoles?: ClaimRole[];

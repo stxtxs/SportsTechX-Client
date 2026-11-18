@@ -13,6 +13,7 @@ import { Screen, Card, Button, Loading, Logo, StagedLoader } from '@/components/
 import { companyHref, hrefOf } from '@/lib/routes';
 import { rating } from './score-tone';
 import { DECK_ANALYSIS_STAGES } from './deck-stages';
+import { fmtFullDate } from '@/lib/format';
 
 /**
  * Deck analysis — full analysis (canvas: deckAnalysis), shared by Raise "Pitch
@@ -160,7 +161,7 @@ export function DeckAnalysisDetail({ id, copy = FOUNDER_DETAIL_COPY }: { id: str
 			<div className="atlas-pagehead" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 20, flexWrap: 'wrap', marginTop: 28 }}>
 				<div>
 					<h1 className="atlas-h1" style={{ fontSize: 28 }}>{row?.filename ?? copy.fallbackName}</h1>
-					{row?.created_at && <div className="atlas-sub">Analysed {new Date(row.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+					{row?.created_at && <div className="atlas-sub">Analysed {fmtFullDate(new Date(row.created_at))}</div>}
 				</div>
 				<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
 					<Button variant="outline" disabled={busy !== null} onClick={() => void viewDeck()}>

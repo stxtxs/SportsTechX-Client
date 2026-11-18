@@ -50,5 +50,6 @@ export { TabbedPageHeader } from './patterns/tabbed-page-header';
 export { NavSectionHeader } from './patterns/nav-section-header';
 export { SectionHeader } from './patterns/section-header';
 export { PlaceholderTag, PLACEHOLDER_LABEL } from './patterns/placeholder-tag';
+export { LockMark, LOCK_HOVER } from './patterns/lock-mark';
 export { AgentComposer } from './patterns/agent-composer';
 export type { HeaderTab } from './patterns/tabbed-page-header';

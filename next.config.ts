@@ -33,7 +33,20 @@ const nextConfig: NextConfig = {
   // `next=/onboarding`, so send them to the plan choice that replaced it.
   // The GSTER26 editor preview may be framed by the admin panel only.
   async headers() {
+    // VC Benchmark R2 (full) and R3 (personal): never a shared CDN cache, never
+    // indexed. `:suffix*` covers the -summary and -yours entries too. The API
+    // must send the same on its report endpoints (see the backend page).
+    const privateReport = [
+      { key: "Cache-Control", value: "private, no-store, max-age=0" },
+      { key: "X-Robots-Tag", value: "noindex, nofollow" },
+    ];
     return [{
+      source: "/reports/investors-survey26",
+      headers: privateReport,
+    }, {
+      source: "/reports/investors-survey26-:suffix",
+      headers: privateReport,
+    }, {
       source: "/report-preview/:path*",
       headers: [{
         key: "Content-Security-Policy",

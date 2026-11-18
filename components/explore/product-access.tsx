@@ -4,7 +4,7 @@ import { PLANS_HREF } from './shell-config';
 
 /** Account → Product access (Claude Design): Explore active; Raise / Scout link to the landing page. */
 const PRODUCTS = [
-	{ name: 'Atlas Explore', body: 'Understand and explore the sports-tech market.', active: true, href: '', cta: '' },
+	{ name: 'Atlas Explore', body: 'Understand and explore the sports tech market.', active: true, href: '', cta: '' },
 	{ name: 'Atlas Raise', body: 'Improve your pitch, find investors and manage your raise.', active: false, href: PLANS_HREF, cta: 'Explore Atlas Raise' },
 	{ name: 'Atlas Scout', body: 'Discover, research and evaluate relevant companies.', active: false, href: PLANS_HREF, cta: 'Explore Atlas Scout' },
 ];

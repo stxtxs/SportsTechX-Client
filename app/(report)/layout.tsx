@@ -3,7 +3,11 @@ import { ProtectedRoute } from '@/components/auth/protected-route';
 
 // Re-declare the site template here: a segment's own title stops the root template from reaching
 // its children, so each report page reads "<report title> | Atlas" (and this fallback "Report | Atlas").
-export const metadata: Metadata = { title: { default: 'Report', template: '%s | Atlas' } };
+// Every report needs a login, so none may surface in search or link previews.
+export const metadata: Metadata = {
+	title: { default: 'Report', template: '%s | Atlas' },
+	robots: { index: false, follow: false },
+};
 
 // Reports read per-user (tier-gated) data — no static pre-render.
 export const dynamic = 'force-dynamic';

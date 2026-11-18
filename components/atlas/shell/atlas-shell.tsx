@@ -12,6 +12,10 @@ import { FigmaIcon } from '../icons/figma-icons';
 import { isSection, pickActive, type ShellNavEntry, type ShellNavItem } from './nav';
 import './atlas-shell.css';
 import { AnnouncementBar } from '@/components/announcement-bar';
+import { LockMark, LOCK_HOVER } from '../patterns/lock-mark';
+
+/** At most this many groups open at once (handover v1 §2). */
+const MAX_OPEN = 3;
 
 /**
  * AtlasShell — the product-agnostic app frame (Atlas Product UX v3 "Side Bar"):
@@ -59,13 +63,7 @@ export function AtlasShell({ product, productColor, homePath, nav, topbar, overl
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
 	const railKey = `stx:${product.toLowerCase()}-rail-collapsed`;
-	const sectionsKey = `stx:${product.toLowerCase()}-nav-closed`;
 	const collapsed = useSyncExternalStore(subscribe, () => readStored(railKey) === '1', () => false);
-	// Closed sections, stored as a JSON array of titles (default: all open).
-	const closedRaw = useSyncExternalStore(subscribe, () => readStored(sectionsKey) ?? '[]', () => '[]');
-	const closed = parseList(closedRaw);
-	const toggleSection = (title: string) =>
-		writeStored(sectionsKey, JSON.stringify(closed.includes(title) ? closed.filter((t) => t !== title) : [...closed, title]));
 	// The mobile drawer, stored as the route it was opened on rather than a
 	// boolean. Any navigation then closes it by definition — including from a
 	// link inside `railExtra`, which a nav item's own onClick would have missed.
@@ -78,6 +76,34 @@ export function AtlasShell({ product, productColor, homePath, nav, topbar, overl
 	const allItems = nav.flatMap((e) => (isSection(e) ? e.items : [e]));
 	const activePath = pickActive(allItems, homePath, pathname, searchParams);
 	const isActive = (path: string) => path === activePath;
+
+	// Groups (handover v1 §2): all closed by default except the one holding the
+	// current page; at most MAX_OPEN open, and opening another closes the one
+	// opened longest ago. Held in shell state, not storage, so a fresh visit
+	// starts closed. `opened` is oldest-first.
+	// A "Soon" page opened by link is not a nav match, but its group still opens.
+	const activeGroup = nav.find((e): e is Extract<ShellNavEntry, { items: ShellNavItem[] }> => isSection(e) && e.items.some((i) => i.path === activePath))?.title
+		?? nav.find((e): e is Extract<ShellNavEntry, { items: ShellNavItem[] }> => isSection(e) && e.items.some((i) => i.soon && i.path.split('?')[0] === pathname))?.title
+		?? null;
+	const [opened, setOpened] = useState<string[]>([]);
+	// The active group shows open unless the user closed it while on this page.
+	const [closedActiveOn, setClosedActiveOn] = useState<string | null>(null);
+	const withActive = (list: string[]) => (activeGroup && closedActiveOn !== pathname && !list.includes(activeGroup)
+		? [...list, activeGroup].slice(-MAX_OPEN)
+		: list);
+	const openGroups = withActive(opened);
+	// Functional updates: two quick toggles must each see the other's result,
+	// not the list as it was at the last render.
+	const toggleSection = (title: string) => {
+		const closing = openGroups.includes(title);
+		setOpened((prev) => {
+			const current = withActive(prev);
+			return current.includes(title)
+				? current.filter((t) => t !== title)
+				: [...current.filter((t) => t !== title), title].slice(-MAX_OPEN);
+		});
+		if (title === activeGroup) setClosedActiveOn(closing ? pathname : null);
+	};
 
 	// Collapsed, the labels are hidden, so the only thing identifying an icon
 	// was the native `title` — slow to appear and unstyled. The rail and the
@@ -105,10 +131,11 @@ export function AtlasShell({ product, productColor, homePath, nav, topbar, overl
 			);
 		}
 		return (
-			<Link key={item.path} href={item.path} className={`${cls} ${isActive(item.path) ? 'active' : ''}`} aria-current={isActive(item.path) ? 'page' : undefined} {...tipProps(item.name)} onClick={() => { setOpen(false); setTip(null); }}>
+			<Link key={item.path} href={item.path} className={`${cls} ${isActive(item.path) ? 'active' : ''}${item.locked ? ' is-locked' : ''}`} aria-current={isActive(item.path) ? 'page' : undefined} {...tipProps(item.locked ? `${item.name} · ${LOCK_HOVER}` : item.name)} onClick={() => { setOpen(false); setTip(null); }}>
 				<span className="atlas-nav-ico"><FigmaIcon name={item.icon} /></span>
 				<span className="atlas-nav-label">{item.name}</span>
 				{item.placeholder && <span className="atlas-soon" title={PLACEHOLDER_LABEL}>Not connected</span>}
+				{item.locked && <LockMark inert size={11} className="atlas-nav-lock" />}
 			</Link>
 		);
 	};
@@ -119,7 +146,7 @@ export function AtlasShell({ product, productColor, homePath, nav, topbar, overl
 		// route — which made the Raise "Watchlists" section's collapse button dead,
 		// since a user is almost always on one of its pages (pipeline / a saved list
 		// / All watchlists).
-		const isOpen = !closed.includes(e.title);
+		const isOpen = openGroups.includes(e.title);
 		const id = `nav-sec-${e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 		return (
 			<div key={e.title} className={`atlas-nav-section${isOpen ? '' : ' is-closed'}`}>
@@ -127,7 +154,11 @@ export function AtlasShell({ product, productColor, homePath, nav, topbar, overl
 					<span>{e.title}</span>
 					<span className="atlas-nav-caret"><FigmaIcon name="nav-caret" /></span>
 				</button>
-				<div id={id} className="atlas-nav-section__items">{e.items.map((i) => renderItem(i))}</div>
+				{/* Two layers so the group can slide: the outer grid animates its
+				    row from 0fr to 1fr, the inner box clips while it does. */}
+				<div id={id} className="atlas-nav-section__items" inert={!isOpen && !collapsed}>
+					<div className="atlas-nav-section__inner">{e.items.map((i) => renderItem(i))}</div>
+				</div>
 			</div>
 		);
 	};
@@ -191,10 +222,6 @@ export function initialsOf(name: string | null | undefined): string {
 	const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
 	if (parts.length === 0) return '·';
 	return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
-}
-
-function parseList(raw: string): string[] {
-	try { const v: unknown = JSON.parse(raw); return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []; } catch { return []; }
 }
 
 // Per-browser UI prefs (rail collapsed, closed nav sections). Read via

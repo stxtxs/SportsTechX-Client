@@ -4,7 +4,7 @@ import type { ClaimRole } from './claim-events.ts';
  * Which claim forms a tier may use, when the caller has not already decided.
  *
  *   Explore  founder + operator + investor — any of the three could be true
- *   Raise    founder + operator            — Raise owns events and programmes,
+ *   Raise    founder + operator            — Raise owns events and programs,
  *                                            and those are operator claims
  *   Scout    investor                      — one option, so the chooser is
  *                                            skipped entirely

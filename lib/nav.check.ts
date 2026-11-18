@@ -25,44 +25,33 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 type Shape = { top: string[]; sections: [string, string[]][]; bottom: string[] };
 
 const EXPECTED: Record<Tier, Shape> = {
+	// Atlas dev handover v1 §2 (16 Nov 2026) — supersedes the Figma-era shapes.
 	explore: {
-		// Matches the Figma Side Nav (31:15195) and ATLAS Base.dc.html.
-		// "Investors" is a Raise feature and is listed here on purpose: the
-		// design shows it like any other item and lets the page sell. It is the
-		// one nav entry in any product that resolves to `upsell` rather than
-		// `allow`, which is why `buildNav` filters on `!== 'hidden'`.
-		// Pitch Deck is a paid feature (Raise/Scout) and resolves to `upsell` for
-		// Explore, like Investors — shown in the nav (buildNav keeps everything
-		// `!== 'hidden'`) so the page can sell it; clicking it hits the TierGate.
-		top: ['Home', 'Ask Atlas', 'Interests', 'Pitch Deck'],
+		top: ['Home', 'Ask Atlas'],
 		sections: [
-			['Intelligence', ['Framework', 'Reports', 'Newsletter']],
-			['Market', ['Analysis', 'Monthly Roundup', 'Companies', 'Events', 'Programs', 'Investors']],
+			['Discover', ['Companies', 'Investors', 'Programs']],
+			['Market', ['Analytics', 'Monthly Roundup', 'Recently Funded', 'M&A']],
+			['Resources', ['Framework', 'Reports', 'Newsletter', 'Events']],
 		],
 		bottom: [],
 	},
 	raise: {
 		top: ['Home', 'Ask Atlas'],
 		sections: [
-			['Raise', ['Pitch Deck', 'Investors', 'Programs']],
-			['Discover', ['Companies', 'Recommended', 'Signals']],
-			['Intelligence', ['Analytics', 'Monthly Roundup', 'My Market', 'Recently Funded', 'M&A']],
-			['Watchlists', ['Main watchlist', 'All watchlists']],
-			['Resources', ['Fundraising Guide', 'Framework', 'Reports', 'Events', 'Newsletter']],
+			['Fundraise', ['Pitch Deck', 'Investors', 'Watchlists', 'Strategy Session']],
+			['Discover', ['Companies', 'Programs']],
+			['Market', ['Analytics', 'Monthly Roundup', 'My Market', 'Recently Funded', 'M&A']],
+			['Resources', ['Fundraising Guide', 'Framework', 'Reports', 'Newsletter', 'Events']],
 		],
 		bottom: [],
 	},
 	scout: {
-		// "All watchlists" lives inside Discover (Scout has no pipeline, so a
-		// standalone one-item Watchlists section looked orphaned). Saved lists
-		// splice in before it — covered by the splice test below.
 		top: ['Home', 'Ask Atlas'],
 		sections: [
-			['Discover', ['Companies', 'Recommended', 'Signals', 'All watchlists']],
-			['Ecosystem', ['Investors', 'Programs']],
-			['Intelligence', ['Market', 'Monthly Roundup', 'Recently Funded', 'M&A']],
-			['Deal Flow', ['All', 'Featured', 'Verified Raises', 'From the Circle', 'Deck Screener']],
-			['Resources', ['Framework', 'Reports', 'Events', 'Newsletter']],
+			['Deal Flow', ['Companies', 'Watchlists', 'Verified Raises', 'Featured Raises', 'Deck Screener']],
+			['Discover', ['Investors', 'Programs']],
+			['Market', ['Analytics', 'Monthly Roundup', 'Recently Funded', 'M&A']],
+			['Resources', ['Framework', 'Reports', 'Newsletter', 'Events']],
 		],
 		bottom: [],
 	},
@@ -108,15 +97,16 @@ for (const tier of ['explore', 'raise', 'scout'] as Tier[]) {
 	check(leaked.length === 0, `no cross-tier leakage${leaked.length ? ': ' + leaked.map((r) => r.id).join(', ') : ''}`);
 }
 
-// The watchlist splice: user lists land immediately before "All watchlists",
-// inside Raise's "Watchlists" section or Scout's "Discover" section.
-for (const tier of ['raise', 'scout'] as Tier[]) {
-	const { nav } = buildNav(tier, false, [{ id: 'w1', name: 'My list' }], ROUTES[0]!.icon);
-	const title = tier === 'scout' ? 'Discover' : 'Watchlists';
-	const section = nav.filter(isSection).find((s) => s.title === title)!;
-	const names = section.items.map((i) => i.name);
-	check(names[names.length - 2] === 'My list' && names[names.length - 1] === 'All watchlists',
-		`[${tier}] watchlists splice: ${names.join(', ')}`);
+// Locked and "Soon" markers (handover v1 §2).
+{
+	const flat = (t: Tier) => buildNav(t, false).nav.flatMap((e) => (isSection(e) ? e.items : [e as ShellNavItem]));
+	const ex = flat('explore');
+	check(ex.filter((i) => i.locked).map((i) => i.name).join(',') === 'Investors,Recently Funded,M&A' || ex.filter((i) => i.locked).map((i) => i.name).join(',') === 'Recently Funded,M&A',
+		`[explore] locked: ${ex.filter((i) => i.locked).map((i) => i.name).join(', ')}`);
+	const sc = flat('scout');
+	check(sc.filter((i) => i.soon).map((i) => i.name).join(',') === 'Verified Raises,Featured Raises,Deck Screener',
+		`[scout] soon: ${sc.filter((i) => i.soon).map((i) => i.name).join(', ')}`);
+	check(!flat('raise').some((i) => i.soon || i.locked), '[raise] nothing locked or soon');
 }
 
 // Every nav destination is flat — one segment under the root, no `/app`.
@@ -173,8 +163,6 @@ for (const tier of ['explore', 'raise', 'scout'] as Tier[]) {
 	const missing = ROUTES.filter((r) => !names.has(r.icon)).map((r) => `${r.id} -> ${r.icon || '(none)'}`);
 	check(missing.length === 0,
 		`every route icon exists in the Figma set${missing.length ? ` — MISSING: ${missing.join(', ')}` : ` (${ROUTES.length} routes, ${names.size} icons)`}`);
-	// The watchlist items the sidebar splices in at runtime use this one.
-	check(names.has('nav-list'), 'the spliced watchlist icon exists');
 }
 
 // Admin sees every product's items; an explore user sees none of them.
@@ -283,11 +271,10 @@ check(access('scout', 'raise', false) === 'hidden', 'raise user is not shown Sco
 	check(access(ROUTE_BY_ID.get('recently-funded')!.tier, 'explore', false) === 'upsell'
 		&& !navigable('recently-funded', 'explore'),
 		'navigable: an upsell route is listed in nav but not offered as a chip');
-	// Deck Screener went live: Scout runs the same deck engine in investor mode,
-	// so `deck` is now offerable to both products (the `placeholder: { scout }`
-	// flag that dropped it is gone).
-	check(navigable('deck', 'scout') && navigable('deck', 'raise'),
-		'navigable: Deck Screener is offerable now that investor mode is wired');
+	// Deck Screener shows "Soon" on Scout until it is confirmed live end to end
+	// (handover v1 §2, §8); Raise's Pitch Deck stays offerable.
+	check(!navigable('deck', 'scout') && navigable('deck', 'raise'),
+		'navigable: Deck Screener is not offered to Scout while "Soon"');
 	check(!navigable('deal-flow', 'scout') && !navigable('deal-flow-circle', 'scout'),
 		'navigable: Deal Flow is not offered while it is "Coming soon" (soon: true)');
 	check(!navigable('no-such-route', 'scout'), 'navigable: an unknown route id is dropped');

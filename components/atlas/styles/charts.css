@@ -78,7 +78,7 @@
 .atlas .pd-bar-track { height: 6px; border-radius: 3px; background: var(--a-track); overflow: hidden; }
 .atlas .pd-bar-fill {
 	height: 100%; border-radius: 3px; transition: width .35s ease;
-	background: linear-gradient(90deg, color-mix(in srgb, var(--c, var(--a-pink)) 78%, #000), var(--c, var(--a-pink)));
+	background: linear-gradient(90deg, color-mix(in srgb, var(--c, var(--atlas-product, var(--a-pink))) 78%, #000), var(--c, var(--atlas-product, var(--a-pink))));
 }
 
 /* ── Hierarchical drilldown (Figma "Sector card") ── */

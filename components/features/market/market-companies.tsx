@@ -34,7 +34,7 @@ const COMPANY_SORTS: [string, string][] = [['-created_at', 'Newest'], ['name', '
 const DASH = <span className="atlas-dash">—</span>;
 
 /**
- * Market → Companies. The full sports-tech company database — the same search +
+ * Market → Companies. The full sports tech company database — the same search +
  * filter set as before, now rendered as list rows (per the design) with a slide-
  * over detail drawer.
  */
@@ -194,7 +194,7 @@ export function MarketCompanies({ companyHref }: { companyHref?: (idOrSlug: stri
 			    SWR reports isLoading=false and this would fall through to
 			    "No companies match your filters" before the first request. */}
 			{(all.isLoading || !filtersReady) && rows.length === 0 ? <Loading />
-				: rows.length === 0 ? <Empty>No companies match your filters.</Empty>
+				: rows.length === 0 ? <Empty>No results for these filters. Remove one, or clear them all.</Empty>
 					: (
 						<div className="atlas-card atlas-chart-card" style={{ marginTop: 10 }}>
 							<div className="atlas-chart-card__head" style={{ padding: '17px 25px 16px', fontSize: 13, color: 'var(--a-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>

@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cx } from '@/components/atlas';
+import type { ReactNode } from 'react';
+import { cx, PageHead } from '@/components/atlas';
 import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
 import { hrefOf } from '@/lib/routes';
 import './account-tabs.css';
@@ -22,39 +23,50 @@ import './account-tabs.css';
  */
 interface Tab { id: string; label: string }
 
-export function AccountTabs() {
+/** How complete a settings page is (handover v1 §7), shown beside its tabs. */
+export function CompletionBadge({ pct }: { pct: number }) {
+	return <span className="atlas-acct-pct" aria-label={`${pct}% complete`}><b>{pct}%</b> complete</span>;
+}
+
+/**
+ * The Account area's frame, identical on all three solutions (handover v1 §4):
+ * one fixed "Account" header with no byline, then the tabs
+ * Account · Preferences · Scouting thesis (Scout) or Raise settings (Raise) ·
+ * Subscription · Credits. A page's own action (e.g. Edit) sits at the right of
+ * the tab row, so no page swaps the header for its own title.
+ */
+export function AccountTabs({ actions }: { actions?: ReactNode } = {}) {
 	const { data: profile } = useUserProfile();
 	const tier = getUserType(profile);
 	const pathname = usePathname();
 
-	const tabs: Tab[] = [{ id: 'account', label: 'Account' }];
-	// The thesis tab is whichever of the two a product actually has: Raise
-	// configures a raise, Scout an investment thesis. Explore has neither.
+	const tabs: Tab[] = [{ id: 'account', label: 'Account' }, { id: 'interests', label: 'Preferences' }];
 	if (tier === 'raise') tabs.push({ id: 'raise-settings', label: 'Raise settings' });
-	if (tier === 'scout') tabs.push({ id: 'thesis', label: 'Thesis settings' });
-	// Explore has no subscription to manage — it is the free tier, and its
-	// upgrade surface is the product-access card on the Account tab.
-	if (tier !== 'explore') tabs.push({ id: 'billing', label: 'Subscription' });
-	// Credits (AI + exports) are a separate purchase from a plan, and every
-	// tier can buy them — including Explore, which has no Subscription tab.
-	tabs.push({ id: 'credits', label: 'Credits' });
+	if (tier === 'scout') tabs.push({ id: 'thesis', label: 'Scouting thesis' });
+	tabs.push({ id: 'billing', label: 'Subscription' }, { id: 'credits', label: 'Credits' });
 
 	return (
-		<nav className="atlas-acct-tabs" aria-label="Account sections">
-			{tabs.map((t) => {
-				const href = hrefOf(t.id);
-				const active = pathname === href;
-				return (
-					<Link
-						key={t.id}
-						href={href}
-						className={cx('atlas-acct-tab', active && 'is-active')}
-						aria-current={active ? 'page' : undefined}
-					>
-						{t.label}
-					</Link>
-				);
-			})}
-		</nav>
+		<>
+			<PageHead title="Account" />
+			<div className="atlas-acct-tabs__row">
+				<nav className="atlas-acct-tabs" aria-label="Account sections">
+					{tabs.map((t) => {
+						const href = hrefOf(t.id);
+						const active = pathname === href;
+						return (
+							<Link
+								key={t.id}
+								href={href}
+								className={cx('atlas-acct-tab', active && 'is-active')}
+								aria-current={active ? 'page' : undefined}
+							>
+								{t.label}
+							</Link>
+						);
+					})}
+				</nav>
+				{actions && <div className="atlas-acct-tabs__actions">{actions}</div>}
+			</div>
+		</>
 	);
 }

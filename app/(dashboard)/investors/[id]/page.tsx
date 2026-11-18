@@ -22,6 +22,8 @@ import { categoryLabel } from '@/components/raise/investors';
 import { fmtUsd, place } from '@/components/features/market/format';
 import { BRAND, fmtDate } from '@/components/features/company/company-profile';
 import '@/components/features/company/company-profile.css';
+import { fmtFullDate } from '@/lib/format';
+import { yearOf } from '@/lib/format';
 
 /**
  * Investor profile — the same layout as the company profile (header with name,
@@ -174,7 +176,7 @@ export default function InvestorProfilePage() {
 													: (d.company_name ?? 'Company')}
 											</span>
 											<span role="cell">{d.round_type_name ?? 'Round'}</span>
-											<span className="atlas-co__amt" role="cell">{d.amount_usd == null ? '—' : fmtUsd(Number(d.amount_usd))}</span>
+											<span className="atlas-co__amt" role="cell">{d.amount_usd == null ? '—' : fmtUsd(Number(d.amount_usd), yearOf(d.announced_date))}</span>
 										</div>
 									))}
 								</div>
@@ -237,7 +239,7 @@ function PipelineRecord({ record, onChanged }: { record: Pipe; onChanged: () => 
 			<div>
 				{(act?.data ?? []).map((a, i) => (
 					<div key={i} style={{ fontSize: 12, color: 'var(--a-muted)', display: 'flex', justifyContent: 'space-between', gap: 10, padding: '11px 0', borderTop: i === 0 ? 'none' : '1px solid var(--a-border)' }}>
-						<span>{describe(a)}</span><span style={{ color: 'var(--a-faint)', fontFamily: 'var(--a-mono)', fontSize: 10, letterSpacing: '0.05em' }}>{new Date(a.occurred_at).toLocaleDateString()}</span>
+						<span>{describe(a)}</span><span style={{ color: 'var(--a-faint)', fontFamily: 'var(--a-mono)', fontSize: 10, letterSpacing: '0.05em' }}>{fmtFullDate(new Date(a.occurred_at))}</span>
 					</div>
 				))}
 				{(act?.data?.length ?? 0) === 0 && <div style={{ fontSize: 12, color: 'var(--a-faint)', padding: '11px 0' }}>No activity yet.</div>}

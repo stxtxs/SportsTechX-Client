@@ -2,6 +2,7 @@
 
 import { forwardRef } from 'react';
 import { Menu, Moon, SunMedium, X } from 'lucide-react';
+import { downloadReport } from '@/lib/report-pdf';
 
 /**
  * The header every custom-built web report shares (GSTER26, FTABR26): Atlas
@@ -25,7 +26,8 @@ type Props = {
 	/** Hidden entirely (print mode, auth gate). */
 	hidden?: boolean;
 	theme: { navBg: string; divider: string; textMuted: string };
-	pdf?: { url: string; file: string; label?: string };
+	/** `slug`: a signed-in report — download through the signed-URL endpoint instead of `url`. */
+	pdf?: { url: string; file: string; label?: string; slug?: string };
 	mobileOpen: boolean;
 	onToggleMobile: () => void;
 	onToggleDark: () => void;
@@ -74,7 +76,7 @@ export const ReportNav = forwardRef<HTMLElement, Props>(function ReportNav(
 							style={{ fontFamily: SANS, fontSize: 11, letterSpacing: 1.6, fontWeight: 500, color: '#fff', background: PILL, border: `1px solid ${PILL}`, padding: '8px 18px', textDecoration: 'none', textTransform: 'uppercase', transition: 'opacity 0.2s', borderRadius: 99 }}
 							onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
 							onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
-							onClick={() => onDownload?.(false)}>{pdfLabel}</a>
+							onClick={(e) => { if (pdf.slug) { e.preventDefault(); void downloadReport(pdf.slug); } onDownload?.(false); }}>{pdfLabel}</a>
 					)}
 				</div>
 			</nav>
@@ -89,7 +91,7 @@ export const ReportNav = forwardRef<HTMLElement, Props>(function ReportNav(
 							</a>
 						))}
 						{pdf && (
-							<a href={pdf.url} download={pdf.file} onClick={() => onDownload?.(true)}
+							<a href={pdf.url} download={pdf.file} onClick={(e) => { if (pdf.slug) { e.preventDefault(); void downloadReport(pdf.slug); } onDownload?.(true); }}
 								style={{ fontSize: 12, letterSpacing: 1.6, textTransform: 'uppercase', color: '#fff', background: PILL, textDecoration: 'none', padding: '11px 20px', fontFamily: SANS, fontWeight: 500, borderRadius: 99, display: 'inline-block', marginTop: 4 }}>{pdfLabel}</a>
 						)}
 					</div>

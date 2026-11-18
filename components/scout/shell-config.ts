@@ -3,5 +3,5 @@
  * used to live here now come from the route manifest (`lib/routes.ts`).
  */
 
-/** Scout's product colour (logo tag), from the Claude Design. */
-export const SCOUT_COLOR = '#0FB86A';
+/** Scout teal (handover v1 §4 Colour). */
+export const SCOUT_COLOR = '#1CC3A4';

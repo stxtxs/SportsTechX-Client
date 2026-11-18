@@ -13,14 +13,13 @@
    Vite project (asset imports and `?url`).
 
    Content is text-identical to the published PDF
-   (assets/sports-tech-vc-deal-sourcing-benchmark-2026.pdf); do not hand-edit
+   (assets/sports tech-vc-deal-sourcing-benchmark-2026.pdf); do not hand-edit
    the copy in data/public-report.json.
    --------------------------------------------------------------------------- */
 
 import { Fragment, type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useReveal } from "./use-reveal";
-import reportJson from "./data/public-report.json";
 import { BENCHMARK26_PART_ORDER } from "./content-defaults";
 import { ReportNav } from "../report-nav";
 import { DARK as NAV_DARK, LIGHT as NAV_LIGHT } from "../ftabr26/lib/report-theme";
@@ -30,8 +29,7 @@ import "./public-report.css";
 
 type NavSection = { id: string; n: string; title: string };
 const contributorsUrl = "/reports/benchmark26/contributors.webp";
-// The published PDF, in Supabase storage (public_bucket) like the other reports' PDFs.
-const pdfUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""}/storage/v1/object/public/public_bucket/reports/VCDSB26.pdf?download=VCDSB26.pdf`;
+// The PDF is private: ReportNav fetches a signed link per download (signed-in readers only).
 
 /* ------------------------------------------------------------ types
    Mirrors the `stx.public-report/1` JSON in data/public-report.json. Change
@@ -83,9 +81,6 @@ export interface PublicReportData {
   partOrder?: string[];
 }
 
-/* JSON imports widen string literals (chart `type`) to string, so the bundled
-   data is asserted to the declared shape here, once. */
-const REPORT = reportJson as unknown as PublicReportData;
 
 /* ----------------------------------------------------------- theme
 
@@ -413,7 +408,7 @@ function ChartFor({ chart, meta }: { chart: Chart; meta: PublicReportData["meta"
 
 /* -------------------------------------------------------------- page */
 
-export default function PublicReport({ data = REPORT }: { data?: PublicReportData }) {
+export default function PublicReport({ data }: { data: PublicReportData }) {
   const { meta, intro, sections, closing, methodology } = data;
   /* Page order: the saved one, then anything it doesn't name, in the published order. */
   const orderKey = JSON.stringify(data.partOrder ?? null);
@@ -537,7 +532,7 @@ export default function PublicReport({ data = REPORT }: { data?: PublicReportDat
       <ReportNav
         items={nav.map((n) => ({ href: `#${n.id}`, label: n.title }))}
         activeIndex={active} isDark={dark} isMobile={isMobile} theme={dark ? NAV_DARK : NAV_LIGHT}
-        pdf={{ url: pdfUrl, file: pdfName }}
+        pdf={{ url: '#', file: pdfName, slug: 'investors-survey26' }}
         mobileOpen={menuOpen} onToggleMobile={() => setMenuOpen((o) => !o)} onToggleDark={toggle}
         onNavigate={(href, _label, mobile) => {
           if (mobile) setMenuOpen(false);

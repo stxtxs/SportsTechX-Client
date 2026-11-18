@@ -1,3 +1,5 @@
+import { fmtAmount } from '@/lib/format';
+
 /** Shared types + IH formatting for the Monthly Roundup. */
 
 export type RoundupMode = 'funding' | 'ma';
@@ -6,8 +8,8 @@ export type Perspective = 'acquiree' | 'acquirer';
 
 export interface Grouping { label: string; deal_count: number; total_amount: number }
 
-/** IH style: always millions, one decimal ("$938.9M", "$0.5M"). */
-export const fmtM = (usd: number) => `$${(usd / 1e6).toFixed(1)}M`;
+/** Atlas amount format ($938.90M, $0.50M, $1.20B) — see lib/format.ts. */
+export const fmtM = (usd: number) => fmtAmount(usd, 'USD', '$0.00M');
 
 /** IH `+12.3% vs prev month` / `-4.0% vs prev month`. */
 export const fmtChange = (pct?: number) => (pct == null || !Number.isFinite(pct) ? '' : `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}% vs prev month`);
@@ -21,9 +23,9 @@ const UNCLASSIFIED = 'Unclassified';
 
 /** IH renamed the three sector pillars for display (server utils/sector-mapping.ts). */
 const PILLAR_LABEL: Record<string, string> = {
-	'Activity & Performance': 'For Athletes',
-	'Fans & Content': 'For Fans',
-	'Management & Organisation': 'For Executives',
+	'Activity & Performance': 'Athlete Tech',
+	'Fans & Content': 'Fan Tech',
+	'Management & Organisation': 'Executive Tech',
 };
 
 export const ihGroups = (rows: Grouping[] | undefined, pillars = false): Grouping[] =>

@@ -5,9 +5,10 @@ import type { ReactNode } from 'react';
 import { H1, Sub } from '../ui/layout';
 import { cx } from '../ui/cx';
 import { PlaceholderTag } from './placeholder-tag';
+import { LockMark } from './lock-mark';
 import { useActiveTabInView } from '../ui/tabs';
 
-export interface HeaderTab { label: string; href: string; active?: boolean; soon?: boolean; placeholder?: boolean }
+export interface HeaderTab { label: string; href: string; active?: boolean; soon?: boolean; placeholder?: boolean; locked?: boolean }
 
 /**
  * TabbedPageHeader — page title + sub-line + link tabs (Figma "Header" + "Tab Bar").
@@ -34,7 +35,7 @@ export function TabbedPageHeader({ title, sub, tabs, actions }: {
 				{tabs.map((t) => t.soon ? (
 					<span key={t.href} className="atlas-tab is-soon" aria-disabled="true">{t.label}<span className="atlas-soon">Soon</span></span>
 				) : (
-					<Link key={t.href} href={t.href} className={cx('atlas-tab', t.placeholder && 'has-pill', t.active && 'active')} aria-current={t.active ? 'page' : undefined}>{t.label}{t.placeholder && <PlaceholderTag short={!t.active} />}</Link>
+					<Link key={t.href} href={t.href} className={cx('atlas-tab', t.placeholder && 'has-pill', t.active && 'active')} aria-current={t.active ? 'page' : undefined}>{t.label}{t.placeholder && <PlaceholderTag short={!t.active} />}{t.locked && <LockMark inert size={11} className="atlas-tab__lock" />}</Link>
 				))}
 			</nav>}
 		</header>

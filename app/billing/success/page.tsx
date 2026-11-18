@@ -100,10 +100,10 @@ export default function BillingSuccessPage() {
 
 				<p style={{ fontSize: 13, color: 'var(--a-muted)', maxWidth: 400, lineHeight: 1.55, margin: 0 }}>
 					{confirmed
-						? 'Your plan is active. Next we’ll help you set things up — you can skip it and come back whenever.'
+						? 'Your solution is active. Next we’ll help you set things up — you can skip it and come back whenever.'
 						: gaveUp
-							? 'Your payment went through, but we haven’t been able to activate the plan automatically. Nothing is lost — contact us and we’ll sort it out. You can keep using Atlas in the meantime.'
-							: 'Thanks! We’re activating your plan — this usually takes a few seconds.'}
+							? 'Your payment went through, but we haven’t been able to activate the solution automatically. Nothing is lost — contact us and we’ll sort it out. You can keep using Atlas in the meantime.'
+							: 'Thanks! We’re activating your solution — this usually takes a few seconds.'}
 				</p>
 
 				<div style={{ marginTop: 6, display: 'flex', gap: 8 }}>

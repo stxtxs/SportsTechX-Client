@@ -19,7 +19,7 @@ export function WatchlistDetail({ id, backHref, companyHref }: { id: string; bac
 	const list = lists.find((l) => l.id === id);
 
 	if (listsLoading) return <Loading />;
-	if (!list) return <Empty>Watchlist not found. <Link href={backHref}>All watchlists</Link></Empty>;
+	if (!list) return <Empty>Watchlist not found. <Link href={backHref}>Watchlists</Link></Empty>;
 
 	const remove = async (companyId: string, name: string) => {
 		setBusy(companyId);
@@ -35,7 +35,7 @@ export function WatchlistDetail({ id, backHref, companyHref }: { id: string; bac
 				</div>
 				<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
 					<ViewToggle value={view} onChange={setView} />
-					<Action icon={<ArrowUpLeft />} href={backHref}>All watchlists</Action>
+					<Action icon={<ArrowUpLeft />} href={backHref}>Watchlists</Action>
 				</div>
 			</div>
 			{isLoading ? <Loading /> : companies.length === 0 ? (

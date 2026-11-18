@@ -9,6 +9,7 @@ import { pathOf } from '@/lib/routes';
 import { navigable } from '@/lib/nav';
 import type { Tier } from '@/lib/access';
 import './raise-chat.css';
+import { ASK_INTRO, ASK_PLACEHOLDER } from '@/lib/atlas-copy';
 
 /**
  * Shared chat policy + transcript renderer, used by BOTH the FAB drawer
@@ -26,13 +27,13 @@ import './raise-chat.css';
  */
 
 export const FOUNDER_GREETING =
-	"I'm your fundraising co-pilot. Ask me to research investors, size your market, sanity-check your raise, or find your way around the workspace — e.g. “find seed investors in Germany” or “what does the Market page do?”";
+	"I'm your fundraising assistant. Ask me to research investors, size your market, sanity-check your raise, or find your way around the workspace — e.g. “find seed investors in Germany” or “what does the Market page do?”";
 
 export const FOUNDER_INSUFFICIENT_CREDITS =
-	"_You're out of AI credits._ [Top up or upgrade](/credits) to keep chatting.";
+	"_You're out of AI credits._ [Top up, or switch to Raise or Scout](/credits), to keep chatting.";
 
 export const SCOUT_GREETING =
-	"I'm your deal-flow co-pilot. Ask me to screen companies against your thesis, dig into a funding round or an investor, or find your way around the workspace — e.g. “find companies matching my thesis” or “who funded sports betting in Europe this year?”";
+	"I'm your scouting assistant. Ask me to screen companies against your thesis, dig into a funding round or an investor, or find your way around the workspace — e.g. “find companies matching my thesis” or “who funded sports betting in Europe this year?”";
 
 export const SCOUT_INSUFFICIENT_CREDITS = FOUNDER_INSUFFICIENT_CREDITS;
 
@@ -40,25 +41,25 @@ export const SCOUT_INSUFFICIENT_CREDITS = FOUNDER_INSUFFICIENT_CREDITS;
  * Explore. No workspace to talk about, so this one is about the market data —
  * which is exactly what a free account has access to.
  */
-export const EXPLORE_GREETING =
-	"Ask me about the sports-tech market — companies, funding rounds, investors, events — and I'll pull it from the Atlas data. Try “who is funding fan engagement right now?” or “summarise last month’s rounds”.";
+/** The handover's one Ask Atlas intro (v1 §5), used as written. */
+export const EXPLORE_GREETING = ASK_INTRO;
 
 /** Explore has no plan to top up *from*, so the nudge is to the plans page. */
 export const EXPLORE_INSUFFICIENT_CREDITS =
-	"_You've used your free AI credits._ [Get more credits or upgrade](/credits) to keep going.";
+	"_You've used your free AI credits._ [Get more credits](/credits) to keep going.";
 
 /** Per-tier chat copy, so the three surfaces pick the same way. */
 export function chatCopy(tier: Tier): { greeting: string; insufficient: string; placeholder: string; fabLabel: string } {
 	if (tier === 'scout') {
 		return { greeting: SCOUT_GREETING, insufficient: SCOUT_INSUFFICIENT_CREDITS,
-			placeholder: 'Ask about companies, deals, your thesis…', fabLabel: 'Open deal-flow co-pilot' };
+			placeholder: ASK_PLACEHOLDER.scout, fabLabel: 'Open Ask Atlas' };
 	}
 	if (tier === 'raise') {
 		return { greeting: FOUNDER_GREETING, insufficient: FOUNDER_INSUFFICIENT_CREDITS,
-			placeholder: 'Ask about investors, your market, your raise…', fabLabel: 'Open fundraising co-pilot' };
+			placeholder: ASK_PLACEHOLDER.raise, fabLabel: 'Open Ask Atlas' };
 	}
 	return { greeting: EXPLORE_GREETING, insufficient: EXPLORE_INSUFFICIENT_CREDITS,
-		placeholder: 'Ask about companies, funding, events…', fabLabel: 'Open the Atlas assistant' };
+		placeholder: ASK_PLACEHOLDER.explore, fabLabel: 'Open Ask Atlas' };
 }
 
 /** Detail routes whose `[id]` segment names an entity the model can be told about. */

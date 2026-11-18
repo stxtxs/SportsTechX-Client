@@ -1,14 +1,18 @@
 'use client';
 
 import { Pencil, Sparkles } from 'lucide-react';
-import { Button, Card, Loading, PageHead } from '@/components/atlas';
+import { Button, Card, Loading } from '@/components/atlas';
+import { AccountTabs, CompletionBadge } from '@/components/features/account/account-tabs';
+import { thesisPct } from '@/lib/profile-completion';
 import { openScoutThesis } from '@/lib/setup-events';
 import { useThesisState } from './use-thesis';
 import type { Thesis } from './sample-data';
-import { chequeRange } from './thesis-codec';
+import { chequeRange, parseMoney } from './thesis-codec';
+import { useUserProfile } from '@/hooks/use-user-profile';
+import { fmtAmount } from '@/lib/format';
 
 /**
- * Thesis settings — a READ-ONLY summary of the saved thesis, not a form.
+ * Scouting thesis — a READ-ONLY summary of the saved thesis, not a form.
  *
  * Editing happens in the same thesis wizard used for onboarding: the "Edit
  * thesis" button fires `openScoutThesis()`, which the globally-mounted
@@ -22,24 +26,26 @@ import { chequeRange } from './thesis-codec';
  */
 export function ThesisSettings() {
 	const { thesis: t, isLoading, needsSetup } = useThesisState();
+	const { data: profile } = useUserProfile();
 	if (isLoading) return <Loading />;
+
+	// The name comes from the account, not the thesis (handover v1 A11).
+	const accountName = (profile?.full_name ?? '').trim();
+	const name = accountName && !accountName.includes('@') ? accountName : t.name;
+	const aum = parseMoney(t.aum ?? '');
 
 	const cheque = chequeRange(t);
 	const hq = [t.city, t.country].filter(Boolean).join(', ');
 
 	return (
 		<>
-			<PageHead
-				title="Thesis settings"
-				sub="What Atlas uses to personalise your recommendations, signals and Deal Flow."
-				actions={<Button onClick={() => openScoutThesis({ edit: true })}><Pencil size={13} /> Edit thesis</Button>}
-			/>
+			<AccountTabs actions={<><CompletionBadge pct={thesisPct(t)} />{!needsSetup && <Button size="sm" variant="outline" onClick={() => openScoutThesis({ edit: true })}><Pencil size={13} /> Edit</Button>}</>} />
 
 			{needsSetup ? (
 				<Card>
 					<div style={{ textAlign: 'center', padding: '28px 16px', display: 'grid', gap: 12, placeItems: 'center' }}>
 						<span style={{ width: 44, height: 44, borderRadius: 'var(--a-radius-sm)', display: 'grid', placeItems: 'center', background: 'var(--a-inset)', color: 'var(--a-muted)' }}><Sparkles size={20} /></span>
-						<div style={{ fontFamily: 'var(--a-font)', fontWeight: 700, fontSize: 16, color: 'var(--a-ink)' }}>Your thesis isn&rsquo;t set up yet</div>
+						<div style={{ fontFamily: 'var(--a-font)', fontWeight: 700, fontSize: 16, color: 'var(--a-ink)' }}>Set up your thesis</div>
 						<p style={{ margin: 0, maxWidth: 440, fontSize: 13, lineHeight: 1.55, color: 'var(--a-muted)' }}>
 							Tell Atlas what you&rsquo;re looking for — stage, cheque, geography and sectors — and it personalises the whole product to your thesis.
 						</p>
@@ -49,16 +55,16 @@ export function ThesisSettings() {
 			) : (
 				<div className="scout-stack">
 					<SummaryCard title="Profile" fields={[
-						['Name', t.name], ['Work email', t.email], ['Role', t.role], ['LinkedIn', t.linkedin],
+						['Name', name], ['Work email', t.email], ['Role', t.role], ['LinkedIn', t.linkedin],
 					]} />
 					<SummaryCard title="Fund" fields={[
 						['Fund / organisation', t.fundName], ['Investor type', t.investorType],
-						['Fund size / AUM', t.aum], ['Website', t.website], ['Headquarters', hq],
+						['Fund size / AUM', aum ? fmtAmount(aum, 'EUR') : t.aum], ['Website', t.website], ['Headquarters', hq],
 					]} />
 					<SummaryCard title="Stage &amp; cheque" fields={[
 						['Stages', t.stages], ['Cheque size', cheque], ['Lead or follow', t.invStyle],
 					]} />
-					<SummaryCard title="Investment focus" fields={[
+					<SummaryCard title="Scouting focus" fields={[
 						['Regions', t.regions], ['Sectors', t.sectors], ['Minimum traction', t.traction],
 						['Looks for', t.include], ['Avoids', t.exclude],
 					]} />

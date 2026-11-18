@@ -34,6 +34,8 @@ export interface Profile {
   // Drives feature gating in the user-facing app, NOT admin access.
   user_type: string | null;
   user_type_detail: string | null;
+  // USD or EUR for every amount (Preferences); stored on the account.
+  display_currency?: 'USD' | 'EUR';
   // Free-text "what brings you to Atlas", from Explore onboarding.
   background?: string | null;
   // `account_type` is the self-declared persona set at onboarding.

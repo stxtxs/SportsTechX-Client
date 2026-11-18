@@ -39,7 +39,7 @@ export default function NotFound() {
 				</p>
 
 				<div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 30, flexWrap: 'wrap' }}>
-					<Link href="/" className="atlas-btn atlas-btn--primary">Go to homepage</Link>
+					<Link href="/" className="atlas-btn atlas-btn--primary">Go to Home</Link>
 					<Link href="/home" className="atlas-btn atlas-btn--outline">Your workspace</Link>
 				</div>
 			</div>

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { hrefOf } from '@/lib/routes';
+import { PLANS_PATH } from '@/lib/routes';
 
 /**
  * "You are seeing the first N of M." Shown when the server capped the result
@@ -29,8 +29,9 @@ export function ResultCapNote({ cap, total, noun }: {
 				Showing the first {cap.toLocaleString()} matching {noun}
 			</span>
 			<span style={{ fontSize: 13, color: 'var(--a-muted)' }}>
+				{/* Handover v1 §5, Companies limit line (Explore). */}
 				Refine your search or filters to narrow the results, or{' '}
-				<Link href={hrefOf('billing')} style={{ color: 'var(--a-navy)' }}>upgrade</Link> to see all {total.toLocaleString()}.
+				<Link href={PLANS_PATH} style={{ color: 'var(--atlas-product, var(--a-ink))' }}>switch to Raise or Scout</Link> to see all {total.toLocaleString()}.
 			</span>
 		</div>
 	);

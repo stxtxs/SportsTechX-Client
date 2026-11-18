@@ -1,23 +1,23 @@
 'use client';
 
-import { Screen, SectionHeader } from '@/components/atlas';
-import { RecommendedInvestors } from '@/components/raise/investors';
-import { Recommended } from '@/components/scout/recommended';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Loading, Screen } from '@/components/atlas';
 import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
+import { hrefOf } from '@/lib/routes';
 
 /**
- * Discover → Recommended.
- *
- * One URL, two different domain objects: investors matched to a founder's raise,
- * or companies matched to an investor's thesis. A user holds one paid tier, so
- * there is always exactly one right answer — no need for two routes.
+ * Recommended is no longer a page (handover v1 §2): it is the "Recommended"
+ * side of the switch on Investors (Raise) and Companies (Scout). Old links and
+ * chat chips land here and are sent on.
  */
 export default function Page() {
+	const router = useRouter();
 	const { data: profile } = useUserProfile();
-	return (
-		<Screen>
-			<SectionHeader />
-			{getUserType(profile) === 'scout' ? <Recommended /> : <RecommendedInvestors />}
-		</Screen>
-	);
+	useEffect(() => {
+		if (!profile) return;
+		const list = getUserType(profile) === 'scout' ? hrefOf('companies') : hrefOf('investors');
+		router.replace(`${list}?list=recommended`);
+	}, [profile, router]);
+	return <Screen><Loading /></Screen>;
 }

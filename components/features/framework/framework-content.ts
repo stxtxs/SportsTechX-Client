@@ -45,7 +45,7 @@ export const CATEGORIES: Record<string, CategoryCopy> = {
 	activity_performance__before_after_activity: {
 		description: 'Everything that surrounds the activity itself — finding and booking it, recovering from it, staying injury-free and progressing as an athlete.',
 		technologies: ['Booking and discovery platforms', 'Recovery and rehab tech', 'Nutrition and health apps', 'Scouting and recruitment platforms'],
-		useCases: ['Finding and booking facilities', 'Return-to-play programmes', 'Injury prevention', 'Athlete progression'],
+		useCases: ['Finding and booking facilities', 'Return-to-play programs', 'Injury prevention', 'Athlete progression'],
 	},
 	fans_content__content_platforms: {
 		description: 'Platforms that produce and distribute sports content to audiences, from editorial products to live and on-demand streaming.',

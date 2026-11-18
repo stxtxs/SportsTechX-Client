@@ -28,8 +28,15 @@ interface Roundup {
 }
 
 /** IH year picker: current year + the 10 before it. */
+/** The last fully completed calendar month (UTC): October while November runs. */
+const LAST_COMPLETED = (() => {
+	const now = new Date();
+	const m = now.getUTCMonth(); // 0-based: the current month's index is last month's 1-based number
+	return m === 0 ? { year: now.getUTCFullYear() - 1, month: 12 } : { year: now.getUTCFullYear(), month: m };
+})();
+
 const YEARS: [string, string][] = Array.from({ length: 11 }, (_, i) => {
-	const y = String(new Date().getUTCFullYear() - i);
+	const y = String(LAST_COMPLETED.year - i);
 	return [y, y];
 });
 
@@ -37,7 +44,7 @@ const YEARS: [string, string][] = Array.from({ length: 11 }, (_, i) => {
  * Intelligence → Monthly Roundup. A port of the old Intelligence Hub
  * /analytics "Monthly Roundup" tab: Funding / M&A tabs with month + year
  * pickers (and the M&A Acquiree/Acquirer toggle) in one filter card, three IH
- * stat cards, three full pies (Sector/Sub Sector, Business Model, Country top
+ * stat cards, three full pies (Sector/Sub-sector, Business Model, Country top
  * 10) each with its own Amount/Count toggle and Complete Breakdown table, then
  * the month's deal table. Numbers come from /api/market/roundup (IH math);
  * the published editorial header sits above and curated news below, outside
@@ -47,10 +54,15 @@ export function MarketRoundup() {
 	const [mode, setModeRaw] = useState<RoundupMode>('funding');
 	const [perspective, setPerspective] = useState<Perspective>('acquiree');
 	const [sectorView, setSectorView] = useState<'sector' | 'sub'>('sector');
-	// `null` = "whatever the server says is the latest month with data" (ingest
-	// lags, so the previous calendar month is often empty). The server echoes
-	// the month it chose.
-	const [sel, setSel] = useState<{ year: number; month: number } | null>(null);
+	// Opens on the last completed month, never the month in progress (handover
+	// v1 §4 Access; fix list 17 Nov, 1.2). It used to ask the server for "the
+	// latest month with data", which was the current, half-finished month.
+	const [sel, setSelRaw] = useState<{ year: number; month: number } | null>(LAST_COMPLETED);
+	// The month in progress (and later) cannot be chosen: picking this year
+	// with a later month clamps back to the last completed one.
+	const setSel = (v: { year: number; month: number }) => setSelRaw(
+		v.year > LAST_COMPLETED.year || (v.year === LAST_COMPLETED.year && v.month > LAST_COMPLETED.month) ? LAST_COMPLETED : v,
+	);
 
 	const roundup = useSWR<Roundup>(qk.market.roundup({ ...(sel ?? {}), mode, ...(mode === 'ma' ? { perspective } : {}) }));
 	const shown = sel ?? (roundup.data ? { year: roundup.data.year, month: roundup.data.month } : null);
@@ -91,7 +103,7 @@ export function MarketRoundup() {
 			<Card style={{ padding: '14px 24px' }}>
 				<div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
 					<Seg<RoundupMode> ariaLabel="Funding or M&A" value={mode} onChange={setMode} options={[{ key: 'funding', label: 'Funding' }, { key: 'ma', label: 'M&A' }]} />
-					<Combobox className="atlas-select atlas-select--pill" ariaLabel="Month" value={String(month)} onChange={(v) => setSel({ year, month: Number(v) })} style={{ width: 150 }} options={MONTHS} />
+					<Combobox className="atlas-select atlas-select--pill" ariaLabel="Month" value={String(month)} onChange={(v) => setSel({ year, month: Number(v) })} style={{ width: 150 }} options={year === LAST_COMPLETED.year ? MONTHS.filter(([m]) => Number(m) <= LAST_COMPLETED.month) : MONTHS} />
 					<Combobox className="atlas-select atlas-select--pill" ariaLabel="Year" value={String(year)} onChange={(v) => setSel({ year: Number(v), month })} style={{ width: 110 }} options={YEARS} />
 					{mode === 'ma' && <Seg<Perspective> ariaLabel="Perspective" value={perspective} onChange={setPerspective} options={[{ key: 'acquiree', label: 'Acquiree' }, { key: 'acquirer', label: 'Acquirer' }]} />}
 				</div>
@@ -109,11 +121,11 @@ export function MarketRoundup() {
 					<div className="mkt-donuts">
 						<PieCard
 							key={`${mode}-sector`} mode={mode} defaultMetric={defMetric}
-							title={`${noun} by ${sectorView === 'sector' ? 'Sector' : 'Sub Sector'}`}
+							title={`${noun} by ${sectorView === 'sector' ? 'Sector' : 'Sub-sector'}`}
 							plural={sectorView === 'sector' ? 'sectors' : 'sub sectors'}
-							dimension={sectorView === 'sector' ? 'Sector' : 'Sub Sector'}
+							dimension={sectorView === 'sector' ? 'Sector' : 'Sub-sector'}
 							rows={sectorView === 'sector' ? groups.sector : groups.sub}
-							extra={<Seg<'sector' | 'sub'> ariaLabel="Sector view" value={sectorView} onChange={setSectorView} options={[{ key: 'sector', label: 'Sector' }, { key: 'sub', label: 'Sub Sector' }]} />}
+							extra={<Seg<'sector' | 'sub'> ariaLabel="Sector view" value={sectorView} onChange={setSectorView} options={[{ key: 'sector', label: 'Sector' }, { key: 'sub', label: 'Sub-sector' }]} />}
 						/>
 						<PieCard key={`${mode}-bm`} mode={mode} defaultMetric={defMetric} title={`${noun} by Business Model`} plural="business models" dimension="Business Model" rows={groups.bm} />
 						<PieCard key={`${mode}-geo`} mode={mode} defaultMetric={defMetric} title={`${noun} by Country`} plural="countries" dimension="Country" rows={groups.geo} top={10} />

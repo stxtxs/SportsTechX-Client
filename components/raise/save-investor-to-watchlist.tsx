@@ -17,7 +17,7 @@ import '@/components/features/watchlists/watchlists.css';
  *  the Raise home cards change together — see lib/invalidate. */
 export { refreshPipeline };
 
-const MAIN = 'Main watchlist';
+const MAIN = 'Investor Watchlist';
 interface PipeRef { id: string; investor_id: string | null; watchlist_id: string | null }
 
 /**
@@ -26,8 +26,10 @@ interface PipeRef { id: string; investor_id: string | null; watchlist_id: string
  * investor list). Picking another list moves it, keeping its stage and notes;
  * "+ New watchlist" creates an investor list and files it there.
  */
-export function SaveInvestorToWatchlist({ investorId, investorName, align = 'start', portal = false }: {
+export function SaveInvestorToWatchlist({ investorId, investorName, align = 'start', portal = false, compact = false }: {
 	investorId: string; investorName: string;
+	/** Icon-only bookmark, as on the Companies table (handover v1 A6). */
+	compact?: boolean;
 	/** Which edge the menu hangs from: 'start' for a card's left-hand action row,
 	 *  'end' for a button at the right of a header (else it clips off-screen). */
 	align?: 'start' | 'end';
@@ -95,7 +97,7 @@ export function SaveInvestorToWatchlist({ investorId, investorName, align = 'sta
 			if (row) await apiRequest('PATCH', `/api/raise/pipeline/${row.id}`, { watchlist_id: listId });
 			else await apiRequest('POST', '/api/raise/pipeline', { investor_id: investorId, stage: 'target', watchlist_id: listId });
 			await refreshPipeline();
-			toast.success(row ? `Moved ${investorName} to ${label}` : `Added ${investorName} to ${label}`);
+			toast.success(`Added to ${label}.`);
 			close();
 		} catch (e) { toast.error((e as Error).message); }
 		finally { setBusy(null); }
@@ -118,10 +120,19 @@ export function SaveInvestorToWatchlist({ investorId, investorName, align = 'sta
 
 	return (
 		<div className="atlas-fbar__anchor" ref={ref}>
+			{compact ? (
+				<button type="button" className={cx('atlas-wl-bookmark', row && 'on')} aria-haspopup="dialog" aria-expanded={open}
+					aria-label={row ? `${investorName}: in ${currentName}` : `Save ${investorName} to a watchlist`}
+					title={row ? `In ${currentName}` : 'Save to watchlist'}
+					onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(); }}>
+					<Bookmark size={15} strokeWidth={1.75} fill={row ? 'currentColor' : 'none'} aria-hidden="true" />
+				</button>
+			) : (
 			<button type="button" className="atlas-action atlas-action--save" aria-haspopup="dialog" aria-expanded={open} onClick={toggle}>
 				<span className="atlas-action__icon"><Bookmark fill={row ? 'currentColor' : 'none'} /></span>
 				<span className="atlas-action__label">{row ? `In ${currentName}` : 'Add to watchlist'}</span>
 			</button>
+			)}
 			{open && (() => {
 				const menu = (
 				<div ref={menuRef} className={cx('atlas-menu', align === 'end' && 'atlas-menu--end', 'atlas-wl-menu', 'atlas-menu--sheet')} role="dialog" aria-label={row ? 'Move to watchlist' : 'Add to watchlist'}

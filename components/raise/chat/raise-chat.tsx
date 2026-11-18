@@ -15,10 +15,11 @@ import { setCopilotOpen, toggleCopilot, useCopilotOpen } from '@/lib/copilot';
 import { hrefOf } from '@/lib/routes';
 import { deslug } from '@/components/shell/breadcrumbs';
 import './raise-chat.css';
+import { fmtFullDate } from '@/lib/format';
 
 /**
  * Ask Atlas — the streaming agent as a co-pilot docked on the right. Opened from
- * the top bar's Ask Atlas button or ⌘J / Ctrl+J; open state lives in
+ * the top bar's Ask Atlas button or ⌘/ / Ctrl+/; open state lives in
  * lib/copilot. It sits beside the page rather than over it: no backdrop, the
  * page narrows to make room (html.copilot-open, ≥1024px), and it stays mounted
  * across page changes so the conversation carries on while you browse. Route
@@ -100,10 +101,11 @@ export function RaiseChat() {
 		return () => document.documentElement.classList.remove('copilot-open');
 	}, [open]);
 
-	// ⌘J / Ctrl+J toggles from anywhere; Esc closes while focus is in the panel.
+	// ⌘/ / Ctrl+/ toggles from anywhere; Esc closes while focus is in the panel.
+	// Not ⌘J: Ctrl+J opens Downloads in Chrome and Edge on Windows (fix list 1.4).
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
-			if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') { e.preventDefault(); toggleCopilot(); }
+			if ((e.metaKey || e.ctrlKey) && (e.key === '/' || e.code === 'Slash')) { e.preventDefault(); toggleCopilot(); }
 		};
 		window.addEventListener('keydown', onKey);
 		return () => window.removeEventListener('keydown', onKey);
@@ -166,7 +168,7 @@ export function RaiseChat() {
 							conversations!.map((c) => (
 								<button key={c.id} className="ai-history-item" onClick={() => void loadConversation(c.id)} title={c.title ?? 'Untitled conversation'}>
 									<span className="ai-history-title">{c.title || 'Untitled conversation'}</span>
-									<span className="ai-history-date">{new Date(c.last_message_at).toLocaleDateString()}</span>
+									<span className="ai-history-date">{fmtFullDate(new Date(c.last_message_at))}</span>
 								</button>
 							))
 						)}
@@ -216,7 +218,7 @@ export function RaiseChat() {
 							onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }}
 							rows={1}
 							disabled={streaming}
-							aria-label="Message the co-pilot"
+							aria-label="Message Ask Atlas"
 						/>
 						<button className="raise-chat-send" onClick={() => void send()} disabled={streaming || !input.trim()} aria-label="Send">
 							<ArrowUp size={15} strokeWidth={2} />

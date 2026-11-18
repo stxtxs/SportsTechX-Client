@@ -5,7 +5,7 @@
  */
 
 /** Explore's product colour (logo tag) — the Atlas pink used on the landing page. */
-export const EXPLORE_COLOR = 'var(--a-pink)';
+export const EXPLORE_COLOR = '#FF3373';
 
 /**
  * Where an in-app "tell me about Raise/Scout" link goes.

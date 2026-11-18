@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 import type { ShellNavEntry, ShellNavItem } from '@/components/atlas';
-import { isInvestorList, useCompanyWatchlists } from '@/components/features/watchlists/use-company-watchlists';
 import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
 import { buildNav } from '@/lib/nav';
 import { pathOf, SECTION_SUBS } from '@/lib/routes';
@@ -10,8 +9,7 @@ import type { Tier } from '@/lib/access';
 
 /**
  * The signed-in user's sidebar: the route manifest filtered to what their tier
- * can reach, arranged by that product's layout, with their own watchlists
- * spliced in.
+ * can reach, arranged by that product's layout, (no per-list entries: "Watchlists" is listed once).
  *
  * Replaces `EXPLORE_NAV`, `useRaiseNav()` and `useScoutNav()` — three arrays
  * that listed the same screens at three different URLs and had to be kept in
@@ -36,18 +34,13 @@ export function useNav(): {
 	const ready = !!profile;
 	const tier = getUserType(profile);
 	const isAdmin = profile?.user_role === 'admin';
-	const { lists: all } = useCompanyWatchlists();
-	// Investor lists are Raise's (their board is the Raise-only pipeline). A
-	// founder who moves to another plan keeps them on file but not in the nav.
-	const lists = useMemo(() => (tier === 'raise' ? all : all.filter((l) => !isInvestorList(l))), [all, tier]);
-
 	return useMemo(() => {
-		const { nav, bottomNav } = buildNav(tier, isAdmin, lists, 'nav-list');
+		const { nav, bottomNav } = buildNav(tier, isAdmin);
 		return {
 			ready, tier, nav, bottomNav,
 			homePath: pathOf('home', tier),
 			accountPath: pathOf('account', tier),
 			subs: SECTION_SUBS[tier],
 		};
-	}, [ready, tier, isAdmin, lists]);
+	}, [ready, tier, isAdmin]);
 }

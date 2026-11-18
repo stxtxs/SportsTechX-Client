@@ -7,8 +7,10 @@ import { toast } from 'sonner';
 import { Check, Lock, Loader2, Calendar } from 'lucide-react';
 import { qk } from '@/lib/query-keys';
 import { apiRequest } from '@/lib/query-client';
-import { Screen, PageHead, Card, Button, Badge, Loading } from '@/components/atlas';
+import { Screen, Card, Button, Badge, Loading } from '@/components/atlas';
+import { SectionHeader } from '@/components/atlas/patterns/section-header';
 import { hrefOf } from '@/lib/routes';
+import { currentNames } from '@/lib/atlas-copy';
 
 /**
  * Atlas Raise — Strategy Session (Notion "2d"). Quarterly session with STX
@@ -18,7 +20,7 @@ import { hrefOf } from '@/lib/routes';
 interface Home { strategy: { status: string; scheduled_at: string | null; next_eligible_at: string | null; steps: { label: string; done: boolean }[] } }
 
 const PERKS: [string, string][] = [
-	['Deck review', 'Pressure-test your pitch deck with STX leadership and see how investors will read it.'],
+	['Deck review', 'Pressure-test your pitch deck with SportsTechX leadership and see how investors will read it.'],
 	['Investor strategy', 'Sharpen your targeting, positioning and the sequence of your raise.'],
 	['Next steps', 'Leave with a concrete, prioritised plan for the weeks ahead.'],
 ];
@@ -30,7 +32,7 @@ export default function RaiseStrategyPage() {
 
 	const book = async () => {
 		setBusy(true);
-		try { await apiRequest('POST', '/api/raise/strategy/book', {}); toast.success('Session requested — STX will confirm a time.'); void mutate(); }
+		try { await apiRequest('POST', '/api/raise/strategy/book', {}); toast.success('Session requested. SportsTechX will confirm a time.'); void mutate(); }
 		catch (e) { toast.error((e as Error).message); }
 		finally { setBusy(false); }
 	};
@@ -39,7 +41,8 @@ export default function RaiseStrategyPage() {
 
 	return (
 		<Screen>
-			<PageHead title="Strategy session" sub="Get direct feedback from SportsTechX leadership on your deck, investor strategy and next steps — one quarterly session." />
+			{/* The Fundraise frame, like every group page (handover v1 A5). */}
+			<SectionHeader />
 
 			{isLoading || !s ? <Loading /> : (
 				<Card glow={s.status === 'available' ? 'blue' : undefined} style={{ marginBottom: 20 }}>
@@ -68,7 +71,7 @@ export default function RaiseStrategyPage() {
 										{s.steps.map((st, i) => (
 											<div key={st.label} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderTop: i ? '1px solid var(--a-border)' : 'none', fontSize: 13, color: st.done ? 'var(--a-ink)' : 'var(--a-faint)' }}>
 												{st.done ? <Check size={16} color="var(--a-navy)" /> : <span style={{ width: 16, height: 16, borderRadius: '50%', border: '1.5px solid var(--a-border-strong)' }} />}
-												{st.label}
+												{currentNames(st.label)}
 											</div>
 										))}
 									</div>

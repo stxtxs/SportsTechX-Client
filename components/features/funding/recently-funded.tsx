@@ -9,9 +9,13 @@ import type { Deal } from '@/types/api';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useUrlSync, useUrlReader } from '@/hooks/use-url-state';
 import { useRoundTypeOptions, useCountryOptions } from '@/hooks/use-catalog-options';
-import { Empty, FilterBar, Loading, Logo, Pager, type FilterDef } from '@/components/atlas';
+import { Empty, FilterBar, Flag, Loading, Logo, Pager, type FilterDef } from '@/components/atlas';
+import { SaveToWatchlist } from '@/components/features/watchlists/save-to-watchlist';
+import '@/components/features/market/market.css';
 import { fmtUsd, place } from '@/components/features/market/format';
 import './funding.css';
+import { fmtMonth } from '@/lib/format';
+import { yearOf } from '@/lib/format';
 
 /**
  * Recently Funded — disclosed funding rounds, newest first (GET /api/deals).
@@ -24,7 +28,7 @@ const PAGE_SIZE = 25;
 const PERIODS: [string, string][] = [['30', 'Last 30 days'], ['90', 'Last 90 days'], ['365', 'Last 12 months']];
 const SORTS: [string, string][] = [['-announced_date', 'Newest'], ['-amount_usd', 'Largest']];
 const isoDaysAgo = (days: number) => new Date(Date.now() - days * 864e5).toISOString().slice(0, 10);
-const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
+const fmtDate = (d?: string | null) => fmtMonth(d);
 
 export function RecentlyFunded({ companyHref }: { companyHref: (idOrSlug: string) => string }) {
 	// View-state in the URL (Back/Forward restore, shareable).
@@ -73,43 +77,56 @@ export function RecentlyFunded({ companyHref }: { companyHref: (idOrSlug: string
 				sort={{ value: sort, options: SORTS, onChange: (v) => { setSort(v); reset(); } }}
 				canClear={anyFilter}
 				onClear={() => { setQ(''); setRound(''); setCountry(''); setPeriod(''); reset(); }}
-				count={`${total.toLocaleString()} round${total === 1 ? '' : 's'}`}
-				actions={<ExportButton entity="deals" search={dq} params={params} />}
 			/>
 
-			<section className="atlas-card atlas-funded">
-				<div className="atlas-funded__head">
-					<h2 className="atlas-h2">Funding rounds</h2>
-					<span className="atlas-eyebrow">Disclosed rounds · {PERIODS.find(([k]) => k === period)?.[1] ?? 'All time'} · sorted by {sort === '-amount_usd' ? 'amount' : 'date'}</span>
-				</div>
-				{res.isLoading && rows.length === 0 ? <Loading /> : rows.length === 0 ? <Empty>No funding rounds match your filters.</Empty> : (
-					<div className="atlas-funded__table" role="table" aria-label="Funding rounds">
-						<div className="atlas-funded__row atlas-funded__row--head" role="row">
-							<span role="columnheader">#</span><span role="columnheader">Company</span><span role="columnheader">Date</span>
-							<span role="columnheader">Round</span><span role="columnheader">Investors</span><span role="columnheader" className="atlas-funded__amt">Amount</span>
+			{/* The master table (handover v1 A6): the Companies list's card, count
+			    and Export in the top row, label headings, logo + name, flag + city,
+			    right-aligned amounts and a bookmark. Deal tables show the month only. */}
+			{res.isLoading && rows.length === 0 ? <Loading /> : rows.length === 0 ? <Empty>No results for these filters. Remove one, or clear them all.</Empty> : (
+				<div className="atlas-card atlas-chart-card" style={{ marginTop: 10 }}>
+					<div className="atlas-dt__top">
+						<span>{total.toLocaleString()} funding round{total === 1 ? '' : 's'} · {PERIODS.find(([k]) => k === period)?.[1] ?? 'All time'}</span>
+						<ExportButton entity="deals" search={dq} params={params} />
+					</div>
+					<div className="atlas-table mkt-table" role="table" aria-label="Funding rounds">
+						<div className="atlas-table__head" role="row">
+							<span className="atlas-table__name" role="columnheader">Company</span>
+							<span className="atlas-table__col hide-sm" style={{ width: 150 }} role="columnheader">Location</span>
+							<span className="atlas-table__col" style={{ width: 84 }} role="columnheader">Date</span>
+							<span className="atlas-table__col hide-sm" style={{ width: 110 }} role="columnheader">Round</span>
+							<span className="atlas-table__col hide-md atlas-dt__flex" role="columnheader">Investors</span>
+							<span className="atlas-table__col" style={{ width: 96, textAlign: 'right' }} role="columnheader">Amount</span>
+							<span className="atlas-table__col" style={{ width: 32 }} role="columnheader"><span className="sr-only">Save</span></span>
 						</div>
-						{rows.map((d, i) => {
+						{rows.map((d) => {
 							const investors = d.investors?.length ? d.investors : d.lead_investor ? [d.lead_investor] : [];
+							const amount = d.amount_usd != null && Number(d.amount_usd) > 0 ? fmtUsd(Number(d.amount_usd), yearOf(d.announced_date)) : null;
 							return (
-								<div key={d.id} className="atlas-funded__row" role="row">
-									<span className="atlas-funded__n" role="cell">{(page - 1) * PAGE_SIZE + i + 1}</span>
-									<span className="atlas-funded__co" role="cell">
-										<Logo co={{ name: d.company_name, website: d.company_website ?? null, custom_logo_url: d.company_custom_logo_url }} size={32} radius={6} />
-										<span>
-											<Link href={companyHref(d.company_slug ?? d.company_id)} className="atlas-funded__name">{d.company_name}</Link>
-											{(() => { const sub = [d.primary_sector, place(d.hq_city, d.hq_country)].filter(Boolean).join(' · '); return <span className="atlas-funded__sub" title={sub || undefined}>{sub}</span>; })()}
-										</span>
+								<div key={d.id} className="atlas-table__row mkt-row" role="row">
+									<div className="atlas-table__name" role="cell">
+										<Logo co={{ name: d.company_name, website: d.company_website ?? null, custom_logo_url: d.company_custom_logo_url }} size={30} radius={6} />
+										<div className="atlas-table__name-main">
+											<Link href={companyHref(d.company_slug ?? d.company_id)} className="atlas-ellipsis mkt-row-link" style={{ fontWeight: 600, minWidth: 0 }}>{d.company_name}</Link>
+										</div>
+									</div>
+									<span className="atlas-table__col hide-sm mkt-icontext" style={{ width: 150 }} role="cell" title={place(d.hq_city, d.hq_country) || undefined}>
+										{d.hq_country || d.hq_city
+											? <><span className="mkt-flag"><Flag cc={d.hq_country ?? ''} size={13} /></span><span className="atlas-ellipsis">{d.hq_city || d.hq_country}</span></>
+											: '—'}
 									</span>
-									<span role="cell">{fmtDate(d.announced_date)}</span>
-									<span role="cell">{d.round_type_name ?? '—'}</span>
-									<span role="cell" className="atlas-funded__inv">{investors.join(', ') || 'Undisclosed'}</span>
-									<span role="cell" className="atlas-funded__amt">{d.amount_usd == null ? 'Undisclosed' : fmtUsd(Number(d.amount_usd))}</span>
+									<span className="atlas-table__col" style={{ width: 84 }} role="cell">{fmtDate(d.announced_date)}</span>
+									<span className="atlas-table__col hide-sm atlas-dt__clip" style={{ width: 110 }} role="cell" title={d.round_type_name ?? undefined}>{d.round_type_name ?? '—'}</span>
+									<span className="atlas-table__col hide-md atlas-dt__flex" role="cell" title={investors.join(', ') || undefined}>{investors.join(', ') || 'Undisclosed'}</span>
+									<span className="atlas-table__col" style={{ width: 96, textAlign: 'right', fontWeight: amount ? 600 : 400, color: amount ? 'var(--a-ink)' : undefined }} role="cell">{amount ?? 'Undisclosed'}</span>
+									<span className="atlas-table__col mkt-save" style={{ width: 32 }} role="cell">
+										{d.company_id && <SaveToWatchlist companyId={d.company_id} companyName={d.company_name ?? ''} compact />}
+									</span>
 								</div>
 							);
 						})}
 					</div>
-				)}
-			</section>
+				</div>
+			)}
 			<Pager page={page} totalPages={res.data?.totalPages ?? 1} onPage={setPage} />
 		</>
 	);

@@ -69,7 +69,7 @@ export function RouteGate({ children }: { children: React.ReactNode }) {
 					    `SectionHeader` renders nothing when the path is in no
 					    section, which covers every other gated route for free. */}
 					<SectionHeader />
-					<TierGate tier={sell} feature={typeof route!.name === 'string' ? route!.name : undefined} />
+					<TierGate tier={sell} shared={Array.isArray(route?.tier) && route.tier.length > 1} />
 				</Screen>
 			);
 		}

@@ -5,17 +5,11 @@
 .fg-phase__blurb { font-size: 13px; color: var(--a-muted); }
 .fg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 14px; }
 
-.fg-card { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 18px 20px; text-decoration: none; color: inherit; min-height: 150px; transition: border-color .15s; }
-.fg-card:hover { border-color: var(--a-border-strong); }
-.fg-card:focus-visible { outline: 2px solid var(--a-ink); outline-offset: 2px; }
-.fg-card__title { font-family: var(--a-font); font-size: 16px; font-weight: 700; color: var(--a-ink); padding-right: 34px; }
-.fg-card__summary { font-size: 13px; line-height: 1.5; color: var(--a-muted); }
-.fg-card__progress { margin-top: auto; display: grid; gap: 6px; font-size: 11px; color: var(--a-muted); }
-.fg-card__go {
-  position: absolute; top: 16px; right: 16px; display: inline-grid; place-items: center; width: 28px; height: 22px;
-  border-radius: var(--a-radius-pill); background: var(--a-field); border: 1px solid var(--a-border); color: var(--a-ink);
-}
-.fg-card:hover .fg-card__go { background: var(--a-primary); color: var(--a-primary-ink); }
+/* Guide cards use the shared post card (Reports, Newsletter); no cover, so
+   the body carries the padding the cover would. */
+.fg-card .atlas-post__cardbody { height: 100%; }
+.fg-card .atlas-post__meta svg { color: var(--a-muted); }
+.fg-card__progress { margin-top: 14px; display: grid; gap: 6px; font-size: 11px; color: var(--a-muted); }
 
 .fg-kind {
   display: inline-flex; align-items: center; gap: 6px; font-family: var(--a-mono); font-size: 10px;

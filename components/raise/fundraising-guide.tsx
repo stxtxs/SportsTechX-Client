@@ -9,8 +9,10 @@ import { qk } from '@/lib/query-keys';
 import { apiRequest } from '@/lib/query-client';
 import { refreshPaths } from '@/lib/invalidate';
 import { hrefOf } from '@/lib/routes';
-import { Empty, Loading, Progress } from '@/components/atlas';
+import { Action, Empty, Loading, Progress } from '@/components/atlas';
 import { inline } from '@/components/markdown';
+import { PinButton } from '@/components/features/pins/pin-button';
+import { pinKey } from '@/components/features/pins/rules';
 import './fundraising-guide.css';
 
 /**
@@ -56,18 +58,26 @@ export function FundraisingGuide() {
 						</div>
 						<div className="fg-grid">
 							{items.map((r) => (
-								<Link key={r.id} href={guideHref(r.slug)} className="atlas-card fg-card">
-									<span className="fg-kind">{KIND[r.kind].icon}{KIND[r.kind].label}</span>
-									<span className="fg-card__title">{r.title}</span>
-									{r.summary && <span className="fg-card__summary">{r.summary}</span>}
-									{r.items_total > 0 && (
-										<span className="fg-card__progress">
-											<Progress pct={(r.items_done / r.items_total) * 100} />
-											<span>{r.items_done} of {r.items_total} done</span>
-										</span>
-									)}
-									<span className="fg-card__go" aria-hidden="true"><ArrowUpRight size={12} /></span>
-								</Link>
+								// Same card as Reports and Newsletter (17 Nov): hovering the card
+								// only tints it; Open and the pin are icon-only, each with its
+								// words on hover, and only Open opens the item.
+								<article key={r.id} className="atlas-post atlas-post--card fg-card">
+									<div className="atlas-post__cardbody">
+										<div className="atlas-post__meta">{KIND[r.kind].icon}{KIND[r.kind].label}</div>
+										<h3 className="atlas-post__title">{r.title}</h3>
+										{r.summary && <p className="atlas-post__desc atlas-post__desc--clamp">{r.summary}</p>}
+										{r.items_total > 0 && (
+											<span className="fg-card__progress">
+												<Progress pct={(r.items_done / r.items_total) * 100} />
+												<span>{r.items_done} of {r.items_total} done</span>
+											</span>
+										)}
+										<div className="atlas-post__actions atlas-post__actions--card">
+											<Action iconOnly icon={<ArrowUpRight />} href={guideHref(r.slug)}>Open</Action>
+											<PinButton target={{ key: pinKey('guide', r.slug), kind: 'guide', title: r.title, body: r.summary || undefined, href: guideHref(r.slug) }} />
+										</div>
+									</div>
+								</article>
 							))}
 						</div>
 					</section>

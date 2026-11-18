@@ -9,7 +9,7 @@ import type { NewsletterArticle, Page, ReportListItem } from '@/types/api';
 import { useInterests, type Interests } from './interests';
 import { hrefOf } from '@/lib/routes';
 import { fmtFullDate, fmtMonth } from '@/lib/format';
-import { PinnedFeedCards, usePinnedTitles } from '@/components/features/benchmark/pinned-reports';
+import { PinnedFeedCards, usePinnedKeys } from '@/components/features/pins/pinned-feed-cards';
 import { HomeHero } from '@/components/features/home/home-hero';
 import { preferencesPct, setupDone } from '@/lib/profile-completion';
 
@@ -52,20 +52,21 @@ export function ExploreHome() {
 	// request. Editions arrive newest-first from the feed, but sort rather than
 	// trust that — the hero must genuinely be the latest.
 	const news = useSWR<NewsletterArticle[]>(qk.newsletter.articles());
+	// An item appears once on Home: skip the newest edition or report when it's
+	// already pinned above (fix brief N1).
+	const pinned = usePinnedKeys();
 	const latestNews = [...(news.data ?? [])]
-		.sort((a, b) => Date.parse(b.pubDate) - Date.parse(a.pubDate))[0];
+		.sort((a, b) => Date.parse(b.pubDate) - Date.parse(a.pubDate))
+		.find((a) => !pinned.has(`newsletter:${a.slug}`));
 	// Shares the Reports library's SWR key, so visiting both costs one request.
 	// Deliberately not `limit: 1`: the list default sorts by `-created_at` and
 	// the `-report_year` sort puts year-less rows FIRST, so a single row is the
 	// wrong report either way (measured: it returns a 2021 edition). The whole
 	// set is 33 rows / 23KB, so sorting client-side is the cheaper correct option.
 	const reports = useSWR<Page<ReportListItem>>(qk.reports.list({ limit: 100 }));
-	// A report appears once on Home (handover v1 §4 Home): skip the newest if it
-	// is already pinned above.
-	const pinnedTitles = usePinnedTitles();
 	const latestReport = [...(reports.data?.data ?? [])]
 		.sort((a, b) => (b.report_year ?? 0) - (a.report_year ?? 0) || (b.report_month ?? 0) - (a.report_month ?? 0))
-		.find((r) => !pinnedTitles.has((r.title ?? '').toLowerCase()));
+		.find((r) => !pinned.has(`report:${r.slug ?? r.id}`));
 	const lastMonth = fmtMonth(new Date(new Date().getFullYear(), new Date().getMonth() - 1));
 
 
@@ -76,7 +77,7 @@ export function ExploreHome() {
 			<section className="explore-home__attn">
 				<SectionHead title="Latest from Atlas" meta={picked.length > 0 ? 'Based on your interests · updated today' : 'Updated today'} />
 				<div className="atlas-feed-grid">
-					{/* Pinned reports first, with the pin marker and Unpin (fix list 1.15). */}
+					{/* Pinned items first, marked "Pinned"; the filled pin unpins (fix brief N1). */}
 					<PinnedFeedCards />
 					{latestNews && (
 						<FeedCard tag="Newsletter" icon={Newspaper} title={latestNews.title} body={`${fmt(latestNews.pubDate)} · ${latestNews.description}`} href={hrefOf('newsletter')} />

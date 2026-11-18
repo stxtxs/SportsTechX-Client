@@ -7,7 +7,7 @@ import { FeedCard, Loading, SectionHead } from '@/components/atlas';
 import { qk } from '@/lib/query-keys';
 import { SETUP_CARD_WIZARD, openRaiseSetup, openScoutThesis } from '@/lib/setup-events';
 import { hrefOf } from '@/lib/routes';
-import { PinnedFeedCards } from '@/components/features/benchmark/pinned-reports';
+import { PinnedFeedCards } from '@/components/features/pins/pinned-feed-cards';
 import { thesisTags, useThesis } from './use-thesis';
 import { HomeHero } from '@/components/features/home/home-hero';
 import { setupDone, thesisPct } from '@/lib/profile-completion';
@@ -76,7 +76,7 @@ export function ScoutHome() {
 			<section className="scout-home__attn">
 				<SectionHead title="Latest from Atlas" meta="Based on your thesis" />
 				<div className="atlas-feed-grid">
-					{/* Pinned reports first, with the pin marker and Unpin (fix list 1.15). */}
+					{/* Pinned items first, marked "Pinned"; the filled pin unpins (fix brief N1). */}
 					<PinnedFeedCards />
 					{/* Server-ranked and already capped at three. */}
 					{/* A setup task stops showing at 80% complete (handover v1 §7). */}

@@ -7,6 +7,7 @@ import type { NewsletterArticle } from '@/types/api';
 import { ResourceLibrary } from './resource-library';
 import type { Resource } from './resource-contract';
 import { NEWSLETTER_INTRO } from '@/lib/atlas-copy';
+import { pinKey } from '@/components/features/pins/rules';
 
 /**
  * Newsletter — latest edition + archive. Live against the Beehiiv feed via
@@ -28,6 +29,7 @@ const toResource = (a: NewsletterArticle): Resource => ({
 	cover: a.thumbnail || null,
 	href: a.link,
 	external: true,
+	pin: { key: pinKey('newsletter', a.slug), kind: 'newsletter', title: a.title, body: a.description, href: a.link, newTab: true },
 });
 
 export function NewsletterArchive() {

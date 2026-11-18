@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import { ArrowUpRight, Building2 } from 'lucide-react';
-import { Loading, Empty } from '@/components/atlas';
+import { Action, Loading, Empty } from '@/components/atlas';
 import { useFramework, useCategoryCount, type FrameworkCategory } from './use-framework';
 import { FRAMEWORK_INTRO } from './framework-content';
 import './framework.css';
@@ -40,7 +40,8 @@ function CategoryBlock({ c, href }: { c: FrameworkCategory; href: string }) {
 		<article className="atlas-fw-block">
 			<div className="atlas-fw-block__head">
 				<h3 className="atlas-fw-block__title"><Link href={href}>{c.name}</Link></h3>
-				<Link href={href} className="atlas-fw-block__go" aria-label={`Open ${c.name}`}><ArrowUpRight size={13} strokeWidth={1.75} /></Link>
+				{/* The same icon-only Open as the report and guide cards (17 Nov). */}
+				<Action iconOnly icon={<ArrowUpRight />} href={href}>Open</Action>
 			</div>
 			<div className="atlas-fw-count"><Building2 size={11} strokeWidth={1.25} aria-hidden="true" />{count == null ? '—' : count.toLocaleString()} companies</div>
 			{c.copy && <p className="atlas-fw-block__desc">{c.copy.description}</p>}

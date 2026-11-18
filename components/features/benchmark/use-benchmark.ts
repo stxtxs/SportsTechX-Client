@@ -2,16 +2,15 @@
 
 import { useCallback, useMemo } from 'react';
 import useSWR from 'swr';
-import { toast } from 'sonner';
 import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
 import { apiRequest } from '@/lib/query-client';
 import { qk } from '@/lib/query-keys';
 import { Events, track } from '@/lib/analytics';
-import { EDITION, FLAGS, RELEASE_DATE, SLUG, SOURCE } from './config';
+import { EDITION, FLAGS, SLUG, SOURCE } from './config';
 import { mockAccess, mockPersonal, mockPrefill, mockScenario } from './mock';
-import { defaultPins, fallbackAccess, visiblePins, withChoices } from './rules';
+import { fallbackAccess } from './rules';
 import { useLocalValue } from './local-store';
-import type { BenchmarkAccess, HomePin, PersonalBenchmark, SummaryContent, ThesisPrefill, WalkthroughState, WalkthroughStatus } from './types';
+import type { BenchmarkAccess, PersonalBenchmark, SummaryContent, ThesisPrefill, WalkthroughState, WalkthroughStatus } from './types';
 
 /**
  * Data hooks for the benchmark surfaces. Each one answers from one of three
@@ -65,49 +64,6 @@ export function useThesisPrefill(): { prefill: ThesisPrefill | null; isLoading: 
 	const scout = getUserType(profile) === 'scout' || profile?.user_role === 'admin';
 	const { data, isLoading } = useSource<ThesisPrefill | null>(FLAGS.benchmark && scout ? qk.benchmark.thesisPrefill() : null, () => mockPrefill(mockScenario()));
 	return { prefill: data ?? null, isLoading };
-}
-
-// ── Home pins ────────────────────────────────────────────────────────────
-
-const NO_CHOICES: Record<string, boolean> = {};
-
-export interface PinsState {
-	/** What the Home row shows: pinned, still featured, at most three. */
-	visible: HomePin[];
-	/** Every pin, pinned or not — the library uses it for "Pin to home". */
-	all: HomePin[];
-	isLoading: boolean;
-	setPinned: (key: string, pinned: boolean) => Promise<void>;
-}
-
-export function useHomePins(): PinsState {
-	const { data: profile } = useUserProfile();
-	const { access, isLoading } = useBenchmarkAccess();
-	const api = useSWR<HomePin[]>(FLAGS.benchmark && SOURCE === 'api' ? qk.benchmark.homePins() : null, { shouldRetryOnError: false });
-	const [choices, setChoices] = useLocalValue(
-		FLAGS.benchmark && profile ? `stx-home-pins:${EDITION}:${profile.id}` : null,
-		NO_CHOICES,
-	);
-
-	const all = useMemo(() => {
-		if (!FLAGS.benchmark) return [];
-		if (SOURCE === 'api') return api.data ?? [];
-		return withChoices(defaultPins(access, RELEASE_DATE), choices);
-	}, [access, choices, api.data]);
-	// "Your benchmark" is for contributors only (handover v1 §4 Access), whatever
-	// the pin source returns.
-	const visible = useMemo(() => visiblePins(all, new Date().toISOString()).filter((p) => p.entry !== 'r3' || access.entries.r3 === 'open'), [all, access]);
-
-	const { mutate } = api;
-	const setPinned = useCallback(async (key: string, pinned: boolean) => {
-		track(pinned ? Events.pinAdded : Events.pinRemoved, { key });
-		if (SOURCE !== 'api') { setChoices({ ...choices, [key]: pinned }); return; }
-		const res = await apiRequest('PUT', `/api/home/pins/${encodeURIComponent(key)}`, { pinned });
-		if (!res.ok) { toast.error('Could not update Home. Try again.'); return; }
-		await mutate();
-	}, [choices, setChoices, mutate]);
-
-	return { visible, all, isLoading: isLoading || api.isLoading, setPinned };
 }
 
 // ── Walkthrough + banner ─────────────────────────────────────────────────

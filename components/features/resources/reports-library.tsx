@@ -5,7 +5,8 @@ import useSWR from 'swr';
 import { qk } from '@/lib/query-keys';
 import { downloadReport } from '@/lib/report-pdf';
 import type { Page, ReportListItem } from '@/types/api';
-import { ENTRY_PATH, ENTRY_TITLE, FLAGS, RELEASE_DATE, SLUG } from '@/components/features/benchmark/config';
+import { ENTRY_PATH, ENTRY_TITLE, SLUG } from '@/components/features/benchmark/config';
+import { useBenchmarkSettings } from '@/components/features/benchmark/settings';
 import { yoursFirst } from '@/components/features/benchmark/rules';
 import { useBenchmarkAccess } from '@/components/features/benchmark/use-benchmark';
 import type { BenchmarkAccess } from '@/components/features/benchmark/types';
@@ -55,7 +56,7 @@ const reportPin = (slug: string, title: string, body: string): PinTarget => ({ k
  * the draft page. "Your benchmark" stays a separate, personal report, shown
  * only once the server says this user contributed.
  */
-function withBenchmark(rows: ReportListItem[], items: Resource[], a: BenchmarkAccess): Resource[] {
+function withBenchmark(rows: ReportListItem[], items: Resource[], a: BenchmarkAccess, RELEASE_DATE: string): Resource[] {
 	const slugOf = (it: Resource) => rows.find((r) => r.id === it.id)?.slug;
 	const hidden = new Set<string>([SLUG.r1, ...(a.entries.r3 === 'open' ? [] : [SLUG.r3])]);
 	const out = items
@@ -89,6 +90,7 @@ export function ReportsLibrary() {
 	// caps limit at 200.
 	const res = useSWR<Page<ReportListItem>>(qk.reports.list({ limit: 100 }));
 	const { access } = useBenchmarkAccess();
+	const benchmark = useBenchmarkSettings();
 	// The gated-report sign is Explore's only (fix brief N2).
 	const { data: profile } = useUserProfile();
 	const isExplore = getUserType(profile) === 'explore';
@@ -97,14 +99,17 @@ export function ReportsLibrary() {
 	const items = useMemo(() => {
 		const rows = res.data?.data ?? [];
 		let list = rows.map(toResource);
-		if (FLAGS.benchmark && rows.length > 0) list = withBenchmark(rows, list, access);
+		if (benchmark.enabled && rows.length > 0) list = withBenchmark(rows, list, access, benchmark.releaseDate);
 		list.sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
-		// Until the list API says which reports have gated sections (backend
-		// brief), "gated" means a PRO edition exists, or it's the Benchmark.
-		if (isExplore) list = list.map((r) => ({ ...r, gated: r.access === 'Premium' }));
+		// "Gated" = the server says a section is gated (`has_gated_sections`), or a PRO
+		// edition exists, or it's the Benchmark.
+		if (isExplore) {
+			const gatedIds = new Set(rows.filter((r) => r.has_gated_sections).map((r) => r.id));
+			list = list.map((r) => ({ ...r, gated: gatedIds.has(r.id) || r.access === 'Premium' }));
+		}
 		const yours = list.find((r) => r.badge === 'yours');
 		return yours ? yoursFirst(list, yours.id) : list;
-	}, [res.data, access, isExplore]);
+	}, [res.data, access, isExplore, benchmark.enabled, benchmark.releaseDate]);
 
 	return (
 		<ResourceLibrary

@@ -5,7 +5,8 @@ import { ArrowUpRight } from 'lucide-react';
 import { Button, Card, PlaceholderTag } from '@/components/atlas';
 import { getAccountType, getUserType, useUserProfile } from '@/hooks/use-user-profile';
 import { Events, track } from '@/lib/analytics';
-import { ENTRY_PATH, SURVEY_URL, UPGRADE_PATH } from './config';
+import { ENTRY_PATH, UPGRADE_PATH } from './config';
+import { useBenchmarkSettings } from './settings';
 import type { BenchmarkAccess } from './types';
 
 type Persona = 'investor' | 'founder' | 'unknown';
@@ -20,6 +21,7 @@ export function usePersona(): Persona {
 }
 
 function SurveyButton({ source }: { source: string }) {
+	const { surveyUrl: SURVEY_URL } = useBenchmarkSettings();
 	if (!SURVEY_URL) return <><Button disabled>Take the survey</Button> <PlaceholderTag short /></>;
 	return (
 		<a href={SURVEY_URL} target="_blank" rel="noopener noreferrer" className="atlas-btn atlas-btn--primary" onClick={() => track(Events.upgradeClicked, { source, target: 'survey' })}>

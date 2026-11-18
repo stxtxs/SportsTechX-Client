@@ -70,8 +70,10 @@ export interface RouteDef {
 	placeholder?: PerTier<boolean>;
 	/** Greyed in the sidebar with a SOON pill, not a link; never offered by chat
 	 *  or the command palette. Deal Flow uses it while it is "Coming soon". */
-	soon?: boolean;
+	soon?: PerTier<boolean>;
 	isDefault?: boolean;
+	/** Other URLs that highlight this item and show its group's frame. */
+	also?: string[];
 }
 
 export const ROUTES: RouteDef[] = [
@@ -100,9 +102,9 @@ export const ROUTES: RouteDef[] = [
 		path: '/recommended', tier: ['raise', 'scout'],
 	},
 	{
-		// Three names for one screen.
+		// One name on every solution (handover v1 §3).
 		id: 'analytics', icon: 'nav-analysis',
-		name: { explore: 'Analysis', raise: 'Analytics', scout: 'Market' },
+		name: 'Analytics',
 		path: '/analytics',
 	},
 	{
@@ -118,8 +120,10 @@ export const ROUTES: RouteDef[] = [
 	// products; Explore is not shown it (not in its nav, `['raise','scout']`).
 	{ id: 'ma', icon: 'nav-ma', name: 'M&A', path: '/ma', tier: ['raise', 'scout'] },
 	{
-		id: 'watchlists', icon: 'nav-list', name: 'All watchlists',
+		id: 'watchlists', icon: 'nav-list', name: 'Watchlists',
 		path: '/watchlists',
+		// The Investor Watchlist board is one of the watchlists (handover v1 B9).
+		also: ['/pipeline'],
 	},
 	{
 		id: 'framework', icon: 'nav-framework', name: 'Framework',
@@ -167,24 +171,30 @@ export const ROUTES: RouteDef[] = [
 		// The Deck Screener is live now: Scout runs the same engine in investor
 		// mode (snapshot, thesis fit, red flags, diligence questions).
 		path: '/deck', tier: ['raise', 'scout'],
+		// Scout's Deck Screener shows "Soon" in Deal Flow until it ships (handover v1 §2).
+		soon: { scout: true },
 	},
-	{ id: 'interests', icon: 'nav-interests', name: 'Interests', path: '/interests', tier: 'explore' },
+	// Preferences: every solution's personal settings (was Explore-only "Interests").
+	// Reached from the Account tabs, not the panel.
+	{ id: 'interests', icon: 'nav-interests', name: 'Preferences', path: '/interests' },
 
 	// ── Raise ───────────────────────────────────────────────────────────────
 	// Both paid products get the ecosystem directories (Scout browses them, Raise
 	// targets them). Explore keeps Investors as an upsell via its own nav entry.
-	{ id: 'investors', icon: 'nav-circle', name: 'Investors', path: '/investors', tier: ['raise', 'scout'] },
+	// Every solution: Explore lists verified investor profiles only (the page
+	// filters to `is_verified`), Raise and Scout see all (handover v1 B5).
+	{ id: 'investors', icon: 'nav-circle', name: 'Investors', path: '/investors' },
 	// Every plan: Programs is a public directory like Events (same component, same
 	// public endpoint), so Explore lists it under Market beside Events.
 	{ id: 'programs', icon: 'nav-dealflow', name: 'Programs', path: '/programs' },
 	{ id: 'my-market', icon: 'nav-market', name: 'My Market', path: '/my-market', tier: 'raise' },
-	{ id: 'pipeline', icon: 'nav-list', name: 'Main watchlist', path: '/pipeline', tier: 'raise' },
-	{ id: 'raise-settings', icon: 'nav-thesis', name: 'Thesis Settings', path: '/settings', tier: 'raise' },
+	{ id: 'pipeline', icon: 'nav-list', name: 'Investor Watchlist', path: '/pipeline', tier: 'raise' },
+	{ id: 'raise-settings', icon: 'nav-thesis', name: 'Raise settings', path: '/settings', tier: 'raise' },
 	// No tier: every plan gets the assistant, bounded by credits rather than by a
 	// locked door (see chat.controller.ts). Still unlisted in NAV_LAYOUT — it is
 	// reached from the home composer and the FAB.
 	{ id: 'chat', icon: 'nav-chat', name: 'Ask Atlas', path: '/chat' },
-	{ id: 'strategy', icon: 'nav-onboarding', name: 'Strategy', path: '/strategy', tier: 'raise' },
+	{ id: 'strategy', icon: 'nav-onboarding', name: 'Strategy Session', path: '/strategy', tier: 'raise' },
 	// Guides, templates and checklists across Prepare → Connect → Close (content in
 	// raise_resources, edited in admin). Back with real content after the October
 	// removal of the "Coming soon" placeholder.
@@ -194,10 +204,10 @@ export const ROUTES: RouteDef[] = [
 	// Deal Flow is "Coming soon" (components/scout/deal-flow-soon.tsx): drop
 	// `soon: true` from these four when it launches.
 	{ id: 'deal-flow', icon: 'nav-dealflow', name: 'All', path: '/deal-flow', tier: 'scout', soon: true },
-	{ id: 'deal-flow-featured', icon: 'nav-recommended', name: 'Featured', path: '/deal-flow/featured', tier: 'scout', soon: true },
+	{ id: 'deal-flow-featured', icon: 'nav-recommended', name: 'Featured Raises', path: '/deal-flow/featured', tier: 'scout', soon: true },
 	{ id: 'deal-flow-verified', icon: 'nav-dealflow', name: 'Verified Raises', path: '/deal-flow/verified', tier: 'scout', soon: true },
 	{ id: 'deal-flow-circle', icon: 'nav-circle', name: 'From the Circle', path: '/deal-flow/circle', tier: 'scout', soon: true },
-	{ id: 'thesis', icon: 'nav-thesis', name: 'Thesis Settings', path: '/thesis', tier: 'scout' },
+	{ id: 'thesis', icon: 'nav-thesis', name: 'Scouting thesis', path: '/thesis', tier: 'scout' },
 ];
 
 export const ROUTE_BY_ID = new Map(ROUTES.map((r) => [r.id, r]));
@@ -225,64 +235,49 @@ export interface NavGroup {
  * matters and is design, not derivable — see the file header.
  */
 export const NAV_LAYOUT: Record<Tier, NavGroup[]> = {
+	// Atlas dev handover v1 §2. Same structure on all three: Home and Ask Atlas,
+	// then the solution's own group (none on Explore), Discover, Market, Resources.
+	// Recommended, Signals, Interests, Pipeline and individual watchlists are not
+	// listed: Recommended is a switch on its list page, Preferences lives in
+	// Account, and the Investor Watchlist is reached from Watchlists.
 	explore: [
-		// Interests sits with Home, per the Figma Side Nav (31:15195). The HTML
-		// mockup puts it in the bottom group with Account; Figma is the newer
-		// file and the one named as the UI source, so it wins.
-		{ title: null, items: ['home', 'chat', 'interests', 'deck'] },
-		{ title: 'Intelligence', items: ['framework', 'reports', 'newsletter'] },
-		// Investors is a Raise feature listed in Explore's sidebar on purpose —
-		// the design surfaces it unlocked-looking and lets the page do the
-		// selling (ATLAS Base.dc.html `navMarket`, which has a lock flag
-		// available and deliberately does not pass it). `buildNav` keeps
-		// upsellable items; only `hidden` ones are dropped.
-		{ title: 'Market', items: ['analytics', 'roundup', 'companies', 'events', 'programs', 'investors'] },
+		{ title: null, items: ['home', 'chat'] },
+		// Investors on Explore: verified profiles only (the page filters).
+		{ title: 'Discover', items: ['companies', 'investors', 'programs'] },
+		// Recently Funded and M&A resolve to `upsell` here and render locked.
+		{ title: 'Market', items: ['analytics', 'roundup', 'recently-funded', 'ma'] },
+		{ title: 'Resources', items: ['framework', 'reports', 'newsletter', 'events'] },
 	],
 	raise: [
 		{ title: null, items: ['home', 'chat'] },
-		{ title: 'Raise', items: ['deck', 'investors', 'programs'] },
-		{ title: 'Discover', items: ['companies', 'recommended', 'signals'] },
-		{ title: 'Intelligence', items: ['analytics', 'roundup', 'my-market', 'recently-funded', 'ma'] },
-		{ title: 'Watchlists', items: ['pipeline', 'watchlists'] },
-		{ title: 'Resources', items: ['guide', 'framework', 'reports', 'events', 'newsletter'] },
+		{ title: 'Fundraise', items: ['deck', 'investors', 'watchlists', 'strategy'] },
+		{ title: 'Discover', items: ['companies', 'programs'] },
+		{ title: 'Market', items: ['analytics', 'roundup', 'my-market', 'recently-funded', 'ma'] },
+		{ title: 'Resources', items: ['guide', 'framework', 'reports', 'newsletter', 'events'] },
 	],
 	scout: [
 		{ title: null, items: ['home', 'chat'] },
-		// Scout has a single watchlist link (no pipeline), so a standalone
-		// "Watchlists" section collapsed to one headerless item. Fold it into
-		// Discover instead — saved lists still splice in before "All watchlists".
-		{ title: 'Discover', items: ['companies', 'recommended', 'signals', 'watchlists'] },
-		// Ecosystem directories — investors and accelerator/VC programs. In the hub
-		// these are their own "Ecosystem" category; a scout browses them to map a
-		// market, so both products now carry them (Raise lists them under "Raise").
-		{ title: 'Ecosystem', items: ['investors', 'programs'] },
-		{ title: 'Intelligence', items: ['analytics', 'roundup', 'recently-funded', 'ma'] },
-		{ title: 'Deal Flow', items: ['deal-flow', 'deal-flow-featured', 'deal-flow-verified', 'deal-flow-circle', 'deck'] },
-		{ title: 'Resources', items: ['framework', 'reports', 'events', 'newsletter'] },
+		{ title: 'Deal Flow', items: ['companies', 'watchlists', 'deal-flow-verified', 'deal-flow-featured', 'deck'] },
+		{ title: 'Discover', items: ['investors', 'programs'] },
+		{ title: 'Market', items: ['analytics', 'roundup', 'recently-funded', 'ma'] },
+		{ title: 'Resources', items: ['framework', 'reports', 'newsletter', 'events'] },
 	],
 };
 
-/** Sub-line under each section heading. Per tier: the same heading carries
- *  different copy in different products. */
+/** One subline per group, the same wherever the group appears (handover v1 §3). */
+export const GROUP_SUBS: Record<string, string> = {
+	Fundraise: 'Your fundraise: pitch deck, investors and watchlists.',
+	'Deal Flow': 'Companies to scout, and the raises verified by SportsTechX.',
+	Discover: 'The companies, investors and programs in sports tech.',
+	Market: "What's happening across the sports tech market.",
+	Resources: 'SportsTechX research, the framework, events and the newsletter.',
+};
+
+/** Kept per tier for existing callers; every tier reads the same sublines. */
 export const SECTION_SUBS: Record<Tier, Record<string, string>> = {
-	explore: {
-		Intelligence: 'Understand how sports tech is structured and read SportsTechX research.',
-		Market: 'A current, navigable view of the sports-tech market.',
-	},
-	raise: {
-		Raise: 'Your fundraise: pitch deck, investors and programs.',
-		Discover: 'Companies and investors worth your attention.',
-		Intelligence: 'A current, navigable view of the sports-tech market.',
-		Watchlists: 'The investors you are tracking, stage by stage.',
-		Resources: 'Understand how sports tech is structured and read SportsTechX research.',
-	},
-	scout: {
-		Discover: 'Find companies worth knowing.',
-		Intelligence: 'Understand what’s happening across the sports-tech market.',
-		Watchlists: 'Track companies you care about.',
-		'Deal Flow': 'Companies actively raising and accessible through the SportsTechX ecosystem.',
-		Resources: 'Understand how sports tech is structured and read SportsTechX research.',
-	},
+	explore: GROUP_SUBS,
+	raise: GROUP_SUBS,
+	scout: GROUP_SUBS,
 };
 
 /**

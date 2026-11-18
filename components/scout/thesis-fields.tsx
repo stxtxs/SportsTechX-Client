@@ -10,22 +10,35 @@ import { PICK_LISTS } from './sample-data';
  * chip sets (single / multi select) and the full-list picker behind "+ Add".
  */
 
-export function ChipSet({ options, value, onToggle, wide }: {
+export function ChipSet({ options, value, onToggle, wide, marked }: {
 	options: string[];
 	/** Selected option(s). */
 	value: string | string[];
 	onToggle: (option: string) => void;
 	/** Full-width rows (sector lists). */
 	wide?: boolean;
+	/** Values pre-filled from the benchmark survey: marked with a dot, still editable. */
+	marked?: ReadonlySet<string>;
 }) {
 	const on = (o: string) => (Array.isArray(value) ? value.includes(o) : value === o);
 	return (
 		<div className={cx('scout-chips', wide && 'scout-chips--wide')}>
-			{options.map((o) => (
-				<button key={o} type="button" className={cx('scout-chip', on(o) && 'on')} aria-pressed={on(o)} onClick={() => onToggle(o)}>{o}</button>
-			))}
+			{options.map((o) => {
+				const fromSurvey = on(o) && !!marked?.has(o);
+				return (
+					<button key={o} type="button" className={cx('scout-chip', on(o) && 'on')} aria-pressed={on(o)} onClick={() => onToggle(o)} title={fromSurvey ? 'Pre-filled from your survey' : undefined}>
+						{o}{fromSurvey && <span className="bm-survey-dot" aria-label="pre-filled from your survey" />}
+					</button>
+				);
+			})}
 		</div>
 	);
+}
+
+/** "Pre-filled from your survey" note over a chip set that holds survey values. */
+export function SurveyNote({ values, marked }: { values: string[]; marked?: ReadonlySet<string> }) {
+	if (!marked || !values.some((v) => marked.has(v))) return null;
+	return <div className="bm-survey-note"><span className="bm-survey-dot" style={{ marginLeft: 0 }} aria-hidden="true" />Pre-filled from your survey · edit freely</div>;
 }
 
 /** Toggle `o` in a list. */

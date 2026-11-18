@@ -2,10 +2,13 @@
 
 import { useMemo, useState, type ReactNode } from 'react';
 import { ArrowUpRight, Download, FileText, Newspaper } from 'lucide-react';
-import { Action, Empty, FeaturedPost, FilterBar, Loading, PostCard, type FilterDef } from '@/components/atlas';
+import { Action, Badge, Empty, FeaturedPost, FilterBar, Loading, PostCard, type FilterDef } from '@/components/atlas';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import type { Resource } from './resource-contract';
 import './resources.css';
+import { fmtFullDate } from '@/lib/format';
+import { CurrencyMark } from '@/components/atlas/patterns/currency-mark';
+import { PinButton } from '@/components/features/pins/pin-button';
 
 /**
  * Featured item + filterable library, shared by Reports and Newsletter in every
@@ -17,10 +20,10 @@ import './resources.css';
  * the `'old'` sort is a positional `reverse()`, not a date comparison.
  */
 const SORTS: [string, string][] = [['new', 'Newest'], ['old', 'Oldest'], ['az', 'Title A–Z']];
-const ACCESS: [string, string][] = [['Free', 'Free'], ['Premium', 'Premium']];
+// Filter values stay as stored; the labels never say "Premium" (handover v1 §4 Access).
+const ACCESS: [string, string][] = [['Free', 'Open to all'], ['Premium', 'Raise and Scout']];
 
-export const fmtLongDate = (d?: string | null) =>
-	(d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) : '');
+export const fmtLongDate = (d?: string | null) => fmtFullDate(d, '');
 
 export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitle, noun, viewLabel, isLoading, aside }: {
 	items: Resource[];
@@ -41,7 +44,8 @@ export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitl
 	/** Right-hand note on the library heading, e.g. the publishing cadence. */
 	aside?: ReactNode;
 }) {
-	const [featured, ...rest] = items;
+	const featured = items[0];
+	const rest = items.slice(1);
 	const [q, setQ] = useState('');
 	const [tag, setTag] = useState('');
 	const [access, setAccess] = useState('');
@@ -61,17 +65,25 @@ export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitl
 	const MetaIcon = kind === 'report' ? FileText : Newspaper;
 	const actionsFor = (r: Resource) => (
 		<>
+			{/* Every report opens; gated sections are gated inside it (fix brief N2). */}
+			{/* Icons only; each says what it does on hover (17 Nov). */}
 			{r.onView
-				? <Action icon={<ArrowUpRight />} onClick={r.onView}>{viewLabel}</Action>
-				: r.href ? <Action icon={<ArrowUpRight />} href={r.href} external={r.external}>{viewLabel}</Action> : null}
-			{r.onDownload && <Action icon={<Download />} onClick={r.onDownload}>Download {noun}</Action>}
+				? <Action iconOnly icon={<ArrowUpRight />} onClick={r.onView}>{viewLabel}</Action>
+				: r.href ? <Action iconOnly icon={<ArrowUpRight />} href={r.href} external={r.external}>{viewLabel}</Action> : null}
+			{/* Pin to Home, beside Open (fix brief N1). */}
+			{r.pin && <PinButton target={r.pin} />}
+			{r.onDownload && <Action iconOnly icon={<Download />} onClick={r.onDownload}>{`Download ${noun}`}</Action>}
 		</>
 	);
+	// Explore: a report with gated content carries the currency sign (fix
+	// brief N2); "Yours" marks a report made for this viewer.
+	const badgeFor = (r: Resource) => (r.gated
+		? <><span aria-hidden="true">·</span><CurrencyMark /></>
+		: r.badge === 'yours' ? <><span aria-hidden="true">·</span><Badge tone="navy">Yours</Badge></> : null);
 	const metaFor = (r: Resource) => (
 		<>
 			<span>{r.dateLabel ?? fmtLongDate(r.date)}</span>
-			<span aria-hidden="true">·</span>
-			<span className={r.access === 'Premium' ? 'is-premium' : undefined}>{r.access}</span>
+			{badgeFor(r)}
 		</>
 	);
 
@@ -85,7 +97,7 @@ export function ResourceLibrary({ items, kind, intro, featuredLabel, libraryTitl
 			<FeaturedPost
 				cover={featured.cover}
 				metaIcon={<MetaIcon size={12} strokeWidth={1.5} aria-hidden="true" />}
-				meta={<>{featuredLabel} · Published {featured.dateLabel ?? fmtLongDate(featured.date)} · <span className={featured.access === 'Premium' ? 'is-premium' : undefined}>{featured.access}</span></>}
+				meta={<>{featured.featuredLabel ?? featuredLabel} · Published {featured.dateLabel ?? fmtLongDate(featured.date)} {badgeFor(featured)}</>}
 				title={featured.title}
 				desc={featured.desc}
 				tags={featured.tags}

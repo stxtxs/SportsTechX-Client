@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { Lock } from 'lucide-react';
 import type { Tier } from '@/lib/access';
 import { PLANS_PATH } from '@/lib/routes';
-import { ATLAS_LINKS } from '@/components/landing/atlas-solutions';
 import './tier-gate.css';
 
 /**
@@ -35,54 +34,46 @@ export const PRODUCT: Record<Exclude<Tier, 'explore'>, {
 		tagline: 'Investor targeting for founders raising capital.',
 		blurb: 'Atlas Raise helps founders sharpen the pitch, identify investors who are actually active in their category, and run the process end to end — investor intelligence, warm-intro paths and outreach tracking in one place.',
 		points: [
-			['Active investors', 'Funds, corporates and angels with a disclosed sports-tech deal since 2020.'],
+			['Active investors', 'Funds, corporates and angels with a disclosed sports tech deal since 2020.'],
 			['Screen by thesis', 'Filter by sector, stage, cheque size and geography, then save the screen.'],
 			['Deal history', 'Every round each investor has participated in, with co-investors and dates.'],
 		],
 	},
 	scout: {
 		name: 'Atlas Scout',
-		tagline: 'Deal flow and screening for investors.',
+		tagline: 'Deal flow and screening for scouts: investors, accelerators and corporates.',
 		blurb: 'Atlas Scout helps investors see what is raising in sports tech, screen it against their own thesis, and track the companies worth following — thesis matching and deck screening in one place, with deal flow and verified raises coming soon.',
 		points: [
 			['Matched to your thesis', 'Companies scored against the sectors, stages, geographies and cheque size you invest in.'],
 			['Verified raises (coming soon)', 'Live rounds confirmed by SportsTechX, including opportunities shared by the Investor Circle.'],
-			['Deck screening', 'Upload a deck and get a structured read: strengths, diligence flags and gaps to probe.'],
+			['Deck screening (coming soon)', 'Upload a deck and get a structured read: strengths, diligence flags and gaps to probe.'],
 		],
 	},
 };
 
-export function TierGate({ tier, feature }: {
-	/** The product that owns the page being gated. */
+/**
+ * Locked-state copy, handover v1 §5. A page both paid solutions include says
+ * "Raise or Scout"; a Raise-only page names Atlas Raise.
+ */
+export function lockedLine(tier: Exclude<Tier, 'explore'>, shared: boolean): string {
+	return shared ? 'Available with Raise or Scout.' : `Available with ${PRODUCT[tier].name}.`;
+}
+
+export function TierGate({ tier, shared = false }: {
+	/** The product that owns the page being gated (the first, if both do). */
 	tier: Exclude<Tier, 'explore'>;
-	/** The screen they tried to open, e.g. "Pipeline". Used in the lock line. */
+	/** True when Raise and Scout both include the page. */
+	shared?: boolean;
+	/** @deprecated The lock line no longer names the screen. */
 	feature?: string;
 }) {
-	const p = PRODUCT[tier];
 	return (
 		<div className="tier-gate">
-			<section className="atlas-card atlas-card--glow tier-gate__main">
-				<span className="tier-gate__lock">
-					<Lock size={12} aria-hidden="true" />
-					{feature ? `${feature} is part of ${p.name}` : `This is part of ${p.name}`}
-				</span>
-				<h2 className="tier-gate__title">{p.tagline}</h2>
-				<p className="tier-gate__body">{p.blurb}</p>
+			<section className="atlas-card tier-gate__main">
+				<span className="tier-gate__lock"><Lock size={12} aria-hidden="true" /></span>
+				<h2 className="tier-gate__title">{lockedLine(tier, shared)}</h2>
 				<div className="tier-gate__cta">
-					<Link href={PLANS_PATH} className="atlas-btn atlas-btn--primary">Get {p.name}</Link>
-					{/* The same booking link as the landing's "Book a demo". */}
-					<a href={ATLAS_LINKS.bookDemo} target="_blank" rel="noreferrer" className="atlas-btn atlas-btn--outline">Talk to the team</a>
-				</div>
-			</section>
-			<section className="atlas-card tier-gate__about">
-				<div className="atlas-eyebrow">About {p.name}</div>
-				<div className="tier-gate__points">
-					{p.points.map(([t, b]) => (
-						<div key={t}>
-							<div className="tier-gate__point">{t}</div>
-							<p className="tier-gate__muted">{b}</p>
-						</div>
-					))}
+					<Link href={PLANS_PATH} className="atlas-btn atlas-btn--primary">See solutions</Link>
 				</div>
 			</section>
 		</div>

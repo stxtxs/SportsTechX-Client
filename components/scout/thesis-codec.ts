@@ -17,6 +17,7 @@
  * table) and a silent 400 would lose the user's whole save.
  */
 import type { Thesis } from './sample-data';
+import { fmtAmount } from '../../lib/format.ts';
 
 export interface TaxonomyRef { id: string; name: string | null }
 export interface GeoScope { scope_type: string; scope_value: string }
@@ -100,9 +101,13 @@ export function formatMoney(n: number | null): string {
 	return `€${n}`;
 }
 
-/** "€250k – €2m" for summaries; '' when neither end is set. */
+/**
+ * "€0.25M – €2.00M" for summaries, in the Atlas amount format (handover v1 §4);
+ * '' when neither end is set. `formatMoney` stays as is: it is the wizard's
+ * input format ("€250k"), which `parseMoney` reads back.
+ */
 export const chequeRange = (t: Pick<Thesis, 'chequeMin' | 'chequeMax'>) =>
-	t.chequeMin || t.chequeMax ? `${formatMoney(parseMoney(t.chequeMin)) || '—'} – ${formatMoney(parseMoney(t.chequeMax)) || '—'}` : '';
+	t.chequeMin || t.chequeMax ? `${fmtAmount(parseMoney(t.chequeMin), 'EUR', '—')} – ${fmtAmount(parseMoney(t.chequeMax), 'EUR', '—')}` : '';
 
 /** Case-insensitive name → id, for a reference list. */
 export const indexByName = (rows: TaxonomyRef[]) =>

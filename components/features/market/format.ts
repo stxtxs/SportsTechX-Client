@@ -1,24 +1,11 @@
 /** Shared formatting for market figures, dates and places. */
 
-/** `$2.3M`, `$340M`, `$1.2B`, `$5B` — one decimal, but a trailing ".0" is dropped
- *  so round values read cleanly. The decimal is KEPT when it's real, so a $2.3M
- *  deal never shows rounded as "$2M". */
-const compact = (n: number, div: number, suffix: string) => `$${(n / div).toFixed(1).replace(/\.0$/, '')}${suffix}`;
+import { fmtAmount } from '@/lib/format';
 
-/** Compact USD for amounts and deal values ($1.2B / $340M / $2.3M / $12,000 / —). */
-export function fmtUsd(n?: number | null): string {
-	if (n == null) return '—';
-	if (n >= 1e9) return compact(n, 1e9, 'B');
-	if (n >= 1e6) return compact(n, 1e6, 'M');
-	return n > 0 ? `$${Math.round(n).toLocaleString()}` : '—';
-}
-/** Same compaction for chart axes AND hover tooltips — so a tooltip shows the
- *  real figure ($2.3M, not $2M) while round axis ticks stay clean ($340M). */
-export const fmtUsdB = (n: number) => {
-	if (n >= 1e9) return compact(n, 1e9, 'B');
-	if (n >= 1e6) return compact(n, 1e6, 'M');
-	return `$${Math.round(n).toLocaleString()}`;
-};
+/** USD amount in the Atlas format ($0.33M, $9.70M, $65.70B, —). See lib/format.ts. */
+export const fmtUsd = (n?: number | null, year?: number | null): string => fmtAmount(n, 'USD', '—', year);
+/** Chart axes and hover tooltips: same format, "$0.00M" rather than a dash at zero. */
+export const fmtUsdB = (n: number) => fmtAmount(n, 'USD', '$0.00M');
 export const fmtCount = (n?: number | null) => Number(n ?? 0).toLocaleString();
 
 /** Coarse relative time ("today", "3 days ago", "5 months ago").

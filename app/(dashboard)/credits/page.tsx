@@ -10,7 +10,8 @@ import { refreshCredits } from '@/lib/invalidate';
 import { qk } from '@/lib/query-keys';
 import { useCreditBalance } from '@/hooks/use-credit-balance';
 import { AccountTabs } from '@/components/features/account/account-tabs';
-import { Screen, PageHead, Card, Button, Loading } from '@/components/atlas';
+import { Screen, Card, Button, Loading } from '@/components/atlas';
+import { fmtFullDate } from '@/lib/format';
 
 /**
  * STX credits — buy and track the one wallet that funds AI features and data
@@ -24,7 +25,16 @@ interface LedgerRow { id: string; transaction_type: string; amount: number; desc
 
 const PAGE_SIZE = 20;
 const fmtMoney = (cents: number, ccy: string) => new Intl.NumberFormat(undefined, { style: 'currency', currency: (ccy || 'eur').toUpperCase() }).format((cents ?? 0) / 100);
-const fmtISO = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+const fmtISO = (iso: string) => fmtFullDate(iso);
+/** Per-credit price to the fraction of a cent, so pack rates can be told apart. */
+const fmtPerCredit = (cents: number, ccy: string) => new Intl.NumberFormat('en-US', { style: 'currency', currency: (ccy || 'eur').toUpperCase(), minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(cents / 100);
+/**
+ * Credit history labels as a customer should read them (handover v1 B11): no
+ * "plan", and the internal migration line becomes "Opening balance".
+ */
+const historyLabel = (raw: string) => (/^opening stx wallet/i.test(raw.trim())
+	? 'Opening balance'
+	: raw.replace(/\s*\bplan\b/gi, '').replace(/\s{2,}/g, ' ').trim()).replace(/^./, (c) => c.toUpperCase());
 
 const CARD_TITLE: React.CSSProperties = { fontSize: 17, fontFamily: 'var(--a-font)', fontWeight: 700, color: 'var(--a-ink)' };
 const BODY: React.CSSProperties = { fontSize: 12, color: 'var(--a-muted)', lineHeight: 1.55 };
@@ -77,6 +87,8 @@ export default function CreditsPage() {
 	};
 
 	const packList = packs.data?.data ?? [];
+	// The smallest pack's per-credit rate, the baseline each larger pack's saving is shown against.
+	const basePerCredit = packList.length ? Math.max(...packList.map((p) => p.price_amount / p.credit_amount)) : 0;
 	const pages = ledger.data ?? [];
 	const current = pages[pageIdx]?.data ?? [];
 	const curHasNext = !!pages[pageIdx]?.nextCursor;
@@ -88,7 +100,6 @@ export default function CreditsPage() {
 
 	return (
 		<Screen>
-			<PageHead title="Credits" />
 			<AccountTabs />
 
 			<Card focus glow="blue" style={{ marginBottom: 24, padding: '24px 26px' }}>
@@ -97,25 +108,28 @@ export default function CreditsPage() {
 					{(bal?.total_available ?? 0).toLocaleString()}
 				</div>
 				<p style={{ ...BODY, margin: '10px 0 0' }}>
-					One wallet powers the AI co-pilot and data exports.
+					One wallet powers Ask Atlas and data exports.
 					{bal ? ` ${bal.monthly_balance.toLocaleString()}${bal.monthly_grant ? `/${bal.monthly_grant.toLocaleString()}` : ''} monthly${bal.topup_balance ? ` · ${bal.topup_balance.toLocaleString()} top-up` : ''}.` : ''}
 				</p>
 			</Card>
 
 			<Card style={{ marginBottom: 8 }}>
 				<div style={{ ...CARD_TITLE, marginBottom: 6 }}>Buy credits</div>
-				<p style={{ ...BODY, margin: '0 0 20px' }}>Top-ups never expire. Monthly plan credits renew each month; top-ups stack on whatever is left.</p>
+				<p style={{ ...BODY, margin: '0 0 20px' }}>Top-ups never expire. Monthly credits renew each month; top-ups stack on whatever is left.</p>
 				{packs.isLoading ? <Loading />
 					: packList.length === 0 ? <div style={{ fontSize: 12, color: 'var(--a-faint)' }}>No credit packs available right now.</div>
 						: (
 							<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 12 }}>
 								{packList.map((pk) => {
 									const perCredit = pk.price_amount / pk.credit_amount;
+									// Against the smallest pack's rate, so the saving on a larger
+									// pack is visible (5,000 and 10,000 both read €0.02 before).
+									const saving = basePerCredit ? Math.round((1 - perCredit / basePerCredit) * 100) : 0;
 									return (
 										<button key={pk.id} type="button" disabled={busy !== null} onClick={() => void buyPack(pk.id)}
-											style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '24px 16px', background: 'linear-gradient(160deg, rgba(59,130,246,0.08) 0%, rgba(139,92,246,0.06) 100%)', border: '1px solid var(--a-border-strong)', borderRadius: 'var(--a-radius)', cursor: busy ? 'not-allowed' : 'pointer', opacity: busy && busy !== pk.id ? 0.5 : 1, transition: 'border-color .15s, background .15s' }}
-											onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--a-ink)'; e.currentTarget.style.background = 'linear-gradient(160deg, rgba(59,130,246,0.14) 0%, rgba(139,92,246,0.10) 100%)'; }}
-											onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--a-border-strong)'; e.currentTarget.style.background = 'linear-gradient(160deg, rgba(59,130,246,0.08) 0%, rgba(139,92,246,0.06) 100%)'; }}
+											style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '24px 16px', background: 'var(--a-surface)', border: '1px solid var(--a-border-strong)', borderRadius: 'var(--a-radius)', cursor: busy ? 'not-allowed' : 'pointer', opacity: busy && busy !== pk.id ? 0.5 : 1, transition: 'border-color .15s, background .15s' }}
+											onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--atlas-product, var(--a-ink))'; e.currentTarget.style.backgroundImage = 'var(--a-glow-product)'; }}
+											onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--a-border-strong)'; e.currentTarget.style.backgroundImage = 'none'; }}
 										>
 											{busy === pk.id
 												? <Loader2 className="animate-spin" size={20} style={{ color: 'var(--a-ink)' }} />
@@ -123,7 +137,8 @@ export default function CreditsPage() {
 													<div style={{ fontFamily: 'var(--a-font)', fontSize: 24, fontWeight: 600, color: 'var(--a-ink)', lineHeight: 1 }}>{pk.credit_amount.toLocaleString()}</div>
 													<div style={{ fontFamily: 'var(--a-mono)', fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--a-faint)' }}>credits</div>
 													<div style={{ fontFamily: 'var(--a-font)', fontSize: 16, fontWeight: 600, color: 'var(--a-ink)', marginTop: 4 }}>{fmtMoney(pk.price_amount, pk.currency_code)}</div>
-													<div style={{ fontFamily: 'var(--a-mono)', fontSize: 9, color: 'var(--a-muted)', letterSpacing: '0.04em' }}>{fmtMoney(Math.round(perCredit), pk.currency_code)} / credit</div>
+													<div style={{ fontFamily: 'var(--a-mono)', fontSize: 9, color: 'var(--a-muted)', letterSpacing: '0.04em' }}>{fmtPerCredit(perCredit, pk.currency_code)} / credit</div>
+													{saving > 0 && <div style={{ fontFamily: 'var(--a-mono)', fontSize: 9, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--atlas-product, var(--a-ink))' }}>Save {saving}%</div>}
 												</>}
 										</button>
 									);
@@ -141,7 +156,7 @@ export default function CreditsPage() {
 								{current.map((r, i) => (
 									<div key={r.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 23px', borderTop: i ? '1px solid var(--a-border)' : 'none' }}>
 										<div>
-											<div style={ROW_TITLE}>{r.display_name ?? r.description ?? r.transaction_type.replace(/_/g, ' ')}</div>
+											<div style={ROW_TITLE}>{historyLabel(r.display_name ?? r.description ?? r.transaction_type.replace(/_/g, ' '))}</div>
 											<div style={META}>{fmtISO(r.occurred_at)}</div>
 										</div>
 										<div style={{ fontFamily: 'var(--a-mono)', fontSize: 12, color: r.amount >= 0 ? 'var(--a-ok)' : 'var(--a-muted)' }}>{r.amount >= 0 ? '+' : ''}{r.amount.toLocaleString()}</div>

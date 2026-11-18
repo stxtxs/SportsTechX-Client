@@ -6,6 +6,7 @@ import { Card, ComboBarLine, Empty, Loading, PageHead, PieDonut, barAt, type Com
 import { fmtCount, fmtUsd, fmtUsdB, place } from '@/components/features/market/format';
 import { qk } from '@/lib/query-keys';
 import './verified-report.css';
+import { fmtFullDate } from '@/lib/format';
 
 /**
  * The verified-company report, on screen at last.
@@ -116,7 +117,7 @@ export function VerifiedReport({ id }: { id: string }) {
 		<div className="vcr-report">
 			<PageHead
 				title={c.name || host(data.company_website) || 'Verified company report'}
-				sub={`Verified company report${d.generatedAt ? ` · generated ${new Date(d.generatedAt).toLocaleDateString()}` : ''}`}
+				sub={`Verified company report${d.generatedAt ? ` · generated ${fmtFullDate(new Date(d.generatedAt))}` : ''}`}
 			/>
 
 			<Card>
@@ -236,7 +237,7 @@ export function VerifiedReport({ id }: { id: string }) {
 
 			{!!d.ecosystem?.length && (
 				<Card>
-					<div className="atlas-section-title">Programmes and events</div>
+					<div className="atlas-section-title">Programs and events</div>
 					<div className="atlas-section-note">Accelerators, competitions and events in this space</div>
 					<ul className="vcr-list">
 						{d.ecosystem.map((x) => (

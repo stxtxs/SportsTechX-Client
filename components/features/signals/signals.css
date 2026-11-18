@@ -15,7 +15,7 @@
 /* The shared hover highlight, so a signal row behaves like every other card. */
 .atlas .atlas-sig:hover {
 	border-color: var(--a-border-strong);
-	background-image: linear-gradient(170deg, transparent 60%, color-mix(in srgb, var(--a-pink) 12%, transparent) 100%);
+	background-image: linear-gradient(170deg, transparent 60%, color-mix(in srgb, var(--atlas-product, var(--a-pink)) 12%, transparent) 100%);
 }
 
 .atlas .atlas-sig__top { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin-bottom: 8px; }

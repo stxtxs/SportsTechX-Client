@@ -7,6 +7,7 @@ import { Zap, Briefcase, Users } from 'lucide-react';
 import { qk } from '@/lib/query-keys';
 import { companyHref } from '@/lib/routes';
 import { Card, Loading, Seg, PillTabs, HBarDrilldown, ComboBarLine, Logo, Flag, FilterBar, BAR_ACCENT, type HBarRow, type FilterGroup } from '@/components/atlas';
+import { fmtAmount } from '@/lib/format';
 
 /**
  * Shared pieces of the Analytics page's tabs — Atlas versions of the old
@@ -36,23 +37,22 @@ export interface HubDeepDive {
 
 // ─── Formatting (the hub's report-theme `fmt` / `fmtB`, from USD) ───────────
 
-const strip = (s: string) => s.replace(/\.0$/, '');
-/** `$340M` below a billion, `$1.2B` above — the hub's table/bar format. */
-export const fmtM = (usd: number) => (usd >= 1e9 ? `$${strip((usd / 1e9).toFixed(1))}B` : `$${Math.round(usd / 1e6)}M`);
-/** Always in billions (`$66.6B`) — the hub's stat-card format. */
-export const fmtB = (usd: number) => `$${strip((usd / 1e9).toFixed(1))}B`;
+/** Atlas amount format ($340.00M, $1.20B) — see lib/format.ts. */
+export const fmtM = (usd: number) => fmtAmount(usd, 'USD', '$0.00M');
+/** Stat cards: same format. */
+export const fmtB = (usd: number) => fmtAmount(usd, 'USD', '$0.00M');
 
 /** The hub renamed the three framework pillars for display. */
 const PILLAR: Record<string, string> = {
-	'Activity & Performance': 'For Athletes',
-	'Fans & Content': 'For Fans',
-	'Management & Organisation': 'For Executives',
+	'Activity & Performance': 'Athlete Tech',
+	'Fans & Content': 'Fan Tech',
+	'Management & Organisation': 'Executive Tech',
 };
 export const pillar = (s: string) => PILLAR[s] ?? s;
 const PILLAR_ICON: Record<string, { Icon: typeof Zap; color: string }> = {
-	'For Athletes': { Icon: Zap, color: 'var(--a-chart-1, #4F2484)' },
-	'For Executives': { Icon: Briefcase, color: 'var(--a-chart-2, #1FCC96)' },
-	'For Fans': { Icon: Users, color: 'var(--a-chart-3, #0482FF)' },
+	'Athlete Tech': { Icon: Zap, color: 'var(--a-chart-1, #4F2484)' },
+	'Executive Tech': { Icon: Briefcase, color: 'var(--a-chart-2, #1FCC96)' },
+	'Fan Tech': { Icon: Users, color: 'var(--a-chart-3, #0482FF)' },
 };
 
 // ─── Controls ───────────────────────────────────────────────────────────────

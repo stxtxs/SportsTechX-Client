@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react';
 
 /**
  * Whether the Ask Atlas co-pilot panel is open. A tiny shared store so the top
- * bar button, the ⌘J shortcut and the panel itself stay in step without
+ * bar button, the ⌘/ shortcut and the panel itself stay in step without
  * threading props through the shell. In memory only: the panel, and its
  * conversation, live for the whole app session, across page changes.
  */

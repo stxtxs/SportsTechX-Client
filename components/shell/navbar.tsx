@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
-import { ChevronRight, LogOut, Search, Settings, ShieldCheck, CreditCard, Sparkles } from 'lucide-react';
+import { Compass, LogOut, Search, Settings, ShieldCheck, CreditCard, Sparkles } from 'lucide-react';
+import { FLAGS } from '@/components/features/benchmark/config';
+import { openWalkthrough } from '@/components/features/benchmark/walkthrough';
 import { cx, useDismiss } from '@/components/atlas';
 import { crumbsFor, type Crumb } from './breadcrumbs';
 import { initialsOf } from '@/components/atlas/shell/atlas-shell';
@@ -21,6 +23,7 @@ import type { ConversationListItem } from '@/components/chat/chat-core';
 import type { Tier } from '@/lib/access';
 import { toggleCopilot, useCopilotOpen } from '@/lib/copilot';
 import './navbar.css';
+import { shortcut } from '@/lib/format';
 
 /**
  * The bar across the top of every authenticated page: breadcrumbs and search on
@@ -52,20 +55,10 @@ function NavbarInner({ tier, nav, homePath, accountPath }: {
 
 	return (
 		<header className="atlas-navbar">
-			<div className="atlas-navbar__left">
-				{/* On Home a lone "HOME" crumb only repeats the sidebar. */}
-				{pathname !== homePath && <nav className="atlas-crumbs" aria-label="Breadcrumb">
-					<Link href={homePath} className="atlas-crumb">Home</Link>
-					{crumbs.map((c) => (
-						<span key={c.label} className="atlas-crumb-wrap">
-							<ChevronRight size={12} strokeWidth={1.75} aria-hidden="true" className="atlas-crumb-sep" />
-							{c.href
-								? <Link href={c.href} className="atlas-crumb">{c.label}</Link>
-								: <span className="atlas-crumb is-plain">{c.label}</span>}
-						</span>
-					))}
-				</nav>}
-			</div>
+			{/* No breadcrumbs anywhere (handover v1 §2). The trail is still
+			    computed, but only to name the browser tab; detail pages carry
+			    their own "Back to results" link. */}
+			<div className="atlas-navbar__left" />
 
 			<div className="atlas-navbar__right">
 				{/* Not on Home or the Ask Atlas page: both already have the chat box. */}
@@ -127,15 +120,16 @@ function useLeafTitle(pathname: string): string | null {
  * reach for before they look for a button.
  */
 /**
- * Opens the Ask Atlas co-pilot beside the page (⌘J / Ctrl+J also toggles it).
+ * Opens Ask Atlas beside the page (⌘/ / Ctrl+/ also toggles it).
  * Set apart from Search by the product-colour sparkle; filled while open.
  */
 function AskAtlasButton() {
 	const open = useCopilotOpen();
 	return (
-		<button type="button" className={cx('atlas-navask', open && 'is-open')} aria-pressed={open} aria-controls="atlas-copilot" onClick={toggleCopilot} title="Ask Atlas (⌘J)">
+		<button type="button" className={cx('atlas-navask', open && 'is-open')} aria-pressed={open} aria-controls="atlas-copilot" onClick={toggleCopilot} title={`Ask Atlas (${shortcut('/')})`}>
 			<Sparkles size={14} strokeWidth={1.75} aria-hidden="true" className="atlas-navask__spark" />
 			<span className="atlas-navask__label">Ask Atlas</span>
+			<kbd className="atlas-navsearch__kbd">{shortcut('/')}</kbd>
 		</button>
 	);
 }
@@ -149,7 +143,7 @@ function SearchButton() {
 			<button type="button" className="atlas-navsearch__btn" aria-haspopup="dialog" aria-expanded={open} onClick={openIt}>
 				<Search size={13} strokeWidth={1.75} aria-hidden="true" />
 				<span className="atlas-navsearch__label">Search</span>
-				<kbd className="atlas-navsearch__kbd">⌘K</kbd>
+				<kbd className="atlas-navsearch__kbd">{shortcut('K')}</kbd>
 			</button>
 			<CommandPalette open={open} onClose={() => setOpen(false)} />
 		</>
@@ -206,6 +200,11 @@ function AccountMenu({ tier, accountPath }: { tier: Tier; accountPath: string })
 						<Link href={hrefOf('verify')} className="atlas-menu__item atlas-menu__item--plain" onClick={() => setOpen(false)}>
 							<ShieldCheck size={13} strokeWidth={1.5} aria-hidden="true" /> Get verified
 						</Link>
+						{FLAGS.walkthrough && (
+							<button type="button" className="atlas-menu__item atlas-menu__item--plain" onClick={() => { setOpen(false); openWalkthrough(); }}>
+								<Compass size={13} strokeWidth={1.5} aria-hidden="true" /> Take the tour
+							</button>
+						)}
 					</div>
 					<div className="atlas-account-menu__foot">
 						<button

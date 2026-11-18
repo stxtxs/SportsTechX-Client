@@ -7,7 +7,7 @@
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 next build",
     "start": "next start",
     "lint": "eslint",
-    "check": "node lib/access.check.ts && node lib/nav.check.ts && node components/scout/thesis-codec.check.ts && node components/scout/deal-types.check.ts && node components/scout/deal-draft-codec.check.ts && node components/shell/breadcrumbs.check.ts && node lib/claim-roles.check.ts && node lib/link-preview.check.ts"
+    "check": "node lib/access.check.ts && node lib/nav.check.ts && node components/scout/thesis-codec.check.ts && node components/scout/deal-types.check.ts && node components/scout/deal-draft-codec.check.ts && node components/shell/breadcrumbs.check.ts && node lib/claim-roles.check.ts && node lib/link-preview.check.ts && node components/features/benchmark/rules.check.ts && node components/features/pins/rules.check.ts && node lib/format.check.ts && node lib/profile-completion.check.ts && node components/features/reports/gstvcr26/sector-keys.check.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

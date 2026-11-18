@@ -187,7 +187,7 @@ async function handleResponse(res: Response, context?: string): Promise<void> {
       // `details` here would silently find nothing.
       const detail = { requiredTiers: err.requiredTiers, currentTier: err.currentTier, message: err.message };
       openTierRequired(detail);
-      throw new TierRequiredError(err.message ?? 'Your plan does not include this.', detail);
+      throw new TierRequiredError(err.message ?? 'Your current solution does not include this.', detail);
     }
     // Any other 402 falls through to the generic message below.
   }

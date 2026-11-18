@@ -7,6 +7,7 @@ import { Drawer, DrawerHead, DrawerBody, DrawerFoot } from '@/components/ui/draw
 import { KV, Tag } from '@/components/ui/atoms';
 import { Logo, Flag } from '@/components/atlas';
 import '@/app/company-detail.css';
+import { fmtFullDate } from '@/lib/format';
 
 /** What the events list already knows about a row — shown at once, before the fetch lands. */
 export interface EventRow {
@@ -20,7 +21,7 @@ interface EventDetails { mode: string | null; start_date: string | null; end_dat
 const MODE_LABEL: Record<string, string> = { in_person: 'In person', virtual: 'Virtual', hybrid: 'Hybrid' };
 const extUrl = (u: string | null | undefined) => (u ? (/^https?:\/\//i.test(u) ? u : `https://${u}`) : undefined);
 // Event dates are calendar days ('YYYY-MM-DD' = UTC midnight): format in UTC so no time zone shifts them a day.
-const fmt = (d: string) => new Date(d).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const fmt = (d: string) => fmtFullDate(d);
 
 /**
  * Event details in the right-side drawer (the old Intelligence Hub showed the

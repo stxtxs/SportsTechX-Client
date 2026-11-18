@@ -69,12 +69,13 @@
   transition: background 0.15s;
 }
 .ecal__event:hover { background: color-mix(in srgb, var(--a-primary) 22%, var(--a-field)); }
-.ecal__event--in_person { border-left-color: #3b82f6; background: color-mix(in srgb, #3b82f6 10%, var(--a-field)); }
-.ecal__event--in_person:hover { background: color-mix(in srgb, #3b82f6 20%, var(--a-field)); }
-.ecal__event--virtual { border-left-color: #8b5cf6; background: color-mix(in srgb, #8b5cf6 10%, var(--a-field)); }
-.ecal__event--virtual:hover { background: color-mix(in srgb, #8b5cf6 20%, var(--a-field)); }
-.ecal__event--hybrid { border-left-color: #f59e0b; background: color-mix(in srgb, #f59e0b 10%, var(--a-field)); }
-.ecal__event--hybrid:hover { background: color-mix(in srgb, #f59e0b 20%, var(--a-field)); }
+/* Solution colour only (handover v1 A1); the format is in each event's label. */
+.ecal__event--in_person,
+.ecal__event--virtual,
+.ecal__event--hybrid { border-left-color: var(--atlas-product, var(--a-ink)); background: color-mix(in srgb, var(--atlas-product, var(--a-ink)) 10%, var(--a-field)); }
+.ecal__event--in_person:hover,
+.ecal__event--virtual:hover,
+.ecal__event--hybrid:hover { background: color-mix(in srgb, var(--atlas-product, var(--a-ink)) 20%, var(--a-field)); }
 
 .ecal__event-name {
   display: block; font-size: 11px; font-weight: 500; color: var(--a-ink);
@@ -126,9 +127,11 @@
   font-size: 11px; font-weight: 500; letter-spacing: 0.04em;
   background: var(--a-inset); color: var(--a-ink);
 }
-.ecal-table__mode--in_person { background: color-mix(in srgb, #3b82f6 15%, var(--a-field)); color: #3b82f6; }
-.ecal-table__mode--virtual { background: color-mix(in srgb, #8b5cf6 15%, var(--a-field)); color: #8b5cf6; }
-.ecal-table__mode--hybrid { background: color-mix(in srgb, #f59e0b 15%, var(--a-field)); color: #f59e0b; }
+/* One colour per solution (handover v1 A1): the format pills take the
+   solution colour, told apart by their label rather than by hue. */
+.ecal-table__mode--in_person,
+.ecal-table__mode--virtual,
+.ecal-table__mode--hybrid { background: color-mix(in srgb, var(--atlas-product, var(--a-ink)) 14%, var(--a-field)); color: var(--atlas-product, var(--a-ink)); }
 
 .ecal-table__link {
   display: inline-flex; align-items: center; gap: 4px;

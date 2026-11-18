@@ -54,6 +54,8 @@ interface Recommendation {
 	 *  declared thesis — shown as a distinct "from your activity" chip. */
 	match_activity: boolean;
 	match_count: number;
+	/** 0–100 from the server: thesis points earned over points possible. */
+	match_score?: number | null;
 }
 
 /** Only the four boolean dimensions — `keyof Recommendation` would widen to
@@ -69,9 +71,11 @@ const CHIPS: [label: string, key: MatchKey][] = [
 /**
  * Match as a percentage, as Raise shows it (fix list 17 Nov, 3.3): the share of
  * the four thesis dimensions this company matches. The raw "4/4" read the same
- * on every row because the list only holds companies matching all four.
+ * on every row because the list only holds companies matching all four. The
+ * server's `match_score` grades each dimension (a sub-sector over a whole pillar,
+ * a country over a continent), so it's used when present.
  */
-const matchPct = (c: Recommendation) => Math.round((CHIPS.filter(([, k]) => c[k]).length / CHIPS.length) * 100);
+const matchPct = (c: Recommendation) => c.match_score ?? Math.round((CHIPS.filter(([, k]) => c[k]).length / CHIPS.length) * 100);
 
 const place = (c: Recommendation) => [c.city, c.country].filter(Boolean).join(', ');
 

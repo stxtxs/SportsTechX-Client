@@ -423,6 +423,8 @@ export interface ReportListItem {
 	has_pdf?: boolean;
 	/** …and one this caller's plan can open — Download only works then. */
 	can_download?: boolean;
+	/** A section is gated above Explore (handover N2): Explore shows the currency sign. */
+	has_gated_sections?: boolean;
 	created_at: string;
 	updated_at: string;
 	/** Topic facet labels. Never null (NOT NULL DEFAULT '{}'), but empty until

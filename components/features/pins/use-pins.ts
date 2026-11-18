@@ -13,10 +13,11 @@ import { EMPTY_PINS, MAX_PINS, PIN_LIMIT_MESSAGE, addPin, homePins, removePin, t
 /**
  * Pin to Home (fix brief N1, 17 Nov).
  *
- * Until the backend ships `/api/home/pins`, pins are kept in this browser, per
- * user, and the SportsTechX pins below stand in for the admin's "pin for
- * everyone". With `NEXT_PUBLIC_PINS_API=1` the same hook reads and writes the
- * API instead (contract: Notion › Atlas: dev handover › section 11, C2):
+ * Pins live on the account: the hook reads and writes `/api/home/pins`, where
+ * SportsTechX pins ("pin for everyone") come from the server too. Only with
+ * `NEXT_PUBLIC_PINS_API=0` (local work without the API) does it fall back to
+ * this browser and the stand-in below (contract: Notion › Atlas: dev handover ›
+ * section 11, C2):
  *
  *   GET    /api/home/pins          → { data: Pin[] }  Home's list: newest first,
  *                                    at most four, SportsTechX pins included
@@ -24,9 +25,9 @@ import { EMPTY_PINS, MAX_PINS, PIN_LIMIT_MESSAGE, addPin, homePins, removePin, t
  *   DELETE /api/home/pins/:key                         a SportsTechX pin stays
  *                                                      unpinned for this user
  */
-const USE_API = process.env.NEXT_PUBLIC_PINS_API === '1';
+const USE_API = process.env.NEXT_PUBLIC_PINS_API !== '0';
 
-/** Stand-in for the admin's "pin for everyone" (fix brief N1): the Football Tech report. */
+/** Local-only stand-in for SportsTechX pins (the server seeds the same one). Used only with NEXT_PUBLIC_PINS_API=0. */
 export const ATLAS_PINS: readonly Pin[] = [{
 	key: 'report:ftabr26',
 	kind: 'report',

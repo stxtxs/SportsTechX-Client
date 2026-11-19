@@ -84,6 +84,10 @@ export const SECTOR_COLORS: Record<string, string> = {
 	'For Athletes': BRAND.athletes,
 	'For Fans': BRAND.fans,
 	'For Executives': BRAND.execs,
+	// GSTVCR26 display names (Nov 2026); the old ones stay for the other reports.
+	'Athlete Tech': BRAND.athletes,
+	'Fan Tech': BRAND.fans,
+	'Executive Tech': BRAND.execs,
 };
 
 export const WORLDCUP_TECH_COLORS: Record<string, string> = {

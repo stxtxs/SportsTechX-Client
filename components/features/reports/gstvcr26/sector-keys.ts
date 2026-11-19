@@ -1,7 +1,7 @@
 /**
  * Atlas renamed its three top sectors (handover v1, C2): Activity & Performance → Athlete Tech,
  * Fans & Content → Fan Tech, Management & Organisation → Executive Tech. This report was written
- * with the old names and keys its colours and "For Athletes / For Fans / For Executives" labels on
+ * with the old names and keys its colours and "Athlete Tech / Fan Tech / Executive Tech" labels on
  * them, so live API data is translated back once, where it enters the report.
  */
 const REPORT_SECTOR_KEY: Record<string, string> = {

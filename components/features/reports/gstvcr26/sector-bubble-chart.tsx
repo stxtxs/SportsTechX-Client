@@ -3,6 +3,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { money } from './format';
 
 interface SectorNode {
   sector: string;
@@ -38,10 +39,8 @@ const LEVEL_COLORS = {
   2: '#BED0E3',
 };
 
-function fmt(m: number): string {
-  if (m >= 1000) return `$${(m / 1000).toFixed(1).replace('.0', '')}B`;
-  return `$${Math.round(m)}M`;
-}
+/** One decimal for every amount (see ./format). */
+const fmt = money;
 
 function buildHierarchy(data: SectorNode[]): SectorItem[] {
   const map = new Map<string, { value: number; deals: number; subs: Map<string, { value: number; deals: number; subSubs: Map<string, { value: number; deals: number }> }> }>();

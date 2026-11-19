@@ -42,6 +42,8 @@ import { dataInFullCaptions } from "./captions";
 import { companyLogoSrc, websiteHref } from "./logos";
 import { SubSectorSnapshotSection } from "./sub-sector-snapshot";
 import { toReportSectorKeys } from "./sector-keys";
+import { renameSectorLabels } from "./sector-labels";
+import { money, millions, pctOf, pctText, round1 } from "./format";
 
 // The downloadable "lite" PDF lives in Supabase storage (public_bucket), not in
 // the repo. `?download` makes Supabase serve it as an attachment — the HTML
@@ -330,11 +332,8 @@ function useWindowWidth() {
   return w;
 }
 
-function fmt(m: number): string {
-  if (m >= 1000) return `$${(m / 1000).toFixed(1)}B`;
-  if (m >= 100) return `$${(m / 1).toFixed(0)}M`;
-  return `$${m.toFixed(1)}M`;
-}
+/** One decimal for every amount: $13.0B · $412.0M · $3.4M (see ./format). */
+const fmt = money;
 
 /* Chart Source Badge , shown under every chart title */
 function SourceBadge(_props: { chartId: string; source: string }) {
@@ -456,7 +455,7 @@ function StatCard({ num, label, t, subtitle, style, icon }: { num: React.ReactNo
   );
 }
 
-function YearBarChart({ data, t, isPdf = false }: { data: { year: number; total_m: number; deals: number }[]; t: Theme; isPdf?: boolean }) {
+function YearBarChart({ data, t, isPdf = false }: { data: { year: number; total_m: number; deals: number; label?: string }[]; t: Theme; isPdf?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const [animated, setAnimated] = useState(isPdf);
   useEffect(() => {
@@ -473,7 +472,7 @@ function YearBarChart({ data, t, isPdf = false }: { data: { year: number; total_
         const pct = (d.total_m / maxVal) * 100;
         const isLatest = Number(d.year) === latestYear;
         return (
-          <div key={d.year} title={`${yearLabel(d.year)}: ${fmt(d.total_m)} across ${d.deals} deals`}
+          <div key={d.year} title={`${d.label ?? yearLabel(d.year)}: ${fmt(d.total_m)} across ${d.deals} deals`}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, height: "100%", justifyContent: "flex-end", cursor: "default" }}>
             <div style={{ width: "100%", height: animated ? `${pct}%` : "0%", background: isLatest ? `linear-gradient(to top,${BRAND.tealBright},${BRAND.lightBlue}66)` : `linear-gradient(to top,${BRAND.navy},${BRAND.teal}55)`, transition: `height 1.4s cubic-bezier(0.16,1,0.3,1) ${i * 0.08}s`, position: "relative", minHeight: 4, borderRadius: "3px 3px 0 0" }}>
               <span style={{ position: "absolute", top: -26, left: "50%", transform: "translateX(-50%)", fontFamily: "'DM Mono',monospace", fontSize: 10, color: isLatest ? BRAND.tealBright : t.textSec, whiteSpace: "nowrap", fontWeight: 600 }}>
@@ -481,13 +480,29 @@ function YearBarChart({ data, t, isPdf = false }: { data: { year: number; total_
               </span>
             </div>
             <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: isLatest ? BRAND.tealBright : t.textMuted, textAlign: "center", fontWeight: isLatest ? 700 : 400 }}>
-              {yearLabel(d.year)}
+              {d.label ?? yearLabel(d.year)}
             </div>
           </div>
         );
       })}
     </div>
   );
+}
+
+/**
+ * Funding By Year bars. With the 2026 (Jan–Oct) filter the API only counts 2026
+ * rounds, so its 2025 bar comes back as $0. Swap in Jan–Oct 2025 from the
+ * caption context (same continent filter) so the two bars compare like for like,
+ * matching the caption. Last 5 years is passed through unchanged.
+ */
+function fundingYearBars(
+  fundingByYear: { year: number; total_m: number; deals: number }[],
+  period: Period,
+  janOct2025: { total_m: number; deals: number } | undefined,
+): { year: number; total_m: number; deals: number; label?: string }[] {
+  if (period !== "2026" || !janOct2025) return fundingByYear;
+  const y2026 = fundingByYear.filter(d => Number(d.year) === PARTIAL_YEAR);
+  return [{ year: PARTIAL_YEAR - 1, total_m: janOct2025.total_m, deals: janOct2025.deals, label: `${PARTIAL_YEAR - 1} (Jan–Oct)` }, ...y2026];
 }
 
 function MaStackedBarChart({ chartData, mode, t, isPdf = false }: { chartData: { year: number; sportstech: number; non_sportstech: number; sportstech_val: number; non_sportstech_val: number }[]; mode: "count" | "value"; t: Theme; isPdf?: boolean }) {
@@ -510,9 +525,9 @@ function MaStackedBarChart({ chartData, mode, t, isPdf = false }: { chartData: {
         const pct = maxTotal > 0 ? (total / maxTotal) * 100 : 0;
         const stPct = total > 0 ? (st / total) * 100 : 0;
         const nstPct = total > 0 ? (nst / total) * 100 : 0;
-        const label = isValue ? `$${total >= 1000 ? (total / 1000).toFixed(1) + "B" : total + "M"}` : String(total);
+        const label = isValue ? money(total) : String(total);
         return (
-          <div key={d.year} title={`${d.year}: ${isValue ? "$" + st + "M" : st} sportstech + ${isValue ? "$" + nst + "M" : nst} non-sportstech`}
+          <div key={d.year} title={`${d.year}: ${isValue ? money(st) : st} sportstech + ${isValue ? money(nst) : nst} non-sportstech`}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, height: "100%", justifyContent: "flex-end", cursor: "default" }}>
             <div style={{ width: "100%", height: animated ? `${pct}%` : "0%", transition: `height 1.4s cubic-bezier(0.16,1,0.3,1) ${i * 0.08}s`, position: "relative", minHeight: 4, borderRadius: "3px 3px 0 0", display: "flex", flexDirection: "column" }}>
               <span style={{ position: "absolute", top: -26, left: "50%", transform: "translateX(-50%)", fontFamily: "'DM Mono',monospace", fontSize: 10, color: BRAND.teal, whiteSpace: "nowrap", fontWeight: 600 }}>
@@ -637,8 +652,8 @@ function PollVoteSection({ pollId, article, t, isMobile, user, sessionValid }: {
   const total = pollData?.total ?? 0;
   const yesCount = pollData?.results?.["yes"] ?? 0;
   const noCount = pollData?.results?.["no"] ?? 0;
-  const yesPct = total > 0 ? Math.round((yesCount / total) * 100) : 0;
-  const noPct = total > 0 ? 100 - yesPct : 0;
+  const yesPct = pctOf(yesCount, total);
+  const noPct = total > 0 ? round1(100 - yesPct) : 0;
   const hasVoted = userVote !== null;
 
   const GREEN = "#4caf50";
@@ -747,9 +762,9 @@ function PollVoteSection({ pollId, article, t, isMobile, user, sessionValid }: {
             <div style={{ height: "100%", flex: 1, background: `${BRAND.pink}40` }} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: GREEN }}>{yesPct}% It will</span>
+            <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: GREEN }}>{pctText(yesPct)} It will</span>
             <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>{total} vote{total !== 1 ? "s" : ""}</span>
-            <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: BRAND.pink }}>{noPct}% It won't</span>
+            <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: BRAND.pink }}>{pctText(noPct)} It won't</span>
           </div>
         </div>
       )}
@@ -771,7 +786,11 @@ export default function ReportGSTVCR26({ content, preview = false }: {
   // falls back to the committed default so the report renders identically until
   // an edition is edited in the DB. The heavy computed chart data stays static.
   const { data: reportDoc } = useSWR<{ content?: Record<string, any> | null }>(content !== undefined ? null : qk.reports.detail("gstvcr26"));
-  const ov = content !== undefined ? content : (reportDoc?.content ?? null);
+  // Saved content may still use the old sector names (For Fans / Athletes /
+  // Executives); show the new ones (Fan / Athlete / Executive Tech) without
+  // touching what is stored.
+  const rawOv = content !== undefined ? content : (reportDoc?.content ?? null);
+  const ov = useMemo(() => (rawOv ? renameSectorLabels(rawOv) : null), [rawOv]);
   const INNOVATOR_RESPONSES   = ov?.innovatorResponses   ?? INNOVATOR_RESPONSES_DEFAULT;
   const watchInnovators       = ov?.watchInnovators      ?? watchInnovators_DEFAULT;
   const watchPeak             = ov?.watchPeak            ?? watchPeak_DEFAULT;
@@ -1580,18 +1599,18 @@ export default function ReportGSTVCR26({ content, preview = false }: {
                             const chartData = trendsData.maByYearSportstech;
                             const latest = chartData[chartData.length - 1];
                             const latestTotal = latest ? latest.sportstech + latest.non_sportstech : 0;
-                            const latestStPct = latestTotal > 0 ? Math.round((latest.sportstech / latestTotal) * 100) : 0;
+                            const latestStPct = latestTotal > 0 ? pctOf(latest.sportstech, latestTotal) : 0;
                             const totalStDeals = chartData.reduce((s, d) => s + d.sportstech, 0);
                             const totalAllDeals = chartData.reduce((s, d) => s + d.sportstech + d.non_sportstech, 0);
-                            const stPctAll = totalAllDeals > 0 ? Math.round((totalStDeals / totalAllDeals) * 100) : 0;
+                            const stPctAll = pctOf(totalStDeals, totalAllDeals);
                             const growthX = chartData.length >= 2 && chartData[0].sportstech > 0 ? (chartData[chartData.length - 1].sportstech / chartData[0].sportstech).toFixed(1) : "—";
                             return (
                               <>
                                 {/* Summary stats */}
                                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16, marginBottom: 28 }}>
                                   {[
-                                    { value: `${latestStPct}%`, label: TREND_MA.statLabels[0] },
-                                    { value: `${stPctAll}%`, label: TREND_MA.statLabels[1] },
+                                    { value: pctText(latestStPct), label: TREND_MA.statLabels[0] },
+                                    { value: pctText(stPctAll), label: TREND_MA.statLabels[1] },
                                     { value: `${growthX}x`, label: TREND_MA.statLabels[2] },
                                   ].map((s, si) => (
                                     <div key={si} style={{ padding: "20px 24px", background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6 }}>
@@ -1696,7 +1715,7 @@ export default function ReportGSTVCR26({ content, preview = false }: {
                                             {/* Stacked bar */}
                                             <div style={{ display: "flex", height: 18, borderRadius: 4, overflow: "hidden", marginBottom: 10 }}>
                                               {trendsData.acquireeProfile.bySector.map((d) => (
-                                                <div key={d.sector} style={{ width: `${(d.deals / totalDeals) * 100}%`, background: sectorColors[d.sector] || BRAND.slate, transition: "width 0.4s" }} title={`${d.sector}: ${d.deals} deals (${Math.round((d.deals / totalDeals) * 100)}%)`} />
+                                                <div key={d.sector} style={{ width: `${(d.deals / totalDeals) * 100}%`, background: sectorColors[d.sector] || BRAND.slate, transition: "width 0.4s" }} title={`${d.sector}: ${d.deals} deals (${pctText(pctOf(d.deals, totalDeals))})`} />
                                               ))}
                                             </div>
                                             {trendsData.acquireeProfile.bySector.map((d) => (
@@ -1707,7 +1726,7 @@ export default function ReportGSTVCR26({ content, preview = false }: {
                                                 </div>
                                                 <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
                                                   <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, fontWeight: 600, color: t.titleColor }}>{d.deals}</span>
-                                                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>{Math.round((d.deals / totalDeals) * 100)}%</span>
+                                                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>{pctText(pctOf(d.deals, totalDeals))}</span>
                                                 </div>
                                               </div>
                                             ))}
@@ -1733,7 +1752,7 @@ export default function ReportGSTVCR26({ content, preview = false }: {
                                             <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase", marginBottom: 10 }}>{TREND_MA.byRegionTitle}</div>
                                             <div style={{ display: "flex", height: 18, borderRadius: 4, overflow: "hidden", marginBottom: 10 }}>
                                               {regions.map((d) => (
-                                                <div key={d.name} style={{ width: `${(d.deals / totalDeals) * 100}%`, background: regionColors[d.name] || BRAND.slate, transition: "width 0.4s" }} title={`${d.name}: ${d.deals} deals (${Math.round((d.deals / totalDeals) * 100)}%)`} />
+                                                <div key={d.name} style={{ width: `${(d.deals / totalDeals) * 100}%`, background: regionColors[d.name] || BRAND.slate, transition: "width 0.4s" }} title={`${d.name}: ${d.deals} deals (${pctText(pctOf(d.deals, totalDeals))})`} />
                                               ))}
                                             </div>
                                             {regions.map((d) => (
@@ -1744,7 +1763,7 @@ export default function ReportGSTVCR26({ content, preview = false }: {
                                                 </div>
                                                 <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
                                                   <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, fontWeight: 600, color: t.titleColor }}>{d.deals}</span>
-                                                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>{Math.round((d.deals / totalDeals) * 100)}%</span>
+                                                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>{pctText(pctOf(d.deals, totalDeals))}</span>
                                                 </div>
                                               </div>
                                             ))}
@@ -1761,7 +1780,7 @@ export default function ReportGSTVCR26({ content, preview = false }: {
                                             <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase", marginBottom: 10 }}>{TREND_MA.byModelTitle}</div>
                                             <div style={{ display: "flex", height: 18, borderRadius: 4, overflow: "hidden", marginBottom: 10 }}>
                                               {trendsData.acquireeProfile.byModel.map((d) => (
-                                                <div key={d.model} style={{ width: `${(d.deals / totalDeals) * 100}%`, background: modelColors[d.model] || BRAND.slate, transition: "width 0.4s" }} title={`${d.model}: ${d.deals} deals (${Math.round((d.deals / totalDeals) * 100)}%)`} />
+                                                <div key={d.model} style={{ width: `${(d.deals / totalDeals) * 100}%`, background: modelColors[d.model] || BRAND.slate, transition: "width 0.4s" }} title={`${d.model}: ${d.deals} deals (${pctText(pctOf(d.deals, totalDeals))})`} />
                                               ))}
                                             </div>
                                             {trendsData.acquireeProfile.byModel.map((d) => (
@@ -1772,7 +1791,7 @@ export default function ReportGSTVCR26({ content, preview = false }: {
                                                 </div>
                                                 <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
                                                   <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, fontWeight: 600, color: t.titleColor }}>{d.deals}</span>
-                                                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>{Math.round((d.deals / totalDeals) * 100)}%</span>
+                                                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>{pctText(pctOf(d.deals, totalDeals))}</span>
                                                 </div>
                                               </div>
                                             ))}
@@ -2731,7 +2750,7 @@ export default function ReportGSTVCR26({ content, preview = false }: {
               <p style={{ fontSize: 11, color: "#fff", lineHeight: 1.5, margin: "0 0 10px" }}>{PEAK_COPY.swcIntro}</p>
               {(() => {
                 const sectors = ["athletes", "fans", "executives"] as const;
-                const sectorLabels = { athletes: "For Athletes", fans: "For Fans", executives: "For Executives" };
+                const sectorLabels = { athletes: "Athlete Tech", fans: "Fan Tech", executives: "Executive Tech" };
                 return (
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px 12px" }}>
                     {sectors.map(sector => (
@@ -3148,7 +3167,7 @@ export default function ReportGSTVCR26({ content, preview = false }: {
               })}
             </div>
             <div style={{ display: isMobile ? "none" : "flex", gap: 14, marginLeft: "auto", marginBottom: 10, flexShrink: 0 }}>
-              {([["For Athletes", BRAND.athletes], ["For Executives", BRAND.execs], ["For Fans", BRAND.fans]] as const).map(([label, color]) => (
+              {([["Athlete Tech", BRAND.athletes], ["Executive Tech", BRAND.execs], ["Fan Tech", BRAND.fans]] as const).map(([label, color]) => (
                 <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
                   <span style={{ color, fontSize: 9, lineHeight: 1 }}>●</span>
                   <span style={{ fontSize: 10, fontFamily: "'DM Mono',monospace", color: t.textMuted, letterSpacing: 0.5 }}>{label}</span>
@@ -3170,7 +3189,7 @@ export default function ReportGSTVCR26({ content, preview = false }: {
           {(() => {
             const companies = mergeWatchCompanies[watchTab];
             const sectorColorMap: Record<WatchCompany["sector"], string> = { athletes: BRAND.athletes, execs: BRAND.execs, fans: BRAND.fans };
-            const sectorLabelMap: Record<WatchCompany["sector"], string> = { athletes: "For Athletes", execs: "For Executives", fans: "For Fans" };
+            const sectorLabelMap: Record<WatchCompany["sector"], string> = { athletes: "Athlete Tech", execs: "Executive Tech", fans: "Fan Tech" };
             return (
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 16 : 20 }}>
                 {companies.map((c, idx) => {
@@ -3449,7 +3468,7 @@ export default function ReportGSTVCR26({ content, preview = false }: {
                   {captions?.fundingByYear ?? ""}
                 </p>
               </div>
-              {data ? <YearBarChart data={data.fundingByYear} t={t} isPdf={isPdf} /> : (
+              {data ? <YearBarChart data={fundingYearBars(data.fundingByYear ?? [], fundingYear, data.captionContext?.fundingJanOct2025)} t={t} isPdf={isPdf} /> : (
                 <div style={{ height: 260, background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 4 }} />
               )}
 
@@ -3466,7 +3485,7 @@ export default function ReportGSTVCR26({ content, preview = false }: {
                       <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 3, color: t.textMuted, textTransform: "uppercase", marginBottom: 10 }}>{regionLabels[r.region] || r.region}</div>
                       <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 38, color: t.titleColor, lineHeight: 1 }}>{fmt(r.total_m)}</div>
                       <div style={{ fontSize: 11, color: t.textMuted, marginTop: 6, fontFamily: "'DM Mono',monospace" }}>
-                        {data?.periodGlobalFunding_m ? ((r.total_m / data.periodGlobalFunding_m) * 100).toFixed(0) : "—"}% global · {r.deals} deals
+                        {data?.periodGlobalFunding_m ? pctText(pctOf(r.total_m, data.periodGlobalFunding_m)) : "—"} global · {r.deals} deals
                       </div>
                     </div>
                   ))}
@@ -3537,7 +3556,7 @@ export default function ReportGSTVCR26({ content, preview = false }: {
                       brandColors={{ pink: BRAND.pink, teal: BRAND.teal, tealBright: BRAND.tealBright, navy: BRAND.navy, lightBlue: BRAND.lightBlue, slate: BRAND.slate }}
                       sectorColors={{ "Activity & Performance": BRAND.athletes, "Fans & Content": BRAND.fans, "Management & Organisation": BRAND.execs }}
                       sectorSecondaryColors={{ "Activity & Performance": BRAND.athletesSec, "Fans & Content": BRAND.fansSec, "Management & Organisation": BRAND.execsSec }}
-                      sectorLabels={{ "Activity & Performance": "For Athletes", "Fans & Content": "For Fans", "Management & Organisation": "For Executives" }}
+                      sectorLabels={{ "Activity & Performance": "Athlete Tech", "Fans & Content": "Fan Tech", "Management & Organisation": "Executive Tech" }}
                       isPdf={isPdf}
                     />
                   </Suspense>

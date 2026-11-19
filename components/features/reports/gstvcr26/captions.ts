@@ -8,6 +8,9 @@
  * compared with the same months of 2025.
  */
 
+// `.ts` extension: captions.check.ts runs this file under plain Node.
+import { money, pctOf, round1 } from "./format.ts";
+
 export type Period = "last5" | "2026";
 export type RegionCode = "NA" | "EU" | "APAC" | "ROW";
 
@@ -58,30 +61,27 @@ export const REGION_NAMES: Record<RegionCode, string> = {
   NA: "North America", EU: "Europe", APAC: "Asia Pacific", ROW: "Rest of World",
 };
 const SECTOR_NAMES: Record<string, string> = {
-  "Fans & Content": "For Fans",
-  "Activity & Performance": "For Athletes",
-  "Management & Organisation": "For Executives",
+  "Fans & Content": "Fan Tech",
+  "Activity & Performance": "Athlete Tech",
+  "Management & Organisation": "Executive Tech",
 };
 
-/** Same money format as the charts ($13.0B · $412M · $3.4M). */
-export function money(m: number): string {
-  if (m >= 1000) return `$${(m / 1000).toFixed(1)}B`;
-  if (m >= 100) return `$${m.toFixed(0)}M`;
-  return `$${m.toFixed(1)}M`;
-}
-const pct = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
+/** Same money format as the charts, one decimal everywhere ($13.0B · $412.0M · $3.4M). */
+export { money };
+/** Share as text with one decimal ("57.6"); callers add the "%". */
+const pct = (part: number, whole: number) => pctOf(part, whole).toFixed(1);
 const plural = (n: number, word: string) => `${n.toLocaleString("en-US")} ${word}${n === 1 ? "" : "s"}`;
 const sectorName = (s: string) => SECTOR_NAMES[s] ?? s;
 const sum = (rows: Named[]) => rows.reduce((a, r) => ({ total_m: a.total_m + r.total_m, deals: a.deals + r.deals }), { total_m: 0, deals: 0 });
 const byValue = <T extends Named>(rows: T[]) => [...rows].sort((a, b) => b.total_m - a.total_m);
 const yearOf = (rows: YearTotal[], y: number) => rows.find((r) => Number(r.year) === y);
 
-/** "up 23%" / "down 40%" / "level" vs a previous value. */
+/** "up 23.4%" / "down 40.1%" / "level" vs a previous value. */
 function change(now: number, before: number): string {
   if (before <= 0) return now > 0 ? "up from nothing" : "level";
-  const d = Math.round(((now - before) / before) * 100);
+  const d = round1(((now - before) / before) * 100);
   if (d === 0) return "level";
-  return d > 0 ? `up ${d}%` : `down ${Math.abs(d)}%`;
+  return d > 0 ? `up ${d.toFixed(1)}%` : `down ${Math.abs(d).toFixed(1)}%`;
 }
 
 function periodLabel(p: Period): string {
@@ -153,7 +153,7 @@ export function regionalShareCaption(i: CaptionInput): string {
   const inYear = byValue(i.context.regionTimeline.filter((r) => r.year === year));
   if (i.fundingPeriod === "last5" && inYear.length >= 2) {
     const [a, b] = inYear;
-    const gap = pct(a.total_m - b.total_m, a.total_m);
+    const gap = pctOf(a.total_m - b.total_m, a.total_m);
     parts.push(gap <= 10
       ? `In 2025 the gap almost closed: ${REGION_NAMES[a.region]} ${money(a.total_m)} vs ${REGION_NAMES[b.region]} ${money(b.total_m)}.`
       : `In 2025, ${REGION_NAMES[a.region]} raised ${money(a.total_m)} vs ${money(b.total_m)} for ${REGION_NAMES[b.region]}.`);

@@ -66,12 +66,15 @@
 /* The app shell makes html/body a 100%-high scroll box; printed, that clips the
    document to its first screen (every page after the cover came out blank). */
 html:has(.ft26-print), body:has(.ft26-print) { height: auto !important; overflow: visible !important; }
+/* Partner panels never run past the page margins (the image mosaic could push them wider) */
+#pdf-playermaker .ft26-fit, #pdf-soccerment .ft26-fit { max-width: 100%; }
+#pdf-soccerment .ft26-fit > div > * { max-width: 100%; overflow: hidden; }
 /* Playermaker fills its page like Soccerment does: the panel stretches to the page
    height and the extra room goes to the image mosaic. Structure (PARTS.featured):
    outer padding div > gradient frame > #featured > content > [header, story+mosaic, footer row] */
 #pdf-playermaker .ft26-fit { height: 100%; }
-#pdf-playermaker .ft26-fit > div { height: 100%; padding: 34px 0 !important; box-sizing: border-box; }
-#pdf-playermaker .ft26-fit > div > div { height: 100%; box-sizing: border-box; margin: 0 8px !important; }
+#pdf-playermaker .ft26-fit > div { height: 100%; padding: 28px 0 !important; box-sizing: border-box; }
+#pdf-playermaker .ft26-fit > div > div { height: 100%; box-sizing: border-box; margin: 0 !important; max-width: 100%; overflow: hidden; }
 #pdf-playermaker #featured { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
 #pdf-playermaker #featured > div { flex: 1 1 auto; width: 100%; display: flex; flex-direction: column; }
 #pdf-playermaker #featured > div > div:nth-child(2) { flex: 1 1 auto; align-items: stretch !important; }

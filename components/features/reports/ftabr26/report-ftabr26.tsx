@@ -333,7 +333,9 @@ function SplitBarChart({ data, mode, t, isPdf = false }: { data: SplitDatum[]; m
   const val = (d: SplitDatum) => isValue ? { a: d.only, b: d.also } : { a: d.roundsOnly, b: d.roundsAlso };
   const maxTotal = Math.max(...data.map(d => { const v = val(d); return v.a + v.b; }));
   return (
-    <div ref={ref} style={{ display: "flex", alignItems: "flex-end", gap: 10, height: 280, paddingBottom: 44, borderBottom: `1px solid ${t.border}`, position: "relative" }}>
+    /* PDF: room above for the tallest bar's value label (it sat outside the card), and no
+       empty band or rule under the axis labels. The web layout is unchanged. */
+    <div ref={ref} style={{ display: "flex", alignItems: "flex-end", gap: 10, height: isPdf ? 250 : 280, paddingTop: isPdf ? 26 : 0, paddingBottom: isPdf ? 22 : 44, borderBottom: isPdf ? "none" : `1px solid ${t.border}`, position: "relative", boxSizing: isPdf ? "border-box" : undefined }}>
       {data.map((d, i) => {
         const v = val(d);
         const total = v.a + v.b;
@@ -976,6 +978,7 @@ export default function ReportFTABR26({ content, preview = false }: {
   const insightGraphic = (a: InsightArticle) => {
     const g = a.graphic;
     if (!g) return null;
+    if (g.kind === "mco" && isPdf) return <Ftabr26McoPanel print groups={FTABR26_WOMENS_MCO_GROUPS} t={t} isDark={isDark} isMobile={false} width={windowWidth} titleCol={titleCol} />;
     if (g.kind === "collage") return imageCollage(g.images);
     if (g.kind === "creator-deals") return creatorDeals;
     if (g.kind === "mco") {
@@ -2232,6 +2235,14 @@ export default function ReportFTABR26({ content, preview = false }: {
   const prMono: React.CSSProperties = { fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 1.5, color: PR.muted, textTransform: "uppercase" };
   const prSrc: React.CSSProperties = { fontSize: 8.5, letterSpacing: 1.1, lineHeight: 1.7 };
 
+  /* Colour key for the Football Only / Football Also charts in the PDF */
+  const prSplitLegend = (
+    <div style={{ display: "flex", gap: 18, marginBottom: 6, fontFamily: "'DM Mono',monospace", fontSize: 8.5, letterSpacing: 1.5, color: PR.muted, textTransform: "uppercase" }}>
+      {([["Football Only", PITCH], ["Football Also", ALSO_COLOR]] as const).map(([l, c]) => (
+        <span key={l} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><i style={{ width: 9, height: 9, borderRadius: 2, background: c, display: "inline-block" }} />{l}</span>
+      ))}
+    </div>
+  );
   /* Leaderboard list (countries, cities): rank, name, amount · rounds, bar */
   const prLeaderList = (title: string, rows: LeaderRow[], color: string) => {
     const max = Math.max(...rows.map(r => r.amount), 1);
@@ -2275,19 +2286,20 @@ export default function ReportFTABR26({ content, preview = false }: {
     </div>
   );
   /* Ecosystem table (initiatives or accelerators) */
-  const prEcoTable = (title: string, rows: Ftabr26EcosystemEntry[]) => (
+  /* Location column: a fixed width, left aligned, so the flags form one column */
+  const prEcoTable = (title: string, rows: Ftabr26EcosystemEntry[], locW = 112) => (
     <div>
       <div style={{ ...prMono, color: BRAND.pink, marginBottom: 6 }}>{title}</div>
       <div style={{ ...prCard, overflow: "hidden" }}>
         {rows.map((r, i) => {
           const href = ecoHref(r.website);
           return (
-            <div key={`${r.name}-${i}`} style={{ display: "grid", gridTemplateColumns: "18px minmax(0,1fr) auto", gap: "0 8px", alignItems: "center", padding: "5px 10px", borderTop: i ? `1px solid ${PR.border}` : "none", fontSize: 9.5 }}>
+            <div key={`${r.name}-${i}`} style={{ display: "grid", gridTemplateColumns: `18px minmax(0,1fr) ${locW}px`, gap: "0 8px", alignItems: "center", padding: "5px 10px", borderTop: i ? `1px solid ${PR.border}` : "none", fontSize: 9.5 }}>
               <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 8.5, color: PR.muted }}>{i + 1}</span>
               <span style={{ fontWeight: 700, color: PR.ink, lineHeight: 1.3 }}>
                 {href ? <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "none" }}>{r.name}</a> : r.name}
               </span>
-              <span style={{ justifySelf: "end" }}>{ecoLocationNode(r, 8.5, "·")}</span>
+              <span style={{ justifySelf: "start", minWidth: 0 }}>{ecoLocationNode(r, 8.5, "·")}</span>
             </div>
           );
         })}
@@ -2407,7 +2419,7 @@ export default function ReportFTABR26({ content, preview = false }: {
     return (<>
       {prHead(`Insights · ${a.label}`, a.heading, a.description)}
       <h3 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, color: PR.ink, margin: "6px 0 10px", letterSpacing: 0.3 }}>{a.title}</h3>
-      <div style={{ display: "grid", gridTemplateColumns: graphic ? "minmax(0,1.15fr) minmax(0,1fr)" : "1fr", gap: 22, alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: !graphic ? "1fr" : a.graphic?.kind === "mco" ? "minmax(0,1fr) minmax(0,1fr)" : "minmax(0,1.15fr) minmax(0,1fr)", gap: 22, alignItems: "start" }}>
         <div className="ft26-pp">{insightBody(a.body)}</div>
         {graphic && <div className="ft26-pp-graphic">{graphic}</div>}
       </div>
@@ -2468,7 +2480,8 @@ export default function ReportFTABR26({ content, preview = false }: {
     {prHead("Dealflow", "Football tech dealflow", <>Football is the world's biggest sport and attracts countless solution providers, so we split them in two: <strong style={{ color: PITCH }}>Football Only</strong> companies built solely for football, and <strong style={{ color: ALSO_COLOR }}>Football Also</strong> multisport platforms serving football alongside other sports. All figures cover {facts.period.label}.</>)}
     {prSub("Investment by year", dfKeys.year)}
     {prText(dealflowCopy.byYear)}
-    <div style={{ ...prCard, padding: "14px 14px 6px", marginTop: 6 }}>
+    <div style={{ ...prCard, padding: "12px 14px 6px", marginTop: 6 }}>
+      {prSplitLegend}
       <SplitBarChart data={yearSplitData} mode="value" t={LIGHT} isPdf />
     </div>
     <div style={{ ...prCard, overflow: "hidden", marginTop: 10 }}>
@@ -2490,7 +2503,7 @@ export default function ReportFTABR26({ content, preview = false }: {
       {prEyebrow("Dealflow")}
       {prSub("Investment by region", dfKeys.region)}
       {prText(dealflowCopy.byRegion)}
-      <div style={{ ...prCard, padding: "14px 14px 6px" }}><SplitBarChart data={regionSplitData} mode="value" t={LIGHT} isPdf /></div>
+      <div style={{ ...prCard, padding: "12px 14px 6px" }}>{prSplitLegend}<SplitBarChart data={regionSplitData} mode="value" t={LIGHT} isPdf /></div>
       <div style={{ marginTop: 12 }}>{prText(dealflowCopy.regionSplit)}</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         <div style={{ ...prCard, padding: "12px 14px" }}>
@@ -2556,7 +2569,7 @@ export default function ReportFTABR26({ content, preview = false }: {
   addPage({ id: "playermaker", contents: "Partner feature · Playermaker", kind: "white", node: () => PARTS.featured });
   /* Soccerment on its own: the Atlas banner that sits before it on the web closes the PDF instead */
   addPage({ id: "soccerment", contents: "Partner feature · Soccerment", kind: "white", node: () => (
-    <div style={{ padding: "34px 14px" }}><Ftabr26SoccermentFeature data={FTABR26_SOCCERMENT} print /></div>
+    <div style={{ padding: "28px 0" }}><Ftabr26SoccermentFeature data={FTABR26_SOCCERMENT} print /></div>
   ) });
 
   /* 15 · Ecosystem */
@@ -2677,7 +2690,7 @@ export default function ReportFTABR26({ content, preview = false }: {
               <span className="ft26-page-no">{String(i + 1).padStart(2, "0")}</span>
             </header>
           )}
-          <div className="ft26-page-body" style={{ padding: p.kind === "cover" ? 0 : p.kind === "white" ? "6px 6px 6px" : "28px 40px 26px", ...(p.kind === "white" ? { display: "flex", flexDirection: "column", justifyContent: "center" } : {}) }}>
+          <div className="ft26-page-body" style={{ padding: p.kind === "cover" ? 0 : p.kind === "white" ? "0 40px" : "28px 40px 26px", ...(p.kind === "white" ? { display: "flex", flexDirection: "column", justifyContent: "center" } : {}) }}>
             <div className="ft26-fit">{p.node()}</div>
           </div>
         </section>

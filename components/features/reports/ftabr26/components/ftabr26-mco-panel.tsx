@@ -30,6 +30,9 @@ type Props = {
   /** Smaller tiles and tighter spacing, for when the panel sits in a
       half-width column beside copy rather than across the full page. */
   dense?: boolean;
+  /** PDF: sized so every club (up to four per group) fits the half-page column,
+      with no scrolling (a printed scroll box cut the third and fourth clubs off). */
+  print?: boolean;
 };
 
 /** "FC Rosengård" → "R", "London City Lionesses" → "LC", "OL Lyonnes" → "OL".
@@ -78,15 +81,16 @@ function LogoTile({ name, website, size, round, t, crest, invertOnDark, isDark }
   );
 }
 
-export function Ftabr26McoPanel({ groups, t, isDark, isMobile, width, titleCol, dense = false }: Props) {
+export function Ftabr26McoPanel({ groups, t, isDark, isMobile, width, titleCol, dense = false, print = false }: Props) {
+  if (print) { dense = true; isMobile = false; }
   const compact = !isMobile && (dense || width < 1100);
 
-  const TILE    = dense ? (isMobile ? 38 : 36) : isMobile || compact ? 44 : 54;
-  const CELL    = dense ? 76 : compact ? 112 : 150;
-  const GAP     = dense ? 8 : isMobile ? 12 : compact ? 14 : 20;
-  const OWNER_W = dense ? 118 : compact ? 150 : 200;
-  const ROW_GAP = dense ? 12 : compact ? 18 : 28;
-  const ROW_PAD = dense ? 12 : 22;
+  const TILE    = print ? 28 : dense ? (isMobile ? 38 : 36) : isMobile || compact ? 44 : 54;
+  const CELL    = print ? 50 : dense ? 76 : compact ? 112 : 150;
+  const GAP     = print ? 3 : dense ? 8 : isMobile ? 12 : compact ? 14 : 20;
+  const OWNER_W = print ? 84 : dense ? 118 : compact ? 150 : 200;
+  const ROW_GAP = print ? 10 : dense ? 12 : compact ? 18 : 28;
+  const ROW_PAD = print ? 9 : dense ? 12 : 22;
 
   /* Widest row drives the column count, so adding a fifth club needs no
      change here. */
@@ -104,7 +108,7 @@ export function Ftabr26McoPanel({ groups, t, isDark, isMobile, width, titleCol, 
         <LogoTile name={c.name} website={c.website} size={TILE} round t={t}
           crest={c.crest} invertOnDark={c.crestInvertOnDark} isDark={isDark} />
         <span style={{
-          marginTop: dense ? 5 : 8, fontSize: dense ? 9.5 : 10.5, lineHeight: 1.3, textAlign: "center",
+          marginTop: print ? 4 : dense ? 5 : 8, fontSize: print ? 7.8 : dense ? 9.5 : 10.5, lineHeight: 1.3, textAlign: "center",
           color: t.textMuted, hyphens: "auto",
         }}>{c.name}</span>
       </>
@@ -123,9 +127,9 @@ export function Ftabr26McoPanel({ groups, t, isDark, isMobile, width, titleCol, 
     <div className="stx-reveal" style={{
       marginTop: dense ? 0 : 40, background: t.bgSec, border: `1px solid ${t.border}`,
       borderRadius: dense ? 12 : 16,
-      padding: isMobile ? "20px 16px" : dense ? "18px 18px" : "30px 32px",
-      /* The #trends container clips overflow, so scroll inside it instead. */
-      overflowX: "auto",
+      padding: print ? "14px 12px" : isMobile ? "20px 16px" : dense ? "18px 18px" : "30px 32px",
+      /* The #trends container clips overflow, so scroll inside it instead (not in print). */
+      overflowX: print ? "visible" : "auto",
     }}>
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 14 : dense ? 12 : 26 }}>
         {groups.map((g, i) => {
@@ -133,11 +137,11 @@ export function Ftabr26McoPanel({ groups, t, isDark, isMobile, width, titleCol, 
           const ownerName = (
             <div style={{ minWidth: 0 }}>
               <div style={{
-                fontFamily: "'Bebas Neue',sans-serif", fontSize: dense ? 15 : compact ? 17 : 19,
+                fontFamily: "'Bebas Neue',sans-serif", fontSize: print ? 13.5 : dense ? 15 : compact ? 17 : 19,
                 letterSpacing: 0.6, color: titleCol, lineHeight: 1.05,
               }}>{g.name}</div>
               {g.principal && (
-                <div style={{ fontSize: 10.5, lineHeight: 1.4, color: t.textMuted, marginTop: 3 }}>{g.principal}</div>
+                <div style={{ fontSize: print ? 8.5 : 10.5, lineHeight: 1.4, color: t.textMuted, marginTop: 3 }}>{g.principal}</div>
               )}
             </div>
           );

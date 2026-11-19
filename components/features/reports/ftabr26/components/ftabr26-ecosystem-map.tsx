@@ -147,7 +147,7 @@ export default function Ftabr26EcosystemMap({
     selected === id ? BRAND.pink : hovered === id ? BRAND.green : null;
 
   return (
-    <div className="stx-reveal" style={{ marginTop: 40 }}>
+    <div className="stx-reveal" style={{ marginTop: print ? 4 : 40 }}>
 
       {/* Legend — totals across the whole map, in the colours the pies use */}
       <div style={{ display: "flex", gap: isMobile ? 14 : 22, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>

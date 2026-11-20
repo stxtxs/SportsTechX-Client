@@ -32,6 +32,8 @@ export async function downloadReport(slug: string, versionId?: string): Promise<
 		const id = await versionFor(slug, versionId);
 		const url = id ? await pdfUrl(id) : null;
 		if (!url) throw new Error('no pdf');
+		// Count the download for admin report analytics (fire-and-forget: never blocks or fails the download).
+		void apiRequest('POST', `/api/reports/${encodeURIComponent(slug)}/downloads`, {}).catch(() => {});
 		const a = document.createElement('a');
 		a.href = url;
 		a.rel = 'noopener';

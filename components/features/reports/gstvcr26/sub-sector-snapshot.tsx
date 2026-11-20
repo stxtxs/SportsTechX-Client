@@ -13,6 +13,7 @@ import { BRAND } from "./brand";
 import { getCountryFlag } from "./flags";
 import { companyLogoSrc, websiteHref } from "./logos";
 import { money, periodYears, subSectorCaption, type Period, type RegionCode } from "./captions";
+import { millions } from "./format";
 
 type Theme = {
   bg: string; bgSec: string; bgCard: string; text: string; textSec: string;
@@ -35,9 +36,9 @@ const DISPLAY = "'Bebas Neue',sans-serif";
 
 /** Sector → audience label + colours already used across the report. */
 const SECTOR_STYLE: Record<string, { label: string; main: string; second: string }> = {
-  "Activity & Performance": { label: "For Athletes", main: BRAND.athletes, second: BRAND.athletesSec },
-  "Fans & Content": { label: "For Fans", main: BRAND.fans, second: BRAND.fansSec },
-  "Management & Organisation": { label: "For Executives", main: BRAND.execs, second: BRAND.execsSec },
+  "Activity & Performance": { label: "Athlete Tech", main: BRAND.athletes, second: BRAND.athletesSec },
+  "Fans & Content": { label: "Fan Tech", main: BRAND.fans, second: BRAND.fansSec },
+  "Management & Organisation": { label: "Executive Tech", main: BRAND.execs, second: BRAND.execsSec },
 };
 const styleOf = (sector: string) => SECTOR_STYLE[sector] ?? { label: sector, main: BRAND.navy, second: BRAND.lightBlue };
 const EXTRA_SLICE_COLORS = [BRAND.teal, BRAND.lightBlue, BRAND.slate, BRAND.peach];
@@ -174,14 +175,14 @@ function SnapshotCard({ s, period, region, t, isMobile }: { s: Snapshot; period:
           rows={s.topCountries.map((c, i) => [
             String(i + 1),
             <span key="c" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>{getCountryFlag(c.country)}<span style={{ fontWeight: 600, color: t.text }}>{c.country}</span></span>,
-            <span key="a" style={{ color: BRAND.pink }}>{c.total_m.toLocaleString("en-US")}</span>,
+            <span key="a" style={{ color: BRAND.pink }}>{millions(c.total_m)}</span>,
             c.top_city ?? "—",
           ])} />
         <RankTable t={t} title="Top Funded Companies" headers={["#", "Company", "Amount ($M)", "HQ City"]}
           rows={s.topCompanies.map((c, i) => [
             String(i + 1),
             <CompanyCell key="c" name={c.name} website={c.website} logoUrl={c.logo_url} color={st.main} t={t} />,
-            <span key="a" style={{ color: BRAND.pink }}>{c.total_m.toLocaleString("en-US")}</span>,
+            <span key="a" style={{ color: BRAND.pink }}>{millions(c.total_m)}</span>,
             <span key="h" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>{c.country ? getCountryFlag(c.country) : null}{c.city ?? c.country ?? "—"}</span>,
           ])} />
       </div>
@@ -202,7 +203,7 @@ function SnapshotBars({ bars, t }: { bars: { year: number; total_m: number; deal
         {bars.map((b, i) => (
           <div key={b.year} title={`${b.year === 2026 ? "2026 (Jan–Oct)" : b.year}: ${money(b.total_m)} across ${b.deals} rounds`}
             style={{ flex: 1, height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", alignItems: "center" }}>
-            <span style={{ fontFamily: MONO, fontSize: 10, color: t.textSec, fontWeight: 600, marginBottom: 4 }}>{b.total_m.toLocaleString("en-US")}</span>
+            <span style={{ fontFamily: MONO, fontSize: 10, color: t.textSec, fontWeight: 600, marginBottom: 4 }}>{millions(b.total_m)}</span>
             <div style={{ width: "100%", maxWidth: 64, height: `${(b.total_m / max) * 100}%`, minHeight: b.total_m > 0 ? 2 : 0, borderRadius: "3px 3px 0 0",
               background: i % 2 === 0 ? `linear-gradient(to top,${BRAND.teal},${BRAND.teal}cc)` : `linear-gradient(to top,${BRAND.execsSec},${BRAND.execsSec}88)` }} />
           </div>

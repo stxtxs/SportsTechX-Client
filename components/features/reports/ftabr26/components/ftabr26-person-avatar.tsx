@@ -6,8 +6,8 @@ import React, { useState } from "react";
 /* ─────────────────────────────────────────────────────────────────────────
    Circular headshot for the FTABR26 innovator and playmaker rosters.
 
-   Photos live under client/public/reports/ftabr26/ and are wired into
-   `photoUrl` by scripts/sync-ftabr26-photos.mjs. Anyone without one — a
+   Photos are image URLs in the report document (reports.content), wired into
+   `photoUrl`. Anyone without one — a
    cohort member whose headshot never arrived — falls back to initials, and so
    does anyone whose asset 404s at runtime, so a stale data file can never
    render a broken-image icon.

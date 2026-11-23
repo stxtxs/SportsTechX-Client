@@ -35,6 +35,8 @@ type Props = {
   linkedin?: string;
   /** Small label in the header bar, e.g. "FTABR 2026". */
   reportLabel: string;
+  /** Wordmark text at the left of the header bar. */
+  brand: string;
   onClose: () => void;
   t: Theme;
   isDark: boolean;
@@ -45,7 +47,7 @@ type Props = {
 const TITLE_ID = "ftabr26-drawer-title";
 
 export function Ftabr26PersonDrawer({
-  name, photoUrl, accent, flag, subtitle, linkedin, reportLabel,
+  name, photoUrl, accent, flag, subtitle, linkedin, reportLabel, brand,
   onClose, t, isDark, isMobile, children,
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -98,7 +100,7 @@ export function Ftabr26PersonDrawer({
           background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, letterSpacing: 2, color: BRAND.pink, flexShrink: 0 }}>SportsTechX</div>
+            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, letterSpacing: 2, color: BRAND.pink, flexShrink: 0 }}>{brand}</div>
             <div style={{ height: 3, flex: 1, borderRadius: 2, background: `linear-gradient(90deg, ${BRAND.pink}44, ${accent}44, transparent)` }} />
             <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: 1.5, color: t.textMuted, textTransform: "uppercase", whiteSpace: "nowrap" }}>{reportLabel}</span>
           </div>

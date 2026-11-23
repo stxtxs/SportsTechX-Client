@@ -5,7 +5,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import * as topojsonClient from "topojson-client";
 import { geoNaturalEarth1, geoPath } from "d3-geo";
-import staticEcoData from "./data/ecosystem-map-data.json";
+import { useReportDataset } from "@/lib/report-dataset";
 
 /* Analytics are no-ops in the Atlas port (STX Mixpanel hooks not wired here). */
 const ecosystemMapContinentClicked = (..._a: unknown[]) => {};
@@ -39,12 +39,8 @@ const BRAND = {
   slate: "#4D5E72", lightBlue: "#BED0E3", teal: "#76ADA7",
   tealBright: "#6A9DA9", navy: "#2B3D8F", white: "#FFFFFF",
 };
-const TAB_COLORS: Record<TabKey, string> = {
-  investors: "#E08B35", initiatives: BRAND.tealBright, programs: BRAND.navy,
-};
-const TAB_LABELS: Record<TabKey, string> = {
-  investors: "Investors", initiatives: "Initiatives", programs: "Programs",
-};
+/** "{a} of {b}" → values. */
+const fill = (tpl: string, vars: Record<string, string | number>) => tpl.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ""));
 
 /* ─── Map dimensions ─────────────────────────────────────────────────────── */
 const W = 900;
@@ -169,16 +165,19 @@ function countryToFlag(country: string): string {
 /* MAIN COMPONENT                                                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 export default function EcosystemMapSection({
-  t, isDark, isMobile = false,
-  eyebrow = "Ecosystem",
-  title = "THE GLOBAL\nECOSYSTEM MAP",
-  intro,
+  slug, t, isDark, isMobile = false,
+  eyebrow,
+  title,
+  intro, labels: L,
 }: {
-  t: Theme; isDark: boolean; isMobile?: boolean;
-  /* Optional label overrides so other reports can frame the same map in their own context */
-  eyebrow?: string; title?: string; intro?: string;
+  slug: string; t: Theme; isDark: boolean; isMobile?: boolean;
+  /* Report copy: the `ecomap` content key (eyebrow/title/intro) and `ecomapLabels`. */
+  eyebrow: string; title: string; intro?: string; labels: Record<string, any>;
 }) {
-  const data: EcoData = staticEcoData as EcoData;
+  // The map's entities are the report's frozen `ecomap` dataset.
+  const { data } = useReportDataset<EcoData>(slug, "ecomap");
+  const TAB_COLORS: Record<TabKey, string> = L.tabColors;
+  const TAB_LABELS: Record<TabKey, string> = L.tabLabels;
 
   /* ── Map state ── */
   const [countryPaths, setCountryPaths] = useState<{ id: string; d: string }[]>([]);
@@ -273,7 +272,7 @@ export default function EcosystemMapSection({
   const groupedByCategory = useMemo(() => {
     const groups: Record<string, EcoEntity[]> = {};
     for (const e of filteredEntities) {
-      const cat = e.category || "Other";
+      const cat = e.category || L.otherCategory;
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(e);
     }
@@ -282,7 +281,7 @@ export default function EcosystemMapSection({
       arr.sort((a, b) => cmp(a.continent, b.continent) || cmp(a.country, b.country) || cmp(a.city, b.city));
     }
     return Object.entries(groups).sort((a, b) => b[1].length - a[1].length);
-  }, [filteredEntities]);
+  }, [filteredEntities, L.otherCategory]);
 
   /* ── Scroll panel into view ── */
   useEffect(() => {
@@ -316,7 +315,7 @@ export default function EcosystemMapSection({
       start = end;
       return <path key={seg.key} d={d} fill={TAB_COLORS[seg.key]} opacity={0.9} />;
     });
-  }, []);
+  }, [TAB_COLORS]);
 
   /* ══════════════════════════ RENDER ══════════════════════════ */
   return (
@@ -336,7 +335,7 @@ export default function EcosystemMapSection({
 
           <div style={{ maxWidth: isMobile ? "100%" : 420, flexShrink: 0, paddingTop: isMobile ? 0 : 28 }}>
             <p style={{ fontSize: 13, color: t.textMuted, lineHeight: 1.8, margin: "0 0 16px 0" }}>
-              {intro ?? <>{data ? `${data.investors.length} investors, ${data.initiatives.length} initiatives, and ${data.programs.length} programs` : "Investors, initiatives, and programs"} across every major region. Select a continent to explore the organisations driving sports technology forward.</>}
+              {intro ?? (data ? fill(L.autoIntro, { investors: data.investors.length, initiatives: data.initiatives.length, programs: data.programs.length }) : L.autoIntroLoading)}
             </p>
             <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
               {(["investors", "initiatives", "programs"] as TabKey[]).map(key => {
@@ -362,13 +361,13 @@ export default function EcosystemMapSection({
 
         {/* ── MAP ── */}
         <div ref={mapRef} className="stx-reveal" style={{ position: "relative", background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 8, overflow: "hidden" }}>
-          {!mapReady && (
+          {(!mapReady || !data) && (
             <div style={{ height: H, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: t.textMuted, letterSpacing: 3 }}>LOADING MAP…</span>
             </div>
           )}
 
-          {mapReady && (
+          {mapReady && data && (
             <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", display: "block", position: "relative", zIndex: 1 }}>
               <defs>
                 <radialGradient id="oceanGrad" cx="50%" cy="50%" r="70%">
@@ -481,10 +480,10 @@ export default function EcosystemMapSection({
             transition: "opacity 0.3s ease",
           }}>
             <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 14 : 16, color: t.titleColor, lineHeight: 1.2, marginBottom: 6 }}>
-              Explore by Region
+              {L.exploreTitle}
             </div>
             <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: t.textMuted, lineHeight: 1.5, letterSpacing: 0.3 }}>
-              Select a continent to explore investors, initiatives and programs by region.
+              {L.exploreText}
             </div>
           </div>
 
@@ -529,16 +528,16 @@ export default function EcosystemMapSection({
           <div style={{ position: "absolute", top: "-15%", right: "5%", width: "clamp(120px,20vw,220px)", height: "clamp(120px,20vw,220px)", borderRadius: "50%", border: `2px solid rgba(237,26,94,0.2)`, pointerEvents: "none" }} />
           <div style={{ position: "absolute", top: 0, left: "30%", width: 1, height: "140%", background: `linear-gradient(to bottom, transparent 10%, rgba(237,26,94,0.1) 50%, transparent 90%)`, transform: "rotate(15deg)", transformOrigin: "top center", pointerEvents: "none" }} />
           <div style={{ position: "absolute", inset: 0, opacity: isDark ? 0.06 : 0.08, backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "24px 24px", color: "#fff", pointerEvents: "none" }} />
-          <a href="https://www.atlas.sportstechx.com" target="_blank" rel="noopener noreferrer" style={{ position: "relative", zIndex: 1, flexShrink: 0, lineHeight: 0 }}>
+          <a href={L.logoUrl} target="_blank" rel="noopener noreferrer" style={{ position: "relative", zIndex: 1, flexShrink: 0, lineHeight: 0 }}>
             <img src="/landing/atlas-wordmark-white.svg" alt="Atlas" style={{ width: isMobile ? 120 : 160, opacity: 0.9, objectFit: "contain" }} />
           </a>
           <div style={{ position: "relative", zIndex: 1, textAlign: isMobile ? "center" : "left" }}>
-            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 20 : 26, color: "#fff", lineHeight: 1.2, marginBottom: 4 }}>Discover the Full Ecosystem</div>
+            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 20 : 26, color: "#fff", lineHeight: 1.2, marginBottom: 4 }}>{L.ctaTitle}</div>
             <div style={{ fontFamily: "'DM Mono',monospace", fontSize: isMobile ? 10 : 11, color: "rgba(255,255,255,0.6)", letterSpacing: 0.5 }}>
-              1,000+ investors, accelerators, and innovation programs on Atlas
+              {L.ctaText}
             </div>
           </div>
-          <a href="https://www.atlas.sportstechx.com/investors" target="_blank" rel="noopener noreferrer" style={{
+          <a href={L.ctaUrl} target="_blank" rel="noopener noreferrer" style={{
             position: "relative", zIndex: 1,
             display: "inline-block", fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, letterSpacing: 2,
             color: "#fff", background: BRAND.pink, textDecoration: "none",
@@ -548,7 +547,7 @@ export default function EcosystemMapSection({
           }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLElement).style.boxShadow = `0 8px 24px ${BRAND.pink}55`; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 16px ${BRAND.pink}44`; }}
-          >EXPLORE ATLAS </a>
+          >{L.ctaLabel}</a>
         </div>
 
         {/* ── CONTINENT DETAIL PANEL ── */}
@@ -570,7 +569,7 @@ export default function EcosystemMapSection({
             }}>
               <div style={{ paddingBottom: 24 }}>
                 <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 3, color: BRAND.pink, textTransform: "uppercase", marginBottom: 8 }}>
-                  Exploring
+                  {L.exploring}
                 </p>
                 <h3 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(28px,4vw,52px)", lineHeight: 0.95, color: t.titleColor, margin: 0 }}>
                   {selectedContinent.toUpperCase()}
@@ -598,7 +597,7 @@ export default function EcosystemMapSection({
                         background: BRAND.pink, color: "#fff", fontWeight: 700,
                         transition: "all 0.18s", outline: "none",
                       }}>
-                        LIMITED
+                        {L.limited}
                       </button>
                       <button
                         onMouseEnter={() => setShowAllTooltip(true)}
@@ -612,7 +611,7 @@ export default function EcosystemMapSection({
                           display: "flex", alignItems: "center", gap: 4,
                           opacity: 0.6,
                         }}>
-                        ALL <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        {L.all} <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                       </button>
                     </div>
                     {showAllTooltip && (
@@ -625,7 +624,7 @@ export default function EcosystemMapSection({
                         boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
                         width: 260,
                       }}>
-                        View all 1,000+ investors, accelerators & programs on Atlas
+                        {L.allTooltip}
                         <div style={{
                           position: "absolute", top: -5, left: 24, transform: "rotate(45deg)",
                           width: 10, height: 10,
@@ -646,7 +645,7 @@ export default function EcosystemMapSection({
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = BRAND.pink; (e.currentTarget as HTMLElement).style.color = BRAND.pink; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = t.border; (e.currentTarget as HTMLElement).style.color = t.textMuted; }}
               >
-                ✕ Close
+                {L.close}
               </button>
             </div>
 
@@ -674,7 +673,7 @@ export default function EcosystemMapSection({
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: "auto", flexShrink: 0 }}>
                 <div style={{ width: 14, height: 14, borderRadius: 3, border: `1px solid ${BRAND.pink}40`, borderLeft: `3px solid ${BRAND.pink}`, background: isDark ? "rgba(237,26,94,0.08)" : "rgba(237,26,94,0.04)" }} />
                 <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: t.textMuted, letterSpacing: 0.5, whiteSpace: "nowrap" }}>
-                  Launched 2025/2026
+                  {L.newLegend}
                 </span>
               </div>
             </div>
@@ -683,7 +682,7 @@ export default function EcosystemMapSection({
             <div style={{ padding: isMobile ? "12px 12px 20px" : "20px 28px 28px" }}>
               {filteredEntities.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "48px 0", color: t.textMuted, fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: 2 }}>
-                  NO {TAB_LABELS[activeTab].toUpperCase()} FOUND
+                  {fill(L.notFound, { tab: TAB_LABELS[activeTab].toUpperCase() })}
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
@@ -707,7 +706,7 @@ export default function EcosystemMapSection({
                             const logoUrl = domain ? `https://www.google.com/s2/favicons?sz=128&domain=${domain}` : null;
                             const CardTag = href ? "a" : "div";
                             const yr = Number(entity.founded_year);
-                            const isNew = yr === 2025 || yr === 2026;
+                            const isNew = (L.newYears as number[]).includes(yr);
                             const newBg = isDark ? "rgba(237,26,94,0.08)" : "rgba(237,26,94,0.04)";
                             const defaultBg = isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.015)";
                             return (
@@ -785,14 +784,14 @@ export default function EcosystemMapSection({
                     {filteredEntities.length}/{data[activeTab].filter(e => normalizeContinent(e.continent) === selectedContinent).length} {TAB_LABELS[activeTab].toUpperCase()}
                   </span>
                   <span style={{ color: t.textMuted, fontSize: 10 }}>·</span>
-                  <a href="https://www.atlas.sportstechx.com/investors" target="_blank" rel="noopener noreferrer" style={{
+                  <a href={L.viewAllUrl} target="_blank" rel="noopener noreferrer" style={{
                     fontFamily: "'DM Mono',monospace", fontSize: 10, color: BRAND.pink, letterSpacing: 0.5,
                     textDecoration: "none", transition: "opacity 0.2s",
                   }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = "0.7"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
                   >
-                    View all on Atlas →
+                    {L.viewAll}
                   </a>
                 </div>
               )}
@@ -818,7 +817,7 @@ export default function EcosystemMapSection({
           display: "flex", alignItems: "center", gap: 6,
         }}
       >
-        <span style={{ fontSize: 14, lineHeight: 1 }}>↑</span> BACK TO MAP
+        <span style={{ fontSize: 14, lineHeight: 1 }}>↑</span> {L.backToMap}
       </button>
     </div>
   );

@@ -17,11 +17,10 @@
    the copy in data/public-report.json.
    --------------------------------------------------------------------------- */
 
-import { Fragment, type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { createContext, Fragment, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, Lock } from "lucide-react";
 import { useReveal } from "./use-reveal";
-import { BENCHMARK26_PART_ORDER } from "./content-defaults";
 import { ReportNav } from "../report-nav";
 import { DARK as NAV_DARK, LIGHT as NAV_LIGHT } from "../ftabr26/lib/report-theme";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -29,7 +28,6 @@ import "@/components/landing/landing.css";
 import "./public-report.css";
 
 type NavSection = { id: string; n: string; title: string };
-const contributorsUrl = "/reports/benchmark26/contributors.webp";
 // The PDF is private: ReportNav fetches a signed link per download (signed-in readers only).
 
 /* ------------------------------------------------------------ types
@@ -80,9 +78,44 @@ export interface PublicReportData {
     blocks: { title: string; body: string }[];
     note: { title: string; body: string };
   };
-  /** Page order of the blocks (the admin's Page order); defaults to the published order. */
-  partOrder?: string[];
+  /** Page order of the blocks (the admin's Page order). */
+  partOrder: string[];
+  /** The page's own words and settings around the document: heading accents, header link
+   *  labels, chart labels, the contributors image, the PDF file name, the contact email. */
+  ui: ReportUi;
 }
+
+export interface ReportUi {
+  /** Where each heading's pink tail starts (the PDF's editorial choice), by block id. */
+  accent: Record<string, string>;
+  /** Blocks that frame the findings and carry no section number. */
+  unnumbered: string[];
+  /** Header link labels by block id (a section without one uses its heading). */
+  nav: Record<string, string>;
+  /** Stacked-bar series names by series key. */
+  series: Record<string, string>;
+  /** How many rows of the "challenges" chart are printed. */
+  challengesShown: number;
+  contributorsImage: string;
+  /** Download file name; {title} = the report title. */
+  pdfFileName: string;
+  email: string;
+  labels: {
+    keyTakeaways: string; shareOfClosedDeals: string; quality: string; show: string; hide: string;
+    /** {value} */ ratingAria: string;
+    /** {n} {deals} {raters} */ channelRowTitle: string;
+    /** {n} {total} */ fundsOf: string;
+    /** {n} */ fundsCount: string;
+    /** {n} */ contributorsAlt: string;
+    /** {email} */ emailCta: string;
+  };
+}
+
+/* The page's words (content.ui), for the small chart components below. */
+const UiContext = createContext<ReportUi | null>(null);
+const useUi = () => useContext(UiContext)!;
+/** "{n} of {total} funds" + { n: 3, total: 9 } → "3 of 9 funds". */
+const fill = (tpl: string, vars: Record<string, string | number>) => tpl.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m));
 
 
 /* ----------------------------------------------------------- theme
@@ -113,33 +146,6 @@ function useReportTheme() {
 }
 
 /* ------------------------------------------------------------ copy */
-
-/* The PDF sets the tail of every heading in pink, and where the tail starts is
-   an editorial choice the JSON does not record — so it lives here. */
-const ACCENT: Record<string, string> = {
-  "why-now": "and why now",
-  "deal-sourcing-reality": "come from",
-  "sourcing-process": "process",
-  "outbound-and-tools": "find deals",
-  closing: "for investors",
-  method: "data notes",
-};
-
-/* The sections that carry findings are numbered (01–04 in the published order),
-   as a fund snapshot's sections are; the opening and the method notes frame
-   them and are not. Numbers follow the page order, so a reordered page still
-   reads 01, 02, 03… The rail uses the same numbers and leaves framing rows blank. */
-const UNNUMBERED = new Set(["why-now", "method"]);
-
-/* Header link labels, in the published order. */
-const NAV: NavSection[] = [
-  { id: "why-now", n: "", title: "Why now" },
-  { id: "deal-sourcing-reality", n: "01", title: "Deal sources" },
-  { id: "sourcing-process", n: "02", title: "Process" },
-  { id: "outbound-and-tools", n: "03", title: "Outbound" },
-  { id: "closing", n: "04", title: "Implications" },
-  { id: "method", n: "", title: "Method" },
-];
 
 /* "2026-09" → "September 2026"; "2026-04/2026-07" → "April to July 2026". */
 const month = (ym: string) =>
@@ -176,7 +182,7 @@ function PubSection({
       {/* Number (findings sections only), heading, and the rule under both. */}
       <div className="pub-head">
         {no && <span className="pub-no">{no}</span>}
-        <h2 className="pub-h2" id={`${id}-title`}><Accented text={heading} tail={ACCENT[id]} /></h2>
+        <h2 className="pub-h2" id={`${id}-title`}><Accented text={heading} tail={useUi().accent[id]} /></h2>
       </div>
       <p className="pub-sub">{subtitle}</p>
       <p className="lead pub-lead">{intro}</p>
@@ -193,6 +199,7 @@ function CollapsibleSection({
   id, heading, subtitle, intro, children,
 }: { id: string; heading: string; subtitle: string; intro: string; children: ReactNode }) {
   const [open, setOpen] = useState(() => window.location.hash === `#${id}`);
+  const ui = useUi();
 
   useEffect(() => {
     const onHash = () => {
@@ -214,9 +221,9 @@ function CollapsibleSection({
             onClick={() => setOpen((v) => !v)}
             data-testid={`button-${id}-toggle`}
           >
-            <span><Accented text={heading} tail={ACCENT[id]} /></span>
+            <span><Accented text={heading} tail={ui.accent[id]} /></span>
             <span className="appx-cue">
-              {open ? "Hide" : "Show"}
+              {open ? ui.labels.hide : ui.labels.show}
               <ChevronDown className="appx-caret" size={15} aria-hidden="true" />
             </span>
           </button>
@@ -259,7 +266,7 @@ function ChartCard({ chart, children }: { chart: Chart; children: ReactNode }) {
 function Takeaways({ items }: { items: string[] }) {
   return (
     <div className="pub-takes">
-      <h3 className="pub-h3">Key takeaways</h3>
+      <h3 className="pub-h3">{useUi().labels.keyTakeaways}</h3>
       <ol>
         {items.map((t, i) => (
           <li key={i}><span className="pub-take-n" aria-hidden="true">{i + 1}</span><p>{t}</p></li>
@@ -274,7 +281,7 @@ function Takeaways({ items }: { items: string[] }) {
 function Rating({ value }: { value: number }) {
   const filled = Math.round(value);
   return (
-    <span className="pub-rating" role="img" aria-label={`Quality ${value.toFixed(1)} out of 5`}>
+    <span className="pub-rating" role="img" aria-label={fill(useUi().labels.ratingAria, { value: value.toFixed(1) })}>
       <b>{value.toFixed(1)}</b>
       <span className="pub-pips" aria-hidden="true">
         {Array.from({ length: 5 }, (_, i) => <i key={i} className={i < filled ? "on" : ""} />)}
@@ -285,19 +292,20 @@ function Rating({ value }: { value: number }) {
 
 function ChannelChart({ rows, deals }: { rows: ChannelRow[]; deals: number }) {
   const { ref, seen } = useReveal<HTMLDivElement>();
+  const ui = useUi();
   const max = Math.max(...rows.map((r) => r.closed_deals_pct));
   return (
     <div className="pub-rows pub-channels" ref={ref}>
       <div className="pub-row pub-colhead" aria-hidden="true">
         <span />
-        <span>Share of closed deals</span>
-        <span>Quality</span>
+        <span>{ui.labels.shareOfClosedDeals}</span>
+        <span>{ui.labels.quality}</span>
       </div>
       {rows.map((r) => (
         <div
           className="pub-row"
           key={r.id}
-          title={`${r.closed_deals} of ${deals} closed deals · rated by ${r.quality_raters} funds`}
+          title={fill(ui.labels.channelRowTitle, { n: r.closed_deals, deals, raters: r.quality_raters })}
         >
           <span className="pub-label">{r.label}</span>
           <span className="pub-track">
@@ -313,11 +321,12 @@ function ChannelChart({ rows, deals }: { rows: ChannelRow[]; deals: number }) {
 
 function ShareChart({ rows, funds }: { rows: FundsRow[]; funds: number }) {
   const { ref, seen } = useReveal<HTMLDivElement>();
+  const ui = useUi();
   const max = Math.max(...rows.map((r) => r.funds_pct));
   return (
     <div className="pub-rows" ref={ref}>
       {rows.map((r) => (
-        <div className="pub-row pub-row-2" key={r.label} title={`${r.funds} of ${funds} funds`}>
+        <div className="pub-row pub-row-2" key={r.label} title={fill(ui.labels.fundsOf, { n: r.funds, total: funds })}>
           <span className="pub-label">{r.label}</span>
           <span className="pub-track">
             <i style={{ width: seen ? `${share(r.funds_pct, max)}%` : 0 }} />
@@ -331,12 +340,13 @@ function ShareChart({ rows, funds }: { rows: FundsRow[]; funds: number }) {
 
 function DotChart({ rows, per }: { rows: FundsRow[]; per: number }) {
   const { ref, seen } = useReveal<HTMLDivElement>();
+  const ui = useUi();
   return (
     <div className="pub-rows" ref={ref}>
       {rows.map((r) => (
         <div className="pub-row pub-row-2" key={r.label}>
           <span className="pub-label">{r.label}</span>
-          <span className="pub-dotrow" role="img" aria-label={`${r.funds} of ${per} funds`}>
+          <span className="pub-dotrow" role="img" aria-label={fill(ui.labels.fundsOf, { n: r.funds, total: per })}>
             <b aria-hidden="true">{r.funds}</b>
             <span className="pub-dots" aria-hidden="true">
               {Array.from({ length: per }, (_, i) => (
@@ -354,13 +364,10 @@ function DotChart({ rows, per }: { rows: FundsRow[]; per: number }) {
   );
 }
 
-const SERIES: Record<string, string> = {
-  no_platform: "No data platform",
-  uses_platform: "Uses a data platform",
-};
-
 function StackChart({ rows, series }: { rows: StackRow[]; series: string[] }) {
   const { ref, seen } = useReveal<HTMLDivElement>();
+  const ui = useUi();
+  const SERIES = ui.series;
   const max = Math.max(...rows.map((r) => r.funds));
   return (
     <>
@@ -369,7 +376,7 @@ function StackChart({ rows, series }: { rows: StackRow[]; series: string[] }) {
           <div className="pub-row pub-row-2" key={r.answer}>
             <span className="pub-label">
               {r.label}
-              <small>{r.funds} funds</small>
+              <small>{fill(ui.labels.fundsCount, { n: r.funds })}</small>
             </span>
             <span className="pub-segs" style={{ width: seen ? `${(r.funds / max) * 100}%` : 0 }}>
               {series.map((k, i) => {
@@ -391,16 +398,13 @@ function StackChart({ rows, series }: { rows: StackRow[]; series: string[] }) {
   );
 }
 
-/* The PDF prints the five challenges that more than one fund named; the three
-   below them are single write-in answers. */
-const CHALLENGES_SHOWN = 5;
-
 function ChartFor({ chart, meta }: { chart: Chart; meta: PublicReportData["meta"] }) {
+  const ui = useUi();
   switch (chart.type) {
     case "bar+rating": return <ChannelChart rows={chart.rows} deals={meta.deals_traced} />;
     case "bar": return (
       <ShareChart
-        rows={chart.id === "challenges" ? chart.rows.slice(0, CHALLENGES_SHOWN) : chart.rows}
+        rows={chart.id === "challenges" ? chart.rows.slice(0, ui.challengesShown) : chart.rows}
         funds={meta.funds}
       />
     );
@@ -411,24 +415,24 @@ function ChartFor({ chart, meta }: { chart: Chart; meta: PublicReportData["meta"
 
 /* -------------------------------------------------------------- page */
 
-export default function PublicReport({ data }: { data: PublicReportData }) {
-  const { meta, intro, sections, closing, methodology } = data;
+export default function PublicReport({ data, slug }: { data: PublicReportData; slug: string }) {
+  const { meta, intro, sections, closing, methodology, ui } = data;
   /* Page order: the saved one, then anything it doesn't name, in the published order. */
   const orderKey = JSON.stringify(data.partOrder ?? null);
   const { order, nav, no } = useMemo(() => {
     const known = new Set(["why-now", "closing", "method", ...sections.map((s) => s.id)]);
-    const order = [...new Set([...(data.partOrder ?? []), ...BENCHMARK26_PART_ORDER, ...sections.map((s) => s.id)])].filter((id) => known.has(id));
-    const numbered = order.filter((id) => !UNNUMBERED.has(id));
+    const order = [...new Set([...(data.partOrder ?? []), ...sections.map((s) => s.id)])].filter((id) => known.has(id));
+    const numbered = order.filter((id) => !ui.unnumbered.includes(id));
     const no = (id: string) => (numbered.includes(id) ? String(numbered.indexOf(id) + 1).padStart(2, "0") : "");
     const nav: NavSection[] = order.map((id) => ({
       id, n: no(id),
-      title: NAV.find((n) => n.id === id)?.title ?? sections.find((s) => s.id === id)?.heading ?? id,
+      title: ui.nav[id] ?? sections.find((s) => s.id === id)?.heading ?? id,
     }));
     return { order, nav, no };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderKey, sections]);
   const { dark, toggle } = useReportTheme();
-  const pdfName = `SportsTechX — ${meta.title}.pdf`;
+  const pdfName = fill(ui.pdfFileName, { title: meta.title });
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -464,8 +468,8 @@ export default function PublicReport({ data }: { data: PublicReportData }) {
           {intro.body.slice(1).map((p, i) => <p className="lead pub-lead" key={i}>{p}</p>)}
           <figure className="pub-logos">
             <img
-              src={contributorsUrl}
-              alt={`Logos of the ${intro.contributors.named} funds named as founding contributors`}
+              src={ui.contributorsImage}
+              alt={fill(ui.labels.contributorsAlt, { n: intro.contributors.named })}
               width={1600}
               height={608}
               loading="lazy"
@@ -522,6 +526,7 @@ export default function PublicReport({ data }: { data: PublicReportData }) {
   };
 
   return (
+    <UiContext.Provider value={ui}>
     <div className={`stx-report${dark ? " dark" : ""}`}>
       <header className="pub-cover">
         <div className="wrap pub-cover-in">
@@ -543,7 +548,7 @@ export default function PublicReport({ data }: { data: PublicReportData }) {
       <ReportNav
         items={nav.map((n) => ({ href: `#${n.id}`, label: n.title }))}
         activeIndex={active} isDark={dark} isMobile={isMobile} theme={dark ? NAV_DARK : NAV_LIGHT}
-        pdf={{ url: '#', file: pdfName, slug: 'investors-survey26' }}
+        pdf={{ url: '#', file: pdfName, slug }}
         mobileOpen={menuOpen} onToggleMobile={() => setMenuOpen((o) => !o)} onToggleDark={toggle}
         onNavigate={(href, _label, mobile) => {
           if (mobile) setMenuOpen(false);
@@ -564,8 +569,8 @@ export default function PublicReport({ data }: { data: PublicReportData }) {
             <h3>{closing.cta.title}</h3>
             <p className="foot-lede">{closing.cta.body}</p>
             <div className="cta-row">
-              <a className="cta" href="mailto:hello@sportstechx.com" data-testid="link-public-email">
-                Email us hello@sportstechx.com
+              <a className="cta" href={`mailto:${ui.email}`} data-testid="link-public-email">
+                {fill(ui.labels.emailCta, { email: ui.email })}
               </a>
             </div>
           </div>
@@ -574,5 +579,6 @@ export default function PublicReport({ data }: { data: PublicReportData }) {
       {/* The footer every web report shares: the Atlas landing footer. */}
       <div className="lp"><LandingFooter /></div>
     </div>
+    </UiContext.Provider>
   );
 }

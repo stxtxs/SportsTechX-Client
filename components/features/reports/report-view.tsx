@@ -18,6 +18,13 @@ const PdfReportView = dynamic(() => import('./pdf-report-view').then((m) => m.Pd
 	loading: () => <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}><Loading /></div>,
 });
 
+/** A spinner only if loading is slow: a report usually arrives first, so the page appears without a flash. */
+function DelayedLoading() {
+	const [show, setShow] = useState(false);
+	useEffect(() => { const t = setTimeout(() => setShow(true), 600); return () => clearTimeout(t); }, []);
+	return <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>{show && <Loading />}</div>;
+}
+
 /**
  * Chrome-less report page (no Atlas shell). Fetches the report + its section
  * feed and the viewer's dark/light choice, then hands them to `ReportPage`
@@ -44,7 +51,7 @@ export function ReportView({ slug }: { slug: string }) {
 		try { localStorage.setItem(`rk-theme:${slug}`, next ? 'dark' : 'light'); } catch { /* ignore */ }
 	};
 
-	if (detail.isLoading || sections.isLoading) return <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}><Loading /></div>;
+	if (detail.isLoading || sections.isLoading) return <DelayedLoading />;
 	if (!detail.data) return <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}><Empty>Report not found. <Link href="/reports">Back to reports</Link></Empty></div>;
 	// A custom-designed report: its template draws the report's own document (reports.content).
 	const tpl = detail.data.template ? REPORT_TEMPLATES[detail.data.template] : undefined;

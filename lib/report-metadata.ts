@@ -37,6 +37,19 @@ export function reportCard({ title, description, path, cover }: Card): Metadata 
 	};
 }
 
+/** A report's own share card, set in its document (reports.content.share). The image is used as-is. */
+type ShareCard = { title: string; shareTitle?: string; description: string; image: { url: string; width?: number; height?: number; alt?: string } };
+function shareCard(s: ShareCard, path: string): Metadata {
+	const shareTitle = s.shareTitle || `${s.title} | ${SITE}`;
+	return {
+		title: s.title,
+		description: s.description,
+		alternates: { canonical: path },
+		openGraph: { type: 'article', siteName: SITE, locale: 'en_US', url: path, title: shareTitle, description: s.description, images: [s.image] },
+		twitter: { card: 'summary_large_image', title: shareTitle, description: s.description, images: [s.image] },
+	};
+}
+
 /**
  * Card for a stored report, from the public report API (published reports only).
  * A draft or miss still gets a card with the fallback title, never the Atlas
@@ -48,7 +61,10 @@ export async function reportMetadata(slug: string, fallbackTitle = 'Report'): Pr
 		// Bots wait for metadata: a hung backend must cost a fallback card, not the preview.
 		const r = await fetch(`${process.env.BACKEND_URL}/api/reports/${encodeURIComponent(slug)}`, { next: { revalidate: 300 }, signal: AbortSignal.timeout(3000) });
 		if (r.ok) {
-			const report = (await r.json()) as { title?: string | null; description?: string | null; cover_url?: string | null };
+			const report = (await r.json()) as { title?: string | null; description?: string | null; cover_url?: string | null; content?: { share?: ShareCard } | null };
+			// A report's own share card (its document's `share`: title, description, purpose-made image) wins.
+			const share = report.content?.share;
+			if (share?.title && share.description && share.image?.url) return shareCard(share, path);
 			if (report.title) return reportCard({ title: report.title, description: report.description, path, cover: report.cover_url });
 		}
 	} catch { /* fall back below */ }

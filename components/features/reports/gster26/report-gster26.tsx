@@ -4,10 +4,9 @@
 
 import React, { useEffect, useRef, useState, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
-import NextLink from "next/link";
-import { usePathname } from "next/navigation";
 import useSWR from "swr";
 import { qk } from "@/lib/query-keys";
+import { useReportDataset } from "@/lib/report-dataset";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
 import "./gster26.css";
@@ -15,46 +14,31 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import "@/components/landing/landing.css";
 import { BRAND } from './brand';
 import { LockedPart, lockedNow } from '../locked-part';
-import { INNOVATOR_RESPONSES_DEFAULT, watchInnovators_DEFAULT, watchPeak_DEFAULT, PEAK_SWC_FINALISTS_DEFAULT, GROUNDBREAKERS_ORGS_DEFAULT, PEAK_PARTNERS_TIER1_DEFAULT, PEAK_PARTNERS_TIER2_DEFAULT, PEAK_PARTNERS_TIER3_DEFAULT, watchStxRecommends_DEFAULT, FEATURED_ARTICLES_DEFAULT, NAV_DEFAULT, HERO_DEFAULT, TRENDS_HEADER_DEFAULT, TREND_CARDS_DEFAULT, PEAK_COPY_DEFAULT, INNOVATORS_HEADER_DEFAULT, STARTUPS_HEADER_DEFAULT, NGSC_DEFAULT, DATA_HEADER_DEFAULT, CLOSING_DEFAULT, ECOMAP_DEFAULT, TREND_MA_DEFAULT, TREND_RUNNING_DEFAULT, TREND_DTC_DEFAULT, GSTER26_PART_ORDER } from './content-defaults';
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-// PEAK conference tracks — stays code-side (embeds lucide icon components, not
-// serializable to the editorial DB doc); labels aren't editable copy.
-const PEAK_TRACKS_DEFAULT = [
-  { label: "Shaping the\nFan Experience", Icon: Users },
-  { label: "Maximizing Smart\nVenue Performance", Icon: Building2 },
-  { label: "Advancing Athlete\nPerformance", Icon: Activity },
-  { label: "AI-Powered\nFront Offices", Icon: Bot },
-  { label: "Pathways\nto Pro", Icon: Trophy },
-  { label: "Financing the\nFuture of Sport", Icon: TrendingUp },
-  { label: "Innovative\nEmerging Leagues", Icon: Lightbulb },
-  { label: "Next-Gen\nRevenue Strategies", Icon: BarChart3 },
-];
 import * as topojsonClient from "topojson-client";
 import { geoMercator, geoPath } from "d3-geo";
-import { Users, Building2, Activity, Bot, Trophy, TrendingUp, Lightbulb, BarChart3, Monitor, GitMerge, Footprints, Landmark, DollarSign, Globe, Menu, X } from "lucide-react";
-import { GSTER25_FACTS } from "./data/gster25-facts-data";
-import { GSTER25_MA_DEALS } from "./data/gster25-ma-deals-data";
-import { INNOVATORS_DATA } from "./data/gster26-innovators-data";
+import { Users, Building2, Activity, Bot, Trophy, TrendingUp, Lightbulb, BarChart3, Monitor, Footprints, Landmark, DollarSign, Globe } from "lucide-react";
 import { getCountryFlag } from "./flags";
 import { track } from "@/lib/analytics";
 import { ReportNav } from "../report-nav";
 
-// The downloadable "lite" PDF lives in Supabase storage (public_bucket), not in
-// the repo. `?download` makes Supabase serve it as an attachment — the HTML
-// `download` attr is ignored cross-origin, so the query param is what forces it.
-const GSTER26_PDF_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""}/storage/v1/object/public/public_bucket/reports/GSTER26-LITE.pdf?download=GSTER26-LITE.pdf`;
+/* Every word, number, list and image of the report comes from reports.content
+   (`ov`) and the report's frozen datasets (useReportDataset); this file is
+   layout only. Content stores icon NAMES; these registries draw them. */
+const LUCIDE: Record<string, any> = { Users, Building2, Activity, Bot, Trophy, TrendingUp, Lightbulb, BarChart3, Monitor, Footprints, Landmark, DollarSign, Globe };
 
-/* ── Atlas port shims ─────────────────────────────────────────────────────
-   The STX page ran under wouter + react-query + a custom auth hook. In Atlas
-   the page is rendered chrome-less behind ProtectedRoute, so the viewer is
-   always authenticated; the innovators/watch/M&A data that STX fetched from
-   /api/report/* is sourced here from the committed static snapshots that back
-   those endpoints, and the pros/cons poll keeps local vote state. */
-const Link = NextLink as unknown as (props: { href: string; children?: React.ReactNode; style?: React.CSSProperties; [k: string]: unknown }) => React.ReactElement;
-function useAuthSession() { return { user: { id: "viewer" }, sessionValid: true, loading: false }; }
-function AuthModal() { return null; }
+/* NGSC social links: content stores { url, icon NAME }; these draw the icons. */
+const SOCIAL_ICONS: Record<string, React.ReactNode> = {
+  globe: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+  linkedin: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>,
+  instagram: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>,
+  x: <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>,
+  youtube: <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>,
+};
+
+/** "{a} of {b}" → values. */
+const fill = (tpl: string, vars: Record<string, string | number>) => tpl.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ""));
 
 /* ── gster26 Mixpanel helper ─────────────────────────────────────────── */
 function trackG26(event: string, props?: Record<string, any>) {
@@ -331,11 +315,6 @@ function fmt(m: number): string {
   return `$${m.toFixed(1)}M`;
 }
 
-/* Chart Source Badge , shown under every chart title */
-function SourceBadge(_props: { chartId: string; source: string }) {
-  return null;
-}
-
 function useReveal(dep?: unknown) {
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -439,19 +418,7 @@ const STAT_ICONS = {
   ma: (c: string) => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.5 16.25l-3-2.5-3.5 3-3.5-3-3 2.5" /><path d="M2 12a5 5 0 0 1 5-5 4.97 4.97 0 0 1 3 1l2 1.5L14 8a4.97 4.97 0 0 1 3-1 5 5 0 0 1 5 5c0 4.5-6.5 8.5-10 10.5C8.5 20.5 2 16.5 2 12z" /></svg>,
 };
 
-function StatCard({ num, label, t, subtitle, style, icon }: { num: React.ReactNode; label: string; t: Theme; subtitle?: string; style?: React.CSSProperties; icon?: keyof typeof STAT_ICONS }) {
-  return (
-    <div className="stx-reveal"
-      style={{ background: t.bgCard, padding: "36px 32px", position: "relative", overflow: "hidden", borderRadius: 14, border: `1px solid ${t.border}`, ...style }}>
-      {icon && <div style={{ position: "absolute", top: 20, right: 20, opacity: 0.13 }}>{STAT_ICONS[icon](t.textMuted)}</div>}
-      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(44px,4.5vw,64px)", color: BRAND.pink, lineHeight: 1 }}>{num}</div>
-      <div style={{ marginTop: 10, fontSize: 14, fontWeight: 600, color: t.titleColor, lineHeight: 1.4 }}>{label}</div>
-      {subtitle && <div style={{ marginTop: 8, fontSize: 12, color: t.textMuted, lineHeight: 1.5 }}>{subtitle}</div>}
-    </div>
-  );
-}
-
-function YearBarChart({ data, t, isPdf = false }: { data: { year: number; total_m: number; deals: number }[]; t: Theme; isPdf?: boolean }) {
+function YearBarChart({ data, t, isPdf = false, highlightYear, tooltip }: { data: { year: number; total_m: number; deals: number }[]; t: Theme; isPdf?: boolean; highlightYear: number; tooltip: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [animated, setAnimated] = useState(isPdf);
   useEffect(() => {
@@ -465,9 +432,9 @@ function YearBarChart({ data, t, isPdf = false }: { data: { year: number; total_
     <div ref={ref} style={{ display: "flex", alignItems: "flex-end", gap: 10, height: 260, paddingBottom: 44, borderBottom: `1px solid ${t.border}`, position: "relative" }}>
       {data.map((d, i) => {
         const pct = (d.total_m / maxVal) * 100;
-        const isLatest = Number(d.year) === 2025;
+        const isLatest = Number(d.year) === highlightYear;
         return (
-          <div key={d.year} title={`${d.year}: ${fmt(d.total_m)} across ${d.deals} deals`}
+          <div key={d.year} title={fill(tooltip, { year: d.year, value: fmt(d.total_m), deals: d.deals })}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, height: "100%", justifyContent: "flex-end", cursor: "default" }}>
             <div style={{ width: "100%", height: animated ? `${pct}%` : "0%", background: isLatest ? `linear-gradient(to top,${BRAND.tealBright},${BRAND.lightBlue}66)` : `linear-gradient(to top,${BRAND.navy},${BRAND.teal}55)`, transition: `height 1.4s cubic-bezier(0.16,1,0.3,1) ${i * 0.08}s`, position: "relative", minHeight: 4, borderRadius: "3px 3px 0 0" }}>
               <span style={{ position: "absolute", top: -26, left: "50%", transform: "translateX(-50%)", fontFamily: "'DM Mono',monospace", fontSize: 10, color: isLatest ? BRAND.tealBright : t.textSec, whiteSpace: "nowrap", fontWeight: 600 }}>
@@ -484,7 +451,7 @@ function YearBarChart({ data, t, isPdf = false }: { data: { year: number; total_
   );
 }
 
-function MaStackedBarChart({ chartData, mode, t, isPdf = false }: { chartData: { year: number; sportstech: number; non_sportstech: number; sportstech_val: number; non_sportstech_val: number }[]; mode: "count" | "value"; t: Theme; isPdf?: boolean }) {
+function MaStackedBarChart({ chartData, mode, t, isPdf = false, tooltip }: { chartData: { year: number; sportstech: number; non_sportstech: number; sportstech_val: number; non_sportstech_val: number }[]; mode: "count" | "value"; t: Theme; isPdf?: boolean; tooltip: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [animated, setAnimated] = useState(isPdf);
   useEffect(() => {
@@ -506,7 +473,7 @@ function MaStackedBarChart({ chartData, mode, t, isPdf = false }: { chartData: {
         const nstPct = total > 0 ? (nst / total) * 100 : 0;
         const label = isValue ? `$${total >= 1000 ? (total / 1000).toFixed(1) + "B" : total + "M"}` : String(total);
         return (
-          <div key={d.year} title={`${d.year}: ${isValue ? "$" + st + "M" : st} sportstech + ${isValue ? "$" + nst + "M" : nst} non-sportstech`}
+          <div key={d.year} title={fill(tooltip, { year: d.year, st: isValue ? "$" + st + "M" : st, nst: isValue ? "$" + nst + "M" : nst })}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, height: "100%", justifyContent: "flex-end", cursor: "default" }}>
             <div style={{ width: "100%", height: animated ? `${pct}%` : "0%", transition: `height 1.4s cubic-bezier(0.16,1,0.3,1) ${i * 0.08}s`, position: "relative", minHeight: 4, borderRadius: "3px 3px 0 0", display: "flex", flexDirection: "column" }}>
               <span style={{ position: "absolute", top: -26, left: "50%", transform: "translateX(-50%)", fontFamily: "'DM Mono',monospace", fontSize: 10, color: BRAND.teal, whiteSpace: "nowrap", fontWeight: 600 }}>
@@ -528,41 +495,17 @@ function MaStackedBarChart({ chartData, mode, t, isPdf = false }: { chartData: {
 /* ─── Continent Filter ────────────────────────────────────────────────────── */
 type RegionCode = "NA" | "EU" | "APAC" | "ROW";
 
-const CONTINENT_REGIONS: { code: RegionCode; label: string; path: string; extra?: string }[] = [
-  {
-    code: "NA", label: "N. America",
-    /* North America: wide top Canada/Alaska, east coast angles SE, Gulf indentation, Florida tip, west coast left */
-    path: "M 8,8 L 24,3 L 50,2 L 74,6 L 82,12 L 82,22 L 76,30 L 72,36 L 68,40 L 62,38 L 56,34 L 44,42 L 24,50 L 14,44 L 8,30 L 8,18 Z",
-  },
-  {
-    code: "EU", label: "Europe",
-    /* Europe: compact blob, Scandinavia juts NE, Iberian SW, Mediterranean indentation south */
-    path: "M 38,8 L 46,4 L 54,4 L 64,10 L 70,18 L 66,28 L 58,36 L 48,40 L 38,36 L 28,28 L 26,20 L 30,12 Z",
-    extra: "M 46,4 L 44,0 L 48,2 Z M 54,4 L 58,0 L 60,4 Z M 58,36 L 60,42 L 56,46 L 52,40 Z",
-  },
-  {
-    code: "APAC", label: "Asia Pacific",
-    /* Asia Pacific: very wide, spans full width, Indian subcontinent dips south, SE Asia curves down-right */
-    path: "M 2,14 L 18,7 L 46,4 L 74,5 L 95,12 L 97,24 L 90,38 L 76,48 L 60,56 L 44,60 L 30,56 L 14,46 L 3,28 Z",
-    extra: "M 30,56 L 24,64 L 30,68 L 38,62 L 44,60 Z",
-  },
-  {
-    code: "ROW", label: "Rest of World",
-    /* Africa (center-right): elongated oval tapering to Cape of Good Hope; South America (left): pear-shaped */
-    path: "M 42,6 L 62,6 L 70,16 L 70,36 L 58,62 L 48,66 L 38,62 L 28,42 L 28,22 L 34,10 Z",
-    extra: "M 4,22 L 16,18 L 22,28 L 20,48 L 12,58 L 4,54 L 2,40 Z",
-  },
-];
-
+/** `regions` = [{ code: null, label: "All" }, ...one per region dataset code] (from content). */
 function ContinentFilterBar({
-  value, onChange, t, label,
+  value, onChange, t, label, regions,
 }: {
   value: RegionCode | null;
   onChange: (v: RegionCode | null) => void;
   t: Theme;
   label?: string;
+  regions: { code: RegionCode | null; label: string }[];
 }) {
-  const allRegions = [{ code: null as RegionCode | null, label: "All" }, ...CONTINENT_REGIONS.map(r => ({ code: r.code as RegionCode | null, label: r.label }))];
+  const allRegions = regions;
   return (
     <div style={{ marginBottom: 28 }}>
       {label && (
@@ -597,7 +540,7 @@ function ContinentFilterBar({
   );
 }
 
-function PollVoteSection({ pollId, article, t, isMobile, user, sessionValid }: { pollId: string; article: FeaturedArticle; t: Theme; isMobile: boolean; user: any; sessionValid: boolean }) {
+function PollVoteSection({ pollId, article, t, isMobile, L }: { pollId: string; article: FeaturedArticle; t: Theme; isMobile: boolean; L: Record<string, string> }) {
   // Atlas port: the pros/cons poll keeps local vote state (STX's /api/report
   // poll backend isn't wired here). Vote is optimistic + client-only.
   const [pollData, setPollData] = useState<{ results: Record<string, number>; total: number; userVote: string | null }>(
@@ -608,10 +551,6 @@ function PollVoteSection({ pollId, article, t, isMobile, user, sessionValid }: {
     e.stopPropagation();
     e.preventDefault();
     trackG26("vote_cast", { poll: pollId, vote });
-    if (!user || !sessionValid) {
-      window.dispatchEvent(new Event("showAuthModal"));
-      return;
-    }
     setPollData((prev) => {
       if (prev.userVote) return prev; // one vote per viewer
       return {
@@ -661,9 +600,9 @@ function PollVoteSection({ pollId, article, t, isMobile, user, sessionValid }: {
           }}
         >
           {userVote === "yes" && (
-            <div style={{ position: "absolute", top: 12, right: 14, fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 1.5, color: GREEN, textTransform: "uppercase", opacity: 0.8 }}>YOUR VOTE</div>
+            <div style={{ position: "absolute", top: 12, right: 14, fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 1.5, color: GREEN, textTransform: "uppercase", opacity: 0.8 }}>{L.yourVote}</div>
           )}
-          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: GREEN, marginBottom: 16 }}>WHY IT WILL</div>
+          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: GREEN, marginBottom: 16 }}>{L.yesTitle}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14, flex: 1 }}>
             {article.pros!.map((item, i) => (
               <div key={i} style={{ display: "flex", gap: 10 }}>
@@ -677,7 +616,7 @@ function PollVoteSection({ pollId, article, t, isMobile, user, sessionValid }: {
           </div>
           {!hasVoted && (
             <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${GREEN}20`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 2, color: GREEN, textTransform: "uppercase", border: `1px solid ${GREEN}`, borderRadius: 999, padding: "6px 20px" }}>VOTE: IT WILL</span>
+              <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 2, color: GREEN, textTransform: "uppercase", border: `1px solid ${GREEN}`, borderRadius: 999, padding: "6px 20px" }}>{L.yesVote}</span>
             </div>
           )}
         </button>
@@ -704,9 +643,9 @@ function PollVoteSection({ pollId, article, t, isMobile, user, sessionValid }: {
           }}
         >
           {userVote === "no" && (
-            <div style={{ position: "absolute", top: 12, right: 14, fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 1.5, color: BRAND.pink, textTransform: "uppercase", opacity: 0.8 }}>YOUR VOTE</div>
+            <div style={{ position: "absolute", top: 12, right: 14, fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 1.5, color: BRAND.pink, textTransform: "uppercase", opacity: 0.8 }}>{L.yourVote}</div>
           )}
-          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: BRAND.pink, marginBottom: 16 }}>WHY IT WON'T</div>
+          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: BRAND.pink, marginBottom: 16 }}>{L.noTitle}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14, flex: 1 }}>
             {article.cons!.map((item, i) => (
               <div key={i} style={{ display: "flex", gap: 10 }}>
@@ -720,7 +659,7 @@ function PollVoteSection({ pollId, article, t, isMobile, user, sessionValid }: {
           </div>
           {!hasVoted && (
             <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${BRAND.pink}20`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 2, color: BRAND.pink, textTransform: "uppercase", border: `1px solid ${BRAND.pink}`, borderRadius: 999, padding: "6px 20px" }}>VOTE: IT WON'T</span>
+              <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 2, color: BRAND.pink, textTransform: "uppercase", border: `1px solid ${BRAND.pink}`, borderRadius: 999, padding: "6px 20px" }}>{L.noVote}</span>
             </div>
           )}
         </button>
@@ -728,7 +667,7 @@ function PollVoteSection({ pollId, article, t, isMobile, user, sessionValid }: {
 
       {/* Pre-vote prompt or post-vote results */}
       {!hasVoted ? (
-        <p style={{ fontSize: 12, color: t.textMuted, textAlign: "center", marginTop: 16, fontStyle: "italic" }}>Cast your vote to see the results</p>
+        <p style={{ fontSize: 12, color: t.textMuted, textAlign: "center", marginTop: 16, fontStyle: "italic" }}>{L.prompt}</p>
       ) : (
         <div style={{ marginTop: 20 }}>
           <div style={{ height: 6, borderRadius: 3, background: `${BRAND.pink}15`, overflow: "hidden", display: "flex" }}>
@@ -736,9 +675,9 @@ function PollVoteSection({ pollId, article, t, isMobile, user, sessionValid }: {
             <div style={{ height: "100%", flex: 1, background: `${BRAND.pink}40` }} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: GREEN }}>{yesPct}% It will</span>
-            <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>{total} vote{total !== 1 ? "s" : ""}</span>
-            <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: BRAND.pink }}>{noPct}% It won't</span>
+            <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: GREEN }}>{yesPct}% {L.yesResult}</span>
+            <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>{total} {total !== 1 ? L.votes : L.vote}</span>
+            <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: BRAND.pink }}>{noPct}% {L.noResult}</span>
           </div>
         </div>
       )}
@@ -746,67 +685,55 @@ function PollVoteSection({ pollId, article, t, isMobile, user, sessionValid }: {
   );
 }
 
-export default function ReportGSTER26({ content, preview = false }: {
+export default function ReportGSTER26({ slug = 'gster26', content, preview = false }: {
+  slug?: string;
   /** Editorial content to render instead of fetching it — the admin editor's
    *  preview passes the draft here (see app/report-preview/gster26). */
   content?: Record<string, any> | null;
   preview?: boolean;
-} = {}) {
-  const reportLocation = usePathname();
-  const isGster26 = preview || reportLocation === "/reports/gster26";
-
-  // ── Phase 3: DB-editable editorial content ───────────────────────────────
-  // Fetch the report's editorial override (reports.content jsonb); each block
-  // falls back to the committed default so the report renders identically until
-  // an edition is edited in the DB. The heavy computed chart data stays static.
-  const { data: reportDoc } = useSWR<{ content?: Record<string, any> | null; locked_parts?: string[] }>(content !== undefined ? null : qk.reports.detail("gster26"));
-  const ov = content !== undefined ? content : (reportDoc?.content ?? null);
-  const INNOVATOR_RESPONSES   = ov?.innovatorResponses   ?? INNOVATOR_RESPONSES_DEFAULT;
-  const watchInnovators       = ov?.watchInnovators      ?? watchInnovators_DEFAULT;
-  const watchPeak             = ov?.watchPeak            ?? watchPeak_DEFAULT;
-  const watchStxRecommends    = ov?.watchStxRecommends   ?? watchStxRecommends_DEFAULT;
-  const FEATURED_ARTICLES     = ov?.featuredArticles     ?? FEATURED_ARTICLES_DEFAULT;
-  // PEAK_TRACKS is code-only (its items carry live lucide Icon components, not
-  // serializable JSON) — no DB override path, so reports.content can't crash it.
-  const PEAK_TRACKS           = PEAK_TRACKS_DEFAULT;
-  const PEAK_SWC_FINALISTS    = ov?.peakSwcFinalists     ?? PEAK_SWC_FINALISTS_DEFAULT;
-  const GROUNDBREAKERS_ORGS   = ov?.groundbreakersOrgs   ?? GROUNDBREAKERS_ORGS_DEFAULT;
-  const PEAK_PARTNERS_TIER1   = ov?.peakPartnersTier1    ?? PEAK_PARTNERS_TIER1_DEFAULT;
-  const PEAK_PARTNERS_TIER2   = ov?.peakPartnersTier2    ?? PEAK_PARTNERS_TIER2_DEFAULT;
-  const PEAK_PARTNERS_TIER3   = ov?.peakPartnersTier3    ?? PEAK_PARTNERS_TIER3_DEFAULT;
-  // Page copy blocks: an edited object is merged field by field over its default,
-  // so a field added here later still renders for content saved before it existed.
-  const block = <T,>(key: string, def: T): T => {
-    const v = ov?.[key];
-    if (Array.isArray(def)) return (Array.isArray(v) ? v : def) as T;
-    return (v && typeof v === "object" && !Array.isArray(v) ? { ...def, ...v } : def) as T;
-  };
-  const NAV = block("nav", NAV_DEFAULT);
-  const HERO = block("hero", HERO_DEFAULT);
-  const TRENDS_HEADER = block("trendsHeader", TRENDS_HEADER_DEFAULT);
-  const PEAK_COPY = block("peakCopy", PEAK_COPY_DEFAULT);
-  const INNOVATORS_HEADER = block("innovatorsHeader", INNOVATORS_HEADER_DEFAULT);
-  const STARTUPS_HEADER = block("startupsHeader", STARTUPS_HEADER_DEFAULT);
-  const NGSC = block("ngsc", NGSC_DEFAULT);
-  const DATA_HEADER = block("dataHeader", DATA_HEADER_DEFAULT);
-  const CLOSING = block("closing", CLOSING_DEFAULT);
-  const ECOMAP = block("ecomap", ECOMAP_DEFAULT);
-  const TREND_MA = block("trendMa", TREND_MA_DEFAULT);
-  const TREND_RUNNING = block("trendRunning", TREND_RUNNING_DEFAULT);
-  const TREND_DTC = block("trendDtc", TREND_DTC_DEFAULT);
+}) {
+  // The whole report is reports.content (jsonb) + its frozen datasets; nothing here falls back to bundled copy.
+  const { data: reportDoc, isLoading: docLoading, error: docError } = useSWR<{ content?: Record<string, any> | null; locked_parts?: string[] }>(content !== undefined ? null : qk.reports.detail(slug));
+  const ov = content !== undefined ? content : reportDoc?.content;
+  const ready = !!(ov?.nav && ov?.hero && ov?.closing && ov?.pageLabels && Array.isArray(ov?.partOrder));
+  const PAGE = ov?.pageLabels;
+  const INNOVATOR_RESPONSES   = ov?.innovatorResponses;
+  const watchInnovators       = ov?.watchInnovators;
+  const watchPeak             = ov?.watchPeak;
+  const watchStxRecommends    = ov?.watchStxRecommends;
+  const FEATURED_ARTICLES     = ov?.featuredArticles;
+  const PEAK_SWC_FINALISTS    = ov?.peakSwcFinalists;
+  const GROUNDBREAKERS_ORGS   = ov?.groundbreakersOrgs;
+  const PEAK_PARTNERS_TIER1   = ov?.peakPartnersTier1;
+  const PEAK_PARTNERS_TIER2   = ov?.peakPartnersTier2;
+  const PEAK_PARTNERS_TIER3   = ov?.peakPartnersTier3;
+  const NAV = ov?.nav;
+  const HERO = ov?.hero;
+  const TRENDS_HEADER = ov?.trendsHeader;
+  const TRENDS_L = ov?.trendsLabels;
+  const TREND_STYLE = ov?.trendsCardStyle;
+  const ARTICLE_STYLE = ov?.trendsArticleStyle;
+  const TREND_MA_DATA = ov?.trendsMaData;
+  const PEAK_COPY = ov?.peakCopy;
+  const PEAK_L = ov?.peakLabels;
+  const INNOVATORS_HEADER = ov?.innovatorsHeader;
+  const INNOVATORS_L = ov?.innovatorsLabels;
+  const STARTUPS_HEADER = ov?.startupsHeader;
+  const STARTUPS_L = ov?.startupsLabels;
+  const NGSC = ov?.ngsc;
+  const NGSC_L = ov?.ngscLabels;
+  const DATA_HEADER = ov?.dataHeader;
+  const DATA_L = ov?.dataLabels;
+  const CLOSING = ov?.closing;
+  const ECOMAP = ov?.ecomap;
+  const ECOMAP_L = ov?.ecomapLabels;
+  const TREND_MA = ov?.trendMa;
+  const TREND_RUNNING = ov?.trendRunning;
+  const TREND_DTC = ov?.trendDtc;
   const numbered = <T,>(items: T[]) => items.map((d, i) => ({ n: String(i + 1).padStart(2, "0"), ...d }));
-  const TREND_CARDS = Object.fromEntries(Object.entries(TREND_CARDS_DEFAULT).map(([id, d]) => [id, { ...d, ...(ov?.trendCards?.[id] ?? {}) }])) as typeof TREND_CARDS_DEFAULT;
+  const TREND_CARDS = ov?.trendCards;
   const isPdf = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("pdf") === "true";
-  const { user, sessionValid, loading: authLoading } = useAuthSession();
-  const isAuthenticated = !authLoading && !!user && sessionValid;
-  const [showAuthModal, setShowAuthModal] = useState(false);
-
-  useEffect(() => {
-    if (isPdf) return; // skip auth in PDF mode
-    if (!isGster26) return;
-    if (authLoading) return;
-    setShowAuthModal(!isAuthenticated);
-  }, [isGster26, authLoading, isAuthenticated, isPdf]);
+  const lockedIds = lockedNow(content, reportDoc);
 
   // Track page view
   useEffect(() => { trackG26("page_view"); }, []);
@@ -825,25 +752,7 @@ export default function ReportGSTER26({ content, preview = false }: {
     };
     el.addEventListener("click", handler);
     return () => el.removeEventListener("click", handler);
-  }, []);
-
-  const authGateActive = isPdf ? false : (isGster26 && showAuthModal);
-
-  useEffect(() => {
-    if (!authGateActive) {
-      lenisRef.current?.start();
-      return;
-    }
-    lenisRef.current?.stop();
-    const blockScroll = (e: Event) => e.preventDefault();
-    window.addEventListener("wheel", blockScroll, { passive: false });
-    window.addEventListener("touchmove", blockScroll, { passive: false });
-    return () => {
-      window.removeEventListener("wheel", blockScroll);
-      window.removeEventListener("touchmove", blockScroll);
-      lenisRef.current?.start();
-    };
-  }, [authGateActive]);
+  }, [ready]);
 
   const [isDark, _setIsDark] = useState(false);
   const setIsDark = (v: boolean | ((d: boolean) => boolean)) => { _setIsDark(v); trackG26("theme_toggle"); };
@@ -967,9 +876,9 @@ export default function ReportGSTER26({ content, preview = false }: {
     // Q&A section — prefer hard-coded responses, fall back to API data
     const hc = INNOVATOR_RESPONSES[person.name] || {};
     const questions = [
-      { label: "Underserved areas ripe for disruption?", answer: hc.q_innovators || person.q_innovators || "" },
-      { label: "Emerging technologies reshaping sports in 3–5 years?", answer: hc.q_investors || person.q_investors || "" },
-      { label: "Operational areas seeking innovation?", answer: hc.q_sports_orgs || person.q_sports_orgs || "" },
+      { label: INNOVATORS_L.shareQuestions[0], answer: hc.q_innovators || person.q_innovators || "" },
+      { label: INNOVATORS_L.shareQuestions[1], answer: hc.q_investors || person.q_investors || "" },
+      { label: INNOVATORS_L.shareQuestions[2], answer: hc.q_sports_orgs || person.q_sports_orgs || "" },
     ].filter(q => q.answer.trim().length > 0);
 
     const wrapText = (text: string, maxWidth: number, lineHeight: number, startY: number): number => {
@@ -1027,12 +936,12 @@ export default function ReportGSTER26({ content, preview = false }: {
     ctx.font = `bold 14px 'Bebas Neue', sans-serif`;
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
-    ctx.fillText("SportsTechX", 24, H - 22);
+    ctx.fillText(INNOVATORS_L.shareBrand, 24, H - 22);
 
     ctx.fillStyle = "rgba(255,255,255,0.35)";
     ctx.font = `10px sans-serif`;
     ctx.textAlign = "right";
-    ctx.fillText("atlas.sportstechx.com/reports/gster26", W - 24, H - 22);
+    ctx.fillText(INNOVATORS_L.shareUrl, W - 24, H - 22);
 
     return canvas.toDataURL("image/png");
   };
@@ -1050,36 +959,22 @@ export default function ReportGSTER26({ content, preview = false }: {
   const windowWidth = useWindowWidth();
   const isMobile = isPdf ? false : windowWidth < 640;
 
-  /* ── PDF mode: force all content visible, no interactivity ─────────── */
-  const pdfBreak: React.CSSProperties = isPdf ? { breakBefore: "page" as const, paddingTop: 40 } : {};
 
-  /* Hardcoded data lookup , all filter combinations pre-computed */
-  const data = useMemo(() => {
-    const regionKey = fundingRegion || maAcquireeRegion || maAcquirerRegion || "global";
-    const key = `${regionKey}_${fundingYear}_${maYear}`;
-    return (GSTER25_FACTS[key] || GSTER25_FACTS["global_last5_last5"]) as ReportData;
-  }, [fundingRegion, maAcquireeRegion, maAcquirerRegion, fundingYear, maYear]);
-  const isLoading = false;
-
-  type WatchDBEntry = {
-    company_name: string;
-    company_website: string | null;
-    description: string | null;
-    city: string | null;
-    country: string | null;
-    sector: string | null;
-  };
-  // Atlas port: STX fetched these from /api/report/*. Here the watch lists fall
-  // back to the component's committed hardcoded arrays, and the innovators come
-  // from the committed Notion snapshot (gster26-innovators-data.ts).
-  const watchData: { innovators: WatchDBEntry[]; peak: WatchDBEntry[]; stx: WatchDBEntry[] } | undefined = undefined;
+  /* Frozen chart data (report_datasets), one pre-computed filter combination
+     per key: facts:{region}_{fundingYear}_{maYear}, ma:{maYear}_{acquiree}_{acquirer}.
+     Skipped while the data block is locked or the document isn't there. */
+  const dataShown = ready && !lockedIds.includes("data");
+  // The current filter combination, e.g. "global_last5_last5" (the trends M&A acquiree profile follows it too).
+  const factsCombo = `${fundingRegion || maAcquireeRegion || maAcquirerRegion || "global"}_${fundingYear}_${maYear}`.toLowerCase();
+  const { data: factsData, isLoading } = useReportDataset<ReportData>(slug, dataShown ? `facts:${factsCombo}` : null);
+  const data = factsData;
 
   type NotionInnovator = {
     id: string; name: string; company: string; designation: string;
     q_innovators: string; q_investors: string; q_sports_orgs: string;
     logo_url: string; photo_url: string; country: string; continent: string; linkedin: string;
   };
-  const notionData: { data: NotionInnovator[] } = { data: (Array.isArray(ov?.innovators) ? ov.innovators : INNOVATORS_DATA) as NotionInnovator[] };
+  const notionData: { data: NotionInnovator[] } = { data: (ov?.innovators ?? []) as NotionInnovator[] };
 
   type MaDealLive = {
     acquiree_name: string; acquirer_name: string;
@@ -1088,60 +983,17 @@ export default function ReportGSTER26({ content, preview = false }: {
     acquirer_country: string | null; acquirer_city: string | null;
     acquiree_sector: string | null; acquisition_type: string | null;
   };
-  /* Hardcoded M&A deals lookup , all filter combinations pre-computed */
-  const maDealsQuery = useMemo(() => {
-    const key = `${maYear || "last5"}_${maAcquireeRegion || "global"}_${maAcquirerRegion || "global"}`;
-    const d = (GSTER25_MA_DEALS[key] || GSTER25_MA_DEALS["last5_global_global"]) as { topMaDeals: MaDealLive[]; undisclosedMaDeals: MaDealLive[] };
-    return { data: d, isLoading: false };
-  }, [maYear, maAcquireeRegion, maAcquirerRegion]);
+  const maKey = `ma:${maYear}_${maAcquireeRegion || "global"}_${maAcquirerRegion || "global"}`;
+  const maDealsQuery = useReportDataset<{ topMaDeals: MaDealLive[]; undisclosedMaDeals: MaDealLive[] }>(slug, dataShown ? maKey.toLowerCase() : null);
 
   const mergeWatchCompanies = useMemo(() => {
-    const sectorMap: Record<string, WatchCompany["sector"]> = {
-      "activity & performance": "athletes",
-      "fans & content": "fans",
-      "management & organisation": "execs",
-    };
-
-    function merge(
-      dbList: WatchDBEntry[] | undefined,
-      hardcoded: WatchCompany[]
-    ): WatchCompanyWithLink[] {
-      if (!dbList || dbList.length === 0) {
-        return hardcoded.map((c) => ({ ...c, website: `https://${c.domain}` }));
-      }
-      const hardcodedByName = new Map<string, WatchCompany>();
-      const hardcodedByDomain = new Map<string, WatchCompany>();
-      for (const c of hardcoded) {
-        hardcodedByName.set(c.name.toLowerCase(), c);
-        if (c.domain) hardcodedByDomain.set(c.domain.toLowerCase(), c);
-      }
-
-      return dbList.map((db) => {
-        let domain = "";
-        if (db.company_website) {
-          try { domain = new URL(db.company_website).hostname.replace(/^www\./, ""); } catch {}
-        }
-        const match = hardcodedByName.get(db.company_name.toLowerCase()) || (domain ? hardcodedByDomain.get(domain.toLowerCase()) : undefined);
-        const dbSector = db.sector ? sectorMap[db.sector.toLowerCase()] || "execs" : "execs";
-        return {
-          name: db.company_name,
-          description: match?.description || db.description || "Placeholder",
-          why: match?.why || "Placeholder",
-          domain: domain || match?.domain || "",
-          city: db.city || match?.city || "",
-          country: db.country || match?.country || "",
-          countryFlag: (db.country && db.country !== "TBC") ? getCountryFlag(db.country) : (match?.country && match.country !== "TBC" ? getCountryFlag(match.country) : ""),
-          sector: dbSector,
-          website: db.company_website || (match ? `https://${match.domain}` : null),
-        };
-      });
-    }
+    const withLink = (list: WatchCompany[] | undefined): WatchCompanyWithLink[] => (list ?? []).map((c) => ({ ...c, website: `https://${c.domain}` }));
     return {
-      innovators: merge(watchData?.innovators, watchInnovators),
-      peak: merge(watchData?.peak, watchPeak),
-      stx: merge(watchData?.stx, watchStxRecommends),
+      innovators: withLink(watchInnovators),
+      peak: withLink(watchPeak),
+      stx: withLink(watchStxRecommends),
     };
-  }, [watchData, watchInnovators, watchPeak, watchStxRecommends]);
+  }, [watchInnovators, watchPeak, watchStxRecommends]);
 
   const lenisRef        = useRef<Lenis | null>(null);
   const progressBarRef  = useRef<HTMLDivElement>(null);
@@ -1149,9 +1001,7 @@ export default function ReportGSTER26({ content, preview = false }: {
   const navRef          = useRef<HTMLElement>(null);
   const skewWrapRef     = useRef<HTMLDivElement>(null);
   const [activeDot, setActiveDot] = useState(0);
-  /* Stable randomised exit directions for hero + 6 sections (assigned once per page load) */
-  const exitDirsRef = useRef<number[]>(Array.from({ length: 9 }, () => (Math.random() > 0.5 ? 1 : -1)));
-  useReveal(`${isDark}-${factTab}-${trendsTab}-${watchTab}-${fundingRegion}-${maAcquireeRegion}-${maAcquirerRegion}-${fundingYear}-${maYear}-${isLoading}`);
+  useReveal(`${ready}-${isDark}-${factTab}-${trendsTab}-${watchTab}-${fundingRegion}-${maAcquireeRegion}-${maAcquirerRegion}-${fundingYear}-${maYear}-${isLoading}`);
 
   /* Preview: the editor asks to jump to the part being edited. Uses Lenis like
      the nav does, so the smooth-scroll position stays in sync. */
@@ -1162,7 +1012,7 @@ export default function ReportGSTER26({ content, preview = false }: {
       // Parts that live behind a tab or a closed card: open them first (raw
       // setters, so a preview doesn't log reader analytics).
       const trend = anchor.match(/^#trend-expanded-(.+)$/);
-      if (trend) { _setTrendsTab("trends"); _setExpandedBlock(trend[1]); if (trend[1] === "dtc-shift") _setOpenRevTab("dtc-launches"); }
+      if (trend) { _setTrendsTab("trends"); _setExpandedBlock(trend[1]); if (TREND_STYLE?.[trend[1]]?.layout === "dtc") _setOpenRevTab("dtc-launches"); }
       if (anchor === "#deep-dives") { _setTrendsTab("articles"); anchor = "#trends"; }
       const el = document.querySelector(anchor);
       if (!el) return;
@@ -1171,7 +1021,7 @@ export default function ReportGSTER26({ content, preview = false }: {
     };
     window.addEventListener("gster26:jump", onJump);
     return () => window.removeEventListener("gster26:jump", onJump);
-  }, [preview]);
+  }, [preview, TREND_STYLE]);
 
   /* Resize Lenis when accordion content changes + auto-scroll to expanded block */
   useEffect(() => {
@@ -1203,9 +1053,6 @@ export default function ReportGSTER26({ content, preview = false }: {
     return () => obs.disconnect();
   }, [expandedBlock]);
 
-  /* Section anchors used for horizontal→vertical jump and dot nav */
-  const SECTION_IDS = ["hero", "trends", "innovators", "peak2026", "ecomap", "ngsc", "dealflow", "ecosystem"];
-  const SECTION_LABELS = ["Summary", "Trends", "Innovators", "Startups to Watch", "Ecosystem", "Data in Full"];
 
   /* ── Lenis + GSAP ScrollTrigger: smooth scroll + scroll-driven effects ── */
   useEffect(() => {
@@ -1356,21 +1203,22 @@ export default function ReportGSTER26({ content, preview = false }: {
     return () => document.getElementById("stx-report-styles")?.remove();
   }, []);
 
+  // No document (or one without the page keys): nothing to draw yet.
+  if (!ready) {
+    if (content === undefined && docLoading) return <div style={{ minHeight: "100vh", background: "#0c0f1a" }} />;
+    const failed = docError && (docError as { status?: number }).status !== 404;
+    return (
+      <div style={{ minHeight: "100vh", background: t.bg, color: t.textMuted, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center", fontFamily: "'Open Sans','system-ui',sans-serif", fontSize: 15 }}>
+        {failed ? "The report could not be loaded. Refresh the page to try again." : "This report is being published. Check back shortly."}
+      </div>
+    );
+  }
+
   const s = data?.summary;
-  const totalFundingB = s ? (s.total_funding_m / 1000).toFixed(1) : "—";
   const totalCountry = data?.topCountries.slice(0, 8).reduce((sum, c) => sum + c.total_m, 0) || 1;
 
-  const regionLabels: Record<string, string> = { NA: "North America", EU: "Europe", APAC: "Asia Pacific", ROW: "Rest of World" };
-
-
-  const marqueeItems = data ? [
-    `$${totalFundingB}B TOTAL DEALFLOW`, `${s?.total_companies?.toLocaleString()} COMPANIES TRACKED`,
-    `${s?.total_deals?.toLocaleString()} FUNDING ROUNDS`, `${s?.total_ma} M&A DEALS`,
-    `${s?.total_countries} COUNTRIES COVERED`, "SPORTSTECHX ATLAS",
-    `$${totalFundingB}B TOTAL DEALFLOW`, `${s?.total_companies?.toLocaleString()} COMPANIES TRACKED`,
-    `${s?.total_deals?.toLocaleString()} FUNDING ROUNDS`, `${s?.total_ma} M&A DEALS`,
-    `${s?.total_countries} COUNTRIES COVERED`, "SPORTSTECHX ATLAS",
-  ] : Array(12).fill("LOADING…");
+  const regionLabels: Record<string, string> = DATA_L?.regionLabels ?? {};
+  const regionFilters = [{ code: null, label: DATA_L?.filterAll }, ...(DATA_L?.regionFilters ?? [])];
 
   const sectionLabel = (text: string) => (
     <p
@@ -1383,7 +1231,7 @@ export default function ReportGSTER26({ content, preview = false }: {
 
   const YearPill = () => (
     <div style={{ display: "inline-flex", background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 20, padding: 3, gap: 2, flexShrink: 0, alignSelf: "center" }}>
-      {(["last5", "2025"] as const).map(yr => {
+      {DATA_L.yearOptions.map(({ key: yr, label }) => {
         const active = fundingYear === yr;
         return (
           <button key={yr} onClick={() => setFundingYear(yr)} style={{
@@ -1394,7 +1242,7 @@ export default function ReportGSTER26({ content, preview = false }: {
             fontWeight: active ? 700 : 400,
             transition: "all 0.18s", outline: "none",
           }}>
-            {yr === "last5" ? "LAST 5 YRS" : "2025"}
+            {label}
           </button>
         );
       })}
@@ -1410,7 +1258,7 @@ export default function ReportGSTER26({ content, preview = false }: {
 
   const MaYearPill = () => (
     <div style={{ display: "inline-flex", background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 20, padding: 3, gap: 2, flexShrink: 0, alignSelf: "center" }}>
-      {(["last5", "2025"] as const).map(yr => {
+      {DATA_L.yearOptions.map(({ key: yr, label }) => {
         const active = maYear === yr;
         return (
           <button key={yr} onClick={() => setMaYear(yr)} style={{
@@ -1421,7 +1269,7 @@ export default function ReportGSTER26({ content, preview = false }: {
             fontWeight: active ? 700 : 400,
             transition: "all 0.18s", outline: "none",
           }}>
-            {yr === "last5" ? "LAST 5 YRS" : "2025"}
+            {label}
           </button>
         );
       })}
@@ -1435,16 +1283,16 @@ export default function ReportGSTER26({ content, preview = false }: {
     </div>
   );
 
-  // Page parts the admin can reorder (content.partOrder); each renders exactly as before.
-  const PARTS: Record<string, React.ReactNode> = {
-    trends: (<>
+  // Page parts the admin can reorder (content.partOrder). Built on demand: a locked
+  // part's content keys are not in the document, so only unlocked parts are drawn.
+  const PARTS: Record<string, () => React.ReactNode> = {
+    trends: () => (<>
       {/* ── CHART-07: KEY TRENDS (THREE FORCES) ─────────────────────────── */}
       <div id="trends" style={{ background: t.bg, padding: isMobile ? "48px 0" : "88px 0" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "0 16px" : "0 40px" }}>
           <div className="stx-reveal">
             {sectionLabel(TRENDS_HEADER.eyebrow)}
             {sectionTitle(TRENDS_HEADER.title)}
-            <SourceBadge chartId="CHART-07" source="dm_test (Sector SUM) · sm_test (Sector COUNT) · ma_test_new (deal count 2024)" />
           </div>
 
           {/* ── Tab Switcher ── */}
@@ -1471,45 +1319,10 @@ export default function ReportGSTER26({ content, preview = false }: {
           {/* ── Trends accordion ── */}
           {(isPdf || trendsTab === "trends") && (() => {
             const dtcExamples: { entity: string; desc: string; date: string; country: string; domain: string }[] = TREND_DTC.launches;
-            const infraProviders: { name: string; location: string; desc: string; domain: string }[] = [
-              { name: "ViewLift", location: "New York", desc: "Most active in the US , powered Seattle Mariners and Tampa Bay Lightning platforms. 16 pro sports team clients. Launched a joint venture with Monumental Sports to offer a managed 'go DTC' playbook.", domain: "viewlift.com" },
-              { name: "Deltatre / Endeavor Streaming", location: "Italy / US", desc: "Dominant global player. Powered Ligue 1+. Combined client list covers NFL, UEFA, UFC, NBA, MLB, and World Rugby. Largest pure-play sports OTT provider after the September 2025 acquisition.", domain: "deltatre.com" },
-              { name: "Two Circles / StayLive", location: "London", desc: "Data-first approach , leads with fan audience intelligence, then builds the platform. Powered Top 14 Rugby TV across 170+ territories. Works with 350+ sports properties globally.", domain: "twocircles.com" },
-            ];
-            const trendBlocks = [
-              {
-                id: "ma-sportstech", n: "01", tag: TREND_CARDS["ma-sportstech"].tag, title: TREND_CARDS["ma-sportstech"].title,
-                summary: TREND_CARDS["ma-sportstech"].summary,
-                body: "",
-                stat: data ? String(data.maByYearSportstech?.[data.maByYearSportstech.length - 1]?.sportstech || "—") : "…",
-                statLabel: TREND_CARDS["ma-sportstech"].statLabel,
-                color: BRAND.teal,
-                expandedContent: true,
-              },
-              {
-                id: "running-renaissance", n: "02", tag: TREND_CARDS["running-renaissance"].tag, title: TREND_CARDS["running-renaissance"].title,
-                summary: TREND_CARDS["running-renaissance"].summary,
-                body: "",
-                stat: TREND_CARDS["running-renaissance"].stat,
-                statLabel: TREND_CARDS["running-renaissance"].statLabel,
-                color: BRAND.pink,
-                expandedContent: true,
-              },
-              {
-                id: "dtc-shift", n: "03", tag: TREND_CARDS["dtc-shift"].tag, title: TREND_CARDS["dtc-shift"].title,
-                summary: TREND_CARDS["dtc-shift"].summary,
-                body: "",
-                stat: TREND_CARDS["dtc-shift"].stat,
-                statLabel: TREND_CARDS["dtc-shift"].statLabel,
-                color: BRAND.tealBright,
-                expandedContent: true,
-              },
-            ];
-            const trendIcons: Record<string, React.ReactNode> = {
-              "dtc-shift": <Monitor size={32} />,
-              "ma-sportstech": <DollarSign size={32} />,
-              "running-renaissance": <Footprints size={32} />,
-            };
+            // Cards in `number` order; each card's expanded body is picked by its `layout` (ma | running | dtc).
+            const trendBlocks = Object.entries(TREND_STYLE as Record<string, { number: string; icon: string; layout: string }>)
+              .sort((a, b) => a[1].number.localeCompare(b[1].number))
+              .map(([id, st]) => ({ id, n: st.number, icon: st.icon, layout: st.layout, title: TREND_CARDS[id].title, summary: TREND_CARDS[id].summary }));
             return (
               <>
               <div ref={trendCardsRef} style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16 }}>
@@ -1524,13 +1337,13 @@ export default function ReportGSTER26({ content, preview = false }: {
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <div style={{ width: 48, height: 48, borderRadius: 12, background: `${BRAND.darkTitle}10`, display: "flex", alignItems: "center", justifyContent: "center", color: BRAND.darkTitle, flexShrink: 0 }}>
-                          {trendIcons[block.id]}
+                          {LUCIDE[block.icon] && React.createElement(LUCIDE[block.icon], { size: 32 })}
                         </div>
                         <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 20 : 24, lineHeight: 1.1, color: t.titleColor, flex: 1 }}>{block.title}</div>
                         <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: 2, color: t.textMuted, flexShrink: 0 }}>{block.n}</div>
                       </div>
                       <div style={{ fontSize: 13, lineHeight: 1.6, color: t.textMuted, flex: 1 }}>{block.summary}</div>
-                      <div style={{ fontSize: 11, fontFamily: "'DM Mono',monospace", letterSpacing: 1, color: isOpen ? BRAND.darkTitle : t.textMuted, marginTop: 4 }}>{isOpen ? "CLOSE ✕" : "READ MORE →"}</div>
+                      <div style={{ fontSize: 11, fontFamily: "'DM Mono',monospace", letterSpacing: 1, color: isOpen ? BRAND.darkTitle : t.textMuted, marginTop: 4 }}>{isOpen ? TRENDS_L.close : TRENDS_L.readMore}</div>
                     </button>
                   );
                 })}
@@ -1545,25 +1358,18 @@ export default function ReportGSTER26({ content, preview = false }: {
                             <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 26 : 34, lineHeight: 1.1, color: t.titleColor }}>{block.title}</div>
                             <p style={{ fontSize: 14, lineHeight: 1.7, color: t.textMuted, marginTop: 8 }}>{block.summary}</p>
                           </div>
-                          {block.id === "ma-sportstech" && data?.maByYearSportstech ? (() => {
+                          {block.layout === "ma" ? (() => {
+                            // Figures pre-computed into content (trendsMaData) — this block reads no dataset.
                             const acquirerDomains: Record<string, string> = Object.fromEntries(TREND_MA.acquirerLogos.map((a) => [a.name, a.domain]));
-                            const chartData = data.maByYearSportstech;
-                            const latest = chartData[chartData.length - 1];
-                            const latestTotal = latest ? latest.sportstech + latest.non_sportstech : 0;
-                            const latestStPct = latestTotal > 0 ? Math.round((latest.sportstech / latestTotal) * 100) : 0;
-                            const totalStDeals = chartData.reduce((s, d) => s + d.sportstech, 0);
-                            const totalAllDeals = chartData.reduce((s, d) => s + d.sportstech + d.non_sportstech, 0);
-                            const stPctAll = totalAllDeals > 0 ? Math.round((totalStDeals / totalAllDeals) * 100) : 0;
-                            const growthX = chartData.length >= 2 && chartData[0].sportstech > 0 ? (chartData[chartData.length - 1].sportstech / chartData[0].sportstech).toFixed(1) : "—";
+                            const maData = TREND_MA_DATA;
+                            // Acquiree profile for the data block's current filters (pre-computed per combination), else the default one.
+                            const profile = maData.acquireeProfiles[factsCombo] ?? maData.acquireeProfiles[maData.defaultCombo];
+                            const chartData = maData.chart;
                             return (
                               <>
                                 {/* Summary stats */}
                                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16, marginBottom: 28 }}>
-                                  {[
-                                    { value: `${latestStPct}%`, label: TREND_MA.statLabels[0] },
-                                    { value: `${stPctAll}%`, label: TREND_MA.statLabels[1] },
-                                    { value: `${growthX}x`, label: TREND_MA.statLabels[2] },
-                                  ].map((s, si) => (
+                                  {maData.stats.map((value, i) => ({ value, label: TREND_MA.statLabels[i] })).map((s, si) => (
                                     <div key={si} style={{ padding: "20px 24px", background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6 }}>
                                       <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 36, color: BRAND.pink, lineHeight: 1 }}>{s.value}</div>
                                       <div style={{ fontSize: 11, color: t.textMuted, marginTop: 6, lineHeight: 1.4 }}>{s.label}</div>
@@ -1606,7 +1412,7 @@ export default function ReportGSTER26({ content, preview = false }: {
                                     <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>{TREND_MA.legendNonSportstech}</span>
                                   </div>
                                 </div>
-                                <MaStackedBarChart chartData={chartData} mode={maChartMode} t={t} isPdf={isPdf} />
+                                <MaStackedBarChart chartData={chartData} mode={maChartMode} t={t} isPdf={isPdf} tooltip={TRENDS_L.maBarTooltip} />
 
                                 {/* Top Acquirers + Acquiree Profile side-by-side */}
                                 <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.teal}55,transparent)`, margin: "40px 0 28px" }} />
@@ -1624,7 +1430,7 @@ export default function ReportGSTER26({ content, preview = false }: {
                                           </tr>
                                         </thead>
                                         <tbody>
-                                          {data.topAcquirers.map((row, i) => {
+                                          {maData.topAcquirers.map((row, i) => {
                                             const domain = acquirerDomains[row.name];
                                             const aUrl = domain ? `https://www.google.com/s2/favicons?sz=128&domain=${domain}` : null;
                                             const isNonSt = row.is_sportstech !== "Y";
@@ -1651,25 +1457,25 @@ export default function ReportGSTER26({ content, preview = false }: {
                                   </div>
 
                                   {/* Right: Acquiree Profile */}
-                                  {data.acquireeProfile && (
+                                  {(
                                     <div style={{ flex: "1 1 300px", minWidth: 0 }}>
                                       <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 3, color: BRAND.teal, textTransform: "uppercase", marginBottom: 16 }}>{TREND_MA.acquireeTitle}</div>
 
                                       {/* By Sector */}
                                       {(() => {
-                                        const sectorColors: Record<string, string> = { "Activity & Performance": BRAND.athletes, "Fans & Content": BRAND.fans, "Management & Organisation": BRAND.execs };
+                                        const sectorColors: Record<string, string> = maData.sectorColors;
                                         const sectorLabels: Record<string, string> = TREND_MA.sectorLabels;
-                                        const totalDeals = data.acquireeProfile.bySector.reduce((s, d) => s + d.deals, 0);
+                                        const totalDeals = profile.bySector.reduce((s, d) => s + d.deals, 0);
                                         return (
                                           <div style={{ marginBottom: 28 }}>
                                             <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase", marginBottom: 10 }}>{TREND_MA.bySectorTitle}</div>
                                             {/* Stacked bar */}
                                             <div style={{ display: "flex", height: 18, borderRadius: 4, overflow: "hidden", marginBottom: 10 }}>
-                                              {data.acquireeProfile.bySector.map((d) => (
-                                                <div key={d.sector} style={{ width: `${(d.deals / totalDeals) * 100}%`, background: sectorColors[d.sector] || BRAND.slate, transition: "width 0.4s" }} title={`${d.sector}: ${d.deals} deals (${Math.round((d.deals / totalDeals) * 100)}%)`} />
+                                              {profile.bySector.map((d) => (
+                                                <div key={d.sector} style={{ width: `${(d.deals / totalDeals) * 100}%`, background: sectorColors[d.sector] || BRAND.slate, transition: "width 0.4s" }} title={fill(TRENDS_L.shareTooltip, { name: d.sector, deals: d.deals, pct: Math.round((d.deals / totalDeals) * 100) })} />
                                               ))}
                                             </div>
-                                            {data.acquireeProfile.bySector.map((d) => (
+                                            {profile.bySector.map((d) => (
                                               <div key={d.sector} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: `1px solid ${t.border}` }}>
                                                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                                   <div style={{ width: 8, height: 8, borderRadius: 2, background: sectorColors[d.sector] || BRAND.slate, flexShrink: 0 }} />
@@ -1687,23 +1493,15 @@ export default function ReportGSTER26({ content, preview = false }: {
 
                                       {/* By Region */}
                                       {(() => {
-                                        const regionColors: Record<string, string> = { "North America": "#E08B35", "Europe": "#2B3D8F", "Asia Pacific": "#76ADA7", "Rest of the World": "#4D5E72" };
-                                        const grouped = data.acquireeProfile.byContinent.reduce<Record<string, number>>((acc, d) => {
-                                          if (d.continent === "USA") return acc;
-                                          const key = (d.continent === "Asia" || d.continent === "Oceania") ? "Asia Pacific"
-                                            : (d.continent === "Africa" || d.continent === "South America") ? "Rest of the World"
-                                            : d.continent;
-                                          acc[key] = (acc[key] || 0) + d.deals;
-                                          return acc;
-                                        }, {});
-                                        const regions = Object.entries(grouped).map(([name, deals]) => ({ name, deals })).sort((a, b) => b.deals - a.deals);
+                                        const regionColors: Record<string, string> = maData.regionColors;
+                                        const regions: { name: string; deals: number }[] = profile.byRegion;
                                         const totalDeals = regions.reduce((s, d) => s + d.deals, 0);
                                         return (
                                           <div style={{ marginBottom: 28 }}>
                                             <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase", marginBottom: 10 }}>{TREND_MA.byRegionTitle}</div>
                                             <div style={{ display: "flex", height: 18, borderRadius: 4, overflow: "hidden", marginBottom: 10 }}>
                                               {regions.map((d) => (
-                                                <div key={d.name} style={{ width: `${(d.deals / totalDeals) * 100}%`, background: regionColors[d.name] || BRAND.slate, transition: "width 0.4s" }} title={`${d.name}: ${d.deals} deals (${Math.round((d.deals / totalDeals) * 100)}%)`} />
+                                                <div key={d.name} style={{ width: `${(d.deals / totalDeals) * 100}%`, background: regionColors[d.name] || BRAND.slate, transition: "width 0.4s" }} title={fill(TRENDS_L.shareTooltip, { name: d.name, deals: d.deals, pct: Math.round((d.deals / totalDeals) * 100) })} />
                                               ))}
                                             </div>
                                             {regions.map((d) => (
@@ -1724,17 +1522,17 @@ export default function ReportGSTER26({ content, preview = false }: {
 
                                       {/* By Business Model */}
                                       {(() => {
-                                        const modelColors: Record<string, string> = { "B2B": BRAND.b2b, "B2C": BRAND.b2c, "B2B2C": BRAND.teal };
-                                        const totalDeals = data.acquireeProfile.byModel.reduce((s, d) => s + d.deals, 0);
+                                        const modelColors: Record<string, string> = maData.modelColors;
+                                        const totalDeals = profile.byModel.reduce((s, d) => s + d.deals, 0);
                                         return (
                                           <div>
                                             <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase", marginBottom: 10 }}>{TREND_MA.byModelTitle}</div>
                                             <div style={{ display: "flex", height: 18, borderRadius: 4, overflow: "hidden", marginBottom: 10 }}>
-                                              {data.acquireeProfile.byModel.map((d) => (
-                                                <div key={d.model} style={{ width: `${(d.deals / totalDeals) * 100}%`, background: modelColors[d.model] || BRAND.slate, transition: "width 0.4s" }} title={`${d.model}: ${d.deals} deals (${Math.round((d.deals / totalDeals) * 100)}%)`} />
+                                              {profile.byModel.map((d) => (
+                                                <div key={d.model} style={{ width: `${(d.deals / totalDeals) * 100}%`, background: modelColors[d.model] || BRAND.slate, transition: "width 0.4s" }} title={fill(TRENDS_L.shareTooltip, { name: d.model, deals: d.deals, pct: Math.round((d.deals / totalDeals) * 100) })} />
                                               ))}
                                             </div>
-                                            {data.acquireeProfile.byModel.map((d) => (
+                                            {profile.byModel.map((d) => (
                                               <div key={d.model} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: `1px solid ${t.border}` }}>
                                                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                                   <div style={{ width: 8, height: 8, borderRadius: 2, background: modelColors[d.model] || BRAND.slate, flexShrink: 0 }} />
@@ -1785,14 +1583,9 @@ export default function ReportGSTER26({ content, preview = false }: {
 
                               </>
                             );
-                          })() : block.id === "running-renaissance" ? (() => {
+                          })() : block.layout === "running" ? (() => {
                             const marathons: { name: string; y2023: string; y2024: string; y2025: string; g2324: string; g2425: string; domain: string; note?: string }[] = TREND_RUNNING.marathons;
                             const drivers: { n: string; title: string; desc: string }[] = numbered(TREND_RUNNING.drivers);
-                            const impacts: { label: string; value: string; detail: string }[] = [
-                              { label: "Top 50 Marathons", value: "$5.2B", detail: "annual economic contribution , Chicago alone: $627M, Berlin: $505M" },
-                              { label: "Global Marathon Events Market", value: "$13.8B", detail: "in 2024, projected $23.6B by 2033 (6.2% CAGR)" },
-                              { label: "Global Running Apparel Market", value: "$161.8B", detail: "projected by 2031 , one of the most commercially valuable participation sports" },
-                            ];
                             return (
                               <>
                                 {/* Summary stats */}
@@ -1904,7 +1697,7 @@ export default function ReportGSTER26({ content, preview = false }: {
 
                               </>
                             );
-                          })() : block.id === "dtc-shift" ? (
+                          })() : block.layout === "dtc" ? (
                             <>
                               {/* Summary stats */}
                               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16, marginBottom: 28 }}>
@@ -2016,17 +1809,7 @@ export default function ReportGSTER26({ content, preview = false }: {
                                 {TREND_DTC.closingLine}
                               </p>
                             </>
-                          ) : (
-                            <>
-                              <div style={{ fontSize: 14, lineHeight: 1.8, color: t.text, marginBottom: 24 }}>{block.body}</div>
-                              {block.stat && (
-                                <div style={{ paddingTop: 20, borderTop: `1px solid ${t.border}`, display: "flex", alignItems: "center", gap: 14 }}>
-                                  <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 34, color: block.color }}>{block.stat}</div>
-                                  <div style={{ fontSize: 11, color: t.textMuted, lineHeight: 1.4 }}>{block.statLabel}</div>
-                                </div>
-                              )}
-                            </>
-                          )}
+                          ) : null}
                         </div>
                     </AccordionBody>
                   </div>
@@ -2038,17 +1821,15 @@ export default function ReportGSTER26({ content, preview = false }: {
 
           {/* ── Explained accordion ── */}
           {(isPdf || trendsTab === "articles") && (() => {
-            const articleIcons: Record<string, React.ReactNode> = {
-              "pe-ownership": <Landmark size={32} />,
-              "who-owns-upside": <DollarSign size={32} />,
-              "nba-europe": <Globe size={32} />,
-            };
+            // Per-article number, icon and layout flags live in content.trendsArticleStyle (by article id).
+            const styleOf = (id: string): { number?: string; icon?: string; timelineSidebar?: boolean; firmsAfterSection?: number; ownershipAfter?: { section: number; paragraph: number } } => ARTICLE_STYLE?.[id] ?? {};
             return (
               <>
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16 }}>
                   {FEATURED_ARTICLES.map((article, ai) => {
                     const isOpen = isPdf || expandedBlock === article.id;
-                    const articleNum = String(ai + 4).padStart(2, "0");
+                    const articleNum = styleOf(article.id).number;
+                    const articleIcon = LUCIDE[styleOf(article.id).icon];
                     return (
                       <button
                         key={article.id}
@@ -2058,19 +1839,20 @@ export default function ReportGSTER26({ content, preview = false }: {
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                           <div style={{ width: 48, height: 48, borderRadius: 12, background: `${BRAND.darkTitle}10`, display: "flex", alignItems: "center", justifyContent: "center", color: BRAND.darkTitle, flexShrink: 0 }}>
-                            {articleIcons[article.id]}
+                            {articleIcon && React.createElement(articleIcon, { size: 32 })}
                           </div>
                           <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 20 : 24, lineHeight: 1.1, color: t.titleColor, flex: 1 }}>{article.title}</div>
                           <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: 2, color: t.textMuted, flexShrink: 0 }}>{articleNum}</div>
                         </div>
                         <div style={{ fontSize: 13, lineHeight: 1.6, color: t.textMuted, flex: 1, overflow: "hidden" }}>{article.summary}</div>
-                        <div style={{ fontSize: 11, fontFamily: "'DM Mono',monospace", letterSpacing: 1, color: isOpen ? BRAND.darkTitle : t.textMuted, marginTop: 4 }}>{isOpen ? "CLOSE ✕" : "READ MORE →"}</div>
+                        <div style={{ fontSize: 11, fontFamily: "'DM Mono',monospace", letterSpacing: 1, color: isOpen ? BRAND.darkTitle : t.textMuted, marginTop: 4 }}>{isOpen ? TRENDS_L.close : TRENDS_L.readMore}</div>
                       </button>
                     );
                   })}
                 </div>
                 {FEATURED_ARTICLES.map(article => {
                   const isOpen = isPdf || expandedBlock === article.id;
+                  const aStyle = styleOf(article.id);
                   return (
                     <div key={article.id} id={`trend-expanded-${article.id}`} style={{ borderRadius: 10, overflow: "hidden", marginTop: isOpen ? 28 : 0, background: isOpen ? t.bgSec : "transparent", border: isOpen ? `1px solid ${BRAND.darkTitle}18` : "1px solid transparent" }}>
                       <AccordionBody isOpen={isOpen} windowWidth={windowWidth}>
@@ -2081,7 +1863,7 @@ export default function ReportGSTER26({ content, preview = false }: {
                             </div>
 
                             {/* Intro + Body , PE article: full-width stat cards, then two-column layout with timeline */}
-                            {article.id === "pe-ownership" && !isMobile && article.timeline ? (
+                            {aStyle.timelineSidebar && !isMobile && article.timeline ? (
                               <>
                               {/* Stat cards , full width */}
                               {article.statCards && (
@@ -2117,10 +1899,10 @@ export default function ReportGSTER26({ content, preview = false }: {
                                         return <p key={pi} style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted, marginTop: 14 }}>{p}</p>;
                                       })}
                                       {/* Firm profiles sit inside WHERE WE ARE TODAY */}
-                                      {section.heading === "WHERE WE ARE TODAY" && article.firms && (
+                                      {si === aStyle.firmsAfterSection && article.firms && (
                                         <div style={{ marginTop: 28 }}>
-                                          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: t.titleColor, marginBottom: 8 }}>WHO PIONEERED THE MODEL</div>
-                                          <p style={{ fontSize: 13, color: t.textMuted, marginBottom: 20 }}>Three firms defined what institutional sports ownership actually looks like, each representing a structurally distinct thesis.</p>
+                                          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: t.titleColor, marginBottom: 8 }}>{TRENDS_L.firmsTitle}</div>
+                                          <p style={{ fontSize: 13, color: t.textMuted, marginBottom: 20 }}>{TRENDS_L.firmsIntro}</p>
                                           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                                             {article.firms.map(firm => {
                                               const fUrl = firm.domain ? `https://www.google.com/s2/favicons?sz=128&domain=${firm.domain}` : null;
@@ -2145,7 +1927,7 @@ export default function ReportGSTER26({ content, preview = false }: {
                                 </div>
                                 {/* Vertical timeline sidebar , stretches full height of article */}
                                 <div style={{ borderLeft: `2px solid ${BRAND.pink}33`, paddingLeft: 20, display: "flex", flexDirection: "column" }}>
-                                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 3, color: BRAND.pink, textTransform: "uppercase", marginBottom: 16 }}>TIMELINE</div>
+                                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 3, color: BRAND.pink, textTransform: "uppercase", marginBottom: 16 }}>{TRENDS_L.timelineTitle}</div>
                                   <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                                     <div style={{ position: "absolute", left: -22, top: 0, bottom: 0, width: 2, background: `linear-gradient(to bottom, ${BRAND.pink}, ${BRAND.navy})` }} />
                                     {article.timeline.map((evt, i) => (
@@ -2158,7 +1940,7 @@ export default function ReportGSTER26({ content, preview = false }: {
                                     ))}
                                   </div>
                                   <p style={{ fontSize: 10, lineHeight: 1.5, color: t.textMuted, fontStyle: "italic", marginTop: 12, opacity: 0.7 }}>
-                                    Domestic investors such as Berlusconi at Milan, Walker at Blackburn, and Moratti at Inter are excluded , this timeline focuses on foreign PE investment.
+                                    {TRENDS_L.timelineNote}
                                   </p>
                                 </div>
                               </div>
@@ -2247,8 +2029,8 @@ export default function ReportGSTER26({ content, preview = false }: {
                                         style={{ width: "100%", background: openRevTab === "revshare" ? `${BRAND.pink}06` : t.bgCard, border: `1px solid ${openRevTab === "revshare" ? BRAND.pink + "44" : t.border}`, borderRadius: 10, cursor: "pointer", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, outline: "none", transition: "all 0.3s", zIndex: 2 }}
                                       >
                                         <div style={{ textAlign: "left" }}>
-                                          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: t.titleColor, lineHeight: 1.2 }}>ATHLETE REVENUE SHARE BY SPORT</div>
-                                          <div style={{ fontSize: 11, color: t.textMuted, fontStyle: "italic", marginTop: 4 }}>Ranges of how much of the money reaches the athletes, across sports, geographies and structures</div>
+                                          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: t.titleColor, lineHeight: 1.2 }}>{TRENDS_L.revShareTitle}</div>
+                                          <div style={{ fontSize: 11, color: t.textMuted, fontStyle: "italic", marginTop: 4 }}>{TRENDS_L.revShareSubtitle}</div>
                                         </div>
                                         <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: openRevTab === "revshare" ? BRAND.pink : t.textMuted, flexShrink: 0, transition: "transform 0.3s", transform: openRevTab === "revshare" ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
                                       </button>
@@ -2257,7 +2039,7 @@ export default function ReportGSTER26({ content, preview = false }: {
                                           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 11 : 12 }}>
                                             <thead>
                                               <tr>
-                                                {["Property", "% to Players", "Structure", "Notes"].map(h => (
+                                                {[TRENDS_L.revenueHeaders.property, TRENDS_L.revenueHeaders.pct, TRENDS_L.revenueHeaders.structure, TRENDS_L.revenueHeaders.notes].map(h => (
                                                   <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: BRAND.pink, textTransform: "uppercase", borderBottom: `2px solid ${t.border}` }}>{h}</th>
                                                 ))}
                                               </tr>
@@ -2290,7 +2072,7 @@ export default function ReportGSTER26({ content, preview = false }: {
                                   );
                                 })()}
                                 {/* Sections for mobile PE fallback */}
-                                {article.id === "pe-ownership" && article.sections && article.sections.map((section, si) => (
+                                {aStyle.timelineSidebar && article.sections && article.sections.map((section, si) => (
                                   <div key={si} style={{ marginTop: 28 }}>
                                     <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, marginBottom: 20 }} />
                                     <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, color: t.titleColor, marginBottom: 12 }}>{section.heading}</div>
@@ -2308,10 +2090,10 @@ export default function ReportGSTER26({ content, preview = false }: {
                                       return <p key={pi} style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted, marginTop: 12 }}>{p}</p>;
                                     })}
                                     {/* Firm profiles inside WHERE WE ARE TODAY on mobile */}
-                                    {section.heading === "WHERE WE ARE TODAY" && article.firms && (
+                                    {si === aStyle.firmsAfterSection && article.firms && (
                                       <div style={{ marginTop: 24 }}>
-                                        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: t.titleColor, marginBottom: 6 }}>WHO PIONEERED THE MODEL</div>
-                                        <p style={{ fontSize: 12, color: t.textMuted, marginBottom: 16 }}>Three firms defined what institutional sports ownership actually looks like, each representing a structurally distinct thesis.</p>
+                                        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: t.titleColor, marginBottom: 6 }}>{TRENDS_L.firmsTitle}</div>
+                                        <p style={{ fontSize: 12, color: t.textMuted, marginBottom: 16 }}>{TRENDS_L.firmsIntro}</p>
                                         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                                           {article.firms.map(firm => (
                                             <div key={firm.name} style={{ paddingLeft: 14, borderLeft: `3px solid ${BRAND.pink}` }}>
@@ -2332,8 +2114,8 @@ export default function ReportGSTER26({ content, preview = false }: {
                             {article.flipCards && (
                               <div style={{ marginTop: 40 }}>
                                 <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, marginBottom: 32 }} />
-                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 8 }}>THE SHIFT</div>
-                                <p style={{ fontSize: 13, color: t.textMuted, marginBottom: 28 }}>For most of sports history, athletes accepted the model they were born into. Three moments made that impossible to continue.</p>
+                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 8 }}>{TRENDS_L.shiftTitle}</div>
+                                <p style={{ fontSize: 13, color: t.textMuted, marginBottom: 28 }}>{TRENDS_L.shiftIntro}</p>
                                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                                   {article.flipCards.map(card => (
                                     <FlipCardComponent key={card.id} card={card} t={t} isMobile={isMobile} />
@@ -2343,14 +2125,8 @@ export default function ReportGSTER26({ content, preview = false }: {
                             )}
                             {article.revenueTables && (() => {
                               const rt = article.revenueTables;
-                              const sectionGroups: { key: string; title: string; subtitle: string; rows: RevShareRow[] }[] = [
-                                { key: "us", title: "US LEAGUES", subtitle: "Closed leagues = controlled labor with strong unions", rows: rt.usLeagues },
-                                { key: "euro", title: "EUROPEAN FOOTBALL", subtitle: "Players run the show", rows: rt.euroFootball },
-                                { key: "comp", title: "COMPETITIONS", subtitle: "Governing bodies with full control", rows: rt.competitions },
-                                { key: "ind", title: "INDIVIDUAL SPORTS", subtitle: "Fragmented power , Golf just forced a reset", rows: rt.individualSports },
-                                { key: "cricket", title: "CRICKET", subtitle: "Governing body capture", rows: rt.cricket },
-                                { key: "combat", title: "UFC / WWE / BOXING", subtitle: "Extreme owner dominance vs star power", rows: rt.combat },
-                              ];
+                              // Group order/titles from content; `rows` names the revenueTables field to show.
+                              const sectionGroups: { key: string; title: string; subtitle: string; rows: RevShareRow[] }[] = TRENDS_L.revenueGroups.map((g) => ({ ...g, rows: rt[g.rows] ?? [] }));
                               const parsePct = (s: string): number => {
                                 const nums = s.match(/\d+/g)?.map(Number) || [];
                                 return nums.length >= 2 ? (nums[0] + nums[1]) / 2 : nums[0] || 0;
@@ -2367,10 +2143,11 @@ export default function ReportGSTER26({ content, preview = false }: {
                               return (
                                 <div style={{ marginTop: 48 }}>
                                   <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, marginBottom: 32 }} />
-                                  <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 8 }}>ATHLETE REVENUE SHARE BY SPORT</div>
-                                  <p style={{ fontSize: 13, color: t.textMuted, marginBottom: 12 }}>How much of the money reaches the athletes , and what structure determines it.</p>
+                                  <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 8 }}>{TRENDS_L.revenueTitle}</div>
+                                  <p style={{ fontSize: 13, color: t.textMuted, marginBottom: 12 }}>{TRENDS_L.revenueIntro}</p>
                                   <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
-                                    {[{ label: "< 25%", color: "#e05252" }, { label: "25–40%", color: "#e08b35" }, { label: "40–55%", color: "#d4a73a" }, { label: "> 55%", color: "#4caf50" }].map(l => (
+                                    {/* Legend colours match pctColor's bands (< 25 / < 40 / < 55 / else). */}
+                                    {["#e05252", "#e08b35", "#d4a73a", "#4caf50"].map((color, li) => ({ label: TRENDS_L.revenueLegend[li], color })).map(l => (
                                       <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
                                         <div style={{ width: 10, height: 10, borderRadius: 2, background: l.color }} />
                                         <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: t.textMuted }}>{l.label}</span>
@@ -2397,7 +2174,7 @@ export default function ReportGSTER26({ content, preview = false }: {
                                               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 11 : 12, minWidth: isMobile ? undefined : 380 }}>
                                                 <thead>
                                                   <tr>
-                                                    {["Property", "% to Players", ...(group.rows[0]?.structure ? ["Structure"] : []), "Notes"].map(h => (
+                                                    {[TRENDS_L.revenueHeaders.property, TRENDS_L.revenueHeaders.pct, ...(group.rows[0]?.structure ? [TRENDS_L.revenueHeaders.structure] : []), TRENDS_L.revenueHeaders.notes].map(h => (
                                                       <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: 2, color: BRAND.pink, textTransform: "uppercase", borderBottom: `2px solid ${t.border}` }}>{h}</th>
                                                     ))}
                                                   </tr>
@@ -2428,7 +2205,7 @@ export default function ReportGSTER26({ content, preview = false }: {
                             })()}
 
                             {/* Content sections with headings (skip PE , handled above) */}
-                            {article.id !== "pe-ownership" && article.sections?.map((section, si) => (
+                            {!aStyle.timelineSidebar && article.sections?.map((section, si) => (
                               <div key={si} style={{ marginTop: si === 0 ? 0 : 36 }}>
                                 <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, marginBottom: 24 }} />
                                 <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 22 : 24, color: t.titleColor, marginBottom: 16 }}>{section.heading}</div>
@@ -2454,8 +2231,8 @@ export default function ReportGSTER26({ content, preview = false }: {
                                           <strong style={{ display: "block", fontSize: 14, color: t.titleColor, marginBottom: 6 }}>{boldPart}</strong>
                                           <p style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted }}>{rest}</p>
                                         </div>
-                                        {/* Collapsible athlete ownership table after THE ATHLETE TAKES CONTROL */}
-                                        {boldPart === "THE ATHLETE TAKES CONTROL" && article.athleteOwnership && (
+                                        {/* Collapsible athlete ownership table after the paragraph content names (trendsArticleStyle.ownershipAfter) */}
+                                        {aStyle.ownershipAfter?.section === si && aStyle.ownershipAfter?.paragraph === pi && article.athleteOwnership && (
                                           <div style={{ marginTop: 20, marginBottom: 8 }}>
                                             <button
                                               type="button"
@@ -2463,8 +2240,8 @@ export default function ReportGSTER26({ content, preview = false }: {
                                               style={{ width: "100%", background: openRevTab === "athlete-ownership" ? `${BRAND.pink}06` : t.bgCard, border: `1px solid ${openRevTab === "athlete-ownership" ? BRAND.pink + "44" : t.border}`, borderRadius: 10, cursor: "pointer", padding: "14px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, outline: "none", transition: "all 0.3s", zIndex: 2 }}
                                             >
                                               <div style={{ textAlign: "left" }}>
-                                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 16, color: t.titleColor, lineHeight: 1.2 }}>HISTORY OF ATHLETE OWNERSHIP</div>
-                                                <div style={{ fontSize: 11, color: t.textMuted, fontStyle: "italic", marginTop: 3 }}>The earliest known example was George Halas (1920s, NFL). From 2009–2015 few but isolated cases. 2019 onward a clear explosion.</div>
+                                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 16, color: t.titleColor, lineHeight: 1.2 }}>{TRENDS_L.ownershipTitle}</div>
+                                                <div style={{ fontSize: 11, color: t.textMuted, fontStyle: "italic", marginTop: 3 }}>{TRENDS_L.ownershipSubtitle}</div>
                                               </div>
                                               <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: openRevTab === "athlete-ownership" ? BRAND.pink : t.textMuted, flexShrink: 0, transition: "transform 0.3s", transform: openRevTab === "athlete-ownership" ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
                                             </button>
@@ -2473,7 +2250,7 @@ export default function ReportGSTER26({ content, preview = false }: {
                                                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 10 : 12 }}>
                                                   <thead>
                                                     <tr>
-                                                      {["Year", "Athlete", "Team / League", "Sport", "Type"].map(h => (
+                                                      {TRENDS_L.ownershipHeaders.map(h => (
                                                         <th key={h} style={{ textAlign: "left", padding: "8px 10px", fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: BRAND.pink, textTransform: "uppercase", borderBottom: `2px solid ${t.border}`, whiteSpace: "nowrap" }}>{h}</th>
                                                       ))}
                                                     </tr>
@@ -2512,15 +2289,15 @@ export default function ReportGSTER26({ content, preview = false }: {
 
                             {/* Pros / Cons + integrated vote */}
                             {article.pros && article.cons && (() => {
-                              const pollId = `gster26:${article.id}:will-it-work`;
-                              return <PollVoteSection pollId={pollId} article={article} t={t} isMobile={isMobile} user={user} sessionValid={sessionValid} />;
+                              const pollId = `${slug}:${article.id}:will-it-work`;
+                              return <PollVoteSection pollId={pollId} article={article} t={t} isMobile={isMobile} L={TRENDS_L.poll} />;
                             })()}
 
                             {/* Timeline , skip for PE on desktop since it's in the sidebar */}
-                            {article.timeline && !(article.id === "pe-ownership" && !isMobile) && (
+                            {article.timeline && !(aStyle.timelineSidebar && !isMobile) && (
                               <>
                                 <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: "48px 0" }} />
-                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 40, textAlign: "center" }}>TIMELINE</div>
+                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 40, textAlign: "center" }}>{TRENDS_L.timelineTitle}</div>
 
                                 {isMobile ? (
                                   /* Mobile: vertical compact timeline */
@@ -2573,10 +2350,10 @@ export default function ReportGSTER26({ content, preview = false }: {
                             )}
 
                             {/* Firm profiles , skip PE entirely (handled in its own section) */}
-                            {article.firms && article.id !== "pe-ownership" && (
+                            {article.firms && !aStyle.timelineSidebar && (
                               <>
                                 <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: "48px 0" }} />
-                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 32 }}>WHO PIONEERED THE MODEL</div>
+                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 32 }}>{TRENDS_L.firmsTitle}</div>
                                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 20 }}>
                                   {article.firms.map(firm => {
                                     const fUrl = firm.domain ? `https://www.google.com/s2/favicons?sz=128&domain=${firm.domain}` : null;
@@ -2608,7 +2385,7 @@ export default function ReportGSTER26({ content, preview = false }: {
       </div>
 
     </>),
-    peak: (<>
+    peak: () => (<>
       <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)` }} />
 
       {/* ── PEAK 2026 FEATURED SECTION ─────────────────────────────────── */}
@@ -2621,7 +2398,7 @@ export default function ReportGSTER26({ content, preview = false }: {
           {/* ── Row 1: Header + Stats ── */}
           <div className="stx-reveal" style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: 16, marginBottom: isMobile ? 16 : 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <img src="/peak-logo.jpeg" alt="PEAK" style={{ height: isMobile ? 40 : 48, borderRadius: 10, flexShrink: 0 }} />
+              <img src={PEAK_L.logo} alt={PEAK_L.logoAlt} style={{ height: isMobile ? 40 : 48, borderRadius: 10, flexShrink: 0 }} />
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                   <h2 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 28 : 38, lineHeight: 1, color: "#fff", margin: 0 }}>{PEAK_COPY.title}</h2>
@@ -2648,7 +2425,7 @@ export default function ReportGSTER26({ content, preview = false }: {
               <div style={{ position: "relative", paddingBottom: "56.25%", height: 0 }}>
                 <iframe
                   src={PEAK_COPY.videoUrl}
-                  title="PEAK 2026"
+                  title={PEAK_L.videoTitle}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
@@ -2666,10 +2443,10 @@ export default function ReportGSTER26({ content, preview = false }: {
                 </div>
                 {/* Tracks */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, alignContent: "start" }}>
-                  {PEAK_TRACKS.map(({ label, Icon }) => (
+                  {PEAK_L.tracks.map(({ label, icon }) => (
                     <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0" }}>
                       <div style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.08)", flexShrink: 0 }}>
-                        <Icon size={13} color="#e8d5f5" strokeWidth={1.5} />
+                        {LUCIDE[icon] && React.createElement(LUCIDE[icon], { size: 13, color: "#e8d5f5", strokeWidth: 1.5 })}
                       </div>
                       <span style={{ fontSize: 10, color: "#fff", fontWeight: 600, lineHeight: 1.2 }}>{label.replace("\n", " ")}</span>
                     </div>
@@ -2700,16 +2477,18 @@ export default function ReportGSTER26({ content, preview = false }: {
               </div>
               <p style={{ fontSize: 11, color: "#fff", lineHeight: 1.5, margin: "0 0 10px" }}>{PEAK_COPY.swcIntro}</p>
               {(() => {
-                const sectors = ["athletes", "fans", "executives"] as const;
-                const sectorLabels = { athletes: "For Athletes", fans: "For Fans", executives: "For Executives" };
+                // Columns (peakSwcFinalists keys) and their headings come from content.
+                const sectors: string[] = PEAK_L.swcSectors.map((x) => x.key);
+                const sectorLabels: Record<string, string> = Object.fromEntries(PEAK_L.swcSectors.map((x) => [x.key, x.label]));
+                const rows = Math.max(0, ...sectors.map((k) => PEAK_SWC_FINALISTS[k]?.length ?? 0));
                 return (
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px 12px" }}>
                     {sectors.map(sector => (
                       <span key={sector} style={{ fontSize: 9, letterSpacing: 1.5, color: "#c9a0e8", textTransform: "uppercase", fontWeight: 600 }}>{sectorLabels[sector]}</span>
                     ))}
-                    {[0, 1, 2].map(row => (
+                    {Array.from({ length: rows }, (_, row) => row).map(row => (
                       sectors.map(sector => {
-                        const c = PEAK_SWC_FINALISTS[sector][row];
+                        const c = PEAK_SWC_FINALISTS[sector]?.[row];
                         if (!c) return <div key={`${sector}-${row}`} />;
                         const lUrl = c.domain ? `https://www.google.com/s2/favicons?sz=128&domain=${c.domain}` : null;
                         return (
@@ -2773,20 +2552,17 @@ export default function ReportGSTER26({ content, preview = false }: {
       </div>
 
     </>),
-    innovators: (<>
+    innovators: () => (<>
       <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)` }} />
 
       {/* ── GSTER26 INNOVATORS ────────────────────────────────────────────── */}
       {(() => {
         const innovators = [...(notionData?.data || [])].sort((a, b) => a.name.localeCompare(b.name));
+        // Ring colour: the first content rule whose `match` substrings appear in the continent.
         const continentColor = (continent: string) => {
           const c = continent.toLowerCase();
-          if (c.includes("europe"))        return "#5B7FFF";
-          if (c.includes("north america")) return "#E08B35";
-          if (c.includes("asia") || c.includes("apac") || c.includes("oceania") || c.includes("india") || c.includes("middle east") || c.includes("pacific")) return "#4D9B6F";
-          if (c.includes("africa"))        return "#4D9B6F";
-          if (c.includes("south america") || c.includes("latin")) return "#E08B35";
-          return "#4D9B6F";
+          const rule = (INNOVATORS_L.continentColors as { match: string[]; color: string }[]).find((r) => r.match.some((m) => c.includes(m)));
+          return rule ? rule.color : INNOVATORS_L.defaultContinentColor;
         };
 
         return (
@@ -2802,11 +2578,7 @@ export default function ReportGSTER26({ content, preview = false }: {
 
               {/* Region legend */}
               <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginTop: 32, marginBottom: 48 }}>
-                {[
-                  { label: "Europe",        color: "#5B7FFF" },
-                  { label: "North America", color: "#E08B35" },
-                  { label: "APAC",          color: "#4D9B6F" },
-                ].map(r => (
+                {(INNOVATORS_L.legend as { label: string; color: string }[]).map(r => (
                   <div key={r.label} style={{ display: "flex", alignItems: "center", gap: 7 }}>
                     <div style={{ width: 10, height: 10, borderRadius: "50%", background: r.color }} />
                     <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase" }}>{r.label}</span>
@@ -2889,7 +2661,7 @@ export default function ReportGSTER26({ content, preview = false }: {
                   const dataUrl = cardImageData || await generateCardImage(p, accent);
                   if (!cardImageData) setCardImageData(dataUrl);
                   const link = document.createElement("a");
-                  link.download = `${p.name.replace(/\s+/g, "-")}-GSTER26.png`;
+                  link.download = `${p.name.replace(/\s+/g, "-")}${INNOVATORS_L.shareFileSuffix}`;
                   link.href = dataUrl;
                   link.click();
                 } catch (err) {
@@ -2944,16 +2716,16 @@ export default function ReportGSTER26({ content, preview = false }: {
                       background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
                     }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, letterSpacing: 2, color: BRAND.pink, flexShrink: 0 }}>SportsTechX</div>
+                        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, letterSpacing: 2, color: BRAND.pink, flexShrink: 0 }}>{INNOVATORS_L.drawerBrand}</div>
                         <div style={{ height: 3, flex: 1, borderRadius: 2, background: `linear-gradient(90deg, ${BRAND.pink}44, ${accent}44, transparent)` }} />
-                        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: 1.5, color: t.textMuted, textTransform: "uppercase", whiteSpace: "nowrap" }}>GSTER 2026</span>
+                        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: 1.5, color: t.textMuted, textTransform: "uppercase", whiteSpace: "nowrap" }}>{INNOVATORS_L.drawerEdition}</span>
                       </div>
                       <div style={{ display: "flex", gap: 6, flexShrink: 0, alignItems: "center" }}>
                         {/* Download PNG */}
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); handleDownload(); }}
-                          title="Download card as image"
+                          title={INNOVATORS_L.downloadTitle}
                           disabled={isGeneratingCard}
                           style={{
                             width: 30, height: 30, borderRadius: "50%",
@@ -3078,7 +2850,7 @@ export default function ReportGSTER26({ content, preview = false }: {
                             ))}
                           </div>
                         ) : (
-                          <p style={{ fontSize: 12, color: t.textMuted, textAlign: "center", padding: "20px 0", fontStyle: "italic" }}>No responses yet</p>
+                          <p style={{ fontSize: 12, color: t.textMuted, textAlign: "center", padding: "20px 0", fontStyle: "italic" }}>{INNOVATORS_L.noResponses}</p>
                         )}
                       </div>
                     </div>
@@ -3093,7 +2865,7 @@ export default function ReportGSTER26({ content, preview = false }: {
       })()}
 
     </>),
-    startups: (<>
+    startups: () => (<>
       <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)` }} />
 
       {/* ── CHART-10 + CHART-11: ECOSYSTEM SNAPSHOT ─────────────────────── */}
@@ -3106,7 +2878,7 @@ export default function ReportGSTER26({ content, preview = false }: {
           {/* ── Tab Switcher + Sector Legend ── */}
           <div style={{ display: "flex", alignItems: "flex-end", marginTop: 32, marginBottom: 16, borderBottom: `2px solid ${t.border}`, flexWrap: "wrap" }}>
             <div style={{ display: "flex" }}>
-              {([["Innovators", "innovators"], ["PEAK", "peak"], ["Our Picks", "stx"]] as const).map(([label, key]) => {
+              {(STARTUPS_L.tabs as { key: string; label: string }[]).map(({ label, key }) => {
                 const active = watchTab === key;
                 return (
                   <button key={key}
@@ -3118,7 +2890,7 @@ export default function ReportGSTER26({ content, preview = false }: {
               })}
             </div>
             <div style={{ display: isMobile ? "none" : "flex", gap: 14, marginLeft: "auto", marginBottom: 10, flexShrink: 0 }}>
-              {([["For Athletes", BRAND.athletes], ["For Executives", BRAND.execs], ["For Fans", BRAND.fans]] as const).map(([label, color]) => (
+              {(STARTUPS_L.legend as { label: string; color: string }[]).map(({ label, color }) => (
                 <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
                   <span style={{ color, fontSize: 9, lineHeight: 1 }}>●</span>
                   <span style={{ fontSize: 10, fontFamily: "'DM Mono',monospace", color: t.textMuted, letterSpacing: 0.5 }}>{label}</span>
@@ -3139,8 +2911,7 @@ export default function ReportGSTER26({ content, preview = false }: {
           {/* ── Card Grid ── */}
           {(() => {
             const companies = mergeWatchCompanies[watchTab];
-            const sectorColorMap: Record<WatchCompany["sector"], string> = { athletes: BRAND.athletes, execs: BRAND.execs, fans: BRAND.fans };
-            const sectorLabelMap: Record<WatchCompany["sector"], string> = { athletes: "For Athletes", execs: "For Executives", fans: "For Fans" };
+            const sectorColorMap: Record<string, string> = STARTUPS_L.audienceColors;
             return (
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 16 : 20 }}>
                 {companies.map((c, idx) => {
@@ -3238,18 +3009,18 @@ export default function ReportGSTER26({ content, preview = false }: {
       </div>
 
     </>),
-    ecomap: (<>
+    ecomap: () => (<>
       <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)` }} />
 
       {/* ── ECOSYSTEM MAP: INVESTORS, INNOVATION & PROGRAMS ──────────────── */}
       <div id="ecomap">
         <Suspense fallback={<div style={{ height: 500, background: t.bgSec, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: t.textMuted, letterSpacing: 2 }}>LOADING ECOSYSTEM MAP…</span></div>}>
-          <EcosystemMapSection t={t} isDark={isDark} isMobile={isMobile} eyebrow={ECOMAP.eyebrow} title={ECOMAP.title} intro={ECOMAP.intro || undefined} />
+          <EcosystemMapSection slug={slug} t={t} isDark={isDark} isMobile={isMobile} eyebrow={ECOMAP.eyebrow} title={ECOMAP.title} intro={ECOMAP.intro || undefined} labels={ECOMAP_L} />
         </Suspense>
       </div>
 
     </>),
-    ngsc: (<>
+    ngsc: () => (<>
       <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: isMobile ? "24px 0" : "40px 0" }} />
 
       {/* ── NGSC FEATURED SECTION ────────────────────────────────────────── */}
@@ -3260,7 +3031,7 @@ export default function ReportGSTER26({ content, preview = false }: {
           {/* ── Row 1: Header + date inline ── */}
           <div className="stx-reveal" style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: 16, marginBottom: isMobile ? 20 : 24 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <img src={NGSC.logoUrl} alt="Esports World Cup Foundation" style={{ height: isMobile ? 32 : 40, flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+              <img src={NGSC.logoUrl} alt={NGSC_L.logoAlt} style={{ height: isMobile ? 32 : 40, flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                   <h2 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 26 : 36, lineHeight: 1, color: "#fff", margin: 0 }}>{NGSC.title}</h2>
@@ -3274,13 +3045,7 @@ export default function ReportGSTER26({ content, preview = false }: {
                   style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, letterSpacing: 2, color: "#0a0a0a", background: BRAND.ngsc, padding: "7px 20px", borderRadius: 50, textDecoration: "none", boxShadow: `0 3px 12px ${BRAND.ngsc}55` }}>
                   {NGSC.registerLabel}
                 </a>
-                {[
-                  { href: "https://newglobalsportconference.com", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> },
-                  { href: "https://www.linkedin.com/company/nextwrldsa/", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg> },
-                  { href: "https://www.instagram.com/ngsc_sa", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg> },
-                  { href: "https://x.com/ngsc_sa", icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
-                  { href: "https://www.youtube.com/channel/UC-OFimRLY7Jxdn_SvAsCzWg", icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg> },
-                ].map((s, i) => (
+                {(NGSC_L.social as { url: string; icon: string }[]).map((x) => ({ href: x.url, icon: SOCIAL_ICONS[x.icon] })).filter((x) => x.icon).map((s, i) => (
                   <a key={i} href={s.href} target="_blank" rel="noopener noreferrer"
                     style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: "50%", color: `${BRAND.ngsc}`, textDecoration: "none", border: `1px solid ${BRAND.ngsc}33`, transition: "all 0.2s" }}
                     onMouseEnter={e => { e.currentTarget.style.background = `${BRAND.ngsc}22`; }}
@@ -3299,7 +3064,7 @@ export default function ReportGSTER26({ content, preview = false }: {
             <div style={{ borderRadius: 10, overflow: "hidden", border: `1px solid ${BRAND.ngsc}20`, minHeight: isMobile ? 180 : 340 }}>
               <img
                 src={NGSC.stageImage}
-                alt="Panel discussion at NGSC with global sports and esports leaders on stage in Riyadh"
+                alt={NGSC_L.stageAlt}
                 style={{ width: "100%", height: "100%", display: "block", objectFit: "cover", objectPosition: "center center" }}
               />
             </div>
@@ -3313,14 +3078,14 @@ export default function ReportGSTER26({ content, preview = false }: {
                 {NGSC.about2}
               </p>
               <p style={{ fontSize: 12, color: "#c8c8c8", lineHeight: 1.7, margin: 0 }}>
-                NGSC 2025 official theme, <em style={{ color: "#fff" }}>"The Next Game,"</em> reflects the accelerating convergence of competitive gaming and global sports.
+                {NGSC_L.themeLine.before}<em style={{ color: "#fff" }}>{NGSC_L.themeLine.em}</em>{NGSC_L.themeLine.after}
               </p>
             </div>
             {/* Crowd photo */}
             <div style={{ borderRadius: 10, overflow: "hidden", border: `1px solid ${BRAND.ngsc}20`, minHeight: isMobile ? 180 : 340 }}>
               <img
                 src={NGSC.crowdImage}
-                alt="Attendees of NGSC sharing a selfie moment during the esports and sports networking session in Riyadh"
+                alt={NGSC_L.crowdAlt}
                 style={{ width: "100%", height: "100%", display: "block", objectFit: "cover", objectPosition: "center center" }}
               />
             </div>
@@ -3369,7 +3134,7 @@ export default function ReportGSTER26({ content, preview = false }: {
       </div>
 
     </>),
-    data: (<>
+    data: () => (<>
       <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.ngsc}55,transparent)`, margin: isMobile ? "24px 0" : "40px 0" }} />
 
       {/* ── FACTS & FIGURES: FUNDING + M&A TABS ─────────────────────────── */}
@@ -3404,26 +3169,24 @@ export default function ReportGSTER26({ content, preview = false }: {
           {(isPdf || factTab === "funding") && (
             <div>
               {/* Continent filter */}
-              <ContinentFilterBar value={fundingRegion} onChange={setFundingRegion} t={t} label="Filter by continent" />
+              <ContinentFilterBar value={fundingRegion} onChange={setFundingRegion} t={t} label={DATA_L.fundingFilterLabel} regions={regionFilters} />
 
               {/* CHART-02: Funding By Year */}
               <div className="stx-reveal">
                 {fundingHeader(DATA_HEADER.fundingByYear)}
-                <SourceBadge chartId="CHART-02" source="dm_test · SUM(Round_Amount_USD) GROUP BY Deal_Year · VC_Date 2021–2025" />
                 <p style={{ fontSize: 14, color: t.textMuted, maxWidth: 580, lineHeight: 1.8, marginBottom: 40 }}>
-                  Peaked at $13.3B in 2021, the all-time high. 2025 marked a decisive return to growth.
+                  {DATA_L.captions.fundingByYear}
                 </p>
               </div>
-              {data ? <YearBarChart data={data.fundingByYear} t={t} isPdf={isPdf} /> : (
+              {data ? <YearBarChart data={data.fundingByYear} t={t} isPdf={isPdf} highlightYear={DATA_L.highlightYear} tooltip={DATA_L.yearTooltip} /> : (
                 <div style={{ height: 260, background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 4 }} />
               )}
 
               {/* CHART-06: Regional Share */}
               <div style={{ marginTop: 48 }} className="stx-reveal">
                 {fundingHeader(DATA_HEADER.regionalShare, "clamp(22px,2.8vw,36px)")}
-                <SourceBadge chartId="CHART-06" source="dm_test · SUM(Round_Amount_USD) GROUP BY VC_Report_Region" />
                 <p style={{ fontSize: 14, color: t.textMuted, maxWidth: 580, lineHeight: 1.8, marginBottom: 20 }}>
-                  North America leads on volume, but Europe closed the gap in 2025.
+                  {DATA_L.captions.regionalShare}
                 </p>
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: 2, marginTop: 20 }}>
                   {data?.regionSplit.map(r => (
@@ -3431,7 +3194,7 @@ export default function ReportGSTER26({ content, preview = false }: {
                       <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 3, color: t.textMuted, textTransform: "uppercase", marginBottom: 10 }}>{regionLabels[r.region] || r.region}</div>
                       <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 38, color: t.titleColor, lineHeight: 1 }}>{fmt(r.total_m)}</div>
                       <div style={{ fontSize: 11, color: t.textMuted, marginTop: 6, fontFamily: "'DM Mono',monospace" }}>
-                        {s ? ((r.total_m / s.total_funding_m) * 100).toFixed(0) : "—"}% global · {r.deals} deals
+                        {fill(DATA_L.regionShareLine, { pct: s ? ((r.total_m / s.total_funding_m) * 100).toFixed(0) : "—", deals: r.deals })}
                       </div>
                     </div>
                   ))}
@@ -3441,9 +3204,8 @@ export default function ReportGSTER26({ content, preview = false }: {
               {/* CHART-03: Top Countries */}
               <div style={{ marginTop: 72 }} className="stx-reveal">
                 {fundingHeader(DATA_HEADER.topCountries)}
-                <SourceBadge chartId="CHART-03" source="dm_test · SUM(Round_Amount_USD) GROUP BY Country · VC_Date 2021–2025" />
                 <p style={{ fontSize: 14, color: t.textMuted, maxWidth: 580, lineHeight: 1.8, marginBottom: 20 }}>
-                  The USA accounts for the majority of capital raised, but the gap to the next tier is narrowing.
+                  {DATA_L.captions.topCountries}
                 </p>
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "4px 48px" }}>
                   {data?.topCountries.slice(0, 10).map((c, i) => (
@@ -3490,9 +3252,8 @@ export default function ReportGSTER26({ content, preview = false }: {
               {/* CHART-04: Sector Split */}
               <div style={{ marginTop: 72 }} className="stx-reveal">
                 {fundingHeader(DATA_HEADER.sectorSplit)}
-                <SourceBadge chartId="CHART-04" source="dm_test · SUM(Round_Amount_USD) GROUP BY Sector → Sub-Sector → Sub-Sub-Sector · VC_Date 2021–2025" />
                 <p style={{ fontSize: 14, color: t.textMuted, maxWidth: 580, lineHeight: 1.8, marginBottom: 20 }}>
-                  'For Fans' companies attract the most capital by volume, and their share is growing.
+                  {DATA_L.captions.sectorSplit}
                 </p>
                 {data?.sectorDrilldown && data.sectorDrilldown.length > 0 ? (
                   <Suspense fallback={<div style={{ height: 460, background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6 }} />}>
@@ -3500,9 +3261,11 @@ export default function ReportGSTER26({ content, preview = false }: {
                       data={data.sectorDrilldown}
                       theme={{ bg: t.bgSec, text: t.text, textMuted: t.textMuted, border: t.border, bgCard: t.bgCard, titleColor: t.titleColor }}
                       brandColors={{ pink: BRAND.pink, teal: BRAND.teal, tealBright: BRAND.tealBright, navy: BRAND.navy, lightBlue: BRAND.lightBlue, slate: BRAND.slate }}
-                      sectorColors={{ "Activity & Performance": BRAND.athletes, "Fans & Content": BRAND.fans, "Management & Organisation": BRAND.execs }}
-                      sectorSecondaryColors={{ "Activity & Performance": BRAND.athletesSec, "Fans & Content": BRAND.fansSec, "Management & Organisation": BRAND.execsSec }}
-                      sectorLabels={{ "Activity & Performance": "For Athletes", "Fans & Content": "For Fans", "Management & Organisation": "For Executives" }}
+                      sectorColors={DATA_L.sectorColors}
+                      sectorSecondaryColors={DATA_L.sectorSecondaryColors}
+                      sectorLabels={DATA_L.sectorLabels}
+                      frameworkLink={DATA_L.frameworkLink}
+                      otherLabel={DATA_L.otherLabel}
                       isPdf={isPdf}
                     />
                   </Suspense>
@@ -3514,12 +3277,11 @@ export default function ReportGSTER26({ content, preview = false }: {
               {/* CHART-05: Top Funded Companies by Region */}
               <div style={{ marginTop: 72 }} className="stx-reveal">
                 {fundingHeader(DATA_HEADER.topFunded)}
-                <SourceBadge chartId="CHART-05" source="dm_test · SUM(Round_Amount_USD) GROUP BY Name, VC_Report_Region · top 5 per region" />
                 <p style={{ fontSize: 14, color: t.textMuted, maxWidth: 580, lineHeight: 1.8, marginBottom: 20 }}>
-                  The names that defined the 2021–2025 cycle, by region.
+                  {DATA_L.captions.topFunded}
                 </p>
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: 2, marginTop: 24 }}>
-                  {["NA","EU","APAC"].map(region => {
+                  {(DATA_L.topFundedRegions as string[]).map(region => {
                     return (
                       <div key={region} style={{ background: t.bgCard, padding: isMobile ? 16 : 28, border: `1px solid ${t.border}` }}>
                         <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 20 : 24, marginBottom: isMobile ? 10 : 16, color: t.titleColor }}>{regionLabels[region]}</div>
@@ -3568,19 +3330,18 @@ export default function ReportGSTER26({ content, preview = false }: {
             <div>
               {/* Acquiree + Acquirer continent filters */}
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 24, marginBottom: 12 }}>
-                <ContinentFilterBar value={maAcquireeRegion} onChange={setMaAcquireeRegion} t={t} label="Acquiree continent" />
-                <ContinentFilterBar value={maAcquirerRegion} onChange={setMaAcquirerRegion} t={t} label="Acquirer continent" />
+                <ContinentFilterBar value={maAcquireeRegion} onChange={setMaAcquireeRegion} t={t} label={DATA_L.acquireeFilterLabel} regions={regionFilters} />
+                <ContinentFilterBar value={maAcquirerRegion} onChange={setMaAcquirerRegion} t={t} label={DATA_L.acquirerFilterLabel} regions={regionFilters} />
               </div>
 
               {/* CHART-08: M&A By Year */}
               <div className="stx-reveal">
                 {maHeader(DATA_HEADER.maByYear)}
-                <SourceBadge chartId="CHART-08" source="ma_test_new · SUM(round_amount_usd) GROUP BY acquisition_year · date 2021–2025" />
                 <p style={{ fontSize: 14, color: t.textMuted, maxWidth: 580, lineHeight: 1.8, marginBottom: 40 }}>
-                  Deal volume peaked in 2023 at $10.9B across 70 deals, consolidation has accelerated sharply since 2022.
+                  {DATA_L.captions.maByYear}
                 </p>
               </div>
-              {data ? <YearBarChart data={(data.maByYear || []).filter(d => d.year >= 2021 && d.year <= 2025)} t={t} isPdf={isPdf} /> : (
+              {data ? <YearBarChart data={(data.maByYear || []).filter(d => d.year >= DATA_L.maYearRange[0] && d.year <= DATA_L.maYearRange[1])} t={t} isPdf={isPdf} highlightYear={DATA_L.highlightYear} tooltip={DATA_L.yearTooltip} /> : (
                 <div style={{ height: 260, background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 4 }} />
               )}
 
@@ -3591,13 +3352,12 @@ export default function ReportGSTER26({ content, preview = false }: {
                 return (
                   <div style={{ marginTop: 72 }} className="stx-reveal">
                     {maHeader(DATA_HEADER.notableAcquisitions)}
-                    <SourceBadge chartId="CHART-09" source="ma_test_new · WHERE round_amount_usd > 0 · ORDER BY round_amount_usd DESC · date 2021–2025" />
                     <p style={{ fontSize: 14, color: t.textMuted, maxWidth: 580, lineHeight: 1.8, marginBottom: 20 }}>
-                      The largest disclosed SportsTech acquisitions of the 2021–2025 cycle, ranked by deal value.
+                      {DATA_L.captions.notableAcquisitions}
                     </p>
                     <div style={{ marginTop: 24, border: `1px solid ${t.border}`, overflow: "hidden", borderRadius: 4 }}>
                       <div style={{ display: "grid", gridTemplateColumns: cols09, gap: "0 12px", padding: "12px 20px", background: isDark ? "rgba(43,61,143,0.35)" : BRAND.darkTitle, fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: BRAND.white, textTransform: "uppercase" }}>
-                        <span>Acquiree</span>{!isMobile && <span>Location</span>}{!isMobile && <span>Acquirer</span>}{!isMobile && <span>Location</span>}{!isMobile && <span>Year</span>}<span style={{ textAlign: "right" }}>Value</span>
+                        <span>{DATA_L.maHeaders.acquiree}</span>{!isMobile && <span>{DATA_L.maHeaders.location}</span>}{!isMobile && <span>{DATA_L.maHeaders.acquirer}</span>}{!isMobile && <span>{DATA_L.maHeaders.location}</span>}{!isMobile && <span>{DATA_L.maHeaders.year}</span>}<span style={{ textAlign: "right" }}>{DATA_L.maHeaders.value}</span>
                       </div>
                       {maDealsQuery.isLoading && (
                         <div style={{ padding: "24px 20px", fontSize: 13, color: t.textMuted, textAlign: "center" }}>Loading…</div>
@@ -3642,7 +3402,7 @@ export default function ReportGSTER26({ content, preview = false }: {
                         );
                       })}
                       {!maDealsQuery.isLoading && maDeals.length === 0 && (
-                        <div style={{ padding: "24px 20px", fontSize: 13, color: t.textMuted, textAlign: "center" }}>No acquisitions found for the selected period.</div>
+                        <div style={{ padding: "24px 20px", fontSize: 13, color: t.textMuted, textAlign: "center" }}>{DATA_L.maEmpty}</div>
                       )}
                     </div>
                   </div>
@@ -3658,19 +3418,20 @@ export default function ReportGSTER26({ content, preview = false }: {
     </>),
   };
   // Blocks the admin locked, for a reader below Raise: the heading and the unlock panel only.
-  const LOCKED_META: Record<string, [string, string]> = { trends: ["trends", "Trends"], peak: ["peak2026", "PEAK 2026"], innovators: ["innovators", "Innovators"], startups: ["ecosystem", "Startups to Watch"], ecomap: ["ecomap", "Ecosystem map"], ngsc: ["ngsc", "NGSC"], data: ["dealflow", "Data in Full"] };
-  for (const id of lockedNow(content, reportDoc)) {
-    if (id in PARTS) PARTS[id] = <LockedPart anchor={LOCKED_META[id]?.[0]} title={LOCKED_META[id]?.[1] ?? id} colors={{ bg: t.bg, card: t.bgCard, border: t.border, title: t.titleColor, muted: t.textMuted, accent: BRAND.pink }} />;
+  // Anchors are the parts' DOM ids (layout); titles come from content.pageLabels.lockedTitles.
+  const LOCKED_ANCHORS: Record<string, string> = { trends: "trends", peak: "peak2026", innovators: "innovators", startups: "ecosystem", ecomap: "ecomap", ngsc: "ngsc", data: "dealflow" };
+  for (const id of lockedIds) {
+    if (id in PARTS) PARTS[id] = () => <LockedPart anchor={LOCKED_ANCHORS[id]} title={PAGE.lockedTitles?.[id] ?? id} colors={{ bg: t.bg, card: t.bgCard, border: t.border, title: t.titleColor, muted: t.textMuted, accent: BRAND.pink }} />;
   }
-  const partOrder = [...new Set([...(Array.isArray(ov?.partOrder) ? ov.partOrder : []), ...GSTER26_PART_ORDER])].filter((id) => id in PARTS);
+  const partOrder = [...new Set(ov.partOrder as string[])].filter((id) => id in PARTS);
 
   return (
     <div ref={reportContainerRef} style={{ background: t.bg, color: t.text, fontFamily: "'Open Sans','system-ui',sans-serif", overflowX: "hidden", minHeight: "100vh", transition: "background 0.35s, color 0.35s" }}>
       {/* ── NAV (shared with every custom report — only the section links differ) ── */}
       <ReportNav ref={navRef}
         items={[{ href: "#trends", label: NAV.insights }, { href: "#innovators", label: NAV.innovators }, { href: "#ecosystem", label: NAV.startups }, { href: "#ecomap", label: NAV.ecosystem }, { href: "#dealflow", label: NAV.data }]}
-        activeIndex={activeDot} isDark={isDark} isMobile={isMobile} hidden={authGateActive || isPdf} theme={t}
-        pdf={{ url: GSTER26_PDF_URL, file: "GSTER26-LITE.pdf", label: NAV.downloadPdf }}
+        activeIndex={activeDot} isDark={isDark} isMobile={isMobile} hidden={isPdf} theme={t}
+        pdf={{ url: PAGE.pdfUrl, file: PAGE.pdfFile, label: NAV.downloadPdf }}
         mobileOpen={mobileMenuOpen} onToggleMobile={() => setMobileMenuOpen(o => !o)} onToggleDark={() => setIsDark((d: boolean) => !d)}
         onNavigate={(href, label, mobile) => {
           trackG26("nav_click", mobile ? { section: label, mobile: true } : { section: label });
@@ -3699,7 +3460,7 @@ export default function ReportGSTER26({ content, preview = false }: {
           display: "flex", alignItems: "center", gap: 6,
         }}
       >
-        <span style={{ fontSize: 14, lineHeight: 1 }}>↑</span> BACK TO TOP
+        <span style={{ fontSize: 14, lineHeight: 1 }}>↑</span> {PAGE.backToTop}
       </button>}
       {/* ── HERO ────────────────────────────────────────────────────────── */}
       <section id="stx-hero" style={{ minHeight: isPdf ? "auto" : "100vh", height: isPdf ? "auto" : (isMobile ? "100svh" : "100vh"), position: "relative", display: "flex", alignItems: "center", overflow: "hidden", background: isDark ? "#0c0f1a" : BRAND.darkTitle, margin: 0, padding: isPdf ? "60px 0" : 0, width: "100%" }}>
@@ -3749,7 +3510,7 @@ export default function ReportGSTER26({ content, preview = false }: {
               <div style={{ width: 1, alignSelf: "stretch", background: "rgba(190,208,227,0.2)" }} />
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "rgba(190,208,227,0.45)", letterSpacing: 2, textTransform: "uppercase" }}>{HERO.poweredBy}</span>
-                <img src={isGster26 ? "/peak-logo-nav.webp" : "/peak-logo.jpeg"} alt="PEAK" style={{ height: isGster26 ? 28 : 36, borderRadius: 6, opacity: 0.9 }} />
+                <img src={PAGE.heroPoweredByLogo} alt={PAGE.heroPoweredByAlt} style={{ height: 28, borderRadius: 6, opacity: 0.9 }} />
               </div>
             </div>
           </div>
@@ -3802,35 +3563,9 @@ export default function ReportGSTER26({ content, preview = false }: {
       {/* ── SKEW WRAPPER: velocity-based tilt applied to all content below hero ── */}
       <div ref={skewWrapRef} style={{ willChange: "transform", transformOrigin: "center top", position: "relative", zIndex: 1 }}>
 
-      {/* ── CHART-01: EXECUTIVE SUMMARY STATS ──────────────────────────── */}
-      {/* Executive Summary section , commented out
-      <div id="facts" style={{ background: t.bgSec, padding: isMobile ? "48px 0" : "88px 0" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "0 16px" : "0 40px" }}>
-          <div className="stx-reveal">
-            {sectionLabel("Executive Summary")}
-            {sectionTitle(DATA_HEADER.title)}
-            <SourceBadge chartId="CHART-01" source="sm_test · dm_test · ma_test_new (COUNT / SUM aggregates)" />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: 16, marginTop: 40 }}>
-            {isLoading ? Array(6).fill(0).map((_,i) => (
-              <div key={i} style={{ background: t.bgCard, height: 156, opacity: 0.35, border: `1px solid ${t.border}`, borderRadius: 14 }} />
-            )) : (
-              <>
-                <StatCard t={t} icon="funding" num="$35.8B" label="Invested in SportsTech 2021–25, with $8.7B deployed in 2025 alone" />
-                <StatCard t={t} icon="unicorn" num="46" label="SportsTech unicorns with a combined $210.2B valuation" />
-                <StatCard t={t} icon="investors" num="58" label="New investors & initiatives in the sports ecosystem in the last 12 months" />
-                <StatCard t={t} icon="globe" num="51%" label="Europe's share of 2025 funding, overtaking North America for the first time ($4.5B vs $4.0B)" />
-                <StatCard t={t} icon="trending" num="$43.6M" label="Average deal value in 2025, up from $28.1M in 2024 despite a similar number of rounds (200 vs 194)" />
-                <StatCard t={t} icon="ma" num="87%" label="Of all 2025 acquisitions made by SportsTech companies, up from 47% in 2020" />
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-      */}
 
 
-      {partOrder.map((id) => <React.Fragment key={id}>{PARTS[id]}</React.Fragment>)}
+      {partOrder.map((id) => <React.Fragment key={id}>{PARTS[id]()}</React.Fragment>)}
 
       {/* ── CLOSING QUOTE ───────────────────────────────────────────────── */}
       <div id="closing" style={{ background: isDark ? BRAND.darkTitle : BRAND.lightBlue, padding: isMobile ? "48px 0" : "88px 0" }}>
@@ -3839,7 +3574,7 @@ export default function ReportGSTER26({ content, preview = false }: {
             {CLOSING.quote}
           </p>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-            <a href="https://www.atlas.sportstechx.com" target="_blank" rel="noopener noreferrer" style={{ lineHeight: 0 }}>
+            <a href={PAGE.closingLogoUrl} target="_blank" rel="noopener noreferrer" style={{ lineHeight: 0 }}>
               <img src={isDark ? "/landing/atlas-wordmark-white.svg" : "/landing/atlas-wordmark-dark.svg"} alt="Atlas" style={{ height: isMobile ? 26 : 32, opacity: 0.9 }} />
             </a>
             <cite style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: 2, color: BRAND.pink, fontStyle: "normal" }}>
@@ -3862,14 +3597,6 @@ export default function ReportGSTER26({ content, preview = false }: {
         ::-webkit-scrollbar-thumb { background: rgba(237,26,94,0.3); border-radius: 3px; }
         .stx-trend-card { transition: border-color 0.3s, transform 0.3s; }
       `}</style>
-      {/* ── GSTER26 AUTH GATE ─────────────────────────────────────────────── */}
-      {isGster26 && !isPdf && (
-        <AuthModal
-          isOpen={showAuthModal}
-          onClose={isAuthenticated ? () => setShowAuthModal(false) : undefined}
-          withBlur={true}
-        />
-      )}
     </div>
   );
 }

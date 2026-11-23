@@ -15,6 +15,7 @@ import type { BenchmarkAccess, SummaryContent } from './types';
  * renders the layout with placeholders — no figures are bundled here.
  */
 const PLACEHOLDER: SummaryContent = {
+	eyebrow: 'VC Deal Sourcing Benchmark 2026 · Summary',
 	title: ENTRY_TITLE.r1,
 	subtitle: 'How sports tech investors find, screen and close deals, and where the gaps are.',
 	headlines: [
@@ -34,7 +35,7 @@ export function SummaryReport({ access, embedded }: { access: BenchmarkAccess; e
 	return (
 		<>
 			<header className="bm-cover">
-				<Eyebrow>VC Deal Sourcing Benchmark 2026 · Summary</Eyebrow>
+				{s.eyebrow && <Eyebrow>{s.eyebrow}</Eyebrow>}
 				{embedded ? <h2 className="atlas-h1" style={{ margin: '10px 0 0' }}>{s.title}</h2> : <h1>{s.title}</h1>}
 				<p>{s.subtitle}</p>
 				<div className="bm-cover__meta">

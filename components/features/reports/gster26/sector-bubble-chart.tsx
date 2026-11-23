@@ -43,7 +43,7 @@ function fmt(m: number): string {
   return `$${Math.round(m)}M`;
 }
 
-function buildHierarchy(data: SectorNode[]): SectorItem[] {
+function buildHierarchy(data: SectorNode[], other: string): SectorItem[] {
   const map = new Map<string, { value: number; deals: number; subs: Map<string, { value: number; deals: number; subSubs: Map<string, { value: number; deals: number }> }> }>();
 
   for (const row of data) {
@@ -52,13 +52,13 @@ function buildHierarchy(data: SectorNode[]): SectorItem[] {
     sec.value += row.total_m;
     sec.deals += row.deals;
 
-    const subKey = row.sub_sector || 'Other';
+    const subKey = row.sub_sector || other;
     if (!sec.subs.has(subKey)) sec.subs.set(subKey, { value: 0, deals: 0, subSubs: new Map() });
     const sub = sec.subs.get(subKey)!;
     sub.value += row.total_m;
     sub.deals += row.deals;
 
-    const ssKey = row.sub_sub_sector || 'Other';
+    const ssKey = row.sub_sub_sector || other;
     if (!sub.subSubs.has(ssKey)) sub.subSubs.set(ssKey, { value: 0, deals: 0 });
     const ss = sub.subSubs.get(ssKey)!;
     ss.value += row.total_m;
@@ -154,14 +154,15 @@ interface Props {
   sectorSecondaryColors?: Record<string, string>;
   sectorLabels?: Record<string, string>;
   formatValue?: (v: number) => string;
-  dealLabel?: string;
+  /** Report copy (content.dataLabels): the link under the chart and the name for an unset sub-sector. */
+  frameworkLink: { label: string; url: string };
+  otherLabel: string;
   isPdf?: boolean;
 }
 
-export default function SectorDrilldownChart({ data, theme, brandColors, sectorColors, sectorSecondaryColors, sectorLabels, formatValue, dealLabel, isPdf = false }: Props) {
+export default function SectorDrilldownChart({ data, theme, brandColors, sectorColors, sectorSecondaryColors, sectorLabels, formatValue, frameworkLink, otherLabel, isPdf = false }: Props) {
   const fmtVal = formatValue ?? fmt;
-  const secLabel = dealLabel ?? 'deals';
-  const hierarchy = buildHierarchy(data);
+  const hierarchy = buildHierarchy(data, otherLabel);
   const totalSector = Math.max(hierarchy.reduce((sum, s) => sum + s.value, 0), 1);
   const getSectorColor = (label: string) => sectorColors?.[label] || LEVEL_COLORS[0];
   const getSectorSecColor = (label: string) => sectorSecondaryColors?.[label] || LEVEL_COLORS[1];
@@ -322,7 +323,7 @@ export default function SectorDrilldownChart({ data, theme, brandColors, sectorC
       })}
 
       <div style={{ marginTop: 14, fontSize: 10, color: theme.textMuted, display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-        <a href="https://www.atlas.sportstechx.com/framework" target="_blank" rel="noopener noreferrer" style={{ color: brandColors.pink, textDecoration: "none" }}>Understand the Framework →</a>
+        <a href={frameworkLink.url} target="_blank" rel="noopener noreferrer" style={{ color: brandColors.pink, textDecoration: "none" }}>{frameworkLink.label}</a>
       </div>
     </div>
   );

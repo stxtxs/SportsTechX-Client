@@ -14,6 +14,7 @@ import "./gster26.css";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import "@/components/landing/landing.css";
 import { BRAND } from './brand';
+import { LockedPart, lockedNow } from '../locked-part';
 import { INNOVATOR_RESPONSES_DEFAULT, watchInnovators_DEFAULT, watchPeak_DEFAULT, PEAK_SWC_FINALISTS_DEFAULT, GROUNDBREAKERS_ORGS_DEFAULT, PEAK_PARTNERS_TIER1_DEFAULT, PEAK_PARTNERS_TIER2_DEFAULT, PEAK_PARTNERS_TIER3_DEFAULT, watchStxRecommends_DEFAULT, FEATURED_ARTICLES_DEFAULT, NAV_DEFAULT, HERO_DEFAULT, TRENDS_HEADER_DEFAULT, TREND_CARDS_DEFAULT, PEAK_COPY_DEFAULT, INNOVATORS_HEADER_DEFAULT, STARTUPS_HEADER_DEFAULT, NGSC_DEFAULT, DATA_HEADER_DEFAULT, CLOSING_DEFAULT, ECOMAP_DEFAULT, TREND_MA_DEFAULT, TREND_RUNNING_DEFAULT, TREND_DTC_DEFAULT, GSTER26_PART_ORDER } from './content-defaults';
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -758,7 +759,7 @@ export default function ReportGSTER26({ content, preview = false }: {
   // Fetch the report's editorial override (reports.content jsonb); each block
   // falls back to the committed default so the report renders identically until
   // an edition is edited in the DB. The heavy computed chart data stays static.
-  const { data: reportDoc } = useSWR<{ content?: Record<string, any> | null }>(content !== undefined ? null : qk.reports.detail("gster26"));
+  const { data: reportDoc } = useSWR<{ content?: Record<string, any> | null; locked_parts?: string[] }>(content !== undefined ? null : qk.reports.detail("gster26"));
   const ov = content !== undefined ? content : (reportDoc?.content ?? null);
   const INNOVATOR_RESPONSES   = ov?.innovatorResponses   ?? INNOVATOR_RESPONSES_DEFAULT;
   const watchInnovators       = ov?.watchInnovators      ?? watchInnovators_DEFAULT;
@@ -3656,6 +3657,11 @@ export default function ReportGSTER26({ content, preview = false }: {
 
     </>),
   };
+  // Blocks the admin locked, for a reader below Raise: the heading and the unlock panel only.
+  const LOCKED_META: Record<string, [string, string]> = { trends: ["trends", "Trends"], peak: ["peak2026", "PEAK 2026"], innovators: ["innovators", "Innovators"], startups: ["ecosystem", "Startups to Watch"], ecomap: ["ecomap", "Ecosystem map"], ngsc: ["ngsc", "NGSC"], data: ["dealflow", "Data in Full"] };
+  for (const id of lockedNow(content, reportDoc)) {
+    if (id in PARTS) PARTS[id] = <LockedPart anchor={LOCKED_META[id]?.[0]} title={LOCKED_META[id]?.[1] ?? id} colors={{ bg: t.bg, card: t.bgCard, border: t.border, title: t.titleColor, muted: t.textMuted, accent: BRAND.pink }} />;
+  }
   const partOrder = [...new Set([...(Array.isArray(ov?.partOrder) ? ov.partOrder : []), ...GSTER26_PART_ORDER])].filter((id) => id in PARTS);
 
   return (

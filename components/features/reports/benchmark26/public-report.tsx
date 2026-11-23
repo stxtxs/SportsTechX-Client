@@ -18,7 +18,8 @@
    --------------------------------------------------------------------------- */
 
 import { Fragment, type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, Lock } from "lucide-react";
 import { useReveal } from "./use-reveal";
 import { BENCHMARK26_PART_ORDER } from "./content-defaults";
 import { ReportNav } from "../report-nav";
@@ -53,6 +54,8 @@ type Chart =
 interface Section {
   id: string; number: number; heading: string; subtitle: string; intro: string;
   stats: Stat[]; charts: Chart[]; takeaways: string[];
+  /** Locked for this reader (the server sent only the heading). */
+  locked?: boolean;
 }
 
 export interface PublicReportData {
@@ -470,7 +473,15 @@ export default function PublicReport({ data }: { data: PublicReportData }) {
           </figure>
         </PubSection>
     ),
-    ...Object.fromEntries(sections.map((s) => [s.id, (
+    ...Object.fromEntries(sections.map((s) => [s.id, s.locked ? (
+          <PubSection key={s.id} id={s.id} no={no(s.id)} heading={s.heading ?? ""} subtitle={s.subtitle ?? ""} intro={s.intro ?? ""}>
+            <div className="pub-card pub-locked">
+              <span className="pub-locked__label"><Lock size={16} aria-hidden="true" /> Unlocked with Raise or Scout</span>
+              <p>This section of the benchmark is for Raise and Scout members.</p>
+              <Link href="/solutions" className="atlas-btn atlas-btn--primary">See solutions</Link>
+            </div>
+          </PubSection>
+    ) : (
           <PubSection key={s.id} id={s.id} no={no(s.id)} heading={s.heading} subtitle={s.subtitle} intro={s.intro}>
             <Stats items={s.stats} />
             {s.charts.map((c) => <ChartCard chart={c} key={c.id}><ChartFor chart={c} meta={meta} /></ChartCard>)}

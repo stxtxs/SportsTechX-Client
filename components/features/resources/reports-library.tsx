@@ -97,7 +97,9 @@ export function ReportsLibrary() {
 	// Sort on the displayed date rather than trusting the server's `-report_year`,
 	// which puts year-less rows first — wrong for a hero.
 	const items = useMemo(() => {
-		const rows = res.data?.data ?? [];
+		// Unlisted reports (e.g. Methodology) open by their link only — never a library card,
+		// not even for admins (the API sends admins every report).
+		const rows = (res.data?.data ?? []).filter((r) => r.is_listed !== false);
 		let list = rows.map(toResource);
 		if (benchmark.enabled && rows.length > 0) list = withBenchmark(rows, list, access, benchmark.releaseDate);
 		list.sort((a, b) => Date.parse(b.date) - Date.parse(a.date));

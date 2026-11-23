@@ -20,7 +20,8 @@ import type { BenchmarkAccess } from './types';
  * `(report)` layout) send them to /login with `redirectTo`. Logged in:
  *
  *   open    → the report (`children`)
- *   locked  → the upgrade screen, which shows R1 — never a 404
+ *   locked  → R2: the report with its locked sections shown as locked;
+ *             others: the upgrade screen, which shows R1 — never a 404
  *   none    → R1 for someone with the full report: sent to it (paid users
  *             see the full report only); R3 for a non-contributor: what it
  *             is and how to get one
@@ -46,7 +47,9 @@ export function EntryGate({ entry, children }: { entry: BenchmarkEntry; children
 	}, [isLoading, toFull, state, entry, access.edition]);
 
 	if (isLoading || toFull) return <ReportFrame loading />;
-	if (state === 'open') return <>{children(access)}</>;
+	// R2 is one report for every plan: below Raise the API sends it with the admin's locked
+	// sections cut to their heading, and the page shows "Unlocked with Raise or Scout" there.
+	if (state === 'open' || (entry === 'r2' && state === 'locked')) return <>{children(access)}</>;
 	if (state === 'locked') return <UpgradeScreen access={access} />;
 	return <NotAContributor access={access} />;
 }

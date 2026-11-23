@@ -17,8 +17,10 @@ async function versionFor(slug: string, versionId?: string): Promise<string | nu
 	const res = await apiRequest('GET', `/api/reports/${encodeURIComponent(slug)}/versions`);
 	if (!res.ok) return null;
 	const versions = (await res.json()) as Version[];
-	// English first when there is a choice; otherwise whatever this tier may open.
-	return (versions.find((v) => v.language_code === 'en') ?? versions[0])?.id ?? null;
+	// The server lists only what this plan may open: the paid edition first when there is one
+	// (a Raise/Scout reader gets the full PDF, not the free one), then English.
+	const rank = (v: Version) => (v.access_tier === 'explore' ? 0 : 10) + (v.language_code === 'en' ? 1 : 0);
+	return [...versions].sort((a, b) => rank(b) - rank(a))[0]?.id ?? null;
 }
 
 async function pdfUrl(versionId: string): Promise<string | null> {

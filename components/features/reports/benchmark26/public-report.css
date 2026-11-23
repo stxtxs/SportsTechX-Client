@@ -515,3 +515,8 @@ html:has(.stx-report) { scroll-behavior: smooth; }
    The shared report header is fixed at the top (68px); the cover clears it. */
 .stx-report .pub-cover .pub-cover-in { padding-top: calc(clamp(28px, 5vw, 56px) + 72px); }
 .stx-report [id] { scroll-margin-top: 84px; }
+
+/* A section the admin locked, as an Explore reader sees it. */
+.stx-report .pub-locked { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+.stx-report .pub-locked > p { margin: 0; flex: 1 1 220px; }
+.stx-report .pub-locked__label { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; }

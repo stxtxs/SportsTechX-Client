@@ -161,7 +161,7 @@ export const CM_ROLES: Record<ClaimRole, RoleConfig> = {
     noun: 'company', searchPlaceholder: 'e.g. Teamworks, Hoopers, your startup…',
     railLead: (name) => `Verify ${name || 'your company'} so the funding, stage and contact details investors see are the ones you control — not a guess.`,
     bonusTag: 'Free bonus when verified',
-    bonus: ['A free Locker Room Report on your competitive set', '30 days of Growth access — investors, programs & events', 'A verified badge investors can trust'],
+    bonus: ['A free Locker Room Report on your competitive set', '30 days of Atlas Raise on your first verified company', 'A verified badge investors can trust'],
     steps: [
       { k: 'identity', label: 'Your details', next: 'Next: Data edits' },
       { k: 'dataedits', label: 'Company data', next: 'Next: Fundraising' },

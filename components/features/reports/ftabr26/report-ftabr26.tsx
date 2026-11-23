@@ -50,6 +50,7 @@ import { Ftabr26PersonDrawer } from "./components/ftabr26-person-drawer";
 import { Ftabr26SoccermentFeature } from "./components/ftabr26-soccerment-feature";
 import { Ftabr26PartnerHeader } from "./components/ftabr26-partner-header";
 import { FTABR26_PART_ORDER } from "./content-defaults";
+import { LockedPart, lockedNow } from "../locked-part";
 import { Ftabr26AtlasCta, ATLAS_CTAS, withPdfUtm } from "./components/ftabr26-atlas-cta";
 
 /* The ecosystem map pulls in d3 and the world topojson, neither of which any
@@ -505,7 +506,7 @@ export default function ReportFTABR26({ content, preview = false }: {
   // Each block renders `content.<block> ?? default`. An object block shallow-
   // merges over its default, so a field added later still renders for content
   // saved before it existed.
-  const { data: reportDoc } = useSWR<{ content?: Record<string, any> | null }>(content !== undefined ? null : qk.reports.detail("ftabr26"));
+  const { data: reportDoc } = useSWR<{ content?: Record<string, any> | null; locked_parts?: string[] }>(content !== undefined ? null : qk.reports.detail("ftabr26"));
   const ov = content !== undefined ? content : (reportDoc?.content ?? null);
   const pick = <T,>(key: string, def: T): T => {
     const v = ov?.[key];
@@ -2146,6 +2147,12 @@ export default function ReportFTABR26({ content, preview = false }: {
       </div>
     </>),
   };
+  // Blocks the admin locked, for a reader below Raise: the heading and the unlock panel only
+  // (also in the print layout, which reads PARTS).
+  const LOCKED_META: Record<string, [string | undefined, string]> = { trends: ["trends", "Insights & FIFA WC26 Recap"], featured: ["featured", "Featured company"], innovators: ["innovators", "Innovators"], startups: ["ecosystem", "Startups to Watch"], soccerment: ["soccerment", "Soccerment feature"], ecomap: ["ecomap", "Ecosystem"], partners: [undefined, "Partner spotlights"], data: ["dealflow", "Data in Full"] };
+  for (const id of lockedNow(content, reportDoc)) {
+    if (PARTS[id] != null) PARTS[id] = <LockedPart anchor={LOCKED_META[id]?.[0]} title={LOCKED_META[id]?.[1] ?? id} colors={{ bg: t.bg, card: t.bgCard, border: t.border, title: t.titleColor, muted: t.textMuted, accent: BRAND.pink }} />;
+  }
   const partOrder = [...new Set([...(Array.isArray(ov?.partOrder) ? (ov.partOrder as string[]) : []), ...FTABR26_PART_ORDER, "partners"])].filter((id) => PARTS[id] != null);
 
   /* Print document: scale any page whose content runs longer than one A4 page so it

@@ -5,6 +5,7 @@ import { qk } from "@/lib/query-keys";
 import PublicReport, { type PublicReportData } from "./public-report";
 import { BENCHMARK26_DEFAULTS } from "./content-defaults";
 import { ReportFrame } from "@/components/features/benchmark/report-frame";
+import { lockedNow } from "../locked-part";
 
 /**
  * The Sports Tech VC Deal Sourcing Benchmark 2026 — its document lives in
@@ -29,5 +30,9 @@ export default function ReportBenchmark26({ content }: { content?: Record<string
 			</ReportFrame>
 		);
 	}
-	return <PublicReport data={{ ...BENCHMARK26_DEFAULTS, ...ov } as unknown as PublicReportData} />;
+	const data = { ...BENCHMARK26_DEFAULTS, ...ov } as unknown as PublicReportData;
+	// Admin preview "View as Explore": draw the draft's locked sections as an Explore reader gets them.
+	const asExplore = lockedNow(content as Record<string, unknown> | null | undefined, undefined);
+	if (asExplore.length) data.sections = data.sections.map((s) => (asExplore.includes(s.id) ? { ...s, locked: true } : s));
+	return <PublicReport data={data} />;
 }

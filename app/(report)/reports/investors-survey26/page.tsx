@@ -10,7 +10,7 @@ const ReportBenchmark26 = dynamic(() => import('@/components/features/reports/be
 
 /**
  * R2 — the full report: Raise or Scout, or an email on the R2 allowlist.
- * Without access: the upgrade screen with R1. The report's document comes
+ * Below Raise: the same report with the admin's locked sections shown locked. Its document comes
  * from the API (reports.content), never from the bundle.
  */
 export default function Benchmark26Page() {

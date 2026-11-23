@@ -1,13 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
+import useSWR from 'swr';
 import { ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge, Button, Card, Eyebrow, Textarea } from '@/components/atlas';
 import { apiRequest } from '@/lib/query-client';
+import { qk } from '@/lib/query-keys';
 import { ROUTE_BY_ID, hrefOf } from '@/lib/routes';
-import { EDITION, ENTRY_PATH, PEER_GROUP_MIN, SOURCE } from './config';
+import { EDITION, ENTRY_PATH, PEER_GROUP_MIN, SLUG, SOURCE } from './config';
 import { GAP_FLAG, gapOf, peerOrSample } from './rules';
 import { usePersonalBenchmark } from './use-benchmark';
 import type { BenchmarkAccess, Compare, PersonalBenchmark } from './types';
@@ -17,10 +19,42 @@ import { fmtFullDate } from '@/lib/format';
  * R3 — "Your benchmark": one fund's answers against the frozen 2026
  * baseline. Eight blocks in the spec's order, each with an empty state.
  * Never names another fund; deals are counts, never percentages.
+ * The page's words (block titles, labels, empty states) are the Benchmark document's
+ * `personal` entry (reports.content of the full report); the figures come from
+ * /benchmark/:edition/mine. Only the correction form and load states are app UI.
  */
+export interface PersonalCopy {
+	/** {edition} */ eyebrow: string;
+	/** {first} {fund} */ titleNamed: string;
+	/** {fund} */ title: string;
+	yourFund: string;
+	/** {funds} */ intro: string;
+	yours: string;
+	/** {date} */ trial: string;
+	priority: Record<string, string>;
+	notEnough: string;
+	legend: { you: string; average: string };
+	/** {direction} {gap} */ flag: string;
+	below: string; above: string;
+	/** {yours} {avg} {n} */ compareVals: string;
+	notUsed: string;
+	headline: { title: string; satisfaction: string; /** {avg} */ satisfactionNote: string; topChannel: string; outbound: string };
+	sources: { title: string; sub: string; none: string; deal: string; deals: string };
+	ratings: { title: string; /** {gap} */ sub: string; none: string };
+	outbound: { title: string; sub: string; none: string; noRating: string; yourPriority: string; /** {n} */ funds: string };
+	tooling: { title: string; sub: string; none: string; platforms: string; noFit: string };
+	challenges: { title: string; sub: string; none: string; challenges: string; reasons: string; noneSelected: string };
+	peers: { title: string; /** {label} {funds} */ subPeer: string; /** {min} {funds} */ subAll: string; none: string };
+	next: { title: string; sub: string; noGaps: string };
+	/** {version} {date} */ footer: string;
+	fullReport: string;
+}
+
 const SCALE = 5;
 const fmt = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1));
-const PRIORITY: Record<string, string> = { high: 'High priority', moderate: 'Moderate priority', not_a_priority: 'Not a priority' };
+const fill = (tpl: string, vars: Record<string, string | number>) => tpl.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m));
+const CopyContext = createContext<PersonalCopy | null>(null);
+const useCopy = () => useContext(CopyContext)!;
 
 function Block({ n, title, sub, children }: { n: number; title: string; sub?: string; children: ReactNode }) {
 	return (
@@ -33,28 +67,29 @@ function Block({ n, title, sub, children }: { n: number; title: string; sub?: st
 }
 
 const Empty = ({ children }: { children: ReactNode }) => <div className="bm-empty">{children}</div>;
-const NOT_ENOUGH = 'Not enough data: this needs at least two investments from your survey answers.';
 
 function Legend() {
+	const c = useCopy();
 	return (
 		<div className="bm-legend">
-			<span><i style={{ background: 'var(--a-ink)' }} />Your fund</span>
-			<span><i style={{ background: 'var(--a-navy)', opacity: 0.55 }} />Benchmark average</span>
+			<span><i style={{ background: 'var(--a-ink)' }} />{c.legend.you}</span>
+			<span><i style={{ background: 'var(--a-navy)', opacity: 0.55 }} />{c.legend.average}</span>
 		</div>
 	);
 }
 
-function CompareRow({ c, flag }: { c: Compare; flag?: boolean }) {
-	const gap = gapOf(c);
+function CompareRow({ c: row, flag }: { c: Compare; flag?: boolean }) {
+	const c = useCopy();
+	const gap = gapOf(row);
 	const flagged = flag && gap !== null && Math.abs(gap) >= GAP_FLAG;
 	return (
 		<div>
 			<div className="bm-row__top">
-				<span>{c.label}{flagged && <span className="bm-flag"><Badge tone={gap! < 0 ? 'warn' : 'ok'}>{gap! < 0 ? 'Below' : 'Above'} by {fmt(Math.abs(gap!))}</Badge></span>}</span>
-				<span className="bm-row__vals">{c.yours === null ? 'not used' : fmt(c.yours)} · avg {fmt(c.baseline)} ({c.n} funds)</span>
+				<span>{row.label}{flagged && <span className="bm-flag"><Badge tone={gap! < 0 ? 'warn' : 'ok'}>{fill(c.flag, { direction: gap! < 0 ? c.below : c.above, gap: fmt(Math.abs(gap!)) })}</Badge></span>}</span>
+				<span className="bm-row__vals">{fill(c.compareVals, { yours: row.yours === null ? c.notUsed : fmt(row.yours), avg: fmt(row.baseline), n: row.n })}</span>
 			</div>
-			<div className="bm-bar bm-bar--you"><span style={{ width: `${((c.yours ?? 0) / SCALE) * 100}%` }} /></div>
-			<div className="bm-bar bm-bar--base"><span style={{ width: `${(c.baseline / SCALE) * 100}%` }} /></div>
+			<div className="bm-bar bm-bar--you"><span style={{ width: `${((row.yours ?? 0) / SCALE) * 100}%` }} /></div>
+			<div className="bm-bar bm-bar--base"><span style={{ width: `${(row.baseline / SCALE) * 100}%` }} /></div>
 		</div>
 	);
 }
@@ -64,21 +99,22 @@ function Rows({ items, flag }: { items: Compare[]; flag?: boolean }) {
 }
 
 function Headline({ pb }: { pb: PersonalBenchmark }) {
+	const c = useCopy();
 	const h = pb.headline;
 	return (
 		<div className="bm-grid3">
 			<Card>
 				<div className={h.satisfaction?.yours != null ? 'bm-stat__value' : 'bm-stat__value bm-stat__value--empty'}>{h.satisfaction?.yours != null ? `${fmt(h.satisfaction.yours)}/5` : '—'}</div>
-				<div className="bm-stat__label">Satisfaction with your deal flow</div>
-				{h.satisfaction && <div className="bm-stat__note">Benchmark average {fmt(h.satisfaction.baseline)}/5</div>}
+				<div className="bm-stat__label">{c.headline.satisfaction}</div>
+				{h.satisfaction && <div className="bm-stat__note">{fill(c.headline.satisfactionNote, { avg: fmt(h.satisfaction.baseline) })}</div>}
 			</Card>
 			<Card>
 				<div className={h.top_channel ? 'bm-stat__value' : 'bm-stat__value bm-stat__value--empty'} style={{ fontSize: h.top_channel ? 20 : undefined }}>{h.top_channel ?? '—'}</div>
-				<div className="bm-stat__label">Your top-ranked sourcing channel</div>
+				<div className="bm-stat__label">{c.headline.topChannel}</div>
 			</Card>
 			<Card>
-				<div className={h.outbound_priority ? 'bm-stat__value' : 'bm-stat__value bm-stat__value--empty'} style={{ fontSize: h.outbound_priority ? 20 : undefined }}>{h.outbound_priority ? PRIORITY[h.outbound_priority] : '—'}</div>
-				<div className="bm-stat__label">Outbound for your fund</div>
+				<div className={h.outbound_priority ? 'bm-stat__value' : 'bm-stat__value bm-stat__value--empty'} style={{ fontSize: h.outbound_priority ? 20 : undefined }}>{h.outbound_priority ? c.priority[h.outbound_priority] : '—'}</div>
+				<div className="bm-stat__label">{c.headline.outbound}</div>
 			</Card>
 		</div>
 	);
@@ -118,11 +154,14 @@ function CorrectionLink() {
 
 export function PersonalReport({ access }: { access: BenchmarkAccess }) {
 	const { data: pb, isLoading, error } = usePersonalBenchmark(true);
-	if (isLoading) return null;
-	if (!pb) {
+	// The page's words live in the full report's document (`personal`).
+	const doc = useSWR<{ content?: { personal?: PersonalCopy } | null }>(SOURCE === 'api' ? qk.reports.detail(SLUG.r2) : null, { shouldRetryOnError: false });
+	const c = doc.data?.content?.personal;
+	if (isLoading || doc.isLoading) return null;
+	if (!pb || !c) {
 		return (
 			<Empty>
-				{error?.status === 404
+				{!pb && error?.status === 404
 					? 'Your benchmark is still being prepared. We’ll email you when it’s ready.'
 					: 'Your benchmark could not be loaded. Refresh the page to try again.'}
 			</Empty>
@@ -137,78 +176,78 @@ export function PersonalReport({ access }: { access: BenchmarkAccess }) {
 	const steps = pb.next_steps.filter((s) => ROUTE_BY_ID.has(s.route)).slice(0, 3);
 
 	return (
-		<>
+		<CopyContext.Provider value={c}>
 			<header className="bm-cover">
-				<Eyebrow>VC Deal Sourcing Benchmark {pb.edition} · Your benchmark</Eyebrow>
-				<h1>{first ? `${first}, here is how ${fund ?? 'your fund'} compares` : `How ${fund ?? 'your fund'} compares`}</h1>
-				<p>Your survey answers against the {pb.full_sample.funds} funds in the 2026 benchmark. Only you can see this page.</p>
+				<Eyebrow>{fill(c.eyebrow, { edition: pb.edition })}</Eyebrow>
+				<h1>{first ? fill(c.titleNamed, { first, fund: fund ?? c.yourFund }) : fill(c.title, { fund: fund ?? c.yourFund })}</h1>
+				<p>{fill(c.intro, { funds: pb.full_sample.funds })}</p>
 				<div className="bm-cover__meta">
-					<Badge tone="navy">Yours</Badge>
-					{trialEnds && <Badge tone="neutral">Scout trial until {trialEnds}</Badge>}
+					<Badge tone="navy">{c.yours}</Badge>
+					{trialEnds && <Badge tone="neutral">{fill(c.trial, { date: trialEnds })}</Badge>}
 				</div>
 			</header>
 
-			<Block n={1} title="Headline"><Headline pb={pb} /></Block>
+			<Block n={1} title={c.headline.title}><Headline pb={pb} /></Block>
 
-			<Block n={2} title="Where your deals came from" sub="Deals you traced, by the channel that brought them. Counts, up to three per fund.">
-				{!pb.enough_deal_data ? <Empty>{NOT_ENOUGH}</Empty>
-					: pb.deal_sources.length === 0 ? <Empty>You didn’t trace any deals to a channel in the survey.</Empty>
-						: <ul className="bm-list">{pb.deal_sources.map((d) => <li key={d.channel}><span>{d.channel}</span><b>{d.deals} {d.deals === 1 ? 'deal' : 'deals'}</b></li>)}</ul>}
+			<Block n={2} title={c.sources.title} sub={c.sources.sub}>
+				{!pb.enough_deal_data ? <Empty>{c.notEnough}</Empty>
+					: pb.deal_sources.length === 0 ? <Empty>{c.sources.none}</Empty>
+						: <ul className="bm-list">{pb.deal_sources.map((d) => <li key={d.channel}><span>{d.channel}</span><b>{d.deals} {d.deals === 1 ? c.sources.deal : c.sources.deals}</b></li>)}</ul>}
 			</Block>
 
-			<Block n={3} title="How you rate each channel" sub={`Your rating out of 5 against the benchmark average. Gaps of ${GAP_FLAG} point or more are flagged.`}>
-				{pb.channel_ratings.length === 0 ? <Empty>You didn’t rate any channels in the survey.</Empty> : <Rows items={pb.channel_ratings} flag />}
+			<Block n={3} title={c.ratings.title} sub={fill(c.ratings.sub, { gap: GAP_FLAG })}>
+				{pb.channel_ratings.length === 0 ? <Empty>{c.ratings.none}</Empty> : <Rows items={pb.channel_ratings} flag />}
 			</Block>
 
-			<Block n={4} title="Outbound" sub="How you rate outbound and how much priority you give it, against the benchmark.">
-				{!pb.outbound ? <Empty>You didn’t answer the outbound questions.</Empty> : (
+			<Block n={4} title={c.outbound.title} sub={c.outbound.sub}>
+				{!pb.outbound ? <Empty>{c.outbound.none}</Empty> : (
 					<div className="bm-grid2">
-						{pb.outbound.rating ? <Rows items={[pb.outbound.rating]} flag /> : <Empty>No outbound rating.</Empty>}
+						{pb.outbound.rating ? <Rows items={[pb.outbound.rating]} flag /> : <Empty>{c.outbound.noRating}</Empty>}
 						<Card>
-							<div className="bm-stat__label" style={{ marginTop: 0 }}>Your priority</div>
-							<div className="bm-stat__value" style={{ fontSize: 20, marginTop: 4 }}>{pb.headline.outbound_priority ? PRIORITY[pb.headline.outbound_priority] : '—'}</div>
+							<div className="bm-stat__label" style={{ marginTop: 0 }}>{c.outbound.yourPriority}</div>
+							<div className="bm-stat__value" style={{ fontSize: 20, marginTop: 4 }}>{pb.headline.outbound_priority ? c.priority[pb.headline.outbound_priority] : '—'}</div>
 							<ul className="bm-list" style={{ marginTop: 14 }}>
-								<li><span>High priority</span><b>{pb.outbound.baseline_priority.high} funds</b></li>
-								<li><span>Moderate priority</span><b>{pb.outbound.baseline_priority.moderate} funds</b></li>
-								<li><span>Not a priority</span><b>{pb.outbound.baseline_priority.not_a_priority} funds</b></li>
+								{(['high', 'moderate', 'not_a_priority'] as const).map((k) => (
+									<li key={k}><span>{c.priority[k]}</span><b>{fill(c.outbound.funds, { n: pb.outbound!.baseline_priority[k] })}</b></li>
+								))}
 							</ul>
 						</Card>
 					</div>
 				)}
 			</Block>
 
-			<Block n={5} title="Tooling" sub="For funds that use a data platform: which ones, and how well they fit your sourcing.">
-				{!pb.tooling ? <Empty>You told us you don’t use a data platform, so there is nothing to compare here.</Empty> : (
+			<Block n={5} title={c.tooling.title} sub={c.tooling.sub}>
+				{!pb.tooling ? <Empty>{c.tooling.none}</Empty> : (
 					<div className="bm-grid2">
-						<Card><div className="bm-stat__label" style={{ marginTop: 0, marginBottom: 10 }}>Platforms you use</div><div className="bm-chips">{pb.tooling.platforms.map((p) => <span key={p} className="bm-chip">{p}</span>)}</div></Card>
-						{pb.tooling.fit ? <Rows items={[pb.tooling.fit]} flag /> : <Empty>No fit rating.</Empty>}
+						<Card><div className="bm-stat__label" style={{ marginTop: 0, marginBottom: 10 }}>{c.tooling.platforms}</div><div className="bm-chips">{pb.tooling.platforms.map((p) => <span key={p} className="bm-chip">{p}</span>)}</div></Card>
+						{pb.tooling.fit ? <Rows items={[pb.tooling.fit]} flag /> : <Empty>{c.tooling.noFit}</Empty>}
 					</div>
 				)}
 			</Block>
 
-			<Block n={6} title="Challenges" sub="What you said makes sourcing hard, and why you’re not fully satisfied.">
-				{pb.challenges.length === 0 && pb.dissatisfaction_reasons.length === 0 ? <Empty>You didn’t select any challenges.</Empty> : (
+			<Block n={6} title={c.challenges.title} sub={c.challenges.sub}>
+				{pb.challenges.length === 0 && pb.dissatisfaction_reasons.length === 0 ? <Empty>{c.challenges.none}</Empty> : (
 					<div className="bm-grid2">
-						<Card><div className="bm-stat__label" style={{ marginTop: 0, marginBottom: 10 }}>Challenges</div>{pb.challenges.length ? <div className="bm-chips">{pb.challenges.map((c) => <span key={c} className="bm-chip">{c}</span>)}</div> : <span className="bm-stat__label">None selected</span>}</Card>
-						<Card><div className="bm-stat__label" style={{ marginTop: 0, marginBottom: 10 }}>Reasons for dissatisfaction</div>{pb.dissatisfaction_reasons.length ? <div className="bm-chips">{pb.dissatisfaction_reasons.map((c) => <span key={c} className="bm-chip">{c}</span>)}</div> : <span className="bm-stat__label">None selected</span>}</Card>
+						<Card><div className="bm-stat__label" style={{ marginTop: 0, marginBottom: 10 }}>{c.challenges.challenges}</div>{pb.challenges.length ? <div className="bm-chips">{pb.challenges.map((x) => <span key={x} className="bm-chip">{x}</span>)}</div> : <span className="bm-stat__label">{c.challenges.noneSelected}</span>}</Card>
+						<Card><div className="bm-stat__label" style={{ marginTop: 0, marginBottom: 10 }}>{c.challenges.reasons}</div>{pb.dissatisfaction_reasons.length ? <div className="bm-chips">{pb.dissatisfaction_reasons.map((x) => <span key={x} className="bm-chip">{x}</span>)}</div> : <span className="bm-stat__label">{c.challenges.noneSelected}</span>}</Card>
 					</div>
 				)}
 			</Block>
 
 			<Block
 				n={7}
-				title="Where you sit"
+				title={c.peers.title}
 				sub={peers.isPeer
-					? `Against funds of your size: ${peers.label} (${peers.funds} funds).`
-					: `Your size group has fewer than ${PEER_GROUP_MIN} funds, so this compares you with all ${peers.funds} funds.`}
+					? fill(c.peers.subPeer, { label: peers.label, funds: peers.funds })
+					: fill(c.peers.subAll, { min: PEER_GROUP_MIN, funds: peers.funds })}
 			>
-				{!pb.enough_deal_data && peers.comparisons.length === 0 ? <Empty>{NOT_ENOUGH}</Empty>
-					: peers.comparisons.length === 0 ? <Empty>No comparison available yet.</Empty>
+				{!pb.enough_deal_data && peers.comparisons.length === 0 ? <Empty>{c.notEnough}</Empty>
+					: peers.comparisons.length === 0 ? <Empty>{c.peers.none}</Empty>
 						: <Rows items={peers.comparisons} />}
 			</Block>
 
-			<Block n={8} title="Next steps" sub="Your three biggest gaps, and where in Atlas to work on each.">
-				{steps.length === 0 ? <Empty>{pb.enough_deal_data ? 'No clear gaps against the benchmark.' : NOT_ENOUGH}</Empty> : (
+			<Block n={8} title={c.next.title} sub={c.next.sub}>
+				{steps.length === 0 ? <Empty>{pb.enough_deal_data ? c.next.noGaps : c.notEnough}</Empty> : (
 					<div className="bm-next">
 						{steps.map((s) => (
 							<Link key={s.gap} href={hrefOf(s.route)}>
@@ -221,9 +260,9 @@ export function PersonalReport({ access }: { access: BenchmarkAccess }) {
 			</Block>
 
 			<footer className="bm-footer">
-				<span>Benchmark baseline v{pb.baseline_version} · generated {fmtFullDate(new Date(pb.generated_at))} · <Link href={ENTRY_PATH.r2}>Full report</Link></span>
+				<span>{fill(c.footer, { version: pb.baseline_version, date: fmtFullDate(new Date(pb.generated_at)) })} · <Link href={ENTRY_PATH.r2}>{c.fullReport}</Link></span>
 				<CorrectionLink />
 			</footer>
-		</>
+		</CopyContext.Provider>
 	);
 }

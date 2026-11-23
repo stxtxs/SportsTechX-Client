@@ -27,20 +27,6 @@ import {
   type Ftabr26EcosystemEntry,
 } from "../lib/ftabr26-ecosystem";
 
-/* Match the two ecosystem lists published in the football report. */
-export const FTABR26_ECO_COLORS: Record<Ftabr26EcoType, string> = {
-  /* Colour rules: not the sector colours or pink. Initiatives use the
-     Football Only green, accelerators the slate. */
-  initiatives: BRAND.green,
-  programs: BRAND.slate,
-};
-
-/* "Accelerators", not "Programs" — the report's own word for the tab. */
-const TYPE_LABELS: Record<Ftabr26EcoType, string> = {
-  initiatives: "Initiatives",
-  programs: "Accelerators",
-};
-
 /* Viewbox, not pixels: the svg scales to its column. */
 const W = 900;
 const H = 460;
@@ -52,9 +38,19 @@ type EcoLists = {
   programs: Ftabr26EcosystemEntry[];
 };
 
+/** ecomapLabels.map: type names and colours, prompts and the footnote wording. */
+export type Ftabr26EcoMapLabels = {
+  types: Record<Ftabr26EcoType, string>;
+  colors: Record<Ftabr26EcoType, string>;
+  selectedNote: string; selectNote: string; promptTitle: string; promptBody: string;
+  entries: string; of: string; mapped: string; shownIn: string; and: string;
+  globalOne: string; globalMany: string; noLocation: string;
+};
+
 export default function Ftabr26EcosystemMap({
-  t, isDark, isMobile = false, eco, selected, onSelect, print = false,
+  t, isDark, isMobile = false, eco, selected, onSelect, print = false, labels: L,
 }: {
+  labels: Ftabr26EcoMapLabels;
   t: Theme;
   isDark: boolean;
   isMobile?: boolean;
@@ -123,7 +119,7 @@ export default function Ftabr26EcosystemMap({
     const total = segs.reduce((n, s) => n + s.v, 0);
     if (total === 0) return null;
     if (segs.length === 1) {
-      return <circle cx={cx} cy={cy} r={r} fill={FTABR26_ECO_COLORS[segs[0].key]} opacity={0.9} />;
+      return <circle cx={cx} cy={cy} r={r} fill={L.colors[segs[0].key]} opacity={0.9} />;
     }
     let start = -Math.PI / 2;
     return segs.map(seg => {
@@ -133,9 +129,9 @@ export default function Ftabr26EcosystemMap({
       const x2 = cx + r * Math.cos(end), y2 = cy + r * Math.sin(end);
       const d = `M ${cx},${cy} L ${x1},${y1} A ${r},${r} 0 ${angle > Math.PI ? 1 : 0},1 ${x2},${y2} Z`;
       start = end;
-      return <path key={seg.key} d={d} fill={FTABR26_ECO_COLORS[seg.key]} opacity={0.9} />;
+      return <path key={seg.key} d={d} fill={L.colors[seg.key]} opacity={0.9} />;
     });
-  }, []);
+  }, [L]);
 
   /* Nothing placeable: the committed fallback lists carry a city but no
      country, so an API outage leaves the map with no bubbles to draw. Better
@@ -153,18 +149,18 @@ export default function Ftabr26EcosystemMap({
       <div style={{ display: "flex", gap: isMobile ? 14 : 22, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>
         {FTABR26_ECO_TYPES.map(key => (
           <div key={key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ width: 10, height: 10, borderRadius: "50%", background: FTABR26_ECO_COLORS[key] }} />
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: L.colors[key] }} />
             <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase" }}>
-              {TYPE_LABELS[key]}
+              {L.types[key]}
             </span>
-            <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: FTABR26_ECO_COLORS[key], background: `${FTABR26_ECO_COLORS[key]}15`, padding: "1px 7px", borderRadius: 8 }}>
+            <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: L.colors[key], background: `${L.colors[key]}15`, padding: "1px 7px", borderRadius: 8 }}>
               {eco[key].length}
             </span>
           </div>
         ))}
         {!print && (
         <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted, letterSpacing: 1 }}>
-          {selected ? "Selected. The tables below show this region." : "Select a continent to filter the tables below."}
+          {selected ? L.selectedNote : L.selectNote}
         </span>
         )}
       </div>
@@ -213,7 +209,7 @@ export default function Ftabr26EcosystemMap({
                   role={clickable ? "button" : undefined}
                   tabIndex={clickable ? 0 : undefined}
                   aria-pressed={clickable ? isSelected : undefined}
-                  aria-label={clickable ? `${cont.id}: ${total} entries` : undefined}
+                  aria-label={clickable ? `${cont.id}: ${total} ${L.entries}` : undefined}
                   style={{ cursor: clickable ? "pointer" : "default", outline: "none" }}
                   onClick={() => clickable && onSelect(isSelected ? null : cont.id)}
                   onKeyDown={e => {
@@ -284,10 +280,10 @@ export default function Ftabr26EcosystemMap({
           pointerEvents: "none", transition: "opacity 0.3s ease",
         }}>
           <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 14 : 16, color: t.titleColor, lineHeight: 1.2, marginBottom: 6 }}>
-            Explore by Region
+            {L.promptTitle}
           </div>
           <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: t.textMuted, lineHeight: 1.5, letterSpacing: 0.3 }}>
-            Select a continent to filter the initiatives and accelerators below.
+            {L.promptBody}
           </div>
         </div>
 
@@ -307,7 +303,7 @@ export default function Ftabr26EcosystemMap({
           </span>
           {FTABR26_ECO_TYPES.map(key => (
             <div key={key} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: FTABR26_ECO_COLORS[key] }} />
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: L.colors[key] }} />
               <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>
                 {counts[hovered][key]}
               </span>
@@ -321,10 +317,10 @@ export default function Ftabr26EcosystemMap({
           quietly missing from the totals — the same note the static map carries. */}
       {(unplacedTotal > 0 || multi.length > 0) && (
         <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted, letterSpacing: 0.5, margin: "10px 0 0" }}>
-          {plotted} of {plotted + unplacedTotal} entries mapped
-          {multi.map(m => ` · ${m.name} shown in ${m.cities.join(" and ")}`).join("")}
-          {global > 0 && ` · ${global} global network${global === 1 ? "" : "s"} listed below`}
-          {unplacedTotal - global > 0 && ` · ${unplacedTotal - global} without a location, listed in the tables below`}
+          {plotted}{L.of}{plotted + unplacedTotal}{L.mapped}
+          {multi.map(m => ` · ${m.name}${L.shownIn}${m.cities.join(L.and)}`).join("")}
+          {global > 0 && ` · ${global}${global === 1 ? L.globalOne : L.globalMany}`}
+          {unplacedTotal - global > 0 && ` · ${unplacedTotal - global}${L.noLocation}`}
         </p>
       )}
     </div>

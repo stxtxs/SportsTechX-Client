@@ -3,7 +3,7 @@
 import React from "react";
 import { BRAND, type Theme } from "../lib/report-theme";
 import { ecoHref, ecoLogoUrl } from "../lib/ftabr26-ecosystem";
-import type { Ftabr26McoClub, Ftabr26McoGroup } from "../data/ftabr26-content-data";
+import type { Ftabr26McoClub, Ftabr26McoGroup } from "../lib/ftabr26-types";
 
 /* ─────────────────────────────────────────────────────────────────────────
    FTABR26 — multi-club ownership panel for the women's football feature.

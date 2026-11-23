@@ -9,6 +9,8 @@ import { qk } from '@/lib/query-keys';
 import { Loading, Empty } from '@/components/atlas';
 import type { ReportDetail, Section } from './report-kit/types';
 import { ReportPage } from './report-page';
+import { REPORT_TEMPLATES } from './templates';
+import { ReportErrorBoundary } from './gster26/error-boundary';
 
 // PDF reports read in-app; PDF.js loads only when one is opened.
 const PdfReportView = dynamic(() => import('./pdf-report-view').then((m) => m.PdfReportView), {
@@ -25,7 +27,7 @@ const PdfReportView = dynamic(() => import('./pdf-report-view').then((m) => m.Pd
 export function ReportView({ slug }: { slug: string }) {
 	const detail = useSWR<ReportDetail>(qk.reports.detail(slug));
 	// A PDF report has no section feed — don't ask for one.
-	const sections = useSWR<{ data: Section[] }>(detail.data?.has_sections ? qk.reports.sections(slug) : null);
+	const sections = useSWR<{ data: Section[] }>(detail.data?.has_sections && !detail.data.template ? qk.reports.sections(slug) : null);
 
 	const defaultDark = detail.data?.theme?.default_dark ?? true;
 	const [isDark, setIsDark] = useState(defaultDark);
@@ -44,6 +46,9 @@ export function ReportView({ slug }: { slug: string }) {
 
 	if (detail.isLoading || sections.isLoading) return <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}><Loading /></div>;
 	if (!detail.data) return <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}><Empty>Report not found. <Link href="/reports">Back to reports</Link></Empty></div>;
+	// A custom-designed report: its template draws the report's own document (reports.content).
+	const tpl = detail.data.template ? REPORT_TEMPLATES[detail.data.template] : undefined;
+	if (tpl) return <ReportErrorBoundary><tpl.Component slug={slug} /></ReportErrorBoundary>;
 	if (!detail.data.has_sections) return <PdfReportView slug={slug} report={detail.data} />;
 
 	return (

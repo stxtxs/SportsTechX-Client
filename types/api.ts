@@ -425,6 +425,8 @@ export interface ReportListItem {
 	can_download?: boolean;
 	/** A section is gated above Explore (handover N2): Explore shows the currency sign. */
 	has_gated_sections?: boolean;
+	/** false = opens by its link but never appears in the library (e.g. Methodology). */
+	is_listed?: boolean;
 	created_at: string;
 	updated_at: string;
 	/** Topic facet labels. Never null (NOT NULL DEFAULT '{}'), but empty until

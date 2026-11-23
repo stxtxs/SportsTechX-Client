@@ -1068,7 +1068,7 @@ export function ClaimModal({
                   <div className="cm-tl-row"><span className="cm-tl-ico">3</span><span className="cm-tl-text">
                     <span className="cm-tl-h">You go live <span className="cm-tl-when">{R.free ? '· verified badge + bonus' : '· claimed badge'}</span></span>
                     <span className="cm-tl-p">{R.free
-                      ? 'Your profile is published with a verified badge, your 30-day Growth access switches on, and your Locker Room Report lands in your inbox.'
+                      ? 'Your profile is published with a verified badge, 30 days of Atlas Raise switch on (on your first verified company), and your Locker Room Report lands in your inbox.'
                       : 'Your profile is published with a claimed badge and management tools, and we\'ll walk you through keeping it current by email.'}</span>
                   </span></div>
                 </div>

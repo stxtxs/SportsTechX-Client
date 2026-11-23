@@ -165,3 +165,23 @@ export type Ftabr26Startup = {
   /** custom_logo_url when set, else null — the client falls back to logo.dev. */
   logoUrl: string | null;
 };
+
+/* ── Women's multi-club ownership panel (content.womensMcoGroups) ───────── */
+
+export type Ftabr26McoClub = {
+  name: string;
+  /** Null where no domain is verified — the crest falls back to a monogram. */
+  website: string | null;
+  /** Local crest file, preferred over the favicon lookup. */
+  crest?: string;
+  /** Monochrome dark artwork, inverted on the dark-theme tile. */
+  crestInvertOnDark?: true;
+};
+
+export type Ftabr26McoGroup = {
+  name: string;
+  website: string | null;
+  /** Principal(s) behind the vehicle, set small under the owner name. */
+  principal?: string;
+  clubs: Ftabr26McoClub[];
+};

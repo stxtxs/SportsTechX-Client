@@ -34,6 +34,8 @@ export interface BenchmarkAccess {
 
 /** R1 content: GET /api/reports/investors-survey26-summary (`content` jsonb). */
 export interface SummaryContent {
+	/** Line above the title, e.g. "VC Deal Sourcing Benchmark 2026 · Summary". */
+	eyebrow?: string;
 	title: string;
 	subtitle: string;
 	/** Exactly three in the design. Null value renders a placeholder. */

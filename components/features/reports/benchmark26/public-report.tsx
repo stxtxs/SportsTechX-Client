@@ -430,7 +430,7 @@ export default function PublicReport({ data, slug }: { data: PublicReportData; s
     }));
     return { order, nav, no };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderKey, sections]);
+  }, [orderKey, sections, ui]);
   const { dark, toggle } = useReportTheme();
   const pdfName = fill(ui.pdfFileName, { title: meta.title });
   const [menuOpen, setMenuOpen] = useState(false);

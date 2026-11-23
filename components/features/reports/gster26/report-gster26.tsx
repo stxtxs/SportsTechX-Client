@@ -6,7 +6,7 @@ import React, { useEffect, useRef, useState, useMemo, lazy, Suspense } from "rea
 import { createPortal } from "react-dom";
 import useSWR from "swr";
 import { qk } from "@/lib/query-keys";
-import { useReportDataset } from "@/lib/report-dataset";
+import { usePrefetchReportDatasets, useReportDataset } from "@/lib/report-dataset";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
 import "./gster26.css";
@@ -968,6 +968,8 @@ export default function ReportGSTER26({ slug = 'gster26', content, preview = fal
   const factsCombo = `${fundingRegion || maAcquireeRegion || maAcquirerRegion || "global"}_${fundingYear}_${maYear}`.toLowerCase();
   const { data: factsData, isLoading } = useReportDataset<ReportData>(slug, dataShown ? `facts:${factsCombo}` : null);
   const data = factsData;
+  // The other filter combinations load quietly once this one is in, so switching filters is instant.
+  usePrefetchReportDatasets(slug, dataShown && !!factsData);
 
   type NotionInnovator = {
     id: string; name: string; company: string; designation: string;

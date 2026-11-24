@@ -14,7 +14,12 @@ import "./gstvcr26.css";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import "@/components/landing/landing.css";
 import { BRAND } from './brand';
-import { INNOVATOR_RESPONSES_DEFAULT, watchInnovators_DEFAULT, watchPeak_DEFAULT, PEAK_SWC_FINALISTS_DEFAULT, GROUNDBREAKERS_ORGS_DEFAULT, PEAK_PARTNERS_TIER1_DEFAULT, PEAK_PARTNERS_TIER2_DEFAULT, PEAK_PARTNERS_TIER3_DEFAULT, watchStxRecommends_DEFAULT, FEATURED_ARTICLES_DEFAULT, NAV_DEFAULT, HERO_DEFAULT, TRENDS_HEADER_DEFAULT, TREND_CARDS_DEFAULT, PEAK_COPY_DEFAULT, INNOVATORS_HEADER_DEFAULT, STARTUPS_HEADER_DEFAULT, NGSC_DEFAULT, DATA_HEADER_DEFAULT, CLOSING_DEFAULT, ECOMAP_DEFAULT, TREND_MA_DEFAULT, TREND_RUNNING_DEFAULT, TREND_DTC_DEFAULT, GSTVCR26_PART_ORDER } from './content-defaults';
+import { INNOVATOR_RESPONSES_DEFAULT, watchInnovators_DEFAULT, watchPeak_DEFAULT, PEAK_SWC_FINALISTS_DEFAULT, GROUNDBREAKERS_ORGS_DEFAULT, PEAK_PARTNERS_TIER1_DEFAULT, PEAK_PARTNERS_TIER2_DEFAULT, PEAK_PARTNERS_TIER3_DEFAULT, watchStxRecommends_DEFAULT, FEATURED_ARTICLES_DEFAULT, NAV_DEFAULT, HERO_DEFAULT, TRENDS_HEADER_DEFAULT, PEAK_COPY_DEFAULT, INNOVATORS_HEADER_DEFAULT, STARTUPS_HEADER_DEFAULT, NGSC_DEFAULT, DATA_HEADER_DEFAULT, CLOSING_DEFAULT, ECOMAP_DEFAULT, UNICORNS_HEADER_DEFAULT, GSTVCR26_PART_ORDER, GSTVCR26_HIDDEN_PARTS } from './content-defaults';
+import { TREND_DEEP_DIVES_DEFAULT, type TrendDeepDive } from './trend-content';
+import { TrendDeepDiveBody } from './trend-deep-dive';
+import { UnicornsSection } from './unicorns-section';
+import { buildSummaryCards } from './summary-cards';
+import { SummaryCardView } from './summary-card';
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -32,8 +37,7 @@ const PEAK_TRACKS_DEFAULT = [
 ];
 import * as topojsonClient from "topojson-client";
 import { geoMercator, geoPath } from "d3-geo";
-import { Users, Building2, Activity, Bot, Trophy, TrendingUp, Lightbulb, BarChart3, Monitor, GitMerge, Footprints, Landmark, DollarSign, Globe, Menu, X } from "lucide-react";
-import { GSTER25_FACTS } from "../gster26/data/gster25-facts-data";
+import { Users, Building2, Activity, Bot, Trophy, TrendingUp, Lightbulb, BarChart3, GitMerge, Landmark, Globe, Watch, Plane, Menu, X } from "lucide-react";
 import { INNOVATORS_DATA } from "../gster26/data/gster26-innovators-data";
 import { getCountryFlag } from "./flags";
 import { track } from "@/lib/analytics";
@@ -292,6 +296,12 @@ function FlipCardComponent({ card, t, isMobile }: { card: FlipCard; t: Theme; is
   );
 }
 
+const TREND_ICONS: Record<TrendDeepDive["icon"], React.ReactNode> = {
+  merge: <GitMerge size={32} />,
+  watch: <Watch size={32} />,
+  plane: <Plane size={32} />,
+};
+
 function AccordionBody({ isOpen, windowWidth, children }: { isOpen: boolean; windowWidth: number; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(0);
@@ -505,46 +515,6 @@ function fundingYearBars(
   return [{ year: PARTIAL_YEAR - 1, total_m: janOct2025.total_m, deals: janOct2025.deals, label: `${PARTIAL_YEAR - 1} (Jan–Oct)` }, ...y2026];
 }
 
-function MaStackedBarChart({ chartData, mode, t, isPdf = false }: { chartData: { year: number; sportstech: number; non_sportstech: number; sportstech_val: number; non_sportstech_val: number }[]; mode: "count" | "value"; t: Theme; isPdf?: boolean }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [animated, setAnimated] = useState(isPdf);
-  useEffect(() => {
-    if (isPdf) return;
-    const el = ref.current; if (!el) return;
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setAnimated(true); }, { threshold: 0.15 });
-    obs.observe(el); return () => obs.disconnect();
-  }, [isPdf]);
-  const isValue = mode === "value";
-  const maxTotal = Math.max(...chartData.map(d => isValue ? d.sportstech_val + d.non_sportstech_val : d.sportstech + d.non_sportstech));
-  return (
-    <div ref={ref} style={{ display: "flex", alignItems: "flex-end", gap: 10, height: 280, paddingBottom: 44, borderBottom: `1px solid ${t.border}`, position: "relative" }}>
-      {chartData.map((d, i) => {
-        const st = isValue ? d.sportstech_val : d.sportstech;
-        const nst = isValue ? d.non_sportstech_val : d.non_sportstech;
-        const total = st + nst;
-        const pct = maxTotal > 0 ? (total / maxTotal) * 100 : 0;
-        const stPct = total > 0 ? (st / total) * 100 : 0;
-        const nstPct = total > 0 ? (nst / total) * 100 : 0;
-        const label = isValue ? money(total) : String(total);
-        return (
-          <div key={d.year} title={`${d.year}: ${isValue ? money(st) : st} sportstech + ${isValue ? money(nst) : nst} non-sportstech`}
-            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, height: "100%", justifyContent: "flex-end", cursor: "default" }}>
-            <div style={{ width: "100%", height: animated ? `${pct}%` : "0%", transition: `height 1.4s cubic-bezier(0.16,1,0.3,1) ${i * 0.08}s`, position: "relative", minHeight: 4, borderRadius: "3px 3px 0 0", display: "flex", flexDirection: "column" }}>
-              <span style={{ position: "absolute", top: -26, left: "50%", transform: "translateX(-50%)", fontFamily: "'DM Mono',monospace", fontSize: 10, color: BRAND.teal, whiteSpace: "nowrap", fontWeight: 600 }}>
-                {label}
-              </span>
-              <div style={{ height: `${stPct}%`, background: `linear-gradient(to top,${BRAND.teal},${BRAND.tealBright})`, borderRadius: "3px 3px 0 0", minHeight: stPct > 0 ? 2 : 0 }} />
-              <div style={{ height: `${nstPct}%`, background: `linear-gradient(to top,${BRAND.slate},${BRAND.navy})`, borderRadius: stPct === 0 ? "3px 3px 0 0" : 0, minHeight: nstPct > 0 ? 2 : 0 }} />
-            </div>
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted, textAlign: "center" }}>
-              {d.year}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 /* ─── Continent Filter ────────────────────────────────────────────────────── */
 type RegionCode = "NA" | "EU" | "APAC" | "ROW";
@@ -821,11 +791,8 @@ export default function ReportGSTVCR26({ content, preview = false }: {
   const DATA_HEADER = block("dataHeader", DATA_HEADER_DEFAULT);
   const CLOSING = block("closing", CLOSING_DEFAULT);
   const ECOMAP = block("ecomap", ECOMAP_DEFAULT);
-  const TREND_MA = block("trendMa", TREND_MA_DEFAULT);
-  const TREND_RUNNING = block("trendRunning", TREND_RUNNING_DEFAULT);
-  const TREND_DTC = block("trendDtc", TREND_DTC_DEFAULT);
-  const numbered = <T,>(items: T[]) => items.map((d, i) => ({ n: String(i + 1).padStart(2, "0"), ...d }));
-  const TREND_CARDS = Object.fromEntries(Object.entries(TREND_CARDS_DEFAULT).map(([id, d]) => [id, { ...d, ...(ov?.trendCards?.[id] ?? {}) }])) as typeof TREND_CARDS_DEFAULT;
+  const UNICORNS_HEADER = block("unicornsHeader", UNICORNS_HEADER_DEFAULT);
+  const TREND_DEEP_DIVES = block("trendDeepDives", TREND_DEEP_DIVES_DEFAULT);
   const isPdf = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("pdf") === "true";
   const { user, sessionValid, loading: authLoading } = useAuthSession();
   const isAuthenticated = !authLoading && !!user && sessionValid;
@@ -881,18 +848,12 @@ export default function ReportGSTVCR26({ content, preview = false }: {
   const setMobileMenuOpen = (v: boolean | ((o: boolean) => boolean)) => { _setMobileMenuOpen(v); trackVCR26("mobile_menu_toggle"); };
   const [factTab, _setFactTab] = useState<"funding" | "ma">("funding");
   const setFactTab = (v: "funding" | "ma") => { _setFactTab(v); trackVCR26("tab_switch", { tab: "data_in_full", value: v }); };
-  const [trendsTab, _setTrendsTab] = useState<"trends" | "articles">("trends");
-  const setTrendsTab = (v: "trends" | "articles") => { _setTrendsTab(v); trackVCR26("tab_switch", { tab: "insights", value: v }); };
   const [watchTab, _setWatchTab] = useState<"innovators" | "peak" | "stx">("innovators");
   const setWatchTab = (v: "innovators" | "peak" | "stx") => { _setWatchTab(v); trackVCR26("tab_switch", { tab: "startups_to_watch", value: v }); };
   const [expandedBlock, _setExpandedBlock] = useState<string | null>(null);
   const setExpandedBlock = (v: string | null) => { _setExpandedBlock(v); if (v) trackVCR26("block_expand", { block: v }); };
-  const [openRevTab, _setOpenRevTab] = useState<string | null>("euro");
-  const setOpenRevTab = (v: string | null) => { _setOpenRevTab(v); if (v) trackVCR26("accordion_toggle", { section: v }); };
   const [showBackToTop, setShowBackToTop] = useState(false);
   const trendCardsRef = useRef<HTMLDivElement>(null);
-  const [maChartMode, _setMaChartMode] = useState<"count" | "value">("count");
-  const setMaChartMode = (v: "count" | "value") => { _setMaChartMode(v); trackVCR26("chart_mode_switch", { mode: v }); };
   const [cardImageData, setCardImageData] = useState<string | null>(null);
   const [isGeneratingCard, setIsGeneratingCard] = useState(false);
   const [selectedInnovator, _setSelectedInnovator] = useState<any | null>(null);
@@ -1093,10 +1054,19 @@ export default function ReportGSTVCR26({ content, preview = false }: {
     acquirerRegion: maAcquirerRegion ?? undefined,
   }] as const, [fundingYear, maYear, fundingRegion, maAcquireeRegion, maAcquirerRegion]);
   const { data: liveFull, error: dataInFullError, isLoading: dataInFullLoading } = useSWR<LiveDataInFull>(dataInFullKey, { keepPreviousData: true });
+  /* Summary cards: one live highlight per section. They read the unfiltered
+     defaults (same key as Data In Full on first load, so one request), so the
+     reader's filters further down never change the headline numbers. */
+  const { data: summaryFull } = useSWR<LiveDataInFull>(["/api/reports/gstvcr26/data-in-full", { fundingPeriod: "last5", maPeriod: "last5", fundingRegion: undefined, acquireeRegion: undefined, acquirerRegion: undefined }]);
+  const { data: ecoLists } = useSWR<{ investors: unknown[]; initiatives: unknown[]; programs: unknown[] }>(["/api/reports/gstvcr26/ecosystem-map"]);
+  const summaryCards = useMemo(() => buildSummaryCards(
+    summaryFull?.captionContext,
+    TREND_DEEP_DIVES,
+    ecoLists ? { investors: ecoLists.investors.length, initiatives: ecoLists.initiatives.length, programs: ecoLists.programs.length } : undefined,
+  ), [summaryFull, TREND_DEEP_DIVES, ecoLists]);
   // The live API returns Atlas's current top-sector names (Athlete Tech / Fan Tech / Executive Tech);
   // this report keys its colours and "For …" labels on the names it was written with.
   const data = useMemo(() => (liveFull ? toReportSectorKeys(liveFull) : undefined) as (ReportData & LiveDataInFull) | undefined, [liveFull]);
-  const trendsData = GSTER25_FACTS["global_last5_last5"] as ReportData;
   /* Chart captions are written from the live numbers (see ./captions.ts), so they
      stay true for every period / region filter and explain 2026 = Jan–Oct. */
   const captions = useMemo(() => (data?.captionContext ? dataInFullCaptions({
@@ -1200,7 +1170,7 @@ export default function ReportGSTVCR26({ content, preview = false }: {
   const [activeDot, setActiveDot] = useState(0);
   /* Stable randomised exit directions for hero + 6 sections (assigned once per page load) */
   const exitDirsRef = useRef<number[]>(Array.from({ length: 9 }, () => (Math.random() > 0.5 ? 1 : -1)));
-  useReveal(`${isDark}-${factTab}-${trendsTab}-${watchTab}-${fundingRegion}-${maAcquireeRegion}-${maAcquirerRegion}-${fundingYear}-${maYear}-${isLoading}`);
+  useReveal(`${isDark}-${factTab}-${watchTab}-${fundingRegion}-${maAcquireeRegion}-${maAcquirerRegion}-${fundingYear}-${maYear}-${isLoading}`);
 
   /* Preview: the editor asks to jump to the part being edited. Uses Lenis like
      the nav does, so the smooth-scroll position stays in sync. */
@@ -1211,8 +1181,8 @@ export default function ReportGSTVCR26({ content, preview = false }: {
       // Parts that live behind a tab or a closed card: open them first (raw
       // setters, so a preview doesn't log reader analytics).
       const trend = anchor.match(/^#trend-expanded-(.+)$/);
-      if (trend) { _setTrendsTab("trends"); _setExpandedBlock(trend[1]); if (trend[1] === "dtc-shift") _setOpenRevTab("dtc-launches"); }
-      if (anchor === "#deep-dives") { _setTrendsTab("articles"); anchor = "#trends"; }
+      if (trend) _setExpandedBlock(trend[1]);
+      if (anchor === "#deep-dives") anchor = "#trends"; // the Deep Dives tab was removed
       const el = document.querySelector(anchor);
       if (!el) return;
       if (lenisRef.current) lenisRef.current.scrollTo(el as HTMLElement, { offset: -72, immediate: true });
@@ -1253,8 +1223,19 @@ export default function ReportGSTVCR26({ content, preview = false }: {
   }, [expandedBlock]);
 
   /* Section anchors used for horizontal→vertical jump and dot nav */
-  const SECTION_IDS = ["hero", "trends", "innovators", "peak2026", "ecomap", "ngsc", "dealflow", "ecosystem"];
-  const SECTION_LABELS = ["Summary", "Trends", "Innovators", "Startups to Watch", "Ecosystem", "Data in Full"];
+  const SECTION_IDS = ["hero", "trends", "peak2026", "ecomap", "ngsc", "dealflow"];
+  const SECTION_LABELS = ["Summary", "Trends", "Ecosystem", "Unicorns", "Data in Full"];
+
+  /* Summary card click: open the trend's deep dive (the expanded-block effect
+     scrolls to it), or smooth-scroll to the section. */
+  const openSummaryTarget = (target: string) => {
+    const trend = target.match(/^#trend-expanded-(.+)$/);
+    if (trend && expandedBlock !== trend[1]) { setExpandedBlock(trend[1]); return; }
+    const el = document.querySelector(target) as HTMLElement | null;
+    if (!el) return;
+    if (lenisRef.current) lenisRef.current.scrollTo(el, { offset: -72 });
+    else el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   /* ── Lenis + GSAP ScrollTrigger: smooth scroll + scroll-driven effects ── */
   useEffect(() => {
@@ -1296,7 +1277,8 @@ export default function ReportGSTVCR26({ content, preview = false }: {
 
     /* ── 5. Lenis scroll → lightweight effects (no skew, no RAF conflict) ── */
     const getSections = () =>
-      ["#trends","#innovators","#ecosystem","#ecomap","#dealflow"]
+      // Same order as the nav items below, so the highlighted link matches the section.
+      ["#trends","#ecomap","#unicorns","#dealflow"]
         .map(id => document.querySelector(id) as HTMLElement | null)
         .filter(Boolean) as HTMLElement[];
 
@@ -1496,1163 +1478,71 @@ export default function ReportGSTVCR26({ content, preview = false }: {
             <SourceBadge chartId="CHART-07" source="dm_test (Sector SUM) · sm_test (Sector COUNT) · ma_test_new (deal count 2024)" />
           </div>
 
-          {/* ── Tab Switcher ── */}
+          {/* ── Single "Trend" tab (Nov 2026: the Deep Dives tab and its articles were
+               removed; each trend now opens its own deep dive). ── */}
           <div style={{ display: "flex", marginTop: 40, marginBottom: 40, borderBottom: `2px solid ${t.border}` }}>
-            {([["trends", TRENDS_HEADER.trendsTab], ["articles", TRENDS_HEADER.deepDivesTab]] as const).map(([key, tab]) => {
-              const active = trendsTab === key;
-              return (
-                <button key={tab}
-                  onClick={() => { setTrendsTab(key as "trends" | "articles"); setExpandedBlock(null); }}
-                  style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 20 : 26, letterSpacing: 2, padding: isMobile ? "8px 18px 10px" : "10px 36px 13px", background: "none", border: "none", borderBottom: active ? `3px solid ${BRAND.pink}` : "3px solid transparent", color: active ? BRAND.pink : t.textMuted, cursor: "pointer", transition: "color 0.2s, border-color 0.2s", marginBottom: -2, outline: "none" }}>
-                  {tab}
-                </button>
-              );
-            })}
+            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 20 : 26, letterSpacing: 2, padding: isMobile ? "8px 18px 10px" : "10px 36px 13px", borderBottom: `3px solid ${BRAND.pink}`, color: BRAND.pink, marginBottom: -2 }}>
+              {TRENDS_HEADER.trendsTab}
+            </div>
           </div>
 
           {/* ── Tab description ── */}
           <p style={{ margin: "0 0 32px", fontSize: 15, lineHeight: 1.7, color: t.text }}>
-            {trendsTab === "trends"
-              ? TRENDS_HEADER.trendsIntro
-              : TRENDS_HEADER.deepDivesIntro}
+            {TRENDS_HEADER.trendsIntro}
           </p>
 
-          {/* ── Trends accordion ── */}
-          {(isPdf || trendsTab === "trends") && (() => {
-            const dtcExamples: { entity: string; desc: string; date: string; country: string; domain: string }[] = TREND_DTC.launches;
-            const infraProviders: { name: string; location: string; desc: string; domain: string }[] = [
-              { name: "ViewLift", location: "New York", desc: "Most active in the US , powered Seattle Mariners and Tampa Bay Lightning platforms. 16 pro sports team clients. Launched a joint venture with Monumental Sports to offer a managed 'go DTC' playbook.", domain: "viewlift.com" },
-              { name: "Deltatre / Endeavor Streaming", location: "Italy / US", desc: "Dominant global player. Powered Ligue 1+. Combined client list covers NFL, UEFA, UFC, NBA, MLB, and World Rugby. Largest pure-play sports OTT provider after the September 2025 acquisition.", domain: "deltatre.com" },
-              { name: "Two Circles / StayLive", location: "London", desc: "Data-first approach , leads with fan audience intelligence, then builds the platform. Powered Top 14 Rugby TV across 170+ territories. Works with 350+ sports properties globally.", domain: "twocircles.com" },
-            ];
-            const trendBlocks = [
-              {
-                id: "ma-sportstech", n: "01", tag: TREND_CARDS["ma-sportstech"].tag, title: TREND_CARDS["ma-sportstech"].title,
-                summary: TREND_CARDS["ma-sportstech"].summary,
-                body: "",
-                stat: trendsData ? String(trendsData.maByYearSportstech?.[trendsData.maByYearSportstech.length - 1]?.sportstech || "—") : "…",
-                statLabel: TREND_CARDS["ma-sportstech"].statLabel,
-                color: BRAND.teal,
-                expandedContent: true,
-              },
-              {
-                id: "running-renaissance", n: "02", tag: TREND_CARDS["running-renaissance"].tag, title: TREND_CARDS["running-renaissance"].title,
-                summary: TREND_CARDS["running-renaissance"].summary,
-                body: "",
-                stat: TREND_CARDS["running-renaissance"].stat,
-                statLabel: TREND_CARDS["running-renaissance"].statLabel,
-                color: BRAND.pink,
-                expandedContent: true,
-              },
-              {
-                id: "dtc-shift", n: "03", tag: TREND_CARDS["dtc-shift"].tag, title: TREND_CARDS["dtc-shift"].title,
-                summary: TREND_CARDS["dtc-shift"].summary,
-                body: "",
-                stat: TREND_CARDS["dtc-shift"].stat,
-                statLabel: TREND_CARDS["dtc-shift"].statLabel,
-                color: BRAND.tealBright,
-                expandedContent: true,
-              },
-            ];
-            const trendIcons: Record<string, React.ReactNode> = {
-              "dtc-shift": <Monitor size={32} />,
-              "ma-sportstech": <DollarSign size={32} />,
-              "running-renaissance": <Footprints size={32} />,
-            };
-            return (
-              <>
-              <div ref={trendCardsRef} style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16 }}>
-                {trendBlocks.map(block => {
-                  const isOpen = isPdf || expandedBlock === block.id;
-                  return (
-                    <button
-                      key={block.id}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => setExpandedBlock(isOpen ? null : block.id)}
-                      style={{ background: isOpen ? t.bgSec : `${BRAND.darkTitle}08`, border: `1px solid ${isOpen ? BRAND.darkTitle + "44" : BRAND.darkTitle + "18"}`, borderRadius: 10, cursor: "pointer", padding: isMobile ? "24px 20px" : "28px 24px", textAlign: "left", outline: "none", display: "flex", flexDirection: "column", gap: 14, transition: "all 0.3s", height: isMobile ? undefined : 220, overflow: "hidden", fontFamily: "inherit" }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <div style={{ width: 48, height: 48, borderRadius: 12, background: `${BRAND.darkTitle}10`, display: "flex", alignItems: "center", justifyContent: "center", color: BRAND.darkTitle, flexShrink: 0 }}>
-                          {trendIcons[block.id]}
-                        </div>
-                        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 20 : 24, lineHeight: 1.1, color: t.titleColor, flex: 1 }}>{block.title}</div>
-                        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: 2, color: t.textMuted, flexShrink: 0 }}>{block.n}</div>
-                      </div>
-                      <div style={{ fontSize: 13, lineHeight: 1.6, color: t.textMuted, flex: 1 }}>{block.summary}</div>
-                      <div style={{ fontSize: 11, fontFamily: "'DM Mono',monospace", letterSpacing: 1, color: isOpen ? BRAND.darkTitle : t.textMuted, marginTop: 4 }}>{isOpen ? "CLOSE ✕" : "READ MORE →"}</div>
-                    </button>
-                  );
-                })}
-              </div>
-              {trendBlocks.map(block => {
-                const isOpen = isPdf || expandedBlock === block.id;
+          {/* ── Trends: one card per trend (doc trends 2, 3, 14); each opens its deep dive ── */}
+          <>
+            <div ref={trendCardsRef} style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16 }}>
+              {TREND_DEEP_DIVES.map((trend, i) => {
+                const isOpen = isPdf || expandedBlock === trend.id;
                 return (
-                  <div key={block.id} id={`trend-expanded-${block.id}`} style={{ borderRadius: 10, overflow: "hidden", marginTop: isOpen ? 28 : 0, background: isOpen ? t.bgSec : "transparent", border: isOpen ? `1px solid ${BRAND.darkTitle}18` : "1px solid transparent" }}>
-                    <AccordionBody isOpen={isOpen} windowWidth={windowWidth}>
-                        <div style={{ padding: isMobile ? "20px 16px" : "28px 32px", textAlign: "justify" }}>
-                          <div style={{ marginBottom: 24 }}>
-                            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 26 : 34, lineHeight: 1.1, color: t.titleColor }}>{block.title}</div>
-                            <p style={{ fontSize: 14, lineHeight: 1.7, color: t.textMuted, marginTop: 8 }}>{block.summary}</p>
-                          </div>
-                          {block.id === "ma-sportstech" && trendsData?.maByYearSportstech ? (() => {
-                            const acquirerDomains: Record<string, string> = Object.fromEntries(TREND_MA.acquirerLogos.map((a) => [a.name, a.domain]));
-                            const chartData = trendsData.maByYearSportstech;
-                            const latest = chartData[chartData.length - 1];
-                            const latestTotal = latest ? latest.sportstech + latest.non_sportstech : 0;
-                            const latestStPct = latestTotal > 0 ? pctOf(latest.sportstech, latestTotal) : 0;
-                            const totalStDeals = chartData.reduce((s, d) => s + d.sportstech, 0);
-                            const totalAllDeals = chartData.reduce((s, d) => s + d.sportstech + d.non_sportstech, 0);
-                            const stPctAll = pctOf(totalStDeals, totalAllDeals);
-                            const growthX = chartData.length >= 2 && chartData[0].sportstech > 0 ? (chartData[chartData.length - 1].sportstech / chartData[0].sportstech).toFixed(1) : "—";
-                            return (
-                              <>
-                                {/* Summary stats */}
-                                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16, marginBottom: 28 }}>
-                                  {[
-                                    { value: pctText(latestStPct), label: TREND_MA.statLabels[0] },
-                                    { value: pctText(stPctAll), label: TREND_MA.statLabels[1] },
-                                    { value: `${growthX}x`, label: TREND_MA.statLabels[2] },
-                                  ].map((s, si) => (
-                                    <div key={si} style={{ padding: "20px 24px", background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6 }}>
-                                      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 36, color: BRAND.pink, lineHeight: 1 }}>{s.value}</div>
-                                      <div style={{ fontSize: 11, color: t.textMuted, marginTop: 6, lineHeight: 1.4 }}>{s.label}</div>
-                                    </div>
-                                  ))}
-                                </div>
-
-                                {/* Insight text */}
-                                <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: "0 0 28px" }} />
-                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 20 }}>{TREND_MA.insightTitle}</div>
-                                <div>
-                                  {TREND_MA.insight.map((text, pi) => <p key={pi} style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted, marginBottom: 16 }}>{text}</p>)}
-                                </div>
-
-                                {/* Stacked bar chart */}
-                                <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.teal}55,transparent)`, margin: "36px 0 28px" }} />
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
-                                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 3, color: BRAND.teal, textTransform: "uppercase" }}>{TREND_MA.chartTitle}</div>
-                                  {/* Count / Value toggle */}
-                                  <div style={{ display: "flex", borderRadius: 4, overflow: "hidden", border: `1px solid ${t.border}` }}>
-                                    {(["count", "value"] as const).map(m => (
-                                      <button key={m} onClick={() => setMaChartMode(m)} style={{
-                                        padding: "5px 14px", fontSize: 10, fontFamily: "'DM Mono',monospace", letterSpacing: 1, textTransform: "uppercase", cursor: "pointer", border: "none", outline: "none",
-                                        background: maChartMode === m ? BRAND.teal : "transparent",
-                                        color: maChartMode === m ? "#fff" : t.textMuted,
-                                        fontWeight: maChartMode === m ? 700 : 400,
-                                        transition: "all 0.2s",
-                                      }}>{m === "count" ? TREND_MA.countLabel : TREND_MA.valueLabel}</button>
-                                    ))}
-                                  </div>
-                                </div>
-                                {/* Legend */}
-                                <div style={{ display: "flex", gap: 20, marginBottom: 16 }}>
-                                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: BRAND.teal }} />
-                                    <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>{TREND_MA.legendSportstech}</span>
-                                  </div>
-                                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: BRAND.slate }} />
-                                    <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>{TREND_MA.legendNonSportstech}</span>
-                                  </div>
-                                </div>
-                                <MaStackedBarChart chartData={chartData} mode={maChartMode} t={t} isPdf={isPdf} />
-
-                                {/* Top Acquirers + Acquiree Profile side-by-side */}
-                                <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.teal}55,transparent)`, margin: "40px 0 28px" }} />
-                                <div style={{ display: "flex", gap: isMobile ? 16 : 32, flexWrap: "wrap" }}>
-                                  {/* Left: Top Acquirers */}
-                                  <div style={{ flex: "1 1 340px", minWidth: 0 }}>
-                                    <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 3, color: BRAND.teal, textTransform: "uppercase", marginBottom: 16 }}>{TREND_MA.topAcquirersTitle}</div>
-                                    <div style={{ overflowX: "auto" }}>
-                                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 11 : 13 }}>
-                                        <thead>
-                                          <tr>
-                                            {TREND_MA.tableHeaders.map(h => (
-                                              <th key={h} style={{ textAlign: "left", padding: "10px 12px", fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: BRAND.teal, textTransform: "uppercase", borderBottom: `2px solid ${t.border}` }}>{h}</th>
-                                            ))}
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {trendsData.topAcquirers.map((row, i) => {
-                                            const domain = acquirerDomains[row.name];
-                                            const aUrl = domain ? `https://www.google.com/s2/favicons?sz=128&domain=${domain}` : null;
-                                            const isNonSt = row.is_sportstech !== "Y";
-                                            return (
-                                              <tr key={i} style={{ background: isNonSt ? `${BRAND.slate}11` : (i % 2 === 1 ? t.tableRowAlt : "transparent") }}>
-                                                <td style={{ padding: "10px 12px", fontFamily: "'DM Mono',monospace", fontSize: 11, color: t.textMuted, borderBottom: `1px solid ${t.border}`, width: 36 }}>{i + 1}</td>
-                                                <td style={{ padding: "10px 12px", fontWeight: 600, color: isNonSt ? t.textMuted : t.text, borderBottom: `1px solid ${t.border}`, whiteSpace: isMobile ? "normal" : "nowrap" }}>
-                                                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                                    <div style={{ width: 22, height: 22, borderRadius: 4, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-                                                      {aUrl && <img src={aUrl} alt="" width={22} height={22} style={{ objectFit: "contain", position: "absolute", top: 0, left: 0, zIndex: 1, background: "#fff", borderRadius: 4 }} onError={(e) => { e.currentTarget.style.display = "none"; }} />}
-                                                      <div style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", background: isNonSt ? BRAND.slate : BRAND.teal, borderRadius: 4, color: "#fff", fontWeight: 700, fontSize: 10, fontFamily: "'Bebas Neue',sans-serif" }}>{row.name.charAt(0)}</div>
-                                                    </div>
-                                                    {row.name}
-                                                    {isNonSt && <span style={{ fontSize: 8, fontFamily: "'DM Mono',monospace", color: BRAND.slate, letterSpacing: 1, opacity: 0.7, marginLeft: 4 }}>{TREND_MA.notSportstechTag}</span>}
-                                                  </div>
-                                                </td>
-                                                <td style={{ padding: "10px 12px", fontFamily: "'DM Mono',monospace", fontSize: 12, fontWeight: 600, color: t.titleColor, borderBottom: `1px solid ${t.border}` }}>{row.deals}</td>
-                                              </tr>
-                                            );
-                                          })}
-                                        </tbody>
-                                      </table>
-                                    </div>
-                                  </div>
-
-                                  {/* Right: Acquiree Profile */}
-                                  {trendsData.acquireeProfile && (
-                                    <div style={{ flex: "1 1 300px", minWidth: 0 }}>
-                                      <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 3, color: BRAND.teal, textTransform: "uppercase", marginBottom: 16 }}>{TREND_MA.acquireeTitle}</div>
-
-                                      {/* By Sector */}
-                                      {(() => {
-                                        const sectorColors: Record<string, string> = { "Activity & Performance": BRAND.athletes, "Fans & Content": BRAND.fans, "Management & Organisation": BRAND.execs };
-                                        const sectorLabels: Record<string, string> = TREND_MA.sectorLabels;
-                                        const totalDeals = trendsData.acquireeProfile.bySector.reduce((s, d) => s + d.deals, 0);
-                                        return (
-                                          <div style={{ marginBottom: 28 }}>
-                                            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase", marginBottom: 10 }}>{TREND_MA.bySectorTitle}</div>
-                                            {/* Stacked bar */}
-                                            <div style={{ display: "flex", height: 18, borderRadius: 4, overflow: "hidden", marginBottom: 10 }}>
-                                              {trendsData.acquireeProfile.bySector.map((d) => (
-                                                <div key={d.sector} style={{ width: `${(d.deals / totalDeals) * 100}%`, background: sectorColors[d.sector] || BRAND.slate, transition: "width 0.4s" }} title={`${d.sector}: ${d.deals} deals (${pctText(pctOf(d.deals, totalDeals))})`} />
-                                              ))}
-                                            </div>
-                                            {trendsData.acquireeProfile.bySector.map((d) => (
-                                              <div key={d.sector} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: `1px solid ${t.border}` }}>
-                                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                                  <div style={{ width: 8, height: 8, borderRadius: 2, background: sectorColors[d.sector] || BRAND.slate, flexShrink: 0 }} />
-                                                  <span style={{ fontFamily: "'Open Sans',sans-serif", fontSize: 12, color: t.text }}>{sectorLabels[d.sector] || d.sector}</span>
-                                                </div>
-                                                <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                                                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, fontWeight: 600, color: t.titleColor }}>{d.deals}</span>
-                                                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>{pctText(pctOf(d.deals, totalDeals))}</span>
-                                                </div>
-                                              </div>
-                                            ))}
-                                          </div>
-                                        );
-                                      })()}
-
-                                      {/* By Region */}
-                                      {(() => {
-                                        const regionColors: Record<string, string> = { "North America": "#E08B35", "Europe": "#2B3D8F", "Asia Pacific": "#76ADA7", "Rest of the World": "#4D5E72" };
-                                        const grouped = trendsData.acquireeProfile.byContinent.reduce<Record<string, number>>((acc, d) => {
-                                          if (d.continent === "USA") return acc;
-                                          const key = (d.continent === "Asia" || d.continent === "Oceania") ? "Asia Pacific"
-                                            : (d.continent === "Africa" || d.continent === "South America") ? "Rest of the World"
-                                            : d.continent;
-                                          acc[key] = (acc[key] || 0) + d.deals;
-                                          return acc;
-                                        }, {});
-                                        const regions = Object.entries(grouped).map(([name, deals]) => ({ name, deals })).sort((a, b) => b.deals - a.deals);
-                                        const totalDeals = regions.reduce((s, d) => s + d.deals, 0);
-                                        return (
-                                          <div style={{ marginBottom: 28 }}>
-                                            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase", marginBottom: 10 }}>{TREND_MA.byRegionTitle}</div>
-                                            <div style={{ display: "flex", height: 18, borderRadius: 4, overflow: "hidden", marginBottom: 10 }}>
-                                              {regions.map((d) => (
-                                                <div key={d.name} style={{ width: `${(d.deals / totalDeals) * 100}%`, background: regionColors[d.name] || BRAND.slate, transition: "width 0.4s" }} title={`${d.name}: ${d.deals} deals (${pctText(pctOf(d.deals, totalDeals))})`} />
-                                              ))}
-                                            </div>
-                                            {regions.map((d) => (
-                                              <div key={d.name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: `1px solid ${t.border}` }}>
-                                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                                  <div style={{ width: 8, height: 8, borderRadius: 2, background: regionColors[d.name] || BRAND.slate, flexShrink: 0 }} />
-                                                  <span style={{ fontFamily: "'Open Sans',sans-serif", fontSize: 12, color: t.text }}>{d.name}</span>
-                                                </div>
-                                                <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                                                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, fontWeight: 600, color: t.titleColor }}>{d.deals}</span>
-                                                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>{pctText(pctOf(d.deals, totalDeals))}</span>
-                                                </div>
-                                              </div>
-                                            ))}
-                                          </div>
-                                        );
-                                      })()}
-
-                                      {/* By Business Model */}
-                                      {(() => {
-                                        const modelColors: Record<string, string> = { "B2B": BRAND.b2b, "B2C": BRAND.b2c, "B2B2C": BRAND.teal };
-                                        const totalDeals = trendsData.acquireeProfile.byModel.reduce((s, d) => s + d.deals, 0);
-                                        return (
-                                          <div>
-                                            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase", marginBottom: 10 }}>{TREND_MA.byModelTitle}</div>
-                                            <div style={{ display: "flex", height: 18, borderRadius: 4, overflow: "hidden", marginBottom: 10 }}>
-                                              {trendsData.acquireeProfile.byModel.map((d) => (
-                                                <div key={d.model} style={{ width: `${(d.deals / totalDeals) * 100}%`, background: modelColors[d.model] || BRAND.slate, transition: "width 0.4s" }} title={`${d.model}: ${d.deals} deals (${pctText(pctOf(d.deals, totalDeals))})`} />
-                                              ))}
-                                            </div>
-                                            {trendsData.acquireeProfile.byModel.map((d) => (
-                                              <div key={d.model} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: `1px solid ${t.border}` }}>
-                                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                                  <div style={{ width: 8, height: 8, borderRadius: 2, background: modelColors[d.model] || BRAND.slate, flexShrink: 0 }} />
-                                                  <span style={{ fontFamily: "'Open Sans',sans-serif", fontSize: 12, color: t.text }}>{d.model}</span>
-                                                </div>
-                                                <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                                                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, fontWeight: 600, color: t.titleColor }}>{d.deals}</span>
-                                                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: t.textMuted }}>{pctText(pctOf(d.deals, totalDeals))}</span>
-                                                </div>
-                                              </div>
-                                            ))}
-                                          </div>
-                                        );
-                                      })()}
-                                    </div>
-                                  )}
-                                </div>
-
-                                {/* WHY IT'S HAPPENING */}
-                                <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: "40px 0 28px" }} />
-                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 20 }}>{TREND_MA.whyHappeningTitle}</div>
-                                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16 }}>
-                                  {numbered(TREND_MA.whyHappening).map(d => (
-                                    <div key={d.n} style={{ padding: "20px 24px", background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6 }}>
-                                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                                        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: BRAND.pink, letterSpacing: 2, opacity: 0.6 }}>{d.n}</span>
-                                        <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: t.titleColor, lineHeight: 1 }}>{d.title}</span>
-                                      </div>
-                                      <p style={{ fontSize: 12, lineHeight: 1.7, color: t.textMuted, margin: 0 }}>{d.desc}</p>
-                                    </div>
-                                  ))}
-                                </div>
-
-                                {/* WHY IT MATTERS */}
-                                <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: "40px 0 28px" }} />
-                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 20 }}>{TREND_MA.whyMattersTitle}</div>
-                                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                                  {numbered(TREND_MA.whyMatters).map(d => (
-                                    <div key={d.n} style={{ padding: "20px 24px", background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6 }}>
-                                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                                        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: BRAND.pink, letterSpacing: 2, opacity: 0.6 }}>{d.n}</span>
-                                        <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: t.titleColor, lineHeight: 1 }}>{d.title}</span>
-                                      </div>
-                                      <p style={{ fontSize: 12, lineHeight: 1.7, color: t.textMuted, margin: 0 }}>{d.desc}</p>
-                                    </div>
-                                  ))}
-                                </div>
-
-                              </>
-                            );
-                          })() : block.id === "running-renaissance" ? (() => {
-                            const marathons: { name: string; y2023: string; y2024: string; y2025: string; g2324: string; g2425: string; domain: string; note?: string }[] = TREND_RUNNING.marathons;
-                            const drivers: { n: string; title: string; desc: string }[] = numbered(TREND_RUNNING.drivers);
-                            const impacts: { label: string; value: string; detail: string }[] = [
-                              { label: "Top 50 Marathons", value: "$5.2B", detail: "annual economic contribution , Chicago alone: $627M, Berlin: $505M" },
-                              { label: "Global Marathon Events Market", value: "$13.8B", detail: "in 2024, projected $23.6B by 2033 (6.2% CAGR)" },
-                              { label: "Global Running Apparel Market", value: "$161.8B", detail: "projected by 2031 , one of the most commercially valuable participation sports" },
-                            ];
-                            return (
-                              <>
-                                {/* Summary stats */}
-                                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16, marginBottom: 28 }}>
-                                  {TREND_RUNNING.stats.map((s, si) => (
-                                    <div key={si} style={{ padding: "20px 24px", background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6 }}>
-                                      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 36, color: BRAND.pink, lineHeight: 1 }}>{s.value}</div>
-                                      <div style={{ fontSize: 11, color: t.textMuted, marginTop: 6, lineHeight: 1.4 }}>{s.label}</div>
-                                    </div>
-                                  ))}
-                                </div>
-
-                                {/* INSIGHT */}
-                                <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: "0 0 28px" }} />
-                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 20 }}>{TREND_RUNNING.insightTitle}</div>
-                                <div>
-                                  {TREND_RUNNING.insight.map((text, pi) => <p key={pi} style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted, marginBottom: 16 }}>{text}</p>)}
-                                </div>
-
-                                {/* Major marathons table */}
-                                <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: "36px 0 28px" }} />
-                                <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 3, color: BRAND.pink, textTransform: "uppercase", marginBottom: 16 }}>{TREND_RUNNING.tableTitle}</div>
-                                <div style={{ overflowX: "auto" }}>
-                                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 11 : 13, minWidth: isMobile ? undefined : 700 }}>
-                                    <thead>
-                                      <tr>
-                                        <th style={{ textAlign: "left", padding: "10px 12px", fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: BRAND.pink, textTransform: "uppercase", borderBottom: `2px solid ${t.border}` }}>{TREND_RUNNING.tableHeaders.name}</th>
-                                        <th style={{ textAlign: "right", padding: "10px 12px", fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase", borderBottom: `2px solid ${t.border}` }}>{TREND_RUNNING.tableHeaders.y2023}</th>
-                                        <th style={{ textAlign: "center", padding: "10px 6px", fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: 1, color: BRAND.pink, textTransform: "uppercase", borderBottom: `2px solid ${t.border}`, opacity: 0.6 }}>{TREND_RUNNING.tableHeaders.yoy}</th>
-                                        <th style={{ textAlign: "right", padding: "10px 12px", fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: t.textMuted, textTransform: "uppercase", borderBottom: `2px solid ${t.border}` }}>{TREND_RUNNING.tableHeaders.y2024}</th>
-                                        <th style={{ textAlign: "center", padding: "10px 6px", fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: 1, color: BRAND.pink, textTransform: "uppercase", borderBottom: `2px solid ${t.border}`, opacity: 0.6 }}>{TREND_RUNNING.tableHeaders.yoy}</th>
-                                        <th style={{ textAlign: "right", padding: "10px 12px", fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: BRAND.pink, textTransform: "uppercase", borderBottom: `2px solid ${t.border}` }}>{TREND_RUNNING.tableHeaders.y2025}</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {marathons.map((m, i) => {
-                                        const mUrl = m.domain ? `https://www.google.com/s2/favicons?sz=128&domain=${m.domain}` : null;
-                                        const isNeg2425 = m.g2425.startsWith("\u2212") || m.g2425.startsWith("-");
-                                        const isNeg2324 = m.g2324.startsWith("\u2212") || m.g2324.startsWith("-");
-                                        return (
-                                          <tr key={i} style={{ background: i % 2 === 1 ? t.tableRowAlt : "transparent" }}>
-                                            <td style={{ padding: isMobile ? "8px 8px" : "10px 12px", fontWeight: 600, color: t.text, borderBottom: `1px solid ${t.border}`, whiteSpace: isMobile ? "normal" : "nowrap" }}>
-                                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                                <div style={{ width: 22, height: 22, borderRadius: 4, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-                                                  {mUrl && <img src={mUrl} alt="" width={22} height={22} style={{ objectFit: "contain", position: "absolute", top: 0, left: 0, zIndex: 1, background: "#fff", borderRadius: 4 }} onError={(e) => { e.currentTarget.style.display = "none"; }} />}
-                                                  <div style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", background: BRAND.pink, borderRadius: 4, color: "#fff", fontWeight: 700, fontSize: 10, fontFamily: "'Bebas Neue',sans-serif" }}>{m.name.charAt(0)}</div>
-                                                </div>
-                                                {m.name}
-                                              </div>
-                                            </td>
-                                            <td style={{ padding: "10px 12px", fontFamily: "'DM Mono',monospace", fontSize: 12, color: t.textMuted, borderBottom: `1px solid ${t.border}`, textAlign: "right" }}>{m.y2023}</td>
-                                            <td style={{ padding: "10px 6px", fontFamily: "'DM Mono',monospace", fontSize: 10, fontWeight: 600, color: isNeg2324 ? "#e05252" : "#4caf50", borderBottom: `1px solid ${t.border}`, textAlign: "center", background: isNeg2324 ? "#e0525208" : "#4caf5008", letterSpacing: 0.5 }}>{m.g2324}</td>
-                                            <td style={{ padding: "10px 12px", fontFamily: "'DM Mono',monospace", fontSize: 12, color: t.textMuted, borderBottom: `1px solid ${t.border}`, textAlign: "right" }}>{m.y2024}</td>
-                                            <td style={{ padding: "10px 6px", fontFamily: "'DM Mono',monospace", fontSize: 10, fontWeight: 600, color: isNeg2425 ? "#e05252" : "#4caf50", borderBottom: `1px solid ${t.border}`, textAlign: "center", background: isNeg2425 ? "#e0525208" : "#4caf5008", letterSpacing: 0.5 }}>{m.g2425}</td>
-                                            <td style={{ padding: "10px 12px", fontFamily: "'DM Mono',monospace", fontSize: 12, fontWeight: 600, color: t.titleColor, borderBottom: `1px solid ${t.border}`, textAlign: "right" }}>{m.y2025}</td>
-                                          </tr>
-                                        );
-                                      })}
-                                    </tbody>
-                                  </table>
-                                </div>
-                                {/* Footnotes */}
-                                <div style={{ marginTop: 12, fontSize: 11, color: t.textMuted, lineHeight: 1.6, fontStyle: "italic", maxWidth: 700 }}>
-                                  {TREND_RUNNING.footnotes.map((text, fi) => <p key={fi} style={{ margin: "4px 0" }}>{text}</p>)}
-                                </div>
-
-                                {/* Drivers section */}
-                                <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: "40px 0 28px" }} />
-                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 20 }}>{TREND_RUNNING.whyHappeningTitle}</div>
-                                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: 16 }}>
-                                  {drivers.map(d => (
-                                    <div key={d.n} style={{ padding: "20px 24px", background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6 }}>
-                                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                                        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: BRAND.pink, letterSpacing: 2, opacity: 0.6 }}>{d.n}</span>
-                                        <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: t.titleColor, lineHeight: 1 }}>{d.title}</span>
-                                      </div>
-                                      <p style={{ fontSize: 12, lineHeight: 1.7, color: t.textMuted, margin: 0 }}>{d.desc}</p>
-                                    </div>
-                                  ))}
-                                </div>
-
-                                {/* WHY IT MATTERS */}
-                                <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: "40px 0 28px" }} />
-                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 8 }}>{TREND_RUNNING.whyMattersTitle}</div>
-                                <p style={{ fontSize: 13, color: t.textMuted, marginBottom: 24 }}>{TREND_RUNNING.whyMattersIntro}</p>
-
-                                {/* Impact stat boxes */}
-                                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16, marginBottom: 24 }}>
-                                  {TREND_RUNNING.impactStats.map((s, si) => (
-                                    <div key={si} style={{ padding: "20px 24px", background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6 }}>
-                                      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 36, color: BRAND.pink, lineHeight: 1 }}>{s.value}</div>
-                                      <div style={{ fontSize: 11, color: t.textMuted, marginTop: 6, lineHeight: 1.4 }}>{s.label}</div>
-                                    </div>
-                                  ))}
-                                </div>
-
-                                {/* Impact boxes , full width stacked */}
-                                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                                  {numbered(TREND_RUNNING.opportunities).map(d => (
-                                    <div key={d.n} style={{ padding: "20px 24px", background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6 }}>
-                                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                                        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: BRAND.pink, letterSpacing: 2, opacity: 0.6 }}>{d.n}</span>
-                                        <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: t.titleColor, lineHeight: 1 }}>{d.title}</span>
-                                      </div>
-                                      <p style={{ fontSize: 12, lineHeight: 1.7, color: t.textMuted, margin: 0 }}>{d.desc}</p>
-                                    </div>
-                                  ))}
-                                </div>
-
-                              </>
-                            );
-                          })() : block.id === "dtc-shift" ? (
-                            <>
-                              {/* Summary stats */}
-                              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16, marginBottom: 28 }}>
-                                {TREND_DTC.stats.map((s, si) => (
-                                  <div key={si} style={{ padding: "20px 24px", background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6 }}>
-                                    <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 36, color: BRAND.pink, lineHeight: 1 }}>{s.value}</div>
-                                    <div style={{ fontSize: 11, color: t.textMuted, marginTop: 6, lineHeight: 1.4 }}>{s.label}</div>
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* INSIGHT */}
-                              <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: "0 0 28px" }} />
-                              <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 20 }}>{TREND_DTC.insightTitle}</div>
-                              <div>
-                                {TREND_DTC.insight.map((text, pi) => <p key={pi} style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted, marginBottom: 16 }}>{text}</p>)}
-                                {TREND_DTC.insightEmphasis && <p style={{ fontSize: 15, lineHeight: 1.8, color: t.titleColor, fontWeight: 600, marginBottom: 16 }}>{TREND_DTC.insightEmphasis}</p>}
-                              </div>
-
-                              {/* KEY DTC LAUNCHES , collapsible table */}
-                              <div style={{ marginBottom: 36 }}>
-                                <button
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); setOpenRevTab(openRevTab === "dtc-launches" ? null : "dtc-launches"); }}
-                                  style={{ width: "100%", background: openRevTab === "dtc-launches" ? `${BRAND.pink}06` : t.bgCard, border: `1px solid ${openRevTab === "dtc-launches" ? BRAND.pink + "44" : t.border}`, borderRadius: 10, cursor: "pointer", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, outline: "none", transition: "all 0.3s", zIndex: 2, fontFamily: "inherit" }}
-                                >
-                                  <div style={{ textAlign: "left" }}>
-                                    <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: t.titleColor, lineHeight: 1.2 }}>{TREND_DTC.launchesTitle}</div>
-                                    <div style={{ fontSize: 11, color: t.textMuted, fontStyle: "italic", marginTop: 4 }}>{TREND_DTC.launchesSubtitle}</div>
-                                  </div>
-                                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: openRevTab === "dtc-launches" ? BRAND.pink : t.textMuted, flexShrink: 0, transition: "transform 0.3s", transform: openRevTab === "dtc-launches" ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
-                                </button>
-                                <div style={{ maxHeight: openRevTab === "dtc-launches" ? 3000 : 0, opacity: openRevTab === "dtc-launches" ? 1 : 0, overflow: "hidden", transition: "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease" }}>
-                                  <div style={{ padding: "12px 0 0", overflowX: "auto" }}>
-                                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 10 : 12 }}>
-                                      <thead>
-                                        <tr>
-                                          {TREND_DTC.launchesHeaders.map(h => (
-                                            <th key={h} style={{ textAlign: "left", padding: "8px 10px", fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: BRAND.pink, textTransform: "uppercase", borderBottom: `2px solid ${t.border}`, whiteSpace: "nowrap" }}>{h}</th>
-                                          ))}
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {dtcExamples.map((row, ri) => (
-                                          <tr key={ri} style={{ background: ri % 2 === 1 ? `${t.border}33` : "transparent" }}>
-                                            <td style={{ padding: "6px 10px", fontFamily: "'DM Mono',monospace", fontWeight: 700, color: BRAND.pink, borderBottom: `1px solid ${t.border}`, whiteSpace: "nowrap" }}>{row.date}</td>
-                                            <td style={{ padding: "6px 10px", fontWeight: 600, color: t.text, borderBottom: `1px solid ${t.border}`, whiteSpace: "nowrap" }}>{row.entity}</td>
-                                            <td style={{ padding: "6px 10px", color: t.textMuted, borderBottom: `1px solid ${t.border}`, whiteSpace: "nowrap" }}>{row.country}</td>
-                                            <td style={{ padding: "6px 10px", color: t.textMuted, fontSize: 11, borderBottom: `1px solid ${t.border}` }}>{row.desc}</td>
-                                          </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* WHY IT'S HAPPENING */}
-                              <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: "40px 0 28px" }} />
-                              <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 20 }}>{TREND_DTC.whyHappeningTitle}</div>
-                              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                                {numbered(TREND_DTC.whyHappening).map((w) => (
-                                  <div key={w.n} style={{ padding: "20px 24px", background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6 }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                                      <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: BRAND.pink, letterSpacing: 2, opacity: 0.6 }}>{w.n}</span>
-                                      <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: t.titleColor, lineHeight: 1 }}>{w.title}</span>
-                                    </div>
-                                    {w.paragraphs.map((text, pi) => (
-                                      <p key={pi} style={{ fontSize: 12, lineHeight: 1.7, color: t.textMuted, margin: pi === w.paragraphs.length - 1 && !w.points.length ? 0 : "0 0 12px" }}>{text}</p>
-                                    ))}
-                                    {w.points.length > 0 && (
-                                      <div style={{ paddingLeft: 16, borderLeft: `3px solid ${BRAND.tealBright}`, marginTop: 12 }}>
-                                        {w.points.map((pt, qi) => (
-                                          <p key={qi} style={{ fontSize: 12, lineHeight: 1.7, color: t.textMuted, margin: qi === w.points.length - 1 ? 0 : "0 0 6px" }}>
-                                            <strong style={{ color: t.titleColor }}>{pt.label}</strong>{pt.text}
-                                          </p>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* Quote block */}
-                              <div style={{ margin: isMobile ? "24px 0" : "32px 0 32px 0", padding: isMobile ? "20px 18px" : "28px 36px", borderLeft: `4px solid ${BRAND.pink}`, background: `${BRAND.pink}08`, borderRadius: "0 10px 10px 0" }}>
-                                <p style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 16 : 20, lineHeight: 1.5, color: t.titleColor, fontStyle: "italic", fontWeight: 700, marginBottom: 10 }}>
-                                  {TREND_DTC.quote}
-                                </p>
-                                <p style={{ fontSize: 11, color: t.textMuted, fontFamily: "'DM Mono',monospace", letterSpacing: 1.5 }}>
-                                  {TREND_DTC.quoteAttribution}
-                                </p>
-                              </div>
-
-                              {/* WHY IT MATTERS */}
-                              <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: "40px 0 28px" }} />
-                              <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 20 }}>{TREND_DTC.whyMattersTitle}</div>
-                              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                                {numbered(TREND_DTC.whyMatters).map(d => (
-                                  <div key={d.n} style={{ padding: "20px 24px", background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6 }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                                      <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: BRAND.pink, letterSpacing: 2, opacity: 0.6 }}>{d.n}</span>
-                                      <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: t.titleColor, lineHeight: 1 }}>{d.title}</span>
-                                    </div>
-                                    <p style={{ fontSize: 12, lineHeight: 1.7, color: t.textMuted, margin: 0 }}>{d.desc}</p>
-                                  </div>
-                                ))}
-                              </div>
-                              <p style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted, fontStyle: "italic", marginTop: 24 }}>
-                                {TREND_DTC.closingLine}
-                              </p>
-                            </>
-                          ) : (
-                            <>
-                              <div style={{ fontSize: 14, lineHeight: 1.8, color: t.text, marginBottom: 24 }}>{block.body}</div>
-                              {block.stat && (
-                                <div style={{ paddingTop: 20, borderTop: `1px solid ${t.border}`, display: "flex", alignItems: "center", gap: 14 }}>
-                                  <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 34, color: block.color }}>{block.stat}</div>
-                                  <div style={{ fontSize: 11, color: t.textMuted, lineHeight: 1.4 }}>{block.statLabel}</div>
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </div>
-                    </AccordionBody>
-                  </div>
+                  <button
+                    key={trend.id}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => setExpandedBlock(isOpen ? null : trend.id)}
+                    style={{ background: isOpen ? t.bgSec : `${BRAND.darkTitle}08`, border: `1px solid ${isOpen ? BRAND.darkTitle + "44" : BRAND.darkTitle + "18"}`, borderRadius: 10, cursor: "pointer", padding: isMobile ? "24px 20px" : "28px 24px", textAlign: "left", outline: "none", display: "flex", flexDirection: "column", gap: 14, transition: "all 0.3s", fontFamily: "inherit" }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 12, background: `${BRAND.darkTitle}10`, display: "flex", alignItems: "center", justifyContent: "center", color: BRAND.darkTitle, flexShrink: 0 }}>
+                        {TREND_ICONS[trend.icon]}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: BRAND.pink }}>{trend.tag}</div>
+                        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 20 : 24, lineHeight: 1.1, color: t.titleColor }}>{trend.title}</div>
+                      </div>
+                      <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: 2, color: t.textMuted, flexShrink: 0 }}>{String(i + 1).padStart(2, "0")}</div>
+                    </div>
+                    <div style={{ fontSize: 13, lineHeight: 1.6, color: t.textMuted, flex: 1 }}>{trend.summary}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 14, borderTop: `1px solid ${t.border}` }}>
+                      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 40, lineHeight: 1, color: BRAND.pink, flexShrink: 0 }}>{trend.stat}</div>
+                      <div style={{ fontSize: 11, lineHeight: 1.4, color: t.textMuted }}>{trend.statLabel}</div>
+                    </div>
+                    {!isPdf && <div style={{ fontSize: 11, fontFamily: "'DM Mono',monospace", letterSpacing: 1, color: isOpen ? BRAND.darkTitle : t.textMuted }}>{isOpen ? "CLOSE ✕" : "DEEP DIVE →"}</div>}
+                  </button>
                 );
               })}
-              </>
-            );
-          })()}
-
-          {/* ── Explained accordion ── */}
-          {(isPdf || trendsTab === "articles") && (() => {
-            const articleIcons: Record<string, React.ReactNode> = {
-              "pe-ownership": <Landmark size={32} />,
-              "who-owns-upside": <DollarSign size={32} />,
-              "nba-europe": <Globe size={32} />,
-            };
-            return (
-              <>
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16 }}>
-                  {FEATURED_ARTICLES.map((article, ai) => {
-                    const isOpen = isPdf || expandedBlock === article.id;
-                    const articleNum = String(ai + 4).padStart(2, "0");
-                    return (
-                      <button
-                        key={article.id}
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => setExpandedBlock(isOpen ? null : article.id)}
-                        style={{ background: isOpen ? t.bgSec : `${BRAND.darkTitle}08`, border: `1px solid ${isOpen ? BRAND.darkTitle + "44" : BRAND.darkTitle + "18"}`, borderRadius: 10, cursor: "pointer", padding: isMobile ? "24px 20px" : "28px 24px", textAlign: "left", outline: "none", display: "flex", flexDirection: "column", gap: 14, transition: "all 0.3s", height: isMobile ? undefined : 220, overflow: "hidden", fontFamily: "inherit" }}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <div style={{ width: 48, height: 48, borderRadius: 12, background: `${BRAND.darkTitle}10`, display: "flex", alignItems: "center", justifyContent: "center", color: BRAND.darkTitle, flexShrink: 0 }}>
-                            {articleIcons[article.id]}
-                          </div>
-                          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 20 : 24, lineHeight: 1.1, color: t.titleColor, flex: 1 }}>{article.title}</div>
-                          <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: 2, color: t.textMuted, flexShrink: 0 }}>{articleNum}</div>
-                        </div>
-                        <div style={{ fontSize: 13, lineHeight: 1.6, color: t.textMuted, flex: 1, overflow: "hidden" }}>{article.summary}</div>
-                        <div style={{ fontSize: 11, fontFamily: "'DM Mono',monospace", letterSpacing: 1, color: isOpen ? BRAND.darkTitle : t.textMuted, marginTop: 4 }}>{isOpen ? "CLOSE ✕" : "READ MORE →"}</div>
-                      </button>
-                    );
-                  })}
-                </div>
-                {FEATURED_ARTICLES.map(article => {
-                  const isOpen = isPdf || expandedBlock === article.id;
-                  return (
-                    <div key={article.id} id={`trend-expanded-${article.id}`} style={{ borderRadius: 10, overflow: "hidden", marginTop: isOpen ? 28 : 0, background: isOpen ? t.bgSec : "transparent", border: isOpen ? `1px solid ${BRAND.darkTitle}18` : "1px solid transparent" }}>
-                      <AccordionBody isOpen={isOpen} windowWidth={windowWidth}>
-                          <div style={{ padding: isMobile ? "20px 16px" : "28px 32px", textAlign: "justify" }}>
-                            <div style={{ marginBottom: 24 }}>
-                              <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 26 : 34, lineHeight: 1.1, color: t.titleColor }}>{article.title}</div>
-                              <p style={{ fontSize: 14, lineHeight: 1.7, color: t.textMuted, marginTop: 8 }}>{article.summary}</p>
-                            </div>
-
-                            {/* Intro + Body , PE article: full-width stat cards, then two-column layout with timeline */}
-                            {article.id === "pe-ownership" && !isMobile && article.timeline ? (
-                              <>
-                              {/* Stat cards , full width */}
-                              {article.statCards && (
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 32 }}>
-                                  {article.statCards.map((card, ci) => (
-                                    <div key={ci} style={{ background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6, padding: "20px 24px" }}>
-                                      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 32, color: BRAND.pink, lineHeight: 1 }}>{card.value}</div>
-                                      <div style={{ fontSize: 11, color: t.textMuted, marginTop: 6, lineHeight: 1.4 }}>{card.label}. {card.sublabel}</div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                              {/* Two-column: content left, timeline right */}
-                              <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 40 }}>
-                                <div>
-                                  {/* Sections with bold sub-headings + firms inside WHERE WE ARE TODAY */}
-                                  {article.sections && article.sections.map((section, si) => (
-                                    <div key={si} style={{ marginTop: si === 0 ? 0 : 36 }}>
-                                      <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, marginBottom: 24 }} />
-                                      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 24, color: t.titleColor, marginBottom: 16 }}>{section.heading}</div>
-                                      {section.paragraphs.map((p, pi) => {
-                                        const dashIdx = p.indexOf(" , ");
-                                        if (dashIdx > 0 && dashIdx < 60 && p.substring(0, dashIdx) === p.substring(0, dashIdx).toUpperCase()) {
-                                          const boldPart = p.substring(0, dashIdx);
-                                          const rest = p.substring(dashIdx + 3);
-                                          return (
-                                            <div key={pi} style={{ marginTop: 14 }}>
-                                              <strong style={{ display: "block", fontSize: 14, color: t.titleColor, marginBottom: 6 }}>{boldPart}</strong>
-                                              <p style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted }}>{rest}</p>
-                                            </div>
-                                          );
-                                        }
-                                        return <p key={pi} style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted, marginTop: 14 }}>{p}</p>;
-                                      })}
-                                      {/* Firm profiles sit inside WHERE WE ARE TODAY */}
-                                      {section.heading === "WHERE WE ARE TODAY" && article.firms && (
-                                        <div style={{ marginTop: 28 }}>
-                                          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: t.titleColor, marginBottom: 8 }}>WHO PIONEERED THE MODEL</div>
-                                          <p style={{ fontSize: 13, color: t.textMuted, marginBottom: 20 }}>Three firms defined what institutional sports ownership actually looks like, each representing a structurally distinct thesis.</p>
-                                          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                                            {article.firms.map(firm => {
-                                              const fUrl = firm.domain ? `https://www.google.com/s2/favicons?sz=128&domain=${firm.domain}` : null;
-                                              return (
-                                                <div key={firm.name} style={{ paddingLeft: 16, borderLeft: `3px solid ${BRAND.pink}` }}>
-                                                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                                                    <div style={{ width: 28, height: 28, borderRadius: 6, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-                                                      {fUrl && <img src={fUrl} alt="" width={28} height={28} style={{ objectFit: "contain", position: "absolute", top: 0, left: 0, zIndex: 1, background: "#fff", borderRadius: 6 }} onError={(e) => { e.currentTarget.style.display = "none"; }} />}
-                                                      <div style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: BRAND.pink, borderRadius: 6, color: "#fff", fontWeight: 700, fontSize: 12, fontFamily: "'Bebas Neue',sans-serif" }}>{firm.name.charAt(0)}</div>
-                                                    </div>
-                                                    <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, color: t.titleColor }}>{firm.name}</div>
-                                                  </div>
-                                                  <p style={{ fontSize: 13, lineHeight: 1.8, color: t.textMuted }}>{firm.desc}</p>
-                                                </div>
-                                              );
-                                            })}
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                                {/* Vertical timeline sidebar , stretches full height of article */}
-                                <div style={{ borderLeft: `2px solid ${BRAND.pink}33`, paddingLeft: 20, display: "flex", flexDirection: "column" }}>
-                                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 3, color: BRAND.pink, textTransform: "uppercase", marginBottom: 16 }}>TIMELINE</div>
-                                  <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                                    <div style={{ position: "absolute", left: -22, top: 0, bottom: 0, width: 2, background: `linear-gradient(to bottom, ${BRAND.pink}, ${BRAND.navy})` }} />
-                                    {article.timeline.map((evt, i) => (
-                                      <div key={i} style={{ position: "relative", paddingLeft: 8 }}>
-                                        <div style={{ position: "absolute", left: -26, top: 4, width: 8, height: 8, borderRadius: "50%", background: BRAND.pink, border: `2px solid ${t.bg}` }} />
-                                        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: BRAND.pink, marginBottom: 1 }}>{evt.year}</div>
-                                        <div style={{ fontSize: 10, fontWeight: 600, color: t.titleColor, lineHeight: 1.3, marginBottom: 1 }}>{evt.event}</div>
-                                        <div style={{ fontSize: 9, lineHeight: 1.4, color: t.textMuted }}>{evt.detail}</div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                  <p style={{ fontSize: 10, lineHeight: 1.5, color: t.textMuted, fontStyle: "italic", marginTop: 12, opacity: 0.7 }}>
-                                    Domestic investors such as Berlusconi at Milan, Walker at Blackburn, and Moratti at Inter are excluded , this timeline focuses on foreign PE investment.
-                                  </p>
-                                </div>
-                              </div>
-                              </>
-                            ) : (
-                              <>
-                                {/* Stat cards */}
-                                {article.statCards && (
-                                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isMobile ? 10 : 14, marginBottom: 28 }}>
-                                    {article.statCards.map((card, ci) => (
-                                      <div key={ci} style={{ background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6, padding: isMobile ? "16px 14px" : "20px 24px" }}>
-                                        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 28 : 32, color: BRAND.pink, lineHeight: 1 }}>{card.value}</div>
-                                        <div style={{ fontSize: 11, color: t.textMuted, marginTop: 6, lineHeight: 1.4 }}>{card.label}. {card.sublabel}</div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                                {article.intro && article.bodyParagraphs.length > 0 && (
-                                  <p style={{ fontStyle: "italic", fontSize: 15, lineHeight: 1.8, color: t.textSec, marginBottom: 24 }}>
-                                    {article.intro}
-                                  </p>
-                                )}
-                                {article.bodyParagraphs.length > 0 && (
-                                  <div>
-                                    {article.bodyHeading && (
-                                      <>
-                                        <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, marginBottom: 24 }} />
-                                        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 22 : 24, color: t.titleColor, marginBottom: 16 }}>{article.bodyHeading}</div>
-                                      </>
-                                    )}
-                                    {article.bodyParagraphs.map((p, i) => {
-                                      const dashIdx = p.indexOf(" , ");
-                                      if (dashIdx > 0 && dashIdx < 50 && p.substring(0, dashIdx) === p.substring(0, dashIdx).toUpperCase()) {
-                                        const boldPart = p.substring(0, dashIdx);
-                                        const rest = p.substring(dashIdx + 3);
-                                        return (
-                                          <div key={i} style={{ marginTop: 14 }}>
-                                            <strong style={{ display: "block", fontSize: 14, color: t.titleColor, marginBottom: 6 }}>{boldPart}</strong>
-                                            <p style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted }}>{rest}</p>
-                                          </div>
-                                        );
-                                      }
-                                      return <p key={i} style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted, marginTop: 14 }}>{p}</p>;
-                                    })}
-                                  </div>
-                                )}
-                                {/* Body sections , render right after bodyParagraphs, before flipCards/tables */}
-                                {article.bodySections?.map((section, si) => (
-                                  <div key={si} style={{ marginTop: si === 0 ? 28 : 36 }}>
-                                    <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, marginBottom: 24 }} />
-                                    <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 22 : 24, color: t.titleColor, marginBottom: 16 }}>{section.heading}</div>
-                                    {section.paragraphs.map((p, pi) => {
-                                      const dashIdx = p.indexOf(" \u2014 ");
-                                      if (dashIdx > 0 && dashIdx < 60) {
-                                        const boldPart = p.substring(0, dashIdx);
-                                        const rest = p.substring(dashIdx + 3);
-                                        return (
-                                          <div key={pi} style={{ marginTop: 14 }}>
-                                            <strong style={{ display: "block", fontSize: 14, color: t.titleColor, marginBottom: 6 }}>{boldPart}</strong>
-                                            <p style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted }}>{rest}</p>
-                                          </div>
-                                        );
-                                      }
-                                      return <p key={pi} style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted, marginTop: 14 }}>{p}</p>;
-                                    })}
-                                  </div>
-                                ))}
-                                {/* Collapsible revenue share table */}
-                                {article.revShareTable && (() => {
-                                  const parsePct = (s: string): number => {
-                                    const nums = s.match(/\d+/g)?.map(Number) || [];
-                                    return nums.length >= 2 ? (nums[0] + nums[1]) / 2 : nums[0] || 0;
-                                  };
-                                  const pctColor = (pct: number): string => {
-                                    if (pct <= 0) return t.textMuted;
-                                    if (pct < 25) return "#e05252";
-                                    if (pct < 40) return "#e08b35";
-                                    if (pct < 55) return "#d4a73a";
-                                    return "#4caf50";
-                                  };
-                                  return (
-                                    <div style={{ marginTop: 28 }}>
-                                      <button
-                                        type="button"
-                                        onClick={(e) => { e.stopPropagation(); setOpenRevTab(openRevTab === "revshare" ? null : "revshare"); }}
-                                        style={{ width: "100%", background: openRevTab === "revshare" ? `${BRAND.pink}06` : t.bgCard, border: `1px solid ${openRevTab === "revshare" ? BRAND.pink + "44" : t.border}`, borderRadius: 10, cursor: "pointer", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, outline: "none", transition: "all 0.3s", zIndex: 2 }}
-                                      >
-                                        <div style={{ textAlign: "left" }}>
-                                          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: t.titleColor, lineHeight: 1.2 }}>ATHLETE REVENUE SHARE BY SPORT</div>
-                                          <div style={{ fontSize: 11, color: t.textMuted, fontStyle: "italic", marginTop: 4 }}>Ranges of how much of the money reaches the athletes, across sports, geographies and structures</div>
-                                        </div>
-                                        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: openRevTab === "revshare" ? BRAND.pink : t.textMuted, flexShrink: 0, transition: "transform 0.3s", transform: openRevTab === "revshare" ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
-                                      </button>
-                                      <div style={{ maxHeight: openRevTab === "revshare" ? 2000 : 0, opacity: openRevTab === "revshare" ? 1 : 0, overflow: "hidden", transition: "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease" }}>
-                                        <div style={{ padding: "12px 0 0", overflowX: "auto" }}>
-                                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 11 : 12 }}>
-                                            <thead>
-                                              <tr>
-                                                {["Property", "% to Players", "Structure", "Notes"].map(h => (
-                                                  <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: BRAND.pink, textTransform: "uppercase", borderBottom: `2px solid ${t.border}` }}>{h}</th>
-                                                ))}
-                                              </tr>
-                                            </thead>
-                                            <tbody>
-                                              {article.revShareTable.map((row, ri) => {
-                                                if (row.isHeader) {
-                                                  return (
-                                                    <tr key={ri}>
-                                                      <td colSpan={4} style={{ padding: "14px 12px 6px", fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, color: t.titleColor, letterSpacing: 1, borderBottom: `1px solid ${t.border}` }}>{row.property}</td>
-                                                    </tr>
-                                                  );
-                                                }
-                                                const numPct = parsePct(row.pct);
-                                                const clr = pctColor(numPct);
-                                                return (
-                                                  <tr key={ri} style={{ background: ri % 2 === 0 ? "transparent" : `${t.border}33` }}>
-                                                    <td style={{ padding: "8px 12px", fontWeight: 600, color: t.text, borderBottom: `1px solid ${t.border}` }}>{row.property}</td>
-                                                    <td style={{ padding: "8px 12px", fontFamily: "'DM Mono',monospace", fontWeight: 700, color: clr, borderBottom: `1px solid ${t.border}` }}>{row.pct}</td>
-                                                    <td style={{ padding: "8px 12px", color: t.textMuted, fontSize: 11, borderBottom: `1px solid ${t.border}` }}>{row.structure}</td>
-                                                    <td style={{ padding: "8px 12px", color: t.textMuted, fontSize: 11, borderBottom: `1px solid ${t.border}`, fontStyle: "italic" }}>{row.notes}</td>
-                                                  </tr>
-                                                );
-                                              })}
-                                            </tbody>
-                                          </table>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  );
-                                })()}
-                                {/* Sections for mobile PE fallback */}
-                                {article.id === "pe-ownership" && article.sections && article.sections.map((section, si) => (
-                                  <div key={si} style={{ marginTop: 28 }}>
-                                    <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, marginBottom: 20 }} />
-                                    <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, color: t.titleColor, marginBottom: 12 }}>{section.heading}</div>
-                                    {section.paragraphs.map((p, pi) => {
-                                      const dashIdx = p.indexOf(" , ");
-                                      if (dashIdx > 0 && dashIdx < 50) {
-                                        const boldPart = p.substring(0, dashIdx);
-                                        const rest = p.substring(dashIdx);
-                                        return (
-                                          <p key={pi} style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted, marginTop: 12 }}>
-                                            <strong style={{ color: t.titleColor }}>{boldPart}</strong>{rest}
-                                          </p>
-                                        );
-                                      }
-                                      return <p key={pi} style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted, marginTop: 12 }}>{p}</p>;
-                                    })}
-                                    {/* Firm profiles inside WHERE WE ARE TODAY on mobile */}
-                                    {section.heading === "WHERE WE ARE TODAY" && article.firms && (
-                                      <div style={{ marginTop: 24 }}>
-                                        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: t.titleColor, marginBottom: 6 }}>WHO PIONEERED THE MODEL</div>
-                                        <p style={{ fontSize: 12, color: t.textMuted, marginBottom: 16 }}>Three firms defined what institutional sports ownership actually looks like, each representing a structurally distinct thesis.</p>
-                                        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-                                          {article.firms.map(firm => (
-                                            <div key={firm.name} style={{ paddingLeft: 14, borderLeft: `3px solid ${BRAND.pink}` }}>
-                                              <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: t.titleColor, marginBottom: 6 }}>{firm.name}</div>
-                                              <p style={{ fontSize: 13, lineHeight: 1.7, color: t.textMuted }}>{firm.desc}</p>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </>
-                            )}
-
-
-                            {/* THE SHIFT + Revenue tables + Athletes as Owners , before sections */}
-                            {article.flipCards && (
-                              <div style={{ marginTop: 40 }}>
-                                <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, marginBottom: 32 }} />
-                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 8 }}>THE SHIFT</div>
-                                <p style={{ fontSize: 13, color: t.textMuted, marginBottom: 28 }}>For most of sports history, athletes accepted the model they were born into. Three moments made that impossible to continue.</p>
-                                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                                  {article.flipCards.map(card => (
-                                    <FlipCardComponent key={card.id} card={card} t={t} isMobile={isMobile} />
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                            {article.revenueTables && (() => {
-                              const rt = article.revenueTables;
-                              const sectionGroups: { key: string; title: string; subtitle: string; rows: RevShareRow[] }[] = [
-                                { key: "us", title: "US LEAGUES", subtitle: "Closed leagues = controlled labor with strong unions", rows: rt.usLeagues },
-                                { key: "euro", title: "EUROPEAN FOOTBALL", subtitle: "Players run the show", rows: rt.euroFootball },
-                                { key: "comp", title: "COMPETITIONS", subtitle: "Governing bodies with full control", rows: rt.competitions },
-                                { key: "ind", title: "INDIVIDUAL SPORTS", subtitle: "Fragmented power , Golf just forced a reset", rows: rt.individualSports },
-                                { key: "cricket", title: "CRICKET", subtitle: "Governing body capture", rows: rt.cricket },
-                                { key: "combat", title: "UFC / WWE / BOXING", subtitle: "Extreme owner dominance vs star power", rows: rt.combat },
-                              ];
-                              const parsePct = (s: string): number => {
-                                const nums = s.match(/\d+/g)?.map(Number) || [];
-                                return nums.length >= 2 ? (nums[0] + nums[1]) / 2 : nums[0] || 0;
-                              };
-                              const pctColor = (pct: number): string => {
-                                if (pct <= 0) return "#9e9e9e";
-                                const clamped = Math.min(pct, 80);
-                                if (clamped < 25) return "#e05252";
-                                if (clamped < 40) return "#e08b35";
-                                if (clamped < 55) return "#d4a73a";
-                                return "#4caf50";
-                              };
-                              const pctBg = (pct: number): string => pctColor(pct) + "14";
-                              return (
-                                <div style={{ marginTop: 48 }}>
-                                  <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, marginBottom: 32 }} />
-                                  <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 8 }}>ATHLETE REVENUE SHARE BY SPORT</div>
-                                  <p style={{ fontSize: 13, color: t.textMuted, marginBottom: 12 }}>How much of the money reaches the athletes , and what structure determines it.</p>
-                                  <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
-                                    {[{ label: "< 25%", color: "#e05252" }, { label: "25–40%", color: "#e08b35" }, { label: "40–55%", color: "#d4a73a" }, { label: "> 55%", color: "#4caf50" }].map(l => (
-                                      <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                                        <div style={{ width: 10, height: 10, borderRadius: 2, background: l.color }} />
-                                        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: t.textMuted }}>{l.label}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                    {sectionGroups.map(group => {
-                                      const isOpen = openRevTab === group.key;
-                                      return (
-                                        <div key={group.key} style={{ borderRadius: 10, border: `1px solid ${isOpen ? BRAND.pink + "44" : t.border}`, overflow: "hidden", transition: "border-color 0.3s" }}>
-                                          <button
-                                            onClick={() => setOpenRevTab(isOpen ? null : group.key)}
-                                            style={{ width: "100%", background: isOpen ? (isDark ? `${BRAND.pink}10` : `${BRAND.pink}06`) : t.bgCard, border: "none", cursor: "pointer", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, outline: "none", transition: "background 0.3s" }}
-                                          >
-                                            <div style={{ textAlign: "left" }}>
-                                              <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 17, color: t.titleColor, lineHeight: 1.2 }}>{group.title}</div>
-                                              <div style={{ fontSize: 10, color: t.textMuted, fontStyle: "italic", marginTop: 2 }}>{group.subtitle}</div>
-                                            </div>
-                                            <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: isOpen ? BRAND.pink : t.textMuted, flexShrink: 0, transition: "transform 0.3s", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
-                                          </button>
-                                          <div style={{ maxHeight: isOpen ? 600 : 0, opacity: isOpen ? 1 : 0, overflow: "hidden", transition: "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease" }}>
-                                            <div style={{ padding: "0 20px 16px", overflowX: "auto" }}>
-                                              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 11 : 12, minWidth: isMobile ? undefined : 380 }}>
-                                                <thead>
-                                                  <tr>
-                                                    {["Property", "% to Players", ...(group.rows[0]?.structure ? ["Structure"] : []), "Notes"].map(h => (
-                                                      <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: 2, color: BRAND.pink, textTransform: "uppercase", borderBottom: `2px solid ${t.border}` }}>{h}</th>
-                                                    ))}
-                                                  </tr>
-                                                </thead>
-                                                <tbody>
-                                                  {group.rows.map((row, i) => {
-                                                    const numPct = parsePct(row.pct);
-                                                    const clr = pctColor(numPct);
-                                                    return (
-                                                      <tr key={i}>
-                                                        <td style={{ padding: isMobile ? "8px 8px" : "8px 12px", fontWeight: 600, color: t.text, whiteSpace: isMobile ? "normal" : "nowrap", borderBottom: `1px solid ${t.border}` }}>{row.property}</td>
-                                                        <td style={{ padding: "8px 12px", fontFamily: "'DM Mono',monospace", fontWeight: 700, color: clr, borderBottom: `1px solid ${t.border}`, background: pctBg(numPct) }}>{row.pct}</td>
-                                                        {row.structure !== undefined && <td style={{ padding: "8px 12px", color: t.textMuted, fontSize: 11, borderBottom: `1px solid ${t.border}` }}>{row.structure}</td>}
-                                                        <td style={{ padding: "8px 12px", color: t.textMuted, fontSize: 11, borderBottom: `1px solid ${t.border}` }}>{row.notes}</td>
-                                                      </tr>
-                                                    );
-                                                  })}
-                                                </tbody>
-                                              </table>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              );
-                            })()}
-
-                            {/* Content sections with headings (skip PE , handled above) */}
-                            {article.id !== "pe-ownership" && article.sections?.map((section, si) => (
-                              <div key={si} style={{ marginTop: si === 0 ? 0 : 36 }}>
-                                <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, marginBottom: 24 }} />
-                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 22 : 24, color: t.titleColor, marginBottom: 16 }}>{section.heading}</div>
-                                {/* Float map right inside first section for articles with maps */}
-                                {si === 0 && article.mapCities && !isMobile && (
-                                  <div style={{ float: "right", width: 460, marginLeft: 28, marginBottom: 16 }}>
-                                    <EuropeMap cities={article.mapCities} t={t} isDark={isDark} />
-                                  </div>
-                                )}
-                                {si === 0 && article.mapCities && isMobile && (
-                                  <div style={{ marginBottom: 20 }}>
-                                    <EuropeMap cities={article.mapCities} t={t} isDark={isDark} />
-                                  </div>
-                                )}
-                                {section.paragraphs.map((p, pi) => {
-                                  const dashIdx = p.indexOf(" , ");
-                                  if (dashIdx > 0 && dashIdx < 60) {
-                                    const boldPart = p.substring(0, dashIdx);
-                                    const rest = p.substring(dashIdx + 3);
-                                    return (
-                                      <React.Fragment key={pi}>
-                                        <div style={{ marginTop: 14 }}>
-                                          <strong style={{ display: "block", fontSize: 14, color: t.titleColor, marginBottom: 6 }}>{boldPart}</strong>
-                                          <p style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted }}>{rest}</p>
-                                        </div>
-                                        {/* Collapsible athlete ownership table after THE ATHLETE TAKES CONTROL */}
-                                        {boldPart === "THE ATHLETE TAKES CONTROL" && article.athleteOwnership && (
-                                          <div style={{ marginTop: 20, marginBottom: 8 }}>
-                                            <button
-                                              type="button"
-                                              onClick={(e) => { e.stopPropagation(); setOpenRevTab(openRevTab === "athlete-ownership" ? null : "athlete-ownership"); }}
-                                              style={{ width: "100%", background: openRevTab === "athlete-ownership" ? `${BRAND.pink}06` : t.bgCard, border: `1px solid ${openRevTab === "athlete-ownership" ? BRAND.pink + "44" : t.border}`, borderRadius: 10, cursor: "pointer", padding: "14px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, outline: "none", transition: "all 0.3s", zIndex: 2 }}
-                                            >
-                                              <div style={{ textAlign: "left" }}>
-                                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 16, color: t.titleColor, lineHeight: 1.2 }}>HISTORY OF ATHLETE OWNERSHIP</div>
-                                                <div style={{ fontSize: 11, color: t.textMuted, fontStyle: "italic", marginTop: 3 }}>The earliest known example was George Halas (1920s, NFL). From 2009–2015 few but isolated cases. 2019 onward a clear explosion.</div>
-                                              </div>
-                                              <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: openRevTab === "athlete-ownership" ? BRAND.pink : t.textMuted, flexShrink: 0, transition: "transform 0.3s", transform: openRevTab === "athlete-ownership" ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
-                                            </button>
-                                            <div style={{ maxHeight: openRevTab === "athlete-ownership" ? 3000 : 0, opacity: openRevTab === "athlete-ownership" ? 1 : 0, overflow: "hidden", transition: "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease" }}>
-                                              <div style={{ padding: "12px 0 0", overflowX: "auto" }}>
-                                                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 10 : 12 }}>
-                                                  <thead>
-                                                    <tr>
-                                                      {["Year", "Athlete", "Team / League", "Sport", "Type"].map(h => (
-                                                        <th key={h} style={{ textAlign: "left", padding: "8px 10px", fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: BRAND.pink, textTransform: "uppercase", borderBottom: `2px solid ${t.border}`, whiteSpace: "nowrap" }}>{h}</th>
-                                                      ))}
-                                                    </tr>
-                                                  </thead>
-                                                  <tbody>
-                                                    {article.athleteOwnership.map((row, ri) => (
-                                                      <tr key={ri} style={{ background: ri % 2 === 1 ? `${t.border}33` : "transparent" }}>
-                                                        <td style={{ padding: "6px 10px", fontFamily: "'DM Mono',monospace", fontWeight: 700, color: BRAND.pink, borderBottom: `1px solid ${t.border}`, whiteSpace: "nowrap" }}>{row.year}</td>
-                                                        <td style={{ padding: "6px 10px", fontWeight: 600, color: t.text, borderBottom: `1px solid ${t.border}`, whiteSpace: "nowrap" }}>{row.athlete}</td>
-                                                        <td style={{ padding: "6px 10px", color: t.textMuted, borderBottom: `1px solid ${t.border}` }}>{row.team}</td>
-                                                        <td style={{ padding: "6px 10px", color: t.textMuted, borderBottom: `1px solid ${t.border}`, whiteSpace: "nowrap" }}>{row.sport}</td>
-                                                        <td style={{ padding: "6px 10px", color: t.textMuted, fontSize: 11, borderBottom: `1px solid ${t.border}` }}>{row.type}</td>
-                                                      </tr>
-                                                    ))}
-                                                  </tbody>
-                                                </table>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        )}
-                                      </React.Fragment>
-                                    );
-                                  }
-                                  return <p key={pi} style={{ fontSize: 14, lineHeight: 1.8, color: t.textMuted, marginTop: 14 }}>{p}</p>;
-                                })}
-                              </div>
-                            ))}
-
-                            {/* Closing quote */}
-                            {article.closingQuote && (
-                              <div style={{ marginTop: 40 }}>
-                                <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, marginBottom: 28 }} />
-                                <p style={{ fontStyle: "italic", fontSize: 14, lineHeight: 1.8, color: t.textMuted, textAlign: "center", padding: isMobile ? "0 8px" : "0 40px" }}>{article.closingQuote}</p>
-                              </div>
-                            )}
-
-                            {/* Pros / Cons + integrated vote */}
-                            {article.pros && article.cons && (() => {
-                              const pollId = `gstvcr26:${article.id}:will-it-work`;
-                              return <PollVoteSection pollId={pollId} article={article} t={t} isMobile={isMobile} user={user} sessionValid={sessionValid} />;
-                            })()}
-
-                            {/* Timeline , skip for PE on desktop since it's in the sidebar */}
-                            {article.timeline && !(article.id === "pe-ownership" && !isMobile) && (
-                              <>
-                                <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: "48px 0" }} />
-                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 40, textAlign: "center" }}>TIMELINE</div>
-
-                                {isMobile ? (
-                                  /* Mobile: vertical compact timeline */
-                                  (<div style={{ position: "relative", paddingLeft: 28 }}>
-                                    <div style={{ position: "absolute", left: 8, top: 0, bottom: 0, width: 2, background: `linear-gradient(to bottom, ${BRAND.pink}, ${BRAND.navy})` }} />
-                                    {article.timeline.map((evt, i) => (
-                                      <div key={i} style={{ position: "relative", marginBottom: 24, paddingLeft: 20 }}>
-                                        <div style={{ position: "absolute", left: -24, top: 4, width: 12, height: 12, borderRadius: "50%", background: BRAND.pink, border: `2px solid ${t.bg}` }} />
-                                        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: 2, color: BRAND.pink, marginBottom: 4 }}>{evt.year}</div>
-                                        <div style={{ fontSize: 13, fontWeight: 600, color: t.titleColor, marginBottom: 2 }}>{evt.event}</div>
-                                        <div style={{ fontSize: 12, lineHeight: 1.6, color: t.textMuted }}>{evt.detail}</div>
-                                      </div>
-                                    ))}
-                                  </div>)
-                                ) : (
-                                  /* Desktop: horizontal with events alternating top/bottom */
-                                  (<div style={{ position: "relative", overflowX: "auto", padding: "0 0 24px", scrollbarWidth: "none" as const }}>
-                                    <div style={{ display: "flex", alignItems: "center", minWidth: article.timeline.length * 140, position: "relative" }}>
-                                      {/* Horizontal line */}
-                                      <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 2, background: `linear-gradient(to right, ${BRAND.pink}, ${BRAND.navy})`, transform: "translateY(-1px)" }} />
-                                      {article.timeline.map((evt, i) => {
-                                        const isTop = i % 2 === 0;
-                                        return (
-                                          <div key={i} style={{ flex: 1, minWidth: 140, position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                            {/* Top content */}
-                                            <div style={{ height: 120, display: "flex", flexDirection: "column", justifyContent: isTop ? "flex-end" : "flex-start", paddingBottom: isTop ? 16 : 0, paddingTop: isTop ? 0 : 16, opacity: isTop ? 1 : 0, pointerEvents: isTop ? "auto" : "none" }}>
-                                              <div style={{ textAlign: "center", maxWidth: 130 }}>
-                                                <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: BRAND.pink, marginBottom: 4 }}>{evt.year}</div>
-                                                <div style={{ fontSize: 11, fontWeight: 600, color: t.titleColor, lineHeight: 1.3, marginBottom: 2 }}>{evt.event}</div>
-                                                <div style={{ fontSize: 10, lineHeight: 1.4, color: t.textMuted }}>{evt.detail}</div>
-                                              </div>
-                                            </div>
-                                            {/* Dot */}
-                                            <div style={{ width: 12, height: 12, borderRadius: "50%", background: BRAND.pink, border: `2px solid ${t.bg}`, zIndex: 1, flexShrink: 0 }} />
-                                            {/* Bottom content */}
-                                            <div style={{ height: 120, display: "flex", flexDirection: "column", justifyContent: !isTop ? "flex-start" : "flex-end", paddingTop: !isTop ? 16 : 0, paddingBottom: !isTop ? 0 : 16, opacity: !isTop ? 1 : 0, pointerEvents: !isTop ? "auto" : "none" }}>
-                                              <div style={{ textAlign: "center", maxWidth: 130 }}>
-                                                <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: 2, color: BRAND.pink, marginBottom: 4 }}>{evt.year}</div>
-                                                <div style={{ fontSize: 11, fontWeight: 600, color: t.titleColor, lineHeight: 1.3, marginBottom: 2 }}>{evt.event}</div>
-                                                <div style={{ fontSize: 10, lineHeight: 1.4, color: t.textMuted }}>{evt.detail}</div>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>)
-                                )}
-                              </>
-                            )}
-
-                            {/* Firm profiles , skip PE entirely (handled in its own section) */}
-                            {article.firms && article.id !== "pe-ownership" && (
-                              <>
-                                <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: "48px 0" }} />
-                                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: t.titleColor, marginBottom: 32 }}>WHO PIONEERED THE MODEL</div>
-                                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 20 }}>
-                                  {article.firms.map(firm => {
-                                    const fUrl = firm.domain ? `https://www.google.com/s2/favicons?sz=128&domain=${firm.domain}` : null;
-                                    return (
-                                      <div key={firm.name} style={{ paddingLeft: 16, borderLeft: `3px solid ${BRAND.pink}` }}>
-                                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                                          <div style={{ width: 28, height: 28, borderRadius: 6, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-                                            {fUrl && <img src={fUrl} alt="" width={28} height={28} style={{ objectFit: "contain", position: "absolute", top: 0, left: 0, zIndex: 1, background: "#fff", borderRadius: 6 }} onError={(e) => { e.currentTarget.style.display = "none"; }} />}
-                                            <div style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: BRAND.pink, borderRadius: 6, color: "#fff", fontWeight: 700, fontSize: 12, fontFamily: "'Bebas Neue',sans-serif" }}>{firm.name.charAt(0)}</div>
-                                          </div>
-                                          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, color: t.titleColor }}>{firm.name}</div>
-                                        </div>
-                                        <p style={{ fontSize: 13, lineHeight: 1.8, color: t.textMuted }}>{firm.desc}</p>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </>
-                            )}
-                          </div>
-                      </AccordionBody>
+            </div>
+            {TREND_DEEP_DIVES.map(trend => {
+              const isOpen = isPdf || expandedBlock === trend.id;
+              return (
+                <div key={trend.id} id={`trend-expanded-${trend.id}`} style={{ ...(isPdf ? pdfBreak : {}), borderRadius: 10, overflow: "hidden", marginTop: isOpen ? 28 : 0, background: isOpen ? t.bgSec : "transparent", border: isOpen ? `1px solid ${BRAND.darkTitle}18` : "1px solid transparent" }}>
+                  {/* PDF: render the deep dive as-is; the accordion's measured max-height clips it in print. */}
+                  {isPdf ? (
+                    <div style={{ padding: "28px 32px" }}>
+                      <TrendDeepDiveBody trend={trend} t={t} isMobile={false} />
                     </div>
-                  );
-                })}
-              </>
-            );
-          })()}
+                  ) : (
+                    <AccordionBody isOpen={isOpen} windowWidth={windowWidth}>
+                      <div style={{ padding: isMobile ? "20px 16px" : "28px 32px" }}>
+                        <TrendDeepDiveBody trend={trend} t={t} isMobile={isMobile} />
+                      </div>
+                    </AccordionBody>
+                  )}
+                </div>
+              );
+            })}
+          </>
         </div>
       </div>
 
@@ -3298,6 +2188,13 @@ export default function ReportGSTVCR26({ content, preview = false }: {
       </div>
 
     </>),
+    unicorns: (<>
+      <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)` }} />
+      {/* ── UNICORNS: list from the Unicorns 2026 sheet, linked to Atlas companies ── */}
+      <div id="unicorns" style={pdfBreak}>
+        <UnicornsSection copy={UNICORNS_HEADER} t={t} isDark={isDark} isMobile={isMobile} isPdf={isPdf} />
+      </div>
+    </>),
     ngsc: (<>
       <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: isMobile ? "24px 0" : "40px 0" }} />
 
@@ -3732,13 +2629,23 @@ export default function ReportGSTVCR26({ content, preview = false }: {
 
     </>),
   };
-  const partOrder = [...new Set([...(Array.isArray(ov?.partOrder) ? ov.partOrder : []), ...GSTVCR26_PART_ORDER])].filter((id) => id in PARTS);
+  // A saved order from before a part existed gets that part in its default slot
+  // (after the part it follows by default), not tacked on at the end.
+  const savedOrder: string[] = Array.isArray(ov?.partOrder) ? ov.partOrder : [];
+  const withNewParts = GSTVCR26_PART_ORDER.reduce<string[]>((order, id, i) => {
+    if (order.includes(id)) return order;
+    const prev = GSTVCR26_PART_ORDER[i - 1];
+    const at = prev && order.includes(prev) ? order.indexOf(prev) + 1 : order.length;
+    return [...order.slice(0, at), id, ...order.slice(at)];
+  }, savedOrder);
+  const partOrder = [...new Set(withNewParts)]
+    .filter((id) => id in PARTS && !GSTVCR26_HIDDEN_PARTS.includes(id));
 
   return (
     <div ref={reportContainerRef} style={{ background: t.bg, color: t.text, fontFamily: "'Open Sans','system-ui',sans-serif", overflowX: "hidden", minHeight: "100vh", transition: "background 0.35s, color 0.35s" }}>
       {/* ── NAV (shared with every custom report — only the section links differ) ── */}
       <ReportNav ref={navRef}
-        items={[{ href: "#trends", label: NAV.insights }, { href: "#innovators", label: NAV.innovators }, { href: "#ecosystem", label: NAV.startups }, { href: "#ecomap", label: NAV.ecosystem }, { href: "#dealflow", label: NAV.data }]}
+        items={[{ href: "#trends", label: NAV.insights }, { href: "#ecomap", label: NAV.ecosystem }, { href: "#unicorns", label: NAV.unicorns ?? "Unicorns" }, { href: "#dealflow", label: NAV.data }]}
         activeIndex={activeDot} isDark={isDark} isMobile={isMobile} hidden={authGateActive || isPdf} theme={t}
         pdf={{ url: GSTVCR26_PDF_URL, file: "GSTVCR26-LITE.pdf", label: NAV.downloadPdf }}
         mobileOpen={mobileMenuOpen} onToggleMobile={() => setMobileMenuOpen(o => !o)} onToggleDark={() => setIsDark((d: boolean) => !d)}
@@ -3826,18 +2733,8 @@ export default function ReportGSTVCR26({ content, preview = false }: {
 
           {/* Right , Summary cards (desktop only , on mobile these are in a separate section below) */}
           {!isMobile && <div style={{ flex: "0 1 580px", display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12, minWidth: 0 }}>
-            {(HERO.kpis as { icon: keyof typeof STAT_ICONS; num: string; label: string }[]).map((card, i) => (
-              <div key={i} style={{
-                padding: "26px 24px 22px", borderRadius: 12,
-                background: isDark ? t.bgCard : "#fff",
-                border: isDark ? `1px solid ${t.border}` : "none",
-                position: "relative", overflow: "hidden",
-                boxShadow: isDark ? "0 4px 24px rgba(0,0,0,0.4)" : "0 4px 24px rgba(0,0,0,0.2)",
-              }}>
-                <div style={{ position: "absolute", top: 16, right: 16, opacity: 0.55 }}>{(STAT_ICONS[card.icon] ?? STAT_ICONS.funding)(isDark ? t.textMuted : BRAND.darkTitle)}</div>
-                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(36px,3.5vw,50px)", color: BRAND.pink, lineHeight: 1 }}>{card.num}</div>
-                <div style={{ marginTop: 10, fontSize: 13, fontWeight: 500, color: isDark ? t.titleColor : BRAND.darkTitle, lineHeight: 1.4 }}>{card.label}</div>
-              </div>
+            {summaryCards.map((card) => (
+              <SummaryCardView key={card.id} card={card} icon={STAT_ICONS[card.icon](isDark ? t.textMuted : BRAND.darkTitle)} t={t} isDark={isDark} compact={false} isPdf={isPdf} onOpen={openSummaryTarget} />
             ))}
           </div>}
         </div>
@@ -3849,22 +2746,8 @@ export default function ReportGSTVCR26({ content, preview = false }: {
           {/* Subtle background pattern */}
           <div style={{ position: "absolute", inset: 0, opacity: isDark ? 0.04 : 0.06, backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "32px 32px", color: "#fff", pointerEvents: "none" }} />
           <div style={{ position: "relative", zIndex: 1, width: "100%", height: "calc(100svh - 140px)", display: "flex", flexDirection: "column", gap: 10 }}>
-            {(HERO.kpis as { icon: keyof typeof STAT_ICONS; num: string; label: string }[]).map((card, i) => (
-              <div key={i} style={{
-                padding: "20px 18px", borderRadius: 10,
-                background: isDark ? t.bgCard : "#fff",
-                border: isDark ? `1px solid ${t.border}` : "none",
-                position: "relative", overflow: "hidden",
-                boxShadow: isDark ? "0 4px 24px rgba(0,0,0,0.4)" : "0 4px 24px rgba(0,0,0,0.2)",
-                display: "flex", alignItems: "center", gap: 14,
-                flex: 1, minHeight: 0,
-              }}>
-                <div style={{ position: "absolute", top: 10, right: 10, opacity: 0.55 }}>{(STAT_ICONS[card.icon] ?? STAT_ICONS.funding)(isDark ? t.textMuted : BRAND.darkTitle)}</div>
-                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 24, color: BRAND.pink, lineHeight: 1, flexShrink: 0, minWidth: 55 }}>{card.num}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 500, color: isDark ? t.titleColor : BRAND.darkTitle, lineHeight: 1.4 }}>{card.label}</div>
-                </div>
-              </div>
+            {summaryCards.map((card) => (
+              <SummaryCardView key={card.id} card={card} icon={STAT_ICONS[card.icon](isDark ? t.textMuted : BRAND.darkTitle)} t={t} isDark={isDark} compact isPdf={isPdf} onOpen={openSummaryTarget} />
             ))}
           </div>
         </section>

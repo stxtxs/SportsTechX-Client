@@ -38,6 +38,8 @@ export const qk = {
   // ── Reference ──────────────────────────────────────────────────────────
   reference: {
     sports: () => ['/api/sports'] as const,
+    /** Headings with their sports nested (Preferences sport families). */
+    sportsTree: () => ['/api/sports', { tree: 1 }] as const,
     sectors: () => ['/api/sectors'] as const,
     techTags: () => ['/api/tech-tags'] as const,
     currencies: () => ['/api/currencies'] as const,

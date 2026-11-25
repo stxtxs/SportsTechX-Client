@@ -12,7 +12,7 @@ import { qk } from '@/lib/query-keys';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
 import { Screen, Card, ReadOnly, Button } from '@/components/atlas';
 import { PasswordField } from '@/components/auth/auth-shell';
-import { VerifyButton } from '@/components/features/verify/verify-cta';
+import { OrganisationCard, ProfileDetailFields, SaveRow, useAccountDetails } from './account-details';
 
 /**
  * Account (Raise mock-up 17, Scout "Account"): profile, security and
@@ -60,6 +60,7 @@ const NOTIFICATIONS: { key: NotificationKey; label: string; sub: string }[] = [
 
 export function AccountSettings({ extra }: { /** @deprecated The Account header has no byline. */ sub?: string; /** Product-specific cards before Log out (e.g. Explore's product access). */ extra?: React.ReactNode }) {
 	const { data: profile } = useUserProfile();
+	const details = useAccountDetails();
 	const [busy, setBusy] = useState(false);
 	const { logout, signingOut } = useLogout();
 	// Avatar upload: mint a signed URL, push the file straight to the public
@@ -209,8 +210,14 @@ export function AccountSettings({ extra }: { /** @deprecated The Account header 
 					<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
 						<ReadOnly label="Full name" value={name || '—'} />
 						<ReadOnly label="Email" value={profile?.email ?? '—'} />
+						{/* Role and LinkedIn moved here from the Scout thesis, on every solution (D1, 1.5). */}
+						<ProfileDetailFields d={details} />
 					</div>
+					<SaveRow d={details} />
 				</Card>
+
+				{/* Fund details from the thesis, as an Organisation block with Verify ownership (D1, 1.5). */}
+				<OrganisationCard d={details} />
 
 				<Card>
 					<div style={{ fontSize: 16, fontFamily: 'var(--a-font)', fontWeight: 700, color: 'var(--a-ink)', marginBottom: 16 }}>Security</div>
@@ -254,18 +261,6 @@ export function AccountSettings({ extra }: { /** @deprecated The Account header 
 					))}
 				</Card>
 
-				{/* Verification lives on every tier's Account page, not just the paid
-					    ones — the whole point is that a free user can correct their own
-					    company's record. */}
-				<Card className="explore-card">
-					<div className="atlas-eyebrow">Verification</div>
-					<div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginTop: 10 }}>
-						<p style={{ fontSize: 13, lineHeight: 1.55, color: 'var(--a-muted)', margin: 0, maxWidth: 420 }}>
-							Claim your company or fund to keep its details accurate on Atlas.
-						</p>
-						<VerifyButton />
-					</div>
-				</Card>
 				{extra}
 
 				<button onClick={() => void logout()} disabled={signingOut} style={{ background: 'none', border: 'none', color: 'var(--a-danger)', fontFamily: 'var(--a-mono)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', padding: '4px 0', justifySelf: 'start' }}>

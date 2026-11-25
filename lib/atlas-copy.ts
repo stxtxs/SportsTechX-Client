@@ -14,13 +14,13 @@ export function greetingFor(hour: number): string {
 export const ASK_PLACEHOLDER: Record<Tier, string> = {
 	explore: 'Ask Atlas about trends, companies, funding and events.',
 	raise: 'Ask Atlas about investors, your market and your raise',
-	scout: 'Ask Atlas about companies, deals and your thesis',
+	scout: 'Ask Atlas about companies, deals and your preferences',
 };
 
 export const ASK_SUGGESTIONS: Record<Tier, [string, string, string]> = {
 	explore: ['Summarise last month’s deal flow', 'What sports tech events are coming up?', 'What’s trending in sports tech?'],
 	raise: ['Find investors for my round', 'Review my pitch deck', 'Size my market'],
-	scout: ['Find companies matching my thesis', 'Show recent sports tech deals', 'What’s trending in sports tech?'],
+	scout: ['Find companies matching my preferences', 'Show recent sports tech deals', 'What’s trending in sports tech?'],
 };
 
 export const ASK_INTRO = 'Ask me about the sports tech market: companies, funding rounds, investors and events.';
@@ -29,7 +29,7 @@ export const ASK_INTRO = 'Ask me about the sports tech market: companies, fundin
 export const SETTINGS_LINK: Record<Tier, { id: string; label: string }> = {
 	explore: { id: 'interests', label: 'Preferences' },
 	raise: { id: 'raise-settings', label: 'Raise settings' },
-	scout: { id: 'thesis', label: 'Scouting thesis' },
+	scout: { id: 'interests', label: 'Preferences' },
 };
 
 export const NEWSLETTER_INTRO = 'The SportsTechX briefing: funding, deals and the developments that matter across sports tech, published weekly.';

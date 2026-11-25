@@ -30,15 +30,21 @@ export interface Interests {
 	sports: string[];
 	/** Technologies (tech tag ids). */
 	techs: string[];
+	/** Business models included under Tags: "B2B", "B2C", "B2B2C" (stored lowercase). */
+	models: string[];
 	geos: string[];
 	goals: string[];
 }
 
-export const NO_INTERESTS: Interests = { sectors: [], subs: [], sports: [], techs: [], geos: [], goals: [] };
+export const NO_INTERESTS: Interests = { sectors: [], subs: [], sports: [], techs: [], models: [], geos: [], goals: [] };
+
+/** Business models offered under Tags → Include, as shown. */
+export const MODEL_OPTIONS = ['B2B', 'B2C', 'B2B2C'];
+const modelLabel = (v: string) => MODEL_OPTIONS.find((m) => m.toLowerCase() === v.toLowerCase());
 
 /** Fixed option sets — stored as text, so the chip value is its own label. */
 export const FIXED_OPTIONS = {
-	geos: { label: 'Countries or regions', options: ['Europe', 'United Kingdom', 'India', 'North America', 'Middle East', 'Global'] },
+	geos: { label: 'Geography', options: ['Global', 'Africa', 'Asia', 'Europe', 'North America', 'Oceania', 'South America'] },
 	// Worded on purpose: the API scans goal text to recommend a product
 	// ("rais|fund…" → Raise, "source|deal flow…" → Scout), so the two
 	// commercial goals must keep those words. See explore.controller.ts.
@@ -82,7 +88,7 @@ export function normaliseGoals(saved: string[]): string[] {
 }
 
 interface Ref { id: string; name: string | null }
-interface StoredInterests { sectors: Ref[]; sports: Ref[]; tech_tags?: Ref[]; geos: string[]; goals: string[] }
+interface StoredInterests { sectors: Ref[]; sports: Ref[]; tech_tags?: Ref[]; business_models?: string[] | null; geos: string[]; goals: string[] }
 
 type Group = { label: string; options: [value: string, label: string][]; backed: boolean };
 
@@ -116,6 +122,7 @@ export function useInterestOptions(): Record<keyof Interests, Group> & { subTop:
 			subs: { label: 'Sub-sectors', backed: true, options: sectorList.filter((s) => !topIds.has(s.id)).map(pair).sort(byLabel) },
 			sports: { label: 'Sports', backed: true, options: sportList.map(pair).sort(byLabel) },
 			techs: { label: 'Technologies', backed: true, options: techList.map(pair).sort(byLabel) },
+			models: { label: 'Business models', backed: true, options: MODEL_OPTIONS.map((m) => [m, m] as [string, string]) },
 			geos: { label: FIXED_OPTIONS.geos.label, backed: true, options: FIXED_OPTIONS.geos.options.map((o) => [o, o] as [string, string]) },
 			goals: { label: FIXED_OPTIONS.goals.label, backed: true, options: FIXED_OPTIONS.goals.options.map((o) => [o, o] as [string, string]) },
 			subTop,
@@ -147,6 +154,7 @@ export function useInterests(): {
 			subs: stored.filter((id) => !topIds.has(id)),
 			sports: (data?.sports ?? []).map((s) => s.id),
 			techs: (data?.tech_tags ?? []).map((t) => t.id),
+			models: (data?.business_models ?? []).map(modelLabel).filter((m): m is string => !!m),
 			geos: data?.geos ?? [],
 			goals: normaliseGoals(data?.goals ?? []),
 		};
@@ -158,6 +166,7 @@ export function useInterests(): {
 			sector_ids: [...next.sectors, ...next.subs],
 			sport_ids: next.sports,
 			tech_tag_ids: next.techs,
+			business_models: next.models.map((m) => m.toLowerCase()),
 			geos: next.geos,
 			// An "Other" ticked but left blank isn't a goal.
 			goals: next.goals.filter((g) => !(g.startsWith(OTHER_GOAL_PREFIX) && !g.slice(OTHER_GOAL_PREFIX.length).trim())),
@@ -174,6 +183,7 @@ export function useInterests(): {
 			...value.subs.map((id) => name('subs', id)),
 			...value.sports.map((id) => name('sports', id)),
 			...value.techs.map((id) => name('techs', id)),
+			...value.models,
 			...value.geos,
 		];
 	}, [value, opts]);

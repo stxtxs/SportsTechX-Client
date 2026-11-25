@@ -1,0 +1,14 @@
+/* Amount field (D1, 2.4): currency symbol inside the box, master format beside it. */
+.atlas .amt { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.atlas .amt__box {
+	display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; max-width: 260px; height: 38px; padding: 0 14px;
+	border-radius: var(--a-radius-pill); box-shadow: inset 0 0 0 1px var(--a-border-strong); background: transparent; cursor: text;
+}
+.atlas .amt__box:focus-within { box-shadow: inset 0 0 0 1px var(--a-ink); }
+.atlas .amt__sym { font-family: var(--a-body); font-size: 14px; color: var(--a-muted); }
+.atlas .amt__input {
+	flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent;
+	font-family: var(--a-body); font-size: 14px; color: var(--a-ink); font-variant-numeric: tabular-nums;
+}
+.atlas .amt__input::placeholder { color: var(--a-faint); }
+.atlas .amt__fmt { flex: none; min-width: 64px; font-family: var(--a-mono); font-size: 12px; color: var(--a-muted); font-variant-numeric: tabular-nums; }

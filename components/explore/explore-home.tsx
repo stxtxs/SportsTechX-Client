@@ -1,15 +1,15 @@
 'use client';
 
-import { Newspaper, Files, CalendarDays, UserRound } from 'lucide-react';
+import { UserRound } from 'lucide-react';
 import { FeedCard, SectionHead } from '@/components/atlas';
 import useSWR from 'swr';
 import type { SectorRef } from '@/hooks/use-sector-tiers';
 import { qk } from '@/lib/query-keys';
-import type { NewsletterArticle, Page, ReportListItem } from '@/types/api';
 import { useInterests, type Interests } from './interests';
 import { hrefOf } from '@/lib/routes';
-import { fmtFullDate, fmtMonth } from '@/lib/format';
-import { PinnedFeedCards, usePinnedKeys } from '@/components/features/pins/pinned-feed-cards';
+import { PinnedFeedCards } from '@/components/features/pins/pinned-feed-cards';
+import { LATEST_MAX, LatestContent } from '@/components/features/home/latest-cards';
+import { usePins } from '@/components/features/pins/use-pins';
 import { HomeHero } from '@/components/features/home/home-hero';
 import { preferencesPct, setupDone } from '@/lib/profile-completion';
 
@@ -18,7 +18,6 @@ import { preferencesPct, setupDone } from '@/lib/profile-completion';
  * (searches the live company database) and "Latest from Atlas". Every
  * card is live; "For you" reads the interests saved via `/api/explore/interests`.
  */
-const fmt = (d: string) => fmtFullDate(d);
 const COMPANIES = hrefOf('companies');
 
 /**
@@ -44,32 +43,11 @@ function forYouLink(v: Interests, sectors: SectorRef[], picked: string[]): { tit
 }
 
 export function ExploreHome() {
+	const { pins } = usePins();
 	const { value: interests, picked } = useInterests();
 	// Same key (and hour-long dedupe) as the interest options — no extra request.
 	const { data: sectorData } = useSWR<SectorRef[] | { data: SectorRef[] }>(qk.reference.sectors(), { dedupingInterval: 60 * 60_000 });
 	const forYou = forYouLink(interests, Array.isArray(sectorData) ? sectorData : (sectorData?.data ?? []), picked);
-	// Shares its SWR key with the Newsletter page, so visiting both costs one
-	// request. Editions arrive newest-first from the feed, but sort rather than
-	// trust that — the hero must genuinely be the latest.
-	const news = useSWR<NewsletterArticle[]>(qk.newsletter.articles());
-	// An item appears once on Home: skip the newest edition or report when it's
-	// already pinned above (fix brief N1).
-	const pinned = usePinnedKeys();
-	const latestNews = [...(news.data ?? [])]
-		.sort((a, b) => Date.parse(b.pubDate) - Date.parse(a.pubDate))
-		.find((a) => !pinned.has(`newsletter:${a.slug}`));
-	// Shares the Reports library's SWR key, so visiting both costs one request.
-	// Deliberately not `limit: 1`: the list default sorts by `-created_at` and
-	// the `-report_year` sort puts year-less rows FIRST, so a single row is the
-	// wrong report either way (measured: it returns a 2021 edition). The whole
-	// set is 33 rows / 23KB, so sorting client-side is the cheaper correct option.
-	const reports = useSWR<Page<ReportListItem>>(qk.reports.list({ limit: 100 }));
-	const latestReport = [...(reports.data?.data ?? [])]
-		.sort((a, b) => (b.report_year ?? 0) - (a.report_year ?? 0) || (b.report_month ?? 0) - (a.report_month ?? 0))
-		.find((r) => !pinned.has(`report:${r.slug ?? r.id}`));
-	const lastMonth = fmtMonth(new Date(new Date().getFullYear(), new Date().getMonth() - 1));
-
-
 	return (
 		<div className="explore-home">
 			<HomeHero tier="explore" settingsMeta={picked.length > 0 ? picked.length : undefined} />
@@ -79,13 +57,8 @@ export function ExploreHome() {
 				<div className="atlas-feed-grid">
 					{/* Pinned items first, marked "Pinned"; the filled pin unpins (fix brief N1). */}
 					<PinnedFeedCards />
-					{latestNews && (
-						<FeedCard tag="Newsletter" icon={Newspaper} title={latestNews.title} body={`${fmt(latestNews.pubDate)} · ${latestNews.description}`} href={hrefOf('newsletter')} />
-					)}
-					{latestReport && (
-						<FeedCard tag="Report" icon={Files} title={latestReport.title} body={`${latestReport.report_year ?? ''} · ${latestReport.description ?? ''}`.trim()} href={hrefOf('reports')} />
-					)}
-					<FeedCard tag="Monthly roundup" icon={CalendarDays} title={`${lastMonth} market roundup`} body="The month’s most relevant funding rounds, acquisitions and industry developments in one read." href={hrefOf('roundup')} />
+					{/* The newest content until there are six cards, keeping one slot for "For you" (Home, 11). */}
+					<LatestContent slots={LATEST_MAX - pins.length - 1} />
 					{/* Setup is a task until preferences are 80% complete (handover v1 §7). */}
 					{!setupDone(preferencesPct(interests)) ? (
 						<FeedCard tag="For you" icon={UserRound} title="Set up your preferences" body="Set up your preferences and Atlas tunes Home to them." href={hrefOf('interests')} actionLabel="Set up your preferences" />

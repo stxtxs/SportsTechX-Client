@@ -40,7 +40,8 @@
 /* Same width as <Screen> (PAGE_MAX) — homes are not a narrower special case. */
 .atlas .scout-home { padding: 57px 56px 0; max-width: 1440px; margin-inline: auto; }
 .atlas .scout-home__sub { margin: 18px 0 0; font-family: var(--a-body); font-size: 14px; color: var(--a-muted); }
-.atlas .scout-home__thesis { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; margin-top: 22px; }
+/* Same gap above the Ask Atlas box as under the subline's rule (D1, 4.1). */
+.atlas .scout-home__thesis { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; margin: 0 0 27px; }
 .atlas .scout-home__composer { margin-top: 27px; padding-top: 27px; border-top: 1px solid var(--a-border); }
 .atlas .scout-home__attn { padding: 56px 0 96px; }
 @media (max-width: 1100px) { .atlas .scout-home { padding: 40px 32px 0; } }

@@ -92,6 +92,12 @@ export const INTEREST_LABEL: Record<string, string> = {
 	shared: 'Details shared', connected: 'Introduced', declined: 'Not proceeding',
 };
 
+/** A Verified Raise carries the founder's round code (raise_profiles.round_type); a Circle deal
+ *  already carries a readable `funding_round_types` name, which passes through unchanged. */
+const ROUND_LABEL: Record<string, string> = {
+	pre_seed: 'Pre-seed', seed: 'Seed', series_a: 'Series A', series_b_plus: 'Series B+', bridge: 'Bridge', other: 'Other',
+};
+export const roundLabel = (v: string | null) => (v ? ROUND_LABEL[v] ?? v : null);
 export const leadLabel = (v: string | null) => (v ? LEAD_LABEL[v] ?? v : null);
 export const instrumentLabel = (v: string | null) => (v ? INSTRUMENT_LABEL[v] ?? v : null);
 export const relationshipLabel = (v: string | null) => (v ? RELATIONSHIP_LABEL[v] ?? v : null);

@@ -10,7 +10,7 @@
  */
 import assert from 'node:assert/strict';
 import {
-	canOpenDocs, closeLabel, committedPct, companyLabel, money, submitterLabel, type DealRow,
+	canOpenDocs, closeLabel, committedPct, companyLabel, money, roundLabel, submitterLabel, type DealRow,
 } from './deal-types.ts';
 
 let failures = 0;
@@ -67,6 +67,8 @@ check(money('abc', 'EUR') === null, 'a non-numeric string does not render as NaN
 check(/^[$€]\d+\.\d{2}M$/.test(money('8000000', null) ?? ''), 'a missing currency still formats');
 check(closeLabel('2026-12-01')?.includes('2026') === true, 'a date renders as month + year');
 check(closeLabel(null) === null, 'no close date renders nothing');
+check(roundLabel('pre_seed') === 'Pre-seed' && roundLabel('series_b_plus') === 'Series B+', 'a Verified Raise round code reads as words');
+check(roundLabel('Seed') === 'Seed' && roundLabel(null) === null, 'a Circle round name passes through; none stays none');
 
 console.log(failures === 0 ? '\nPASS' : `\nFAIL — ${failures} check(s)`);
 process.exitCode = failures === 0 ? 0 : 1;

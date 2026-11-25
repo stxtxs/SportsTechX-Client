@@ -12,7 +12,7 @@ import { refreshPaths } from '@/lib/invalidate';
 import { qk } from '@/lib/query-keys';
 import { hrefOf } from '@/lib/routes';
 import {
-	LEAD_LABEL, MY_STATUS, closeLabel, committedPct, companyLabel, money, submitterLabel,
+	LEAD_LABEL, MY_STATUS, closeLabel, committedPct, companyLabel, money, roundLabel, submitterLabel,
 	type DealRow, type DealTab, type MyDealRow,
 } from './deal-types';
 
@@ -179,7 +179,7 @@ function MySubmissions() {
 								{m.company_name ?? 'Untitled draft'}
 							</div>
 							<div className="scout-df-card__round">
-								{m.round_type ?? 'Round'}{target ? ` · ${target} target` : ''}
+								{roundLabel(m.round_type) ?? 'Round'}{target ? ` · ${target} target` : ''}
 							</div>
 							<div className="scout-df-card__by">{MY_STATUS[m.status] ?? m.status}</div>
 							{/* The whole reason this section exists: a returned deal shows as
@@ -288,7 +288,7 @@ function FeaturedDeal({ d }: { d: DealRow }) {
 	const geography = d.company_hq?.split(', ').pop();
 	// Only render terms we actually have — empty "—" cells read as unfinished.
 	const terms = ([
-		['Round', d.round_type],
+		['Round', roundLabel(d.round_type)],
 		['Target', money(d.target_amount, d.currency_code)],
 		['Committed', money(d.committed_amount, d.currency_code)],
 		['Valuation', d.valuation],
@@ -324,7 +324,7 @@ function VerifiedCard({ d }: { d: DealRow }) {
 		<article className="scout-df-card">
 			<div className="scout-df-card__name">{companyLabel(d)}</div>
 			<div className="scout-df-card__round">
-				{d.round_type ?? 'Round'}{target ? ` · ${target} target` : ''}
+				{roundLabel(d.round_type) ?? 'Round'}{target ? ` · ${target} target` : ''}
 			</div>
 			{/* Only drawn when both figures are known — a 0% bar would read as
 			    "nothing raised" rather than "not disclosed". */}
@@ -344,7 +344,7 @@ function CircleCard({ d }: { d: DealRow }) {
 		<article className="scout-df-card scout-df-card--circle">
 			<div className="scout-df-card__name">{companyLabel(d)}</div>
 			<div className="scout-df-card__round">
-				{d.round_type ?? 'Round'}{target ? ` · ${target} target` : ''}
+				{roundLabel(d.round_type) ?? 'Round'}{target ? ` · ${target} target` : ''}
 			</div>
 			<p className="scout-df-card__desc">{d.company_description ?? ''}</p>
 			<div className="scout-df-card__by">Shared by {submitterLabel(d)}</div>

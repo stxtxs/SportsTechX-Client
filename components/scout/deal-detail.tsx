@@ -11,7 +11,7 @@ import { apiRequest } from '@/lib/query-client';
 import { qk } from '@/lib/query-keys';
 import { hrefOf } from '@/lib/routes';
 import {
-	INTEREST_LABEL, canOpenDocs, closeLabel, companyLabel, instrumentLabel, leadLabel, money,
+	INTEREST_LABEL, canOpenDocs, closeLabel, companyLabel, instrumentLabel, leadLabel, money, roundLabel,
 	relationshipLabel, submitterLabel, type DealRow,
 } from './deal-types';
 
@@ -98,7 +98,7 @@ export function DealDetail({ id }: { id: string }) {
 	const name = companyLabel(d);
 
 	const terms: [string, string][] = [
-		['Round', d.round_type ?? '—'],
+		['Round', roundLabel(d.round_type) ?? '—'],
 		['Target', money(d.target_amount, d.currency_code) ?? '—'],
 		['Committed', money(d.committed_amount, d.currency_code) ?? '—'],
 		['Valuation', d.valuation ?? 'Not disclosed'],

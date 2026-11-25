@@ -52,8 +52,11 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
 
 	// The page they were on, with its query (filters), editable in case the problem was elsewhere.
 	useEffect(() => { setPage(`${window.location.pathname}${window.location.search}`); }, [pathname]);
-	// Free the previews.
-	useEffect(() => () => shots.forEach((s) => URL.revokeObjectURL(s.url)), [shots]);
+	// Free the previews when the form closes (a removed one is freed as it goes). Keyed on the
+	// latest list via a ref: an effect on `shots` would free the ones still on screen.
+	const shotsRef = useRef<Shot[]>([]);
+	shotsRef.current = shots;
+	useEffect(() => () => shotsRef.current.forEach((s) => URL.revokeObjectURL(s.url)), []);
 
 	const addFiles = (files: File[]) => {
 		const next = [...shots];
@@ -157,7 +160,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
 							<div key={s.url} className="atlas-fb__shot">
 								{/* eslint-disable-next-line @next/next/no-img-element -- local blob preview */}
 								<img src={s.url} alt={`Screenshot ${i + 1}`} />
-								<button type="button" aria-label={`Remove screenshot ${i + 1}`} onClick={() => setShots(shots.filter((_, j) => j !== i))}><X size={12} /></button>
+								<button type="button" aria-label={`Remove screenshot ${i + 1}`} onClick={() => { URL.revokeObjectURL(s.url); setShots(shots.filter((_, j) => j !== i)); }}><X size={12} /></button>
 							</div>
 						))}
 						{shots.length < MAX_FILES && (

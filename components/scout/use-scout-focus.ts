@@ -5,12 +5,11 @@ import useSWR from 'swr';
 import { apiRequest } from '@/lib/query-client';
 import { refreshScout } from '@/lib/invalidate';
 import { qk } from '@/lib/query-keys';
-import { useUserProfile } from '@/hooks/use-user-profile';
 import type { Interests } from '@/components/explore/interests';
 import { normaliseGeos } from '@/components/explore/geography';
 import {
 	focusFromThesis, legacyIncludes, thesisDto,
-	type ScoutFocus, type StoredCheque, type StoredThesis, type ThesisRef,
+	type ScoutFocus, type StoredThesis, type ThesisRef,
 } from './scout-focus';
 
 interface ScoutRow { setup_completed_at: string | null }
@@ -44,10 +43,7 @@ export function useScoutFocus(enabled: boolean) {
 		() => new Map(list(rounds.data).filter((r) => r.name).map((r) => [r.name!.toLowerCase(), r.id])),
 		[rounds.data],
 	);
-	const { data: profile, mutate: refetchProfile } = useUserProfile();
-	const cfg = profile?.dashboard_config ?? null;
-	const storedCheque = ((cfg as { scout?: { cheque?: StoredCheque } } | null)?.scout?.cheque) ?? null;
-	const focus = useMemo(() => focusFromThesis(thesis.data, storedCheque), [thesis.data, storedCheque]);
+	const focus = useMemo(() => focusFromThesis(thesis.data), [thesis.data]);
 
 	const carry = useMemo<ThesisCarryOver | null>(() => {
 		const t = thesis.data;
@@ -66,18 +62,10 @@ export function useScoutFocus(enabled: boolean) {
 		if (!p.ok) throw new Error(`scout profile save failed (${p.status})`);
 		const r = await apiRequest('PUT', '/api/scout/thesis', thesisDto(prefs, tagNames, next, roundIdByName));
 		if (!r.ok) throw new Error(`scouting focus save failed (${r.status})`);
-		// The cheque as typed, with its currency, on the account (the thesis holds a euro copy).
-		const cheque: StoredCheque = { min: next.chequeMin, max: next.chequeMax, currency: next.chequeCurrency };
-		if (JSON.stringify(cheque) !== JSON.stringify(storedCheque)) {
-			const scoutCfg = ((cfg as { scout?: Record<string, unknown> } | null)?.scout) ?? {};
-			const m = await apiRequest('PATCH', '/api/me', { dashboard_config: { ...(cfg ?? {}), scout: { ...scoutCfg, cheque } } });
-			if (!m.ok) throw new Error(`cheque save failed (${m.status})`);
-			void refetchProfile();
-		}
 		await Promise.all([scout.mutate(), thesis.mutate()]);
 		// Home, Recommended, Deal Flow and Signals all read the thesis.
 		void refreshScout();
-	}, [roundIdByName, scout, thesis, cfg, storedCheque, refetchProfile]);
+	}, [roundIdByName, scout, thesis]);
 
 	// Old Avoid names that map across ("Web3 & crypto" → "Web3") are saved
 	// under their new names once, by the page's one-time move (13).

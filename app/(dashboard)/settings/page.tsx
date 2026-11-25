@@ -11,6 +11,7 @@ import { openRaiseSetup } from '@/lib/setup-events';
 import { Screen, Card, Button, Loading, Badge } from '@/components/atlas';
 import { Modal } from '@/components/atlas/patterns/modal';
 import { AccountTabs, CompletionBadge } from '@/components/features/account/account-tabs';
+import { DealflowOptIn } from '@/components/raise/dealflow-opt-in';
 import { raisePct } from '@/lib/profile-completion';
 import { fmtAmount, fmtFullDate } from '@/lib/format';
 
@@ -124,13 +125,8 @@ export default function RaiseSettingsPage() {
 				)}
 
 				{/* Operational — not part of the setup wizard, so they stay as live controls. */}
-				{/* Coming soon, like Deal Flow → From the Circle. Restore
-				    <DealflowOptIn /> (components/raise/dealflow-opt-in) when it launches. */}
 				<Section title="Investor Circle">
-					<div style={{ fontSize: 12, lineHeight: 1.55, color: 'var(--a-muted)' }}>
-						<Badge tone="navy">Coming soon</Badge>{' '}
-						Share your round with vetted investors in the Investor Circle.
-					</div>
+					<DealflowOptIn />
 				</Section>
 
 				{!needsSetup && (

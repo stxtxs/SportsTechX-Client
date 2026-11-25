@@ -1,8 +1,14 @@
 'use client';
 
-import { DealFlowSoon } from '@/components/scout/deal-flow-soon';
+import { Screen, SectionHeader } from '@/components/atlas';
+import { DealFlow } from '@/components/scout/deal-flow';
 
-/** Deal Flow → All — "Coming soon" while Deal Flow is held back (see DealFlowSoon). */
+/** Deal Flow → All: featured, verified and Circle deals. */
 export default function Page() {
-	return <DealFlowSoon />;
+	return (
+		<Screen>
+			<SectionHeader />
+			<DealFlow />
+		</Screen>
+	);
 }

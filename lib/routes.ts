@@ -171,8 +171,6 @@ export const ROUTES: RouteDef[] = [
 		// The Deck Screener is live now: Scout runs the same engine in investor
 		// mode (snapshot, thesis fit, red flags, diligence questions).
 		path: '/deck', tier: ['raise', 'scout'],
-		// Scout's Deck Screener shows "Soon" in Deal Flow until it ships (handover v1 §2).
-		soon: { scout: true },
 	},
 	// Preferences: every solution's personal settings (was Explore-only "Interests").
 	// Reached from the Account tabs, not the panel.
@@ -201,12 +199,10 @@ export const ROUTES: RouteDef[] = [
 	{ id: 'guide', icon: 'nav-onboarding', name: 'Fundraising Guide', path: '/resources', tier: 'raise' },
 
 	// ── Scout ───────────────────────────────────────────────────────────────
-	// Deal Flow is "Coming soon" (components/scout/deal-flow-soon.tsx): drop
-	// `soon: true` from these four when it launches.
-	{ id: 'deal-flow', icon: 'nav-dealflow', name: 'All', path: '/deal-flow', tier: 'scout', soon: true },
-	{ id: 'deal-flow-featured', icon: 'nav-recommended', name: 'Featured Raises', path: '/deal-flow/featured', tier: 'scout', soon: true },
-	{ id: 'deal-flow-verified', icon: 'nav-dealflow', name: 'Verified Raises', path: '/deal-flow/verified', tier: 'scout', soon: true },
-	{ id: 'deal-flow-circle', icon: 'nav-circle', name: 'From the Circle', path: '/deal-flow/circle', tier: 'scout', soon: true },
+	{ id: 'deal-flow', icon: 'nav-dealflow', name: 'All', path: '/deal-flow', tier: 'scout' },
+	{ id: 'deal-flow-featured', icon: 'nav-recommended', name: 'Featured Raises', path: '/deal-flow/featured', tier: 'scout' },
+	{ id: 'deal-flow-verified', icon: 'nav-dealflow', name: 'Verified Raises', path: '/deal-flow/verified', tier: 'scout' },
+	{ id: 'deal-flow-circle', icon: 'nav-circle', name: 'From the Circle', path: '/deal-flow/circle', tier: 'scout' },
 ];
 
 export const ROUTE_BY_ID = new Map(ROUTES.map((r) => [r.id, r]));

@@ -50,8 +50,7 @@ const BUCKET_LABEL: Record<string, string> = {
  */
 function bucketsFor(tier: Tier): string[] {
 	if (tier === 'raise') return ['companies', 'investors'];
-	// 'deals' is held back while Deal Flow is "Coming soon" (deal-flow-soon.tsx).
-	if (tier === 'scout') return ['companies'];
+	if (tier === 'scout') return ['companies', 'deals'];
 	return ['companies'];
 }
 

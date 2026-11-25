@@ -1,7 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
-import { BadgeCheck, Bookmark, Sparkles, Target } from 'lucide-react';
+import { BadgeCheck, Bookmark, Layers, Sparkles, Target } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { FeedCard, Loading, SectionHead } from '@/components/atlas';
 import { qk } from '@/lib/query-keys';
@@ -108,10 +108,14 @@ export function ScoutHome() {
 								: { href: c.cta_href })}
 						/>
 					))}
+					<FeedCard
+						tag="Deal Flow" icon={Layers}
+						title="Live raises from the Circle"
+						body="Featured deals and verified raises, ranked by thesis fit."
+						href={hrefOf('deal-flow')}
+					/>
 					{/* Then the newest content until there are six cards (Home, 11). */}
-					<LatestContent slots={LATEST_MAX - pins.length - tasks.length} />
-					{/* The Deal Flow card is held back while Deal Flow is "Coming soon"
-					    (components/scout/deal-flow-soon.tsx). */}
+					<LatestContent slots={LATEST_MAX - pins.length - tasks.length - 1} />
 				</div>
 			</section>
 		</div>

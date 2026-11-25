@@ -35,8 +35,6 @@ export interface ScoutFocus {
 
 export const NO_FOCUS: ScoutFocus = { stages: [], chequeMin: null, chequeMax: null, chequeCurrency: 'EUR', invStyle: '', traction: '', exclude: [] };
 
-/** Avoid's line on Tags: five options before "+ Add". */
-export const QUICK_AVOID = ['Fantasy Sports & Betting', 'Web3', 'Tokens & Crypto', 'NFT / Blockchain', 'Metaverse / Virtual worlds'];
 
 export const FOCUS_OPTIONS = {
 	// Values must match the `funding_round_types` names exactly: the thesis

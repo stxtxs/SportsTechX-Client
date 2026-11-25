@@ -343,3 +343,10 @@
 /* Form footers (Share a deal, onboarding) */
 .atlas .scout-intro__actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
 .atlas .scout-done { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+/* Home pills: two lines, then "+N" (4.3). The measure row is an invisible copy used to size them. */
+.atlas .scout-home__thesis { flex-wrap: nowrap; align-items: flex-start; }
+.atlas .scout-home__thesis > .atlas-eyebrow { flex: none; line-height: 28px; }
+.atlas .scout-tags--rows { position: relative; flex: 1; min-width: 0; }
+.atlas .scout-tags--measure { position: absolute; top: 0; left: 0; flex-wrap: nowrap; visibility: hidden; pointer-events: none; height: 0; overflow: hidden; }
+.atlas .scout-tags--measure .scout-tag { flex: none; white-space: nowrap; }
+.atlas .scout-tags--rows > .scout-tag { white-space: nowrap; }

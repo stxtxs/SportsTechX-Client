@@ -6,6 +6,7 @@ import { Button, Loading, Seg } from '@/components/atlas';
 import { displayCurrency, setDisplayCurrency, subscribeCurrency, type DisplayCurrency } from '@/lib/currency';
 import { apiRequest } from '@/lib/query-client';
 import { refreshAccount } from '@/lib/invalidate';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { AccountTabs, CompletionBadge } from '@/components/features/account/account-tabs';
 import { preferencesPct, scoutPreferencesPct } from '@/lib/profile-completion';
 import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
@@ -96,35 +97,51 @@ export function InterestsPage() {
 
 	const onPrefs = (next: Interests) => { setDraft(next); schedule(next, focus); };
 	const onFocus = (next: ScoutFocus) => { setFocusDraft(next); schedule(value, next); };
-	// Tags → Avoid lives on the Scout thesis; a pick that moves sides changes both.
-	const avoid = scout ? {
-		value: focus.exclude,
-		onChange: (exclude: string[], prefs: Interests) => {
-			const f = { ...focus, exclude };
-			setDraft(prefs);
-			setFocusDraft(f);
-			schedule(prefs, f);
-		},
-	} : undefined;
+	// Tags → Avoid lives on the Scout thesis. Something included or in Sectors
+	// can't be avoided (and the reverse), so a pick never has to move sides.
+	const avoid = scout ? { value: focus.exclude, onChange: (exclude: string[]) => onFocus({ ...focus, exclude }) } : undefined;
+
+	// Clear all (4.7): Goal, Sectors, Geography, Sports, Tags and, on Scout, the
+	// Scouting focus. Currency stays; the cheque keeps its currency for next time.
+	const confirm = useConfirm();
+	const clearAll = async () => {
+		const ok = await confirm({
+			title: 'Clear all your preferences?',
+			description: 'Atlas will show you the whole market again.',
+			confirmLabel: 'Clear all',
+			cancelLabel: 'Cancel',
+		});
+		if (!ok) return;
+		const f: ScoutFocus = { ...NO_FOCUS, chequeCurrency: focus.chequeCurrency };
+		setDraft(NO_INTERESTS);
+		setFocusDraft(f);
+		schedule(NO_INTERESTS, f);
+		toast.success('Preferences cleared.');
+	};
 
 	if (!ready) {
 		return <><AccountTabs /><Loading /></>;
 	}
 
-	const total = value.goals.length + value.sectors.length + value.subs.length + value.geos.length + value.sports.length + value.techs.length + value.models.length;
+	const total = value.goals.length + value.sectors.length + value.subs.length + value.geos.length + value.sports.length + value.techs.length + value.models.length
+		+ (scout ? focus.stages.length + focus.exclude.length + (focus.chequeMin ? 1 : 0) + (focus.chequeMax ? 1 : 0) + (focus.invStyle ? 1 : 0) + (focus.traction ? 1 : 0) : 0);
 	// Tags counts business models as well as tags.
 	const tagged = { ...value, techs: [...value.techs, ...value.models] };
 	const pct = scout ? scoutPreferencesPct(tagged, focus) : preferencesPct(tagged);
 
 	return (
 		<>
-			<AccountTabs actions={<><CompletionBadge pct={pct} /><SaveStatus state={state} /></>} />
+			<AccountTabs actions={<>
+				<span className="int-meta">
+					<CompletionBadge pct={pct} />
+					{/* Hidden when nothing is selected (4.7). */}
+					{total > 0 && <Button variant="ghost" size="sm" onClick={() => void clearAll()}>Clear all</Button>}
+				</span>
+				<SaveStatus state={state} />
+			</>} />
 			<CurrencySetting />
 			<InterestsEditor value={value} onChange={onPrefs} avoid={avoid} />
 			{scout && <div className="int-editor"><ScoutingFocus value={focus} onChange={onFocus} /></div>}
-			<div className="int-savebar">
-				<Button variant="outline" onClick={() => onPrefs(NO_INTERESTS)} disabled={!total}>Reset to the entire market</Button>
-			</div>
 		</>
 	);
 }

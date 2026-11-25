@@ -247,3 +247,18 @@
 	background: color-mix(in srgb, var(--a-danger) 14%, var(--a-page)); color: var(--a-ink);
 	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--a-danger) 40%, transparent);
 }
+
+/* + Add dialog: heading tick boxes, indented tree rows, items chosen elsewhere (4.1, 4.6). */
+.atlas .int-dlg__grid--tree { grid-template-columns: 1fr; }
+.atlas .int-dlg__row.is-blocked { cursor: default; color: var(--a-muted); }
+.atlas .int-dlg__row.is-blocked:hover { background: transparent; }
+.atlas .int-dlg__row.is-blocked .int-dlg__box-check { box-shadow: inset 0 0 0 1px var(--a-border); }
+.atlas .int-dlg--avoid .int-dlg__row.on .int-dlg__box-check {
+	background: color-mix(in srgb, var(--a-danger) 18%, var(--a-page)); color: var(--a-ink);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--a-danger) 45%, transparent);
+}
+/* Something chosen elsewhere, shown on the page but not pickable (4.6). */
+.atlas .int-chip:disabled.is-blocked, .atlas .int-sub.is-blocked, .atlas .int-cat__name.is-blocked, .atlas .int-pillar__badge.is-blocked { opacity: 0.45; cursor: not-allowed; }
+/* "+N" on Home: the hidden pills, in the same pill style (4.3). */
+.atlas .scout-tag--more { cursor: pointer; text-decoration: none; }
+.atlas .int-meta { display: inline-flex; align-items: center; gap: 10px; }

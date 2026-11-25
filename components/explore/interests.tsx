@@ -5,6 +5,7 @@ import useSWR from 'swr';
 import { apiRequest } from '@/lib/query-client';
 import { qk } from '@/lib/query-keys';
 import { useSectorTiers, type SectorRef } from '@/hooks/use-sector-tiers';
+import { collapseSports, expandSports, familiesFromTree, type SportFamily, type SportTreeRow } from './sport-families';
 
 /**
  * Explore interests: what Atlas prioritises on Home.
@@ -137,6 +138,12 @@ export function useInterestOptions(): Record<keyof Interests, Group> & { subTop:
  * "Interests N" pill counts and what "Because you follow …" lists. Resolving
  * ids to names here keeps every caller from needing the taxonomy.
  */
+/** The Sports headings (families) from the database hierarchy. */
+export function useSportFamilies(): SportFamily[] {
+	const { data } = useSWR<SportTreeRow[] | { data: SportTreeRow[] }>(qk.reference.sportsTree(), { dedupingInterval: 60 * 60_000 });
+	return useMemo(() => familiesFromTree(Array.isArray(data) ? data : (data?.data ?? [])), [data]);
+}
+
 export function useInterests(): {
 	value: Interests;
 	save: (next: Interests) => Promise<void>;
@@ -145,6 +152,7 @@ export function useInterests(): {
 } {
 	const { data, isLoading, mutate } = useSWR<StoredInterests>(qk.explore.interests());
 	const opts = useInterestOptions();
+	const families = useSportFamilies();
 
 	const value = useMemo<Interests>(() => {
 		const topIds = new Set(opts.sectors.options.map(([id]) => id));
@@ -152,19 +160,21 @@ export function useInterests(): {
 		return {
 			sectors: stored.filter((id) => topIds.has(id)),
 			subs: stored.filter((id) => !topIds.has(id)),
-			sports: (data?.sports ?? []).map((s) => s.id),
+			// A saved heading stands for every sport under it (4.8).
+			sports: expandSports((data?.sports ?? []).map((s) => s.id), families),
 			techs: (data?.tech_tags ?? []).map((t) => t.id),
 			models: (data?.business_models ?? []).map(modelLabel).filter((m): m is string => !!m),
 			geos: data?.geos ?? [],
 			goals: normaliseGoals(data?.goals ?? []),
 		};
-	}, [data, opts.sectors.options]);
+	}, [data, opts.sectors.options, families]);
 
 	const save = useCallback(async (next: Interests) => {
 		// Both sector tiers are one column server-side; geos/goals are text arrays.
 		const res = await apiRequest('PUT', qk.explore.interests()[0], {
 			sector_ids: [...next.sectors, ...next.subs],
-			sport_ids: next.sports,
+			// A fully ticked heading is saved as the heading, so later sports are included (4.8).
+			sport_ids: collapseSports(next.sports, families),
 			tech_tag_ids: next.techs,
 			business_models: next.models.map((m) => m.toLowerCase()),
 			geos: next.geos,
@@ -173,7 +183,7 @@ export function useInterests(): {
 		});
 		if (!res.ok) throw new Error(`save failed (${res.status})`);
 		await mutate();
-	}, [mutate]);
+	}, [mutate, families]);
 
 	const picked = useMemo(() => {
 		const name = (group: keyof Interests, id: string) =>

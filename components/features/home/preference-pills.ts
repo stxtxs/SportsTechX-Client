@@ -4,9 +4,9 @@ import { useMemo } from 'react';
 import useSWR from 'swr';
 import { qk } from '@/lib/query-keys';
 import type { SectorRef } from '@/hooks/use-sector-tiers';
-import { MODEL_OPTIONS, useInterestOptions, type Interests } from '@/components/explore/interests';
+import { MODEL_OPTIONS, useInterestOptions, useSportFamilies, type Interests } from '@/components/explore/interests';
 import { collapse, groupTags, titleCase } from '@/components/explore/headings';
-import { SPORT_FAMILIES, sportLabel } from '@/components/explore/sport-families';
+import { sportLabel } from '@/components/explore/sport-families';
 import { stageLabel } from '@/components/scout/scouting-focus';
 
 interface Country { name: string; continent: string | null }
@@ -21,6 +21,7 @@ const list = <T,>(d: T[] | { data: T[] } | undefined): T[] => (Array.isArray(d) 
  */
 export function usePreferencePills(p: Interests, stages: string[]): string[] {
 	const opts = useInterestOptions();
+	const sportFamilies = useSportFamilies();
 	const { data: sectorData } = useSWR<SectorRef[] | { data: SectorRef[] }>(qk.reference.sectors(), { dedupingInterval: 60 * 60_000 });
 	const { data: countryData } = useSWR<Country[] | { data: Country[] }>(qk.reference.countries(), { dedupingInterval: 60 * 60_000 });
 	const { data: tagData } = useSWR<TagRow[] | { data: TagRow[] }>(qk.reference.techTags(), { dedupingInterval: 60 * 60_000 });
@@ -41,11 +42,7 @@ export function usePreferencePills(p: Interests, stages: string[]): string[] {
 		const geoPills = p.geos.filter((g) => !p.geos.includes(continentOf.get(g) ?? '\0'));
 
 		const sportName = new Map(opts.sports.options);
-		const byName = new Map(opts.sports.options.map(([id, n]) => [n, id]));
-		const families = SPORT_FAMILIES.map((f) => ({
-			label: titleCase(f.name),
-			values: f.sports.map((n) => byName.get(n)).filter((v): v is string => !!v),
-		}));
+		const families = sportFamilies.map((f) => ({ label: f.name, values: f.sports }));
 		const sportPills = collapse(p.sports, families).map((g) => (g.values.length > 1 ? g.label : sportLabel(sportName.get(g.label) ?? g.label)));
 
 		const tags = list(tagData);
@@ -57,5 +54,5 @@ export function usePreferencePills(p: Interests, stages: string[]): string[] {
 		const tagPills = collapse([...p.models, ...p.techs], headings).map((g) => (g.values.length > 1 ? g.label : tagName.get(g.label) ?? g.label));
 
 		return [...new Set([...stages.map(stageLabel), ...sectorPills, ...geoPills, ...sportPills, ...tagPills])];
-	}, [p, stages, opts.sports.options, sectorData, countryData, tagData]);
+	}, [p, stages, opts.sports.options, sportFamilies, sectorData, countryData, tagData]);
 }

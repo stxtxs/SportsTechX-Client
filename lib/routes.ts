@@ -207,7 +207,6 @@ export const ROUTES: RouteDef[] = [
 	{ id: 'deal-flow-featured', icon: 'nav-recommended', name: 'Featured Raises', path: '/deal-flow/featured', tier: 'scout', soon: true },
 	{ id: 'deal-flow-verified', icon: 'nav-dealflow', name: 'Verified Raises', path: '/deal-flow/verified', tier: 'scout', soon: true },
 	{ id: 'deal-flow-circle', icon: 'nav-circle', name: 'From the Circle', path: '/deal-flow/circle', tier: 'scout', soon: true },
-	{ id: 'thesis', icon: 'nav-thesis', name: 'Scouting thesis', path: '/thesis', tier: 'scout' },
 ];
 
 export const ROUTE_BY_ID = new Map(ROUTES.map((r) => [r.id, r]));

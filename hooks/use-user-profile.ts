@@ -45,6 +45,8 @@ export interface Profile {
   avatar_url: string | null;
   company_name: string | null;
   job_title: string | null;
+  /** Free-form account settings. `account` holds LinkedIn and the Organisation block (D1, 1.5) until the backend has columns for them. */
+  dashboard_config?: Record<string, unknown> | null;
   is_trial: boolean | null;
   trial_ends_at: string | null;
   stripe_customer_id: string | null;

@@ -1,16 +1,19 @@
 'use client';
 
 import useSWR from 'swr';
-import { BadgeCheck, Bookmark, CalendarDays, Sparkles, Target } from 'lucide-react';
+import { BadgeCheck, Bookmark, Sparkles, Target } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { FeedCard, Loading, SectionHead } from '@/components/atlas';
 import { qk } from '@/lib/query-keys';
 import { SETUP_CARD_WIZARD, openRaiseSetup, openScoutThesis } from '@/lib/setup-events';
-import { hrefOf } from '@/lib/routes';
 import { PinnedFeedCards } from '@/components/features/pins/pinned-feed-cards';
-import { thesisTags, useThesis } from './use-thesis';
+import { LATEST_MAX, LatestContent } from '@/components/features/home/latest-cards';
+import { usePins } from '@/components/features/pins/use-pins';
 import { HomeHero } from '@/components/features/home/home-hero';
-import { setupDone, thesisPct } from '@/lib/profile-completion';
+import { scoutPreferencesPct, setupDone } from '@/lib/profile-completion';
+import { useInterestOptions, useInterests, type Interests } from '@/components/explore/interests';
+import { useScoutFocus } from './use-scout-focus';
+import { stageLabel } from './scouting-focus';
 import { currentNames } from '@/lib/atlas-copy';
 
 /**
@@ -56,31 +59,37 @@ const CARD_ICON: Record<string, LucideIcon> = {
 };
 
 export function ScoutHome() {
-	const [thesis] = useThesis();
+	// Regions and sectors come from Preferences, stages from the Scouting focus
+	// block (D1, 1.3): the thesis copy of them is no longer read here.
+	const { value: prefs } = useInterests();
+	const opts = useInterestOptions();
+	const { focus } = useScoutFocus(true);
 	const { data, isLoading } = useSWR<ScoutHomeData>(qk.scout.home());
-	const month = new Date(new Date().getFullYear(), new Date().getMonth() - 1)
-		.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-	const tags = thesisTags(thesis);
+	const tags = preferenceTags(prefs, focus.stages, opts);
+	const pct = scoutPreferencesPct(prefs, focus);
+
+	const { pins } = usePins();
+	// A setup task stops showing at 80% complete (handover v1 §7).
+	const tasks = (data?.attention ?? []).filter((c) => !(SETUP_CARD_WIZARD[c.id] && setupDone(pct)));
 
 	if (isLoading) return <Loading />;
 
 	return (
 		<div className="scout-home">
-			<HomeHero tier="scout" below={data?.thesis_set && tags.length > 0 ? (
+			<HomeHero tier="scout" below={tags.length > 0 ? (
 				<div className="scout-home__thesis">
-					<span className="atlas-eyebrow">Tuned to your thesis</span>
+					<span className="atlas-eyebrow">Tuned to your preferences</span>
 					<div className="scout-tags">{tags.map((t) => <span key={t} className="scout-tag">{t}</span>)}</div>
 				</div>
 			) : undefined} />
 
 			<section className="scout-home__attn">
-				<SectionHead title="Latest from Atlas" meta="Based on your thesis" />
+				<SectionHead title="Latest from Atlas" />
 				<div className="atlas-feed-grid">
 					{/* Pinned items first, marked "Pinned"; the filled pin unpins (fix brief N1). */}
 					<PinnedFeedCards />
-					{/* Server-ranked and already capped at three. */}
-					{/* A setup task stops showing at 80% complete (handover v1 §7). */}
-					{(data?.attention ?? []).filter((c) => !(SETUP_CARD_WIZARD[c.id] && setupDone(thesisPct(thesis)))).map((c) => (
+					{/* Server-ranked task cards, already capped at three. */}
+					{tasks.map((c) => (
 						<FeedCard
 							key={c.id}
 							tag={c.count != null ? `${c.count}` : 'Scout'}
@@ -97,13 +106,8 @@ export function ScoutHome() {
 								: { href: c.cta_href })}
 						/>
 					))}
-					{/* Two standing entry points the read-model does not emit. */}
-					<FeedCard
-						tag="Monthly Roundup" icon={CalendarDays}
-						title={`${month} market roundup`}
-						body="Funding, deals and news across sports tech for the month."
-						href={hrefOf('roundup')}
-					/>
+					{/* Then the newest content until there are six cards (Home, 11). */}
+					<LatestContent slots={LATEST_MAX - pins.length - tasks.length} />
 					{/* The Deal Flow card is held back while Deal Flow is "Coming soon"
 					    (components/scout/deal-flow-soon.tsx). */}
 				</div>
@@ -112,3 +116,15 @@ export function ScoutHome() {
 	);
 }
 
+/** Home pill row: stages, then sectors, then up to three regions (D1, 1.3). */
+function preferenceTags(p: Interests, stages: string[], opts: ReturnType<typeof useInterestOptions>): string[] {
+	const name = (group: 'sectors' | 'subs', id: string) => opts[group].options.find(([v]) => v === id)?.[1];
+	const sectors = [...p.sectors.map((id) => name('sectors', id)), ...p.subs.map((id) => name('subs', id))].filter((n): n is string => !!n);
+	const regions = p.geos.slice(0, 3);
+	return [
+		...stages.map(stageLabel),
+		...sectors,
+		...regions,
+		...(p.geos.length > 3 ? [`+${p.geos.length - 3} regions`] : []),
+	];
+}

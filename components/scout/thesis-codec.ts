@@ -53,7 +53,7 @@ export interface ScoutProfile {
 }
 
 /** `investor_category` in the database, against the labels the form offers. */
-const INVESTOR_TYPE: Record<string, string> = {
+export const INVESTOR_TYPE: Record<string, string> = {
 	'Venture capital': 'venture_capital',
 	'Growth / PE': 'private_equity',
 	'Family office': 'family_investment_office',

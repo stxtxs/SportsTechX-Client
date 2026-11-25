@@ -33,7 +33,7 @@ export const FOUNDER_INSUFFICIENT_CREDITS =
 	"_You're out of AI credits._ [Top up, or switch to Raise or Scout](/credits), to keep chatting.";
 
 export const SCOUT_GREETING =
-	"I'm your scouting assistant. Ask me to screen companies against your thesis, dig into a funding round or an investor, or find your way around the workspace — e.g. “find companies matching my thesis” or “who funded sports betting in Europe this year?”";
+	"I'm your scouting assistant. Ask me to screen companies against your preferences, dig into a funding round or an investor, or find your way around the workspace — e.g. “find companies matching my preferences” or “who funded sports betting in Europe this year?”";
 
 export const SCOUT_INSUFFICIENT_CREDITS = FOUNDER_INSUFFICIENT_CREDITS;
 
@@ -138,7 +138,7 @@ export function founderActionFromTool(tool: string, input: unknown, tier: Tier):
 			recommended: { label: 'Open Recommended', routeId: 'recommended' },
 			signals: { label: 'Open Signals', routeId: 'signals' },
 			watchlists: { label: 'Open Watchlists', routeId: 'watchlists' },
-			thesis: { label: 'Open Thesis Settings', routeId: 'thesis' },
+			thesis: { label: 'Open Preferences', routeId: 'interests' },
 		};
 		const m = p?.page ? NAV[p.page] : undefined;
 		if (!m || !navigable(m.routeId, tier)) return null;

@@ -37,8 +37,8 @@ function open(wizard: SetupWizard, edit = false): void {
  *  Pass `{ edit: true }` to re-edit a completed raise (saves + closes, no done screen). */
 export const openRaiseSetup = (opts?: { edit?: boolean }): void => open('raise', opts?.edit);
 
-/** The Scout thesis wizard (profile → fund → stage → focus → review). Pass
- *  `{ edit: true }` to re-edit a completed thesis (saves + closes, no done screen). */
+/** Scout setup. There is no wizard any more (D1, 1.2): the host sends the
+ *  Scout to Preferences, which holds the Scouting focus block. */
 export const openScoutThesis = (opts?: { edit?: boolean }): void => open('thesis', opts?.edit);
 
 /**

@@ -11,9 +11,11 @@ import { LATEST_MAX, LatestContent } from '@/components/features/home/latest-car
 import { usePins } from '@/components/features/pins/use-pins';
 import { HomeHero } from '@/components/features/home/home-hero';
 import { scoutPreferencesPct, setupDone } from '@/lib/profile-completion';
-import { useInterestOptions, useInterests, type Interests } from '@/components/explore/interests';
+import { useInterests } from '@/components/explore/interests';
 import { useScoutFocus } from './use-scout-focus';
-import { stageLabel } from './scouting-focus';
+import { PillRows } from '@/components/features/home/pill-rows';
+import { usePreferencePills } from '@/components/features/home/preference-pills';
+import { hrefOf } from '@/lib/routes';
 import { currentNames } from '@/lib/atlas-copy';
 
 /**
@@ -62,10 +64,9 @@ export function ScoutHome() {
 	// Regions and sectors come from Preferences, stages from the Scouting focus
 	// block (D1, 1.3): the thesis copy of them is no longer read here.
 	const { value: prefs } = useInterests();
-	const opts = useInterestOptions();
 	const { focus } = useScoutFocus(true);
 	const { data, isLoading } = useSWR<ScoutHomeData>(qk.scout.home());
-	const tags = preferenceTags(prefs, focus.stages, opts);
+	const tags = usePreferencePills(prefs, focus.stages);
 	const pct = scoutPreferencesPct(prefs, focus);
 
 	const { pins } = usePins();
@@ -79,7 +80,8 @@ export function ScoutHome() {
 			<HomeHero tier="scout" below={tags.length > 0 ? (
 				<div className="scout-home__thesis">
 					<span className="atlas-eyebrow">Tuned to your preferences</span>
-					<div className="scout-tags">{tags.map((t) => <span key={t} className="scout-tag">{t}</span>)}</div>
+					{/* Two lines at most, then "+N" to Preferences (4.3). */}
+					<PillRows pills={tags} moreHref={hrefOf('interests')} />
 				</div>
 			) : undefined} />
 
@@ -116,15 +118,3 @@ export function ScoutHome() {
 	);
 }
 
-/** Home pill row: stages, then sectors, then up to three regions (D1, 1.3). */
-function preferenceTags(p: Interests, stages: string[], opts: ReturnType<typeof useInterestOptions>): string[] {
-	const name = (group: 'sectors' | 'subs', id: string) => opts[group].options.find(([v]) => v === id)?.[1];
-	const sectors = [...p.sectors.map((id) => name('sectors', id)), ...p.subs.map((id) => name('subs', id))].filter((n): n is string => !!n);
-	const regions = p.geos.slice(0, 3);
-	return [
-		...stages.map(stageLabel),
-		...sectors,
-		...regions,
-		...(p.geos.length > 3 ? [`+${p.geos.length - 3} regions`] : []),
-	];
-}

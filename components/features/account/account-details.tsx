@@ -46,7 +46,7 @@ export function useAccountDetails() {
 	useEffect(() => {
 		if (!ready || moved.current || !needsMove(profile, saved)) return;
 		moved.current = true;
-		void apiRequest('PATCH', '/api/me', profilePatch(saved, profile?.dashboard_config))
+		void apiRequest('PATCH', '/api/me', profilePatch(saved))
 			.then((r) => (r.ok ? mutate(qk.profile()) : undefined))
 			.catch(() => { /* retried next visit */ });
 	}, [ready, profile, saved]);
@@ -54,7 +54,7 @@ export function useAccountDetails() {
 	const save = async () => {
 		setBusy(true);
 		try {
-			const me = await apiRequest('PATCH', '/api/me', profilePatch(value, profile?.dashboard_config));
+			const me = await apiRequest('PATCH', '/api/me', profilePatch(value));
 			if (!me.ok) throw new Error(String(me.status));
 			if (scout) {
 				const usd = (m: AccountDetails['org']['size']) => (m.amount ? convert(m.amount, m.currency, 'USD') : null);

@@ -45,7 +45,15 @@ export interface Profile {
   avatar_url: string | null;
   company_name: string | null;
   job_title: string | null;
-  /** Free-form account settings. `account` holds LinkedIn and the Organisation block (D1, 1.5) until the backend has columns for them. */
+  /** Account › LinkedIn and Organisation (D1, 1.5). Role = job_title, organisation name = company_name. */
+  linkedin_url?: string | null;
+  org_type?: string | null;
+  org_website?: string | null;
+  org_country?: string | null;
+  org_city?: string | null;
+  org_size_amount?: number | null;
+  org_size_currency?: 'USD' | 'EUR' | null;
+  /** Free-form account settings (`account` = where LinkedIn + Organisation lived before their columns; read as a fallback). */
   dashboard_config?: Record<string, unknown> | null;
   is_trial: boolean | null;
   trial_ends_at: string | null;

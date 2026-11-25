@@ -2,14 +2,16 @@
  * Role, LinkedIn and the Organisation block on Account (D1, 1.5), on all three
  * solutions.
  *
- * Where each field lives, until the backend gives them columns of their own:
- *   - Role → `profiles.job_title`; organisation name → `profiles.company_name`.
- *   - LinkedIn and the rest of the Organisation block (type, website,
- *     headquarters, size) → `profiles.dashboard_config.account`.
+ * Where each field lives (profile columns, `PATCH /api/me`):
+ *   - Role → `job_title`; organisation name → `company_name`.
+ *   - LinkedIn → `linkedin_url`; Organisation type, website, headquarters and
+ *     size → `org_type`, `org_website`, `org_country`, `org_city`,
+ *     `org_size_amount` + `org_size_currency`.
  *   - On Scout the same values are also written to the Scout record
  *     (`PATCH /api/scout`), which verification and Deal Flow read.
- * Reading falls back to the Scout record, so what a Scout entered in the old
- * thesis wizard shows here before their first save (3.3).
+ * Reading falls back to `dashboard_config.account` (where this block lived
+ * before the columns existed) and then to the Scout record, so what a Scout
+ * entered in the old thesis wizard shows here before their first save (3.3).
  *
  * Size is stored with its currency (3.2). The old wizard asked for "Fund size /
  * AUM (USD)", so a Scout record's `aum` is read as US dollars.
@@ -56,6 +58,14 @@ export interface ScoutRecord {
 interface ProfileLike {
 	job_title?: string | null;
 	company_name?: string | null;
+	linkedin_url?: string | null;
+	org_type?: string | null;
+	org_website?: string | null;
+	org_country?: string | null;
+	org_city?: string | null;
+	org_size_amount?: number | null;
+	org_size_currency?: 'USD' | 'EUR' | null;
+	/** Legacy home of LinkedIn + Organisation (`account`), read as a fallback only. */
 	dashboard_config?: Record<string, unknown> | null;
 }
 
@@ -87,33 +97,41 @@ export function readDetails(
 	const a = stored(p);
 	const o = a.org ?? {};
 	const legacyAum = parseAmount(scout?.aum);
+	const columnSize = p?.org_size_amount != null && p.org_size_amount > 0;
 	return {
 		role: str(p?.job_title) || str(scout?.role_title),
-		linkedin: str(a.linkedin) || str(scout?.linkedin_url),
+		linkedin: str(p?.linkedin_url) || str(a.linkedin) || str(scout?.linkedin_url),
 		org: {
 			name: str(p?.company_name) || str(scout?.fund_name),
-			type: str(o.type) || (scout ? typeLabelOf(scout) : ''),
-			website: str(o.website) || str(scout?.fund_website),
-			country: str(o.country) || str(scout?.hq_country),
-			city: str(o.city) || str(scout?.hq_city),
-			size: o.size && (o.size.amount ?? null) !== null
-				? { amount: o.size.amount ?? null, currency: o.size.currency === 'EUR' ? 'EUR' : 'USD' }
-				: { amount: legacyAum, currency: 'USD' },
+			type: str(p?.org_type) || str(o.type) || (scout ? typeLabelOf(scout) : ''),
+			website: str(p?.org_website) || str(o.website) || str(scout?.fund_website),
+			country: str(p?.org_country) || str(o.country) || str(scout?.hq_country),
+			city: str(p?.org_city) || str(o.city) || str(scout?.hq_city),
+			size: columnSize
+				? { amount: p!.org_size_amount!, currency: p!.org_size_currency === 'EUR' ? 'EUR' : 'USD' }
+				: o.size && (o.size.amount ?? null) !== null
+					? { amount: o.size.amount ?? null, currency: o.size.currency === 'EUR' ? 'EUR' : 'USD' }
+					: { amount: legacyAum, currency: 'USD' },
 		},
 	};
 }
 
 const absolute = (s: string) => (!s ? '' : /^https?:\/\//i.test(s) ? s : `https://${s}`);
 
-/** `PATCH /api/me`. Keeps every other key in `dashboard_config`. */
-export function profilePatch(d: AccountDetails, current: Record<string, unknown> | null | undefined) {
-	const cfg = { ...(current ?? {}) };
+/** `PATCH /api/me`: the profile columns. `dashboard_config` is left alone. Blank → null. */
+export function profilePatch(d: AccountDetails) {
 	const { type, website, country, city, size } = d.org;
-	cfg.account = { linkedin: absolute(d.linkedin.trim()), org: { type, website: absolute(website.trim()), country, city, size } };
+	const amount = size.amount && size.amount > 0 ? size.amount : null;
 	return {
 		job_title: d.role.trim() || null,
 		company_name: d.org.name.trim() || null,
-		dashboard_config: cfg,
+		linkedin_url: absolute(d.linkedin.trim()) || null,
+		org_type: type.trim() || null,
+		org_website: absolute(website.trim()) || null,
+		org_country: country.trim() || null,
+		org_city: city.trim() || null,
+		org_size_amount: amount,
+		org_size_currency: amount ? size.currency : null,
 	};
 }
 
@@ -136,10 +154,10 @@ export function scoutPatch(d: AccountDetails, investorTypeEnum: Record<string, s
 /** True when the account itself lacks a value that the old Scout record supplies. */
 export function needsMove(p: ProfileLike | null | undefined, d: AccountDetails): boolean {
 	if (!p) return false;
-	const a = stored(p);
 	const o = d.org;
 	const orgDetail = !!(o.type || o.website || o.country || o.city || o.size.amount) || !!d.linkedin;
-	return (!str(p.job_title) && !!d.role) || (!str(p.company_name) && !!o.name) || (!a.org && orgDetail);
+	const hasColumns = !!(str(p.linkedin_url) || str(p.org_type) || str(p.org_website) || str(p.org_country) || str(p.org_city) || p.org_size_amount);
+	return (!str(p.job_title) && !!d.role) || (!str(p.company_name) && !!o.name) || (!hasColumns && orgDetail);
 }
 
 export const sameDetails = (a: AccountDetails, b: AccountDetails) => JSON.stringify(a) === JSON.stringify(b);

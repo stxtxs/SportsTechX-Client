@@ -42,11 +42,10 @@ interface AttentionCard {
 interface ScoutHomeData {
 	needs_setup: boolean;
 	verification: 'unverified' | 'pending' | 'verified';
-	scout: { full_name: string | null; fund_name: string | null; investor_type: string | null } | null;
+	scout: { fund_name: string | null; investor_type: string | null } | null;
 	thesis_set: boolean;
 	snapshot: { watchlist_companies: number; thesis_dimensions: number };
 	attention: AttentionCard[];
-	prompts: string[];
 }
 
 /** Card id → icon. An unknown id still renders, with a neutral icon. */

@@ -13,7 +13,6 @@
  */
 
 import { geosToThesis, type GeoScope } from '../explore/geography.ts';
-import { convert } from '../../lib/currency.ts';
 
 export type Cur = 'USD' | 'EUR';
 
@@ -66,11 +65,9 @@ export function tractionFloor(t: string): { amount: number; currency: Cur } | nu
  */
 export const LEGACY_ATTR: Record<string, string> = {
 	'Web3 & crypto': 'Web3',
-	'AI / machine learning': 'AI / ML',
+	'AI / machine learning': 'AI',
 	'Computer vision': 'Computer Vision',
-	'AR / VR': 'XR (AR/VR/MR)',
-	'Mobile-first': 'Mobile Apps',
-	SaaS: 'Enterprise & SaaS',
+	'AR / VR': 'AR/VR',
 	'Women’s sports': "Women's Sports",
 	"Women's sports": "Women's Sports",
 	'Betting & prediction': 'Fantasy Sports & Betting',
@@ -101,6 +98,8 @@ export interface StoredThesis {
 	business_models?: string[];
 	cheque_min?: number | null;
 	cheque_max?: number | null;
+	/** The currency the cheque was typed in (doc 4.14); older rows are euros. */
+	cheque_currency?: Cur | null;
 	traction_floor?: string | null;
 	invest_style?: string | null;
 	exclusions?: string | null;
@@ -110,18 +109,15 @@ export interface StoredThesis {
 const names = (rows: ThesisRef[] | undefined) => (rows ?? []).map((r) => r.name).filter((n): n is string => !!n);
 
 /** Stored thesis → the Scouting focus block. */
-/** The cheque as entered, kept on the account with its currency (`dashboard_config.scout.cheque`). */
-export interface StoredCheque { min: number | null; max: number | null; currency: Cur }
-
-export function focusFromThesis(t: StoredThesis | null | undefined, cheque?: StoredCheque | null): ScoutFocus {
+export function focusFromThesis(t: StoredThesis | null | undefined): ScoutFocus {
 	if (!t) return NO_FOCUS;
 	const style = (t.invest_style ?? '').trim();
 	return {
 		stages: names(t.round_types),
-		// The thesis columns are euros; the account copy is what was typed, in its currency.
-		chequeMin: cheque ? cheque.min : t.cheque_min ?? null,
-		chequeMax: cheque ? cheque.max : t.cheque_max ?? null,
-		chequeCurrency: cheque ? cheque.currency : 'EUR',
+		// Stored as typed, with its currency (doc 4.14); converted only for display.
+		chequeMin: t.cheque_min ?? null,
+		chequeMax: t.cheque_max ?? null,
+		chequeCurrency: t.cheque_currency === 'USD' ? 'USD' : 'EUR',
 		invStyle: (style ? style[0]!.toUpperCase() + style.slice(1).toLowerCase() : '') as ScoutFocus['invStyle'],
 		traction: t.traction_floor ?? '',
 		exclude: [...new Set(t.exclusions ? t.exclusions.split(',').map((s) => mapAttr(s.trim())).filter(Boolean) : [])],
@@ -158,9 +154,10 @@ export function thesisDto(
 		round_type_ids: f.stages.map((s) => roundIdByName.get(s.toLowerCase())).filter((v): v is string => !!v),
 		business_models: prefs.models.map((m) => BUSINESS_MODEL[m]).filter((v): v is string => !!v),
 		include_tags: tagNames,
-		// Matching reads euros, so the thesis gets a euro copy of the cheque.
-		cheque_min: f.chequeMin && f.chequeMin > 0 ? Math.round(convert(f.chequeMin, f.chequeCurrency, 'EUR')) : null,
-		cheque_max: f.chequeMax && f.chequeMax > 0 ? Math.round(convert(f.chequeMax, f.chequeCurrency, 'EUR')) : null,
+		// As typed, with its currency; the server converts where it compares (doc 4.14).
+		cheque_min: f.chequeMin && f.chequeMin > 0 ? Math.round(f.chequeMin) : null,
+		cheque_max: f.chequeMax && f.chequeMax > 0 ? Math.round(f.chequeMax) : null,
+		cheque_currency: f.chequeCurrency,
 		traction_floor: f.traction || null,
 		invest_style: f.invStyle ? f.invStyle.toLowerCase() : null,
 		exclusions: f.exclude.length ? f.exclude.join(', ') : null,

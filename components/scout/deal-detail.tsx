@@ -18,7 +18,7 @@ import { qk } from '@/lib/query-keys';
 import { hrefOf } from '@/lib/routes';
 import {
 	INTEREST_LABEL, canOpenDocs, closeLabel, committedPct, companyLabel, instrumentLabel, leadLabel, money, roundLabel,
-	relationshipLabel, submitterLabel, type DealRow,
+	relationshipLabel, submitterLabel, valuationLabel, type DealRow,
 } from './deal-types';
 
 /**
@@ -118,7 +118,7 @@ export function DealDetail({ id }: { id: string }) {
 		['Round', roundLabel(d.round_type) ?? '—'],
 		['Target', money(d.target_amount, d.currency_code) ?? '—'],
 		['Committed', money(d.committed_amount, d.currency_code) ?? '—'],
-		['Valuation', d.valuation ?? 'Not disclosed'],
+		['Valuation', valuationLabel(d)],
 		['Instrument', instrumentLabel(d.instrument) ?? '—'],
 		['Target close', closeLabel(d.target_close_date) ?? '—'],
 		// The lead investor's name is withheld with the company name, so fall back

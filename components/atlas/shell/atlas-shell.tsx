@@ -130,13 +130,25 @@ export function AtlasShell({ product, productColor, homePath, nav, topbar, overl
 				</span>
 			);
 		}
-		return (
+		const link = (
 			<Link key={item.path} href={item.path} className={`${cls} ${isActive(item.path) ? 'active' : ''}${item.locked ? ' is-locked' : ''}`} aria-current={isActive(item.path) ? 'page' : undefined} {...tipProps(item.locked ? `${item.name} · ${LOCK_HOVER}` : item.name)} onClick={() => { setOpen(false); setTip(null); }}>
 				<span className="atlas-nav-ico"><FigmaIcon name={item.icon} /></span>
 				<span className="atlas-nav-label">{item.name}</span>
 				{item.placeholder && <span className="atlas-soon" title={PLACEHOLDER_LABEL}>Not connected</span>}
 				{item.locked && <LockMark inert size={11} className="atlas-nav-lock" />}
 			</Link>
+		);
+		if (!item.children?.length || collapsed) return link;
+		// Pinned watchlists, indented under Watchlists (preview fixes 3.1).
+		return (
+			<div key={item.path} className="atlas-nav-group">
+				{link}
+				{item.children.map((c) => (
+					<Link key={c.path} href={c.path} className={`atlas-nav-item atlas-nav-sub ${pathname === c.path ? 'active' : ''}`} aria-current={pathname === c.path ? 'page' : undefined} onClick={() => { setOpen(false); setTip(null); }}>
+						<span className="atlas-nav-label">{c.name}</span>
+					</Link>
+				))}
+			</div>
 		);
 	};
 	const renderEntry = (e: ShellNavEntry) => {

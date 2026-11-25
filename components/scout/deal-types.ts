@@ -132,6 +132,23 @@ export function money(amount: string | number | null, ccy: string | null): strin
 	return fmtAmount(n, ccy || 'EUR');
 }
 
+const VALUATION_BASIS: Record<string, string> = { pre_money: 'pre-money', post_money: 'post-money', cap: 'cap' };
+
+/**
+ * Valuation from the structured fields (amount + basis), in the standard money
+ * format and the user's currency: "€10M pre-money" / "$11.6M pre-money". The
+ * old free-text `valuation` is only a fallback for rows without an amount.
+ */
+export function valuationLabel(d: Pick<DealRow, 'valuation' | 'valuation_amount' | 'valuation_basis' | 'valuation_undisclosed' | 'currency_code'>): string {
+	if (d.valuation_undisclosed) return 'Not disclosed';
+	const amount = money(d.valuation_amount, d.currency_code);
+	if (amount) {
+		const basis = d.valuation_basis ? VALUATION_BASIS[d.valuation_basis] : undefined;
+		return basis ? `${amount} ${basis}` : amount;
+	}
+	return d.valuation?.trim() || 'Not disclosed';
+}
+
 /** `2026-12-01` → `Dec 2026`, matching the designed card copy. */
 export function closeLabel(date: string | null): string | null {
 	if (!date) return null;

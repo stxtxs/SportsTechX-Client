@@ -18,6 +18,7 @@ import { CommandPalette, useCommandShortcut } from './command-palette';
 import { useNav } from '@/hooks/use-nav';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { useLogout } from '@/hooks/use-logout';
+import { useCompanyWatchlists } from '@/components/features/watchlists/use-company-watchlists';
 import { forTier, hrefOf, routeForPath } from '@/lib/routes';
 import { qk } from '@/lib/query-keys';
 import type { ConversationListItem } from '@/components/chat/chat-core';
@@ -116,8 +117,12 @@ function useLeafTitle(pathname: string): string | null {
 	const dealLeaf = leafOf(pathname, hrefOf('deal-flow'));
 	const dealId = dealLeaf && /^[0-9a-f-]{36}$/i.test(dealLeaf) ? dealLeaf : null;
 	const { data: deal } = useSWR<{ company_name?: string | null; company_anonymous?: boolean }>(dealId ? qk.scout.deal(dealId) : null);
+	// A watchlist is named after the list: "Football Infrastructure | Atlas".
+	const listId = leafOf(pathname, hrefOf('watchlists'));
+	const { lists } = useCompanyWatchlists();
 	if (chatId) return convos?.find((c) => c.id === chatId)?.title ?? 'Conversation';
 	if (pathname === `${hrefOf('watchlists')}/raises`) return 'Saved raises';
+	if (listId) return lists.find((l) => l.id === listId)?.name ?? null;
 	if (dealId) return deal ? (deal.company_name ?? 'Undisclosed company') : null;
 	if (companySlug) return company?.name ?? null;
 	return null;

@@ -21,6 +21,8 @@ export interface WatchlistCompany {
 	id: string; name: string; slug: string | null; website: string | null; custom_logo_url: string | null;
 	description: string | null; primary_sector: string | null; hq_city: string | null; hq_country: string | null;
 	total_funding_usd: number | string | null; added_at?: string | null;
+	/** Scout stage (identified … invested); null = Identified. */
+	stage?: string | null;
 }
 
 const asList = <T,>(d: unknown): T[] => (Array.isArray(d) ? d : ((d as { data?: T[] } | null)?.data ?? [])) as T[];

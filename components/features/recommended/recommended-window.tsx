@@ -25,13 +25,14 @@ const read = (k: string) => { try { return Number(localStorage.getItem(k) ?? '0'
 const write = (k: string, v: number) => { try { localStorage.setItem(k, String(v)); } catch { /* not persisted */ } listeners.forEach((l) => l()); };
 const subscribe = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
 
-export function useRecommendedWindow<T extends { id: string; name: string }>(items: T[], saved: Set<string>, key: string) {
+export function useRecommendedWindow<T extends { id: string; name: string }>(items: T[], saved: Set<string>, key: string, keepOrder = false) {
 	const storageKey = `stx:rec-offset:${key}`;
 	const offset = useSyncExternalStore(subscribe, () => read(storageKey), () => 0);
-	const queue = useMemo(
-		() => items.filter((i) => !saved.has(i.id)).sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' })),
-		[items, saved],
-	);
+	// A to Z by default; `keepOrder` keeps the caller's order (Best match, a chosen sort).
+	const queue = useMemo(() => {
+		const q = items.filter((i) => !saved.has(i.id));
+		return keepOrder ? q : q.sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
+	}, [items, saved, keepOrder]);
 	const start = queue.length ? offset % queue.length : 0;
 	const page = queue.length <= REC_PAGE ? queue : [...queue, ...queue].slice(start, start + REC_PAGE);
 	return {

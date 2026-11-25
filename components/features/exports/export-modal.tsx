@@ -46,12 +46,17 @@ interface CountResponse {
 	matched: number; rows: number; credits: number; credits_per_row: number; capped: boolean;
 }
 
-export function ExportModal({ entity, search, filters, onClose }: {
+export function ExportModal({ entity, search, filters, ids, onClose }: {
 	entity: string;
 	/** The list's current search term, so the export matches what is on screen. */
 	search?: string | null;
 	/** The list's current facet filters, forwarded verbatim. */
 	filters?: Record<string, unknown> | null;
+	/**
+	 * Exactly these rows (a watchlist). The count endpoint can't take ids yet,
+	 * so the set is priced here from its per-row cost; the server still charges.
+	 */
+	ids?: string[] | null;
 	onClose: () => void;
 }) {
 	const cols = useSWR<ColumnsResponse>(qk.exports.columns(entity));
@@ -88,8 +93,8 @@ export function ExportModal({ entity, search, filters, onClose }: {
 	// Row window (1-indexed, inclusive); blank = the whole filtered list. The
 	// count endpoint prices the full set, so a window is re-priced client-side
 	// from the per-row cost it returns (the server is still the authority).
-	const matched = count.data?.matched ?? 0;
 	const perRow = count.data?.credits_per_row ?? 0;
+	const matched = ids ? ids.length : (count.data?.matched ?? 0);
 	const from = fromRow ? Math.max(1, Math.floor(Number(fromRow))) : null;
 	const to = toRow ? Math.floor(Number(toRow)) : null;
 	const hasRange = from !== null || to !== null;
@@ -99,8 +104,8 @@ export function ExportModal({ entity, search, filters, onClose }: {
 	const rangeInvalid = hasRange && count.data != null
 		&& (rangeRows === 0 || (from !== null && to !== null && to < from));
 
-	const willExportRows = hasRange ? rangeRows : (count.data?.rows ?? 0);
-	const requiredCredits = hasRange ? Math.ceil(rangeRows * perRow) : (count.data?.credits ?? 0);
+	const willExportRows = hasRange ? rangeRows : ids ? ids.length : (count.data?.rows ?? 0);
+	const requiredCredits = hasRange || ids ? Math.ceil(willExportRows * perRow) : (count.data?.credits ?? 0);
 	const insufficient = balance != null && count.data != null && !rangeInvalid
 		&& requiredCredits > balance.total_available;
 
@@ -113,7 +118,7 @@ export function ExportModal({ entity, search, filters, onClose }: {
 		setDownloading(true);
 		try {
 			const res = await apiRequest('POST', `/api/exports/${entity}`, {
-				format, columns: selected, search: search ?? undefined, filters: filters ?? undefined,
+				format, columns: selected, search: search ?? undefined, filters: filters ?? undefined, ids: ids ?? undefined,
 				...(hasRange ? { offset, range_limit: rangeRows } : {}),
 			});
 			if (!res.ok) throw new Error(String(res.status));
@@ -171,7 +176,7 @@ export function ExportModal({ entity, search, filters, onClose }: {
 
 							<div className="export-modal__pickhead" style={{ marginTop: 18 }}>
 								<span className="atlas-eyebrow">Rows</span>
-								{matched > 0 && <span className="export-modal__rowstotal">{matched.toLocaleString()} match your filters</span>}
+								{matched > 0 && <span className="export-modal__rowstotal">{matched.toLocaleString()} {ids ? `in this list` : `match your filters`}</span>}
 							</div>
 							<div className="export-modal__rows">
 								<input type="number" min={1} inputMode="numeric" className="export-modal__rowinput"
@@ -195,7 +200,7 @@ export function ExportModal({ entity, search, filters, onClose }: {
 											? <>
 												<strong>{willExportRows.toLocaleString()}</strong> rows ·{' '}
 												<strong>{requiredCredits.toLocaleString()}</strong> credits
-												{!hasRange && count.data.capped && <> · capped from {count.data.matched.toLocaleString()}</>}
+												{!hasRange && !ids && count.data.capped && <> · capped from {count.data.matched.toLocaleString()}</>}
 												{balance != null && <span className="export-modal__bal"> · balance {balance.total_available.toLocaleString()}</span>}
 											</>
 											: 'Could not price this export'}

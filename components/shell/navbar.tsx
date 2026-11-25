@@ -13,6 +13,7 @@ import { initialsOf } from '@/components/atlas/shell/atlas-shell';
 import { ThemeToggle } from '@/components/atlas/shell/theme-toggle';
 import { VerifyButton } from '@/components/features/verify/verify-cta';
 import { NotificationBell } from './notification-bell';
+import { FeedbackButton } from '@/components/features/feedback/feedback-button';
 import { CommandPalette, useCommandShortcut } from './command-palette';
 import { useNav } from '@/hooks/use-nav';
 import { useUserProfile } from '@/hooks/use-user-profile';
@@ -66,6 +67,8 @@ function NavbarInner({ tier, nav, homePath, accountPath }: {
 				<SearchButton />
 				<VerifyButton />
 				<ThemeToggle header />
+				{/* Report a bug / send feedback, on every page and plan. */}
+				<FeedbackButton />
 				<NotificationBell />
 				<AccountMenu tier={tier} accountPath={accountPath} />
 			</div>

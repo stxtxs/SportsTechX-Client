@@ -57,7 +57,7 @@ export function Signals({ companiesHref }: { companiesHref: string }) {
 					<p className="atlas-sig-lede">Companies showing activity worth watching.</p>
 				</div>
 				{/* Same place as Recommended's: Scout's thesis drives both. */}
-				{getUserType(profile) === 'scout' && <Link href={hrefOf('thesis')} className="scout-link">Edit thesis</Link>}
+				{getUserType(profile) === 'scout' && <Link href={hrefOf('interests')} className="scout-link">Edit preferences</Link>}
 			</div>
 			<div className="atlas-sig-filter atlas-sig-filter--top">
 				<PillTabs ariaLabel="Signal type" value={type} onChange={setType} options={filters} />

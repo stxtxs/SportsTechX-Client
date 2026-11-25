@@ -31,9 +31,10 @@ export function CompletionBadge({ pct }: { pct: number }) {
 /**
  * The Account area's frame, identical on all three solutions (handover v1 §4):
  * one fixed "Account" header with no byline, then the tabs
- * Account · Preferences · Scouting thesis (Scout) or Raise settings (Raise) ·
- * Subscription · Credits. A page's own action (e.g. Edit) sits at the right of
- * the tab row, so no page swaps the header for its own title.
+ * Account · Preferences · Raise settings (Raise only) · Subscription · Credits
+ * (D1: the Scouting thesis folded into Preferences). The tab row holds the tabs
+ * alone, so it is never clipped (D1, 2.6): a page's completion % and its own
+ * action (e.g. Raise's Edit) sit under the tabs, at the top of the content.
  */
 export function AccountTabs({ actions }: { actions?: ReactNode } = {}) {
 	const { data: profile } = useUserProfile();
@@ -42,7 +43,6 @@ export function AccountTabs({ actions }: { actions?: ReactNode } = {}) {
 
 	const tabs: Tab[] = [{ id: 'account', label: 'Account' }, { id: 'interests', label: 'Preferences' }];
 	if (tier === 'raise') tabs.push({ id: 'raise-settings', label: 'Raise settings' });
-	if (tier === 'scout') tabs.push({ id: 'thesis', label: 'Scouting thesis' });
 	tabs.push({ id: 'billing', label: 'Subscription' }, { id: 'credits', label: 'Credits' });
 
 	return (
@@ -65,8 +65,8 @@ export function AccountTabs({ actions }: { actions?: ReactNode } = {}) {
 						);
 					})}
 				</nav>
-				{actions && <div className="atlas-acct-tabs__actions">{actions}</div>}
 			</div>
+			{actions && <div className="atlas-acct-tabs__meta">{actions}</div>}
 		</>
 	);
 }

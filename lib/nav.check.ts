@@ -265,7 +265,9 @@ check(access('scout', 'raise', false) === 'hidden', 'raise user is not shown Sco
 		'navigable: Programs is offered to Explore, like Events');
 	check(!navigable('pipeline', 'scout'),
 		'navigable: a genuinely Raise-only chip (pipeline) is still dropped for Scout');
-	check(navigable('thesis', 'scout') && !navigable('thesis', 'raise'),
+	// The Scouting thesis page folded into Preferences (D1), so this covers
+	// every Scout-only route rather than naming one.
+	check(ROUTES.filter((r) => r.tier === 'scout').every((r) => !navigable(r.id, 'raise')),
 		'navigable: a Scout-only page is never offered to a founder');
 	// `upsell` is good enough for the sidebar and not for an action.
 	check(access(ROUTE_BY_ID.get('recently-funded')!.tier, 'explore', false) === 'upsell'

@@ -22,10 +22,17 @@ export function preferencesPct(p: { goals?: unknown[]; sectors?: unknown[]; geos
 	return pct([p.goals, p.sectors, p.geos, p.sports, p.techs]);
 }
 
-/** Scouting thesis: Organisation · Type · Stages · Cheque size · Lead or follow · Minimum traction · Looks for · Avoids. */
-export function thesisPct(t: { fundName?: string; investorType?: string; stages?: string[]; chequeMin?: string; chequeMax?: string; invStyle?: string; traction?: string; include?: string[]; exclude?: string[] }): number {
-	const cheque = amountSet(t.chequeMin) || amountSet(t.chequeMax) ? 'set' : '';
-	return pct([t.fundName, t.investorType, t.stages, cheque, t.invStyle, t.traction, t.include, t.exclude]);
+/**
+ * Preferences on Scout: the five Preferences fields (Tags counts Include) plus
+ * Stages · Cheque size · Lead or follow · Minimum traction from the Scouting
+ * focus block, and Tags → Avoid. Replaces the "Scouting thesis" row of §7.
+ */
+export function scoutPreferencesPct(
+	p: { goals?: unknown[]; sectors?: unknown[]; geos?: unknown[]; sports?: unknown[]; techs?: unknown[] },
+	f: { stages?: string[]; chequeMin?: number | null; chequeMax?: number | null; invStyle?: string; traction?: string; exclude?: string[] },
+): number {
+	const cheque = amountSet(f.chequeMin) || amountSet(f.chequeMax) ? 'set' : '';
+	return pct([p.goals, p.sectors, p.geos, p.sports, p.techs, f.stages, cheque, f.invStyle, f.traction, f.exclude]);
 }
 
 /**

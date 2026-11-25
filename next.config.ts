@@ -60,6 +60,8 @@ const nextConfig: NextConfig = {
       // The pricing page moved from /plans to /solutions; old links, emails and the
       // FTABR26 PDF/QR still point at /plans (the query string carries over).
       { source: "/plans", destination: "/solutions", permanent: true },
+      // The Scouting thesis folded into Preferences (D1, 1.1).
+      { source: "/thesis", destination: "/interests", permanent: false },
     ];
   },
   async rewrites() {

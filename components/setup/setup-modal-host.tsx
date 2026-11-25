@@ -2,6 +2,8 @@
 
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { hrefOf } from '@/lib/routes';
 import { SETUP_EVENT, type OpenSetupDetail, type SetupWizard } from '@/lib/setup-events';
 import { useUrlModal } from '@/hooks/use-url-state';
 import { useUserProfile, getUserType } from '@/hooks/use-user-profile';
@@ -30,14 +32,14 @@ const WIZARD_TIER: Record<SetupWizard, 'raise' | 'scout'> = { raise: 'raise', th
  * reason to throw away the current step's in-progress edits as well.
  */
 const RaiseSetup = dynamic(() => import('@/components/raise/raise-setup').then((m) => m.RaiseSetup), { ssr: false });
-const Onboarding = dynamic(() => import('@/components/scout/onboarding').then((m) => m.Onboarding), { ssr: false });
 
 const LABEL: Record<SetupWizard, string> = {
 	raise: 'Set up your raise',
-	thesis: 'Set up your investment thesis',
+	thesis: 'Set up your preferences',
 };
 
 export function SetupModalHost() {
+	const router = useRouter();
 	const [open, setOpen] = useState(false);
 	const [wizard, setWizard] = useState<SetupWizard | null>(null);
 	const [edit, setEdit] = useState(false);
@@ -58,6 +60,8 @@ export function SetupModalHost() {
 			const detail = (e as CustomEvent<OpenSetupDetail>).detail;
 			if (!detail?.wizard) return;
 			if (!allowsRef.current(detail.wizard)) return; // out-of-tier request — ignore
+			// Scout has no wizard: setup is the Preferences page (D1, 1.2).
+			if (detail.wizard === 'thesis') { router.push(hrefOf('interests')); return; }
 			setWizard(detail.wizard);
 			setEdit(!!detail.edit);
 			setOpen(true);
@@ -65,7 +69,7 @@ export function SetupModalHost() {
 		};
 		window.addEventListener(SETUP_EVENT, onEvent);
 		return () => window.removeEventListener(SETUP_EVENT, onEvent);
-	}, [setSetupParam]);
+	}, [setSetupParam, router]);
 
 	// URL-driven: a deep link opens the matching wizard ONLY if it belongs to the
 	// viewer's tier; a wrong-tier param is stripped so the wizard never shows. Wait
@@ -79,7 +83,10 @@ export function SetupModalHost() {
 		// is disabled — isLoading false, no data — so the tier read as 'explore'
 		// and a cold load of `?setup=thesis` stripped its own param.
 		if (isLoading || !profile) return;
-		if (allows(setupParam)) {
+		if (allows(setupParam) && setupParam === 'thesis') {
+			// Old `?setup=thesis` links: the thesis lives in Preferences now.
+			router.replace(hrefOf('interests'));
+		} else if (allows(setupParam)) {
 			setWizard(setupParam);
 			setOpen(true);
 		} else {
@@ -95,12 +102,10 @@ export function SetupModalHost() {
 	if (!wizard) return null;
 
 	const close = () => { setOpen(false); setSetupParam(null); };
-	const label = edit
-		? (wizard === 'thesis' ? 'Edit your investment thesis' : 'Edit your raise')
-		: LABEL[wizard];
+	const label = edit ? 'Edit your raise' : LABEL[wizard];
 	return (
 		<SetupModal open={open} onClose={close} label={label}>
-			{wizard === 'raise' ? <RaiseSetup onClose={close} edit={edit} /> : <Onboarding onClose={close} edit={edit} />}
+			{wizard === 'raise' && <RaiseSetup onClose={close} edit={edit} />}
 		</SetupModal>
 	);
 }

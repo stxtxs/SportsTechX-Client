@@ -52,7 +52,9 @@ export function AddButton({ onClick }: { onClick: () => void }) {
 
 /** Modal with the full grouped list (regions or attributes), searchable, multi-select. */
 export function PickerDialog({ title, sub, list, selected, blocked, blockedNote, onToggle, onClose }: {
-	title: string; sub: string; list: keyof typeof PICK_LISTS;
+	title: string; sub: string;
+	/** A named list, or the groups themselves. */
+	list: keyof typeof PICK_LISTS | readonly (readonly [string, readonly string[]])[];
 	selected: string[];
 	/** Options already chosen on the opposite list (include vs exclude). */
 	blocked?: string[]; blockedNote?: string;
@@ -78,7 +80,8 @@ export function PickerDialog({ title, sub, list, selected, blocked, blockedNote,
 		return () => { window.removeEventListener('keydown', onKey); opener?.focus(); };
 	}, []);
 	const term = q.trim().toLowerCase();
-	const groups = PICK_LISTS[list].map(([name, items]) => [name, items.filter((o) => !term || o.toLowerCase().includes(term))] as const).filter(([, items]) => items.length);
+	const source = typeof list === 'string' ? PICK_LISTS[list] : list;
+	const groups = source.map(([name, items]) => [name, items.filter((o) => !term || o.toLowerCase().includes(term))] as const).filter(([, items]) => items.length);
 	return (
 		<div className="scout-modal" role="presentation" onClick={onClose}>
 			<div ref={boxRef} className="scout-modal__box" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>

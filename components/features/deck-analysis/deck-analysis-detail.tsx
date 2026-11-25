@@ -247,7 +247,7 @@ export function DeckAnalysisDetail({ id, copy = FOUNDER_DETAIL_COPY }: { id: str
 					<Card style={{ marginTop: 20, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 10 }}>
 						<HelpCircle size={15} style={{ color: 'var(--a-muted)', flexShrink: 0 }} />
 						<p style={{ margin: 0, fontSize: 13, color: 'var(--a-muted)' }}>
-							Set up your <a href={hrefOf('thesis')} style={{ color: 'var(--a-ink)', textDecoration: 'underline', textUnderlineOffset: 3 }}>investment thesis</a> and future screens will be judged against it.
+							Set up your <a href={hrefOf('interests')} style={{ color: 'var(--a-ink)', textDecoration: 'underline', textUnderlineOffset: 3 }}>preferences</a> and future screens will be judged against it.
 						</p>
 					</Card>
 				)}

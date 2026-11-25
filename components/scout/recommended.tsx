@@ -125,13 +125,13 @@ export function Recommended() {
 				// setup empty state.
 				: error && !needsThesis ? <Empty>Couldn&apos;t load your recommendations. Please try again.</Empty>
 				: needsThesis || rows.length === 0 ? (
-					<Empty>No recommendations yet. Finish your setup to see matches.{' '}<Button size="sm" href={hrefOf('thesis')}>Open settings</Button></Empty>
+					<Empty>No recommendations yet. Finish your setup to see matches.{' '}<Button size="sm" href={hrefOf('interests')}>Open Preferences</Button></Empty>
 				)
 				: (
 				<div className="atlas-card atlas-chart-card" style={{ marginTop: 10 }}>
 					<div className="atlas-dt__top">
-						<span>Matched to your scouting thesis · {win.page.length} of {rows.length}</span>
-						<div><ViewToggle value={view} onChange={setView} /><Button href={hrefOf('thesis')} variant="outline" size="sm">Edit thesis</Button></div>
+						<span>Matched to your preferences · {win.page.length} of {rows.length}</span>
+						<div><ViewToggle value={view} onChange={setView} /><Button href={hrefOf('interests')} variant="outline" size="sm">Edit preferences</Button></div>
 					</div>
 					{view === 'cards' ? (
 					<div className="atlas-rec-list" style={{ padding: 20 }}>

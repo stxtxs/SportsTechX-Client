@@ -111,7 +111,7 @@ export function DealFlow({ tab = 'all' }: { tab?: DealTab }) {
 			{nothingLive && (tab === 'all' || tab === 'featured') && (
 				<Empty>
 					{tab === 'featured'
-						? 'No featured deal at the moment. Check the Verified Raises and Circle tabs.'
+						? 'No featured deal at the moment. Check the Verified Raises tab.'
 						: 'No live opportunities yet. We list a raise here once SportsTechX has checked it.'}
 				</Empty>
 			)}

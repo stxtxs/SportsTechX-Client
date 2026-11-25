@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import { useUrlSync, useUrlReader, useUrlModal } from '@/hooks/use-url-state';
@@ -39,7 +39,11 @@ const DASH = <span className="atlas-dash">—</span>;
  * over detail drawer.
  */
 /** `companyHref` → rows link to a company profile page; omitted → rows open the side drawer. */
-export function MarketCompanies({ companyHref }: { companyHref?: (idOrSlug: string) => string } = {}) {
+export function MarketCompanies({ companyHref, modeSwitch }: {
+	companyHref?: (idOrSlug: string) => string;
+	/** "Recommended / All", shown in the filter bar like the raise tabs (Deal Flow, preview fixes 4). */
+	modeSwitch?: ReactNode;
+} = {}) {
 	// View-state lives in the URL so Back/Forward restore it (a profile visit
 	// unmounts this list; the URL is all the browser keeps) and so the page is
 	// shareable. Deep links (framework/Scout) can preselect ?q=, ?sector= etc.
@@ -153,6 +157,7 @@ export function MarketCompanies({ companyHref }: { companyHref?: (idOrSlug: stri
 	return (
 		<>
 			<FilterBar
+				actions={modeSwitch}
 				search={{ value: q, onChange: (v) => { setQ(v); reset(); }, placeholder: 'Search companies' }}
 				groups={[
 					{ label: 'Industry & domain', filters: [

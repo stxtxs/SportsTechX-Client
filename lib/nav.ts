@@ -66,7 +66,7 @@ export function buildNav(tier: Tier, isAdmin: boolean): {
 			.filter((r): r is RouteDef => !!r && access(r.tier, tier, isAdmin) !== 'hidden')
 			// `upsell` items stay listed, marked locked: the lock icon and its
 			// hover text say what unlocks them (handover v1 §4 Access).
-			.map((r) => toItem(r, tier, access(r.tier, tier, isAdmin) === 'upsell'))
+			.map((r) => toItem(r, tier, access(r.tier, tier, isAdmin) === 'upsell' || (!!r.boardroomOnly && !isAdmin)))
 			.filter((i): i is ShellNavItem => i !== null);
 		if (items.length === 0) continue;
 

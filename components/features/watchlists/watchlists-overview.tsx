@@ -7,6 +7,8 @@ import { ArrowUpRight, Pencil, Plus, Trash2 } from 'lucide-react';
 import useSWR from 'swr';
 import { Action, Button, Empty, Input, Loading, Seg } from '@/components/atlas';
 import { qk } from '@/lib/query-keys';
+import { useConfirm } from '@/components/ui/confirm-dialog';
+import { SAVED_RAISES_HREF } from '@/components/scout/raise-bookmark';
 import { hrefOf } from '@/lib/routes';
 import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
 import { useCompanyWatchlists, createWatchlist, renameWatchlist, deleteWatchlist, isInvestorList } from './use-company-watchlists';
@@ -27,12 +29,35 @@ export function WatchlistsOverview({ watchlistHref }: { watchlistHref: (id: stri
 	const mainCount = (pipe.data?.data ?? []).filter((r) => !r.watchlist_id).length;
 	// Investor lists only mean something on Raise (see use-nav).
 	const lists = isRaise ? all : all.filter((l) => !isInvestorList(l));
+	// Raises saved from Deal Flow (Scout): listed here with the company lists (6.8).
+	const raises = useSWR<{ data: Array<{ is_watched?: boolean }> }>(tier === 'scout' ? qk.scout.dealflow({ tab: 'all', limit: 50 }) : null);
+	const savedRaises = (raises.data?.data ?? []).filter((r) => r.is_watched).length;
 	const [kind, setKind] = useState<'investors' | 'companies'>('investors');
 	const newKind = isRaise ? kind : 'companies';
 	const [name, setName] = useState('');
 	const [editing, setEditing] = useState<string | null>(null);
 	const [editName, setEditName] = useState('');
 	const [busy, setBusy] = useState(false);
+
+	// A list with items asks first (Deal Flow 8.3); an empty one goes at once.
+	const confirm = useConfirm();
+	const remove = async (l: (typeof lists)[number]) => {
+		const n = l.company_count ?? 0;
+		if (n > 0) {
+			const investors = isInvestorList(l);
+			const ok = await confirm({
+				title: `Delete ${l.name}?`,
+				description: investors
+					? `The ${n} investors in it move back to your Investor Watchlist.`
+					: `The ${n} items in it are removed from this list only.`,
+				confirmLabel: 'Delete',
+				cancelLabel: 'Cancel',
+				destructive: true,
+			});
+			if (!ok) return;
+		}
+		await run(() => deleteWatchlist(l.id), `${l.name} deleted.`);
+	};
 
 	const run = async (fn: () => Promise<unknown>, ok: string) => {
 		setBusy(true);
@@ -67,6 +92,17 @@ export function WatchlistsOverview({ watchlistHref }: { watchlistHref: (id: stri
 							</div>
 						</div>
 					)}
+					{tier === 'scout' && savedRaises > 0 && (
+						<div className="atlas-rowlist__row">
+							<div className="atlas-rowlist__main">
+								<Link href={SAVED_RAISES_HREF} className="atlas-rowlist__title atlas-wl-title">Saved raises</Link>
+								<div className="atlas-rowlist__desc">{savedRaises} {savedRaises === 1 ? 'raise' : 'raises'} from Deal Flow</div>
+							</div>
+							<div className="atlas-wl-actions">
+								<Action icon={<ArrowUpRight />} href={SAVED_RAISES_HREF}>Open</Action>
+							</div>
+						</div>
+					)}
 					{lists.map((l) => (
 						<div key={l.id} className="atlas-rowlist__row">
 							<div className="atlas-rowlist__main">
@@ -87,7 +123,15 @@ export function WatchlistsOverview({ watchlistHref }: { watchlistHref: (id: stri
 								<div className="atlas-wl-actions">
 									<Action icon={<ArrowUpRight />} href={watchlistHref(l.id)}>Open</Action>
 									<Action icon={<Pencil />} onClick={() => { setEditing(l.id); setEditName(l.name); }}>Rename</Action>
-									<Action icon={<Trash2 />} disabled={busy} onClick={() => { if (window.confirm(isInvestorList(l) ? `Delete “${l.name}”? Its investors move back to your Investor Watchlist.` : `Delete “${l.name}”? Companies stay in the database.`)) void run(() => deleteWatchlist(l.id), `Deleted ${l.name}`); }}>Delete</Action>
+									{/* There is always at least one watchlist (Deal Flow 8.2): on Raise the
+									    Investor Watchlist always remains; elsewhere the only list can't go. */}
+									{!isRaise && lists.length === 1 ? (
+										<span title="You need at least one watchlist." className="atlas-wl-nodelete">
+											<Action icon={<Trash2 />} disabled>Delete</Action>
+										</span>
+									) : (
+										<Action icon={<Trash2 />} disabled={busy} onClick={() => void remove(l)}>Delete</Action>
+									)}
 								</div>
 							)}
 						</div>

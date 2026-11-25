@@ -8,6 +8,7 @@ import { openCreditExhausted, InsufficientCreditsError } from './credit-events';
 import { openTierRequired, TierRequiredError } from './tier-events';
 import { isPublicPath } from './public-paths';
 import type { Tier } from './access';
+import { answerTestRaise, mergeTestRaises, readTestRaise, testRaisesOn } from './dev/test-raises-intercept';
 
 // ─── Auth header cache ───────────────────────────────────────────────────────
 //
@@ -236,6 +237,11 @@ export async function apiRequest(
   url: string,
   data?: unknown,
 ): Promise<Response> {
+  // Local review only: test raises answer here and contact no one (lib/dev).
+  if (testRaisesOn()) {
+    const local = await answerTestRaise(method, url);
+    if (local) return local;
+  }
   const authHeaders = await getAuthHeaders();
   const headers: Record<string, string> = {
     ...(data ? { 'Content-Type': 'application/json' } : {}),
@@ -320,6 +326,18 @@ export async function fetcher<T = unknown>(key: Key): Promise<T | null> {
 
   const queryKey = Array.isArray(key) ? key : [key];
   const url = buildUrl(queryKey);
+
+  // Local review only: test raises join Deal Flow (lib/dev/test-raises-intercept.ts).
+  if (testRaisesOn()) {
+    const own = await readTestRaise(url);
+    if (own) return own.data as T;
+    const real = await fetchJson<T>(url);
+    return (await mergeTestRaises(url, real)) as T;
+  }
+  return fetchJson<T>(url);
+}
+
+async function fetchJson<T>(url: string): Promise<T | null> {
 
   const authHeaders = await getAuthHeaders();
   const headers: Record<string, string> = {

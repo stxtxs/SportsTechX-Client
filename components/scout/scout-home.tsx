@@ -109,7 +109,7 @@ export function ScoutHome() {
 					))}
 					<FeedCard
 						tag="Deal Flow" icon={Layers}
-						title="Live raises from the Circle"
+						title="Live raises from Boardroom"
 						body="Featured deals and verified raises, ranked by thesis fit."
 						href={hrefOf('deal-flow')}
 					/>

@@ -109,7 +109,13 @@ function useLeafTitle(pathname: string): string | null {
 	const companySlug = leafOf(pathname, hrefOf('companies'));
 	const { data: convos } = useSWR<ConversationListItem[]>(chatId ? qk.chat.conversations() : null);
 	const { data: company } = useSWR<{ name?: string }>(companySlug ? qk.companies.detail(companySlug) : null);
+	// A raise page is named after the company, or "Undisclosed company" (Deal Flow 3.6).
+	const dealLeaf = leafOf(pathname, hrefOf('deal-flow'));
+	const dealId = dealLeaf && /^[0-9a-f-]{36}$/i.test(dealLeaf) ? dealLeaf : null;
+	const { data: deal } = useSWR<{ company_name?: string | null; company_anonymous?: boolean }>(dealId ? qk.scout.deal(dealId) : null);
 	if (chatId) return convos?.find((c) => c.id === chatId)?.title ?? 'Conversation';
+	if (pathname === `${hrefOf('watchlists')}/raises`) return 'Saved raises';
+	if (dealId) return deal ? (deal.company_name ?? 'Undisclosed company') : null;
 	if (companySlug) return company?.name ?? null;
 	return null;
 }

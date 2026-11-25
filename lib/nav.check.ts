@@ -48,7 +48,7 @@ const EXPECTED: Record<Tier, Shape> = {
 	scout: {
 		top: ['Home', 'Ask Atlas'],
 		sections: [
-			['Deal Flow', ['Companies', 'Watchlists', 'Verified Raises', 'Featured Raises', 'Deck Screener']],
+			['Deal Flow', ['Companies', 'Watchlists', 'Verified Raises', 'Featured Raises', 'From Boardroom', 'Deck Screener']],
 			['Discover', ['Investors', 'Programs']],
 			['Market', ['Analytics', 'Monthly Roundup', 'Recently Funded', 'M&A']],
 			['Resources', ['Framework', 'Reports', 'Newsletter', 'Events']],

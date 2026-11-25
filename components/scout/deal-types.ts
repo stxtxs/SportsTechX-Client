@@ -74,6 +74,8 @@ export interface DealRow {
 	interest_status: string | null;
 	/** This viewer has the deal on watch (server-side since Oct 2026). */
 	is_watched?: boolean;
+	/** Tag names, once the API sends them for matching (Deal Flow 6.3). */
+	tags?: string[];
 }
 
 export const LEAD_LABEL: Record<string, string> = {
@@ -87,15 +89,29 @@ const RELATIONSHIP_LABEL: Record<string, string> = {
 	investing_this_round: 'Investing in this round', existing_investor: 'Existing investor',
 	advisor_or_board: 'Advisor / board', referral: 'Referral',
 };
+/**
+ * The introduction status a scout sees (Deal Flow for launch, 2.3): Requested →
+ * With the founder → Introduced, or Not right now. Mapped from the API's
+ * statuses until the approval flow has its own (received is waiting for
+ * SportsTechX; confirming and shared are with the founder).
+ */
 export const INTEREST_LABEL: Record<string, string> = {
-	received: 'Request received', source_confirmed: 'Confirming with the company',
-	shared: 'Details shared', connected: 'Introduced', declined: 'Not proceeding',
+	received: 'Requested', source_confirmed: 'With the founder',
+	shared: 'With the founder', connected: 'Introduced', declined: 'Not right now',
+	no_response: 'No response',
 };
 
-/** A Verified Raise carries the founder's round code (raise_profiles.round_type); a Circle deal
- *  already carries a readable `funding_round_types` name, which passes through unchanged. */
+/**
+ * Round names, one set everywhere: the Preferences ones (Deal Flow 9.2). A
+ * Verified Raise carries the founder's round code (raise_profiles.round_type);
+ * a Circle deal carries a `funding_round_types` name ("Seed Round"), shown in
+ * the same words.
+ */
 const ROUND_LABEL: Record<string, string> = {
-	pre_seed: 'Pre-seed', seed: 'Seed', series_a: 'Series A', series_b_plus: 'Series B+', bridge: 'Bridge', other: 'Other',
+	pre_seed: 'Pre-seed round', seed: 'Seed round', series_a: 'Series A', series_b_plus: 'Series B',
+	late_stage: 'Late-stage venture', bridge: 'Bridge', other: 'Other',
+	'Pre Seed Round': 'Pre-seed round', 'Seed Round': 'Seed round', 'Series A Round': 'Series A',
+	'Series B Round': 'Series B', 'Late Stage Venture': 'Late-stage venture',
 };
 export const roundLabel = (v: string | null) => (v ? ROUND_LABEL[v] ?? v : null);
 export const leadLabel = (v: string | null) => (v ? LEAD_LABEL[v] ?? v : null);
@@ -142,7 +158,7 @@ export const companyLabel = (d: DealRow) =>
 	d.company_name ?? (d.company_anonymous ? 'Undisclosed company' : 'Company');
 
 export const submitterLabel = (d: DealRow) =>
-	d.submitter_name ?? (d.submitter_anonymous ? 'An anonymous Circle member' : 'A Circle member');
+	d.submitter_name ?? 'a Boardroom member';
 
 /**
  * Will the document endpoints actually hand this viewer a URL?
@@ -198,6 +214,6 @@ export const MY_STATUS: Record<string, string> = {
 	pending: 'Submitted, awaiting review',
 	reviewing: 'Being reviewed',
 	changes_requested: 'Changes requested',
-	live: 'Live in From the Circle',
+	live: 'Live in From Boardroom',
 	closed: 'Closed',
 };

@@ -62,6 +62,11 @@ const nextConfig: NextConfig = {
       { source: "/plans", destination: "/solutions", permanent: true },
       // The Scouting thesis folded into Preferences (D1, 1.1).
       { source: "/thesis", destination: "/interests", permanent: false },
+      // Deal Flow for launch (25 Nov): one address for Deck Screener (2.1), the
+      // old "All" page retired (3.2), Signals off main (3.2).
+      { source: "/deal-flow/screener", destination: "/deck", permanent: false },
+      { source: "/deal-flow", destination: "/deal-flow/verified", permanent: false },
+      { source: "/signals", destination: "/home", permanent: false },
     ];
   },
   async rewrites() {

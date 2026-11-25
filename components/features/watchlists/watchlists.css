@@ -34,3 +34,4 @@
 .atlas .atlas-wl-bookmark:hover { color: var(--a-ink); background: color-mix(in srgb, var(--a-ink) 6%, transparent); }
 .atlas .atlas-wl-bookmark.on { color: var(--a-ink); }
 .atlas .atlas-wl-bookmark:focus-visible { outline: 2px solid var(--a-ink); outline-offset: 1px; }
+.atlas .atlas-wl-nodelete { display: inline-flex; cursor: not-allowed; }

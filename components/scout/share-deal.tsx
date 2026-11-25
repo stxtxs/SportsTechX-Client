@@ -91,7 +91,7 @@ export function ShareDeal({ resumeId }: { resumeId?: string }) {
 		return (
 			<Empty>
 				Set up your investment thesis first.{' '}
-				<Link href={hrefOf('thesis')} style={{ color: 'var(--a-accent)' }}>Set up your thesis</Link>
+				<Link href={hrefOf('interests')} style={{ color: 'var(--a-accent)' }}>Set up your preferences</Link>
 			</Empty>
 		);
 	}

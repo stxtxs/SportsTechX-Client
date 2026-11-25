@@ -24,7 +24,7 @@ export default function Page() {
 						<h2 className="atlas-h2">Signals</h2>
 						<p className="scout-muted">What the companies you track are doing.</p>
 					</div>
-					<Link href={hrefOf('thesis')} className="scout-link">Edit thesis</Link>
+					<Link href={hrefOf('interests')} className="scout-link">Edit preferences</Link>
 				</div>
 			)}
 			<div style={{ minHeight: '50vh', display: 'grid', placeItems: 'center' }}>

@@ -82,8 +82,9 @@ export default function BillingSuccessPage() {
 	// instant, so it re-pinned the wizard to THIS page and the onboarding could
 	// never leave it — Continue → wizard → "Go to Scout" → back here, forever.
 	const openSetup = () => {
-		const wizard = tier === 'scout' ? 'thesis' : tier === 'raise' ? 'raise' : null;
-		router.push(wizard ? `${hrefOf('home')}?setup=${wizard}` : hrefOf('home'));
+		// Scout has no wizard any more: first-time setup is Preferences (D1, 1.2).
+		if (tier === 'scout') { router.push(hrefOf('interests')); return; }
+		router.push(tier === 'raise' ? `${hrefOf('home')}?setup=raise` : hrefOf('home'));
 	};
 
 	return (

@@ -175,3 +175,75 @@
 .atlas .int-currency { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 0 0 22px; margin-bottom: 26px; border-bottom: 1px solid var(--a-border); }
 .atlas .int-currency__title { margin: 0 0 4px; font-family: var(--a-font); font-size: 16px; font-weight: 700; color: var(--a-ink); }
 .atlas .int-currency__sub { margin: 0; font-family: var(--a-body); font-size: 13px; color: var(--a-muted); }
+
+/* Scouting focus block, Scout only (D1, 1.4). Same pills as the rest of Preferences. */
+.atlas .scout-focus { display: grid; gap: 22px; }
+.atlas .scout-focus__sub { margin: -6px 0 0; font-size: 13px; line-height: 1.5; color: var(--a-muted); }
+.atlas .scout-focus__field { display: grid; gap: 10px; }
+.atlas .scout-focus__label { font-family: var(--a-font); font-size: 13px; font-weight: 600; color: var(--a-ink); }
+.atlas .scout-focus__range { display: flex; align-items: center; gap: 10px; max-width: 540px; }
+.atlas .scout-focus__range .amt { flex: 1 1 0; }
+.atlas .scout-focus__to { font-size: 13px; color: var(--a-muted); }
+.atlas .scout-focus__err { margin: 0; font-size: 12px; color: var(--a-danger); }
+.atlas .int-chip--add { display: inline-flex; align-items: center; gap: 4px; color: var(--a-muted); box-shadow: inset 0 0 0 1px var(--a-border); border-style: dashed; }
+.atlas .int-carry {
+	display: grid; gap: 4px; margin: 0 0 18px; padding: 12px 14px; border-radius: var(--a-radius-sm);
+	background: var(--a-inset); font-size: 13px; line-height: 1.5; color: var(--a-ink-2);
+}
+.atlas .int-carry b { font-weight: 600; color: var(--a-ink); }
+
+/* "+ Add" dialog (Preferences second pass, 2): the only search box on the page. */
+.atlas .int-dlg { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.35); }
+.atlas .int-dlg__box {
+	display: flex; flex-direction: column; width: min(640px, 100%); max-height: min(720px, calc(100dvh - 32px));
+	border-radius: var(--a-radius); background: var(--a-page); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25), inset 0 0 0 1px var(--a-border);
+}
+.atlas .int-dlg__head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 22px 12px; }
+.atlas .int-dlg__title { margin: 0; font-family: var(--a-font); font-size: 18px; font-weight: 700; color: var(--a-ink); }
+.atlas .int-dlg__close { display: grid; place-items: center; width: 30px; height: 30px; flex: none; border: 0; border-radius: 50%; background: var(--a-inset); color: var(--a-ink); cursor: pointer; }
+.atlas .int-dlg .int-search { flex: none; margin: 0 22px 6px; }
+.atlas .int-dlg__body { flex: 1; overflow-y: auto; padding: 4px 22px 14px; }
+.atlas .int-dlg__group { padding: 10px 0; border-bottom: 1px solid var(--a-border); }
+.atlas .int-dlg__group:last-child { border-bottom: 0; }
+.atlas .int-dlg__ghead { display: flex; align-items: center; gap: 6px; }
+.atlas .int-dlg__glabel { font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--a-muted); padding: 4px 0; }
+.atlas .int-dlg__caret { display: grid; place-items: center; width: 26px; height: 26px; flex: none; border: 0; border-radius: 50%; background: transparent; color: var(--a-muted); cursor: pointer; }
+.atlas .int-dlg__caret:hover { background: var(--a-inset); color: var(--a-ink); }
+.atlas .int-dlg__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr)); gap: 4px; margin-top: 6px; }
+.atlas .int-dlg__grid--nested { padding-left: 32px; }
+.atlas .int-dlg__row {
+	display: flex; align-items: center; gap: 9px; min-width: 0; padding: 7px 8px; border: 0; border-radius: var(--a-radius-sm);
+	background: transparent; text-align: left; cursor: pointer; font-family: var(--a-body); font-size: 13px; color: var(--a-ink);
+}
+.atlas .int-dlg__row:hover { background: var(--a-inset); }
+.atlas .int-dlg__row--strong { font-weight: 600; }
+.atlas .int-dlg__box-check {
+	display: grid; place-items: center; width: 16px; height: 16px; flex: none; border-radius: 4px;
+	box-shadow: inset 0 0 0 1px var(--a-border-strong); color: var(--a-primary-ink);
+}
+.atlas .int-dlg__row.on .int-dlg__box-check { background: var(--a-primary); box-shadow: inset 0 0 0 1px var(--a-primary); }
+.atlas .int-dlg__note { margin-left: auto; font-family: var(--a-mono); font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--a-muted); }
+.atlas .int-dlg__foot { display: flex; align-items: center; justify-content: flex-end; padding: 14px 22px; border-top: 1px solid var(--a-border); }
+.atlas .int-savestate { font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--a-muted); }
+.atlas .int-savestate--error { color: var(--a-danger); }
+
+/* Tags → Include / Avoid. */
+.atlas .int-tagblocks { display: grid; gap: 20px; }
+.atlas .int-tagblock { display: grid; gap: 10px; }
+.atlas .int-tagblock__title { margin: 0; font-family: var(--a-font); font-size: 13px; font-weight: 600; color: var(--a-ink); }
+
+/* One line with "+ Add" at its end (Preferences, 2): unpicked suggestions drop
+   until it fits; the measure row is an invisible copy used to size them. */
+.atlas .int-line { position: relative; min-width: 0; }
+.atlas .int-chips--line .int-chip { flex: none; white-space: nowrap; }
+.atlas .int-chips--measure {
+	position: absolute; top: 0; left: 0; flex-wrap: nowrap; visibility: hidden; pointer-events: none;
+	height: 0; overflow: hidden; white-space: nowrap;
+}
+.atlas .int-chips--measure .int-chip { display: inline-flex; align-items: center; gap: 4px; flex: none; box-sizing: border-box; }
+
+/* Avoid picks: pale red fill, dark text (Include stays black). */
+.atlas .int-chip--avoid.on {
+	background: color-mix(in srgb, var(--a-danger) 14%, var(--a-page)); color: var(--a-ink);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--a-danger) 40%, transparent);
+}

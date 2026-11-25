@@ -93,7 +93,7 @@ export const PRIVATE_PREFIXES = [
   '/deck', '/events', '/framework', '/home', '/interests',
   '/investors', '/ma', '/my-market', '/newsletter', '/pipeline', '/programs',
   '/recently-funded', '/recommended', '/reports', '/resources', '/roundup', '/settings',
-  '/signals', '/strategy', '/thesis', '/verify', '/watchlists',
+  '/signals', '/strategy', '/verify', '/watchlists',
   // Not in ROUTES: the integration docs and the verified-company report
   // (reached from an email, not the sidebar).
   '/docs', '/verified-reports',

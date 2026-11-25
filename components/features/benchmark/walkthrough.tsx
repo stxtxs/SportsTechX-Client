@@ -9,8 +9,8 @@ import { firstNameOf, getUserType, useUserProfile } from '@/hooks/use-user-profi
 import { hrefOf } from '@/lib/routes';
 import { qk } from '@/lib/query-keys';
 import { openRaiseSetup } from '@/lib/setup-events';
-import { ENTRY_PATH, FLAGS } from './config';
-import { useBenchmarkAccess, useThesisPrefill, useWalkthroughState } from './use-benchmark';
+import { FLAGS } from './config';
+import { useThesisPrefill, useWalkthroughState } from './use-benchmark';
 import { useTourLayout } from './tour-targets';
 import { deviceOf, welcomeName } from './tour-layout';
 import { TOURS, textOf, type TourCopy } from './tour-steps';
@@ -50,7 +50,6 @@ function WalkthroughInner() {
 	const STEPS = TOURS[tier];
 	const setUp = useSetUp(tier);
 	const { ready, state, record } = useWalkthroughState();
-	const { access } = useBenchmarkAccess();
 	const { prefill } = useThesisPrefill();
 	// null = follow the stored state; true/false = the user opened or closed it here.
 	const [manual, setManual] = useState<boolean | null>(null);
@@ -83,7 +82,6 @@ function WalkthroughInner() {
 	const s = STEPS[step];
 	const copy: TourCopy = { name: tourName(profile), device: browserDevice(), setUp };
 	const last = step === STEPS.length - 1;
-	const contributor = access.entries.r3 === 'open';
 	const prefilled = !!prefill && (prefill.stages.length > 0 || prefill.regions.length > 0);
 
 	// The welcome leads to Home, where the next stops are.
@@ -96,12 +94,8 @@ function WalkthroughInner() {
 		record('completed');
 		setManual(false);
 		if (tier === 'scout' || profile?.user_role === 'admin') {
-			// The thesis wizard is a global modal that `?setup=thesis` opens on any
-			// page, so it opens over where they land: a contributor's benchmark
-			// (stored return URL), else Home. Opening it by event instead raced the
-			// navigation and left them on the current page.
-			const dest = contributor ? (state.return_url ?? ENTRY_PATH.r3) : hrefOf('home');
-			router.push(`${dest}${dest.includes('?') ? '&' : '?'}setup=thesis`);
+			// Scout setup is Preferences now; the thesis wizard is gone (D1, 1.2).
+			router.push(hrefOf('interests'));
 			return;
 		}
 		// The tour ends on Home's setup prompt: Raise opens its setup there,

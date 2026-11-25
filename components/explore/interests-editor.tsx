@@ -7,12 +7,12 @@ import { cx } from '@/components/atlas';
 import { qk } from '@/lib/query-keys';
 import type { SectorRef } from '@/hooks/use-sector-tiers';
 import { CATEGORIES, PILLARS } from '@/components/features/framework/framework-content';
-import { FIXED_OPTIONS, MODEL_OPTIONS, OTHER_GOAL_MAX, OTHER_GOAL_PREFIX, useInterestOptions, type Interests } from './interests';
+import { FIXED_OPTIONS, MODEL_OPTIONS, OTHER_GOAL_MAX, OTHER_GOAL_PREFIX, useInterestOptions, useSportFamilies, type Interests } from './interests';
 import { AddDialog, type AddGroup } from './add-dialog';
 import { collapse, findTag, groupTags, titleCase } from './headings';
 import { apiRequest } from '@/lib/query-client';
 import { CONTINENTS, CONTINENTS_BY_COMPANIES, GLOBAL, toggleGeo } from './geography';
-import { POPULAR_SPORTS, SPORT_FAMILIES, sportLabel } from './sport-families';
+import { POPULAR_SPORTS, sportLabel } from './sport-families';
 
 /**
  * The Preferences editor: Goal · Sectors · Geography · Sports · Tags
@@ -350,17 +350,21 @@ function GeoPicker({ value, onChange }: { value: string[]; onChange: (next: stri
 
 function SportsPicker({ value, onSetMany }: { value: string[]; onSetMany: (ids: string[], on: boolean) => void }) {
 	const sports = useInterestOptions().sports.options; // [id, name]
+	const families = useSportFamilies();
 	const byName = useMemo(() => new Map(sports.map(([id, name]) => [name, id])), [sports]);
+	// Headings come from the database hierarchy (doc 4.8); sports under no heading go in Other.
 	const groups = useMemo<AddGroup[]>(() => {
-		const grouped = new Set(SPORT_FAMILIES.flatMap((f) => f.sports));
+		const nameOf = new Map(sports);
+		const grouped = new Set(families.flatMap((f) => f.sports));
 		return [
-			...SPORT_FAMILIES.map((f) => ({
-				key: f.name, label: titleCase(f.name), tick: true,
-				options: f.sports.map((n) => [byName.get(n), sportLabel(n)]).filter((x): x is [string, string] => !!x[0]),
+			...families.map((f) => ({
+				key: f.name, label: f.name, tick: true,
+				options: f.sports.filter((id) => nameOf.has(id)).map((id) => [id, sportLabel(nameOf.get(id)!)] as [string, string])
+					.sort((a, b) => a[1].localeCompare(b[1])),
 			})),
-			{ key: 'Other', label: 'Other', tick: true, options: sports.filter(([, n]) => !grouped.has(n)).map(([id, n]) => [id, sportLabel(n)] as [string, string]) },
+			{ key: 'Other', label: 'Other', tick: true, options: sports.filter(([id]) => !grouped.has(id)).map(([id, n]) => [id, sportLabel(n)] as [string, string]) },
 		].filter((g) => g.options.length);
-	}, [sports, byName]);
+	}, [sports, families]);
 	if (!sports.length) return null;
 	const quick = POPULAR_SPORTS.slice(0, 5).map((n) => [byName.get(n), sportLabel(n)]).filter((x): x is [string, string] => !!x[0]);
 	const name = new Map(sports);

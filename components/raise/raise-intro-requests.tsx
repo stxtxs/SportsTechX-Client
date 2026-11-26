@@ -43,7 +43,7 @@ export function RaiseIntroRequests() {
 					No introduction requests yet. When an investor asks to meet you through Deal Flow and SportsTechX approves it, it shows here.
 				</p>
 			) : rows.map((r) => (
-				<div key={r.id} style={{ borderTop: '1px solid var(--a-line)', paddingTop: 12, display: 'grid', gap: 6 }}>
+				<div key={r.id} style={{ borderTop: '1px solid var(--a-border)', paddingTop: 12, display: 'grid', gap: 6 }}>
 					<div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
 						<strong style={{ fontSize: 14 }}>{r.scout_name ?? 'An investor'}{r.scout_org ? ` · ${r.scout_org}` : ''}</strong>
 						{r.scout_verified && <Badge>Verified investor</Badge>}

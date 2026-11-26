@@ -17,9 +17,12 @@ import { apiRequest } from '@/lib/query-client';
 import { qk } from '@/lib/query-keys';
 import { hrefOf } from '@/lib/routes';
 import {
-	INTEREST_LABEL, canOpenDocs, closeLabel, committedPct, companyLabel, instrumentLabel, leadLabel, money, roundLabel,
+	INTEREST_LABEL, canOpenDocs, closeLabel, committedPct, companyLabel, instrumentLabel, leadLabel, money, raiseLabel, roundLabel,
 	relationshipLabel, submitterLabel, valuationLabel, type DealRow,
 } from './deal-types';
+import { fmtUsd } from '@/components/features/market/format';
+import { fmtMonth, yearOf } from '@/lib/format';
+import type { Deal } from '@/types/api';
 
 /**
  * One Deal Flow opportunity: terms, summary, documents, introduction request.
@@ -104,7 +107,7 @@ export function DealDetail({ id }: { id: string }) {
 	}
 
 	const isCircle = d.source === 'circle';
-	const label = isCircle ? 'From Boardroom' : d.is_featured ? 'Featured raise' : 'Verified raise';
+	const label = raiseLabel(d);
 	const name = companyLabel(d);
 	const pct = committedPct(d);
 	// Website only when the company is disclosed: an anonymous raise sends no website.
@@ -238,6 +241,7 @@ export function DealDetail({ id }: { id: string }) {
 							View company profile →
 						</Link>
 					)}
+					{d.company_id && <FundingHistory companyId={d.company_id} />}
 				</div>
 			</div>
 
@@ -344,6 +348,30 @@ function Documents({ d }: { d: DealRow }) {
 					? 'Shared where authorised by the company.'
 					: 'Materials are released once SportsTechX has confirmed with the company.'}
 			</p>
+		</section>
+	);
+}
+
+/**
+ * The linked company's earlier rounds (5.5), as on its profile. Only for a raise whose
+ * company is disclosed: `company_id` is withheld with the name, so an anonymous raise has none.
+ */
+function FundingHistory({ companyId }: { companyId: string }) {
+	const { data, isLoading } = useSWR<{ data: Deal[] }>(qk.deals.list({ company_id: companyId, limit: 30, sort: '-announced_date' }));
+	if (isLoading) return null;
+	const rows = data?.data ?? [];
+	return (
+		<section className="scout-dd-box">
+			<h2 className="scout-dd-box__h">Funding history</h2>
+			{rows.length === 0 ? <p className="scout-dd-box__text">No disclosed rounds on record.</p> : (
+				<ul className="scout-dd-box__text" style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 6 }}>
+					{rows.map((r) => (
+						<li key={r.id}>
+							{fmtMonth(r.announced_date)} · {r.round_type_name ?? 'Round'} · {r.amount_usd == null ? 'Undisclosed' : fmtUsd(Number(r.amount_usd), yearOf(r.announced_date))}
+						</li>
+					))}
+				</ul>
+			)}
 		</section>
 	);
 }

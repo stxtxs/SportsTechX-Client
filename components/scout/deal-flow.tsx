@@ -18,7 +18,7 @@ import { refreshPaths } from '@/lib/invalidate';
 import { qk } from '@/lib/query-keys';
 import { hrefOf } from '@/lib/routes';
 import {
-	LEAD_LABEL, MY_STATUS, closeLabel, committedPct, companyLabel, money, roundLabel, submitterLabel,
+	LEAD_LABEL, MY_STATUS, closeLabel, committedPct, companyLabel, money, raiseLabel, roundLabel, submitterLabel,
 	type DealRow, type DealTab, type MyDealRow,
 } from './deal-types';
 
@@ -329,7 +329,7 @@ export function RaiseCard({ d, match }: { d: DealRow; match?: Match }) {
 		<article className={cx('scout-raise', d.is_featured && 'is-featured')}>
 			<div className="scout-raise__top">
 				<span className="scout-raise__tag">
-					{d.source === 'circle' ? 'From Boardroom' : d.is_featured ? 'Featured raise' : 'Verified raise'}
+					{raiseLabel(d)}
 					{match?.pct != null && <span className="scout-raise__pct"> · {match.pct}% match</span>}
 				</span>
 				<span className="atlas-feed-card__actions">

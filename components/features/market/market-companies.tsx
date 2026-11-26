@@ -278,10 +278,14 @@ export function MarketCompanies({ companyHref, modeSwitch, recommended = false }
 			    SWR reports isLoading=false and this would fall through to
 			    "No companies match your filters" before the first request. */}
 			{(all.isLoading || !filtersReady || (recommended && rec.isLoading)) && rows.length === 0 ? <Loading />
+				// The switch stays reachable when the list is empty: a new user with no preferences
+				// must still be able to go to All (it otherwise lives on the count line).
 				: recommended && (recNeedsSetup || recIds.length === 0) ? (
-					<Empty>No recommendations yet. Finish your preferences to see matches.{' '}<Button size="sm" href={hrefOf('interests')}>Edit preferences</Button></Empty>
+					<>{modeSwitch && <div className="mkt-countline__left" style={{ marginTop: 10 }}>{modeSwitch}</div>}
+					<Empty>No recommendations yet. Finish your preferences to see matches.{' '}<Button size="sm" href={hrefOf('interests')}>Edit preferences</Button></Empty></>
 				)
-				: rows.length === 0 ? <Empty>No results for these filters. Remove one, or clear them all.</Empty>
+				: rows.length === 0 ? <>{modeSwitch && <div className="mkt-countline__left" style={{ marginTop: 10 }}>{modeSwitch}</div>}
+					<Empty>No results for these filters. Remove one, or clear them all.</Empty></>
 					: (
 						<div className="atlas-card atlas-chart-card" style={{ marginTop: 10 }}>
 							{/* One count line for both views; the switch sits next to the count (1.5). */}

@@ -35,7 +35,7 @@ export default function Page() {
 					const q = new URLSearchParams(Object.entries({ sector, sub, subsub }).filter(([, v]) => v) as [string, string][]);
 					return `${list}?${q}`;
 				}}
-				railTop={getUserType(profile) === 'scout' ? <ThesisMatchCard /> : undefined}
+				railTop={getUserType(profile) === 'scout' ? <ThesisMatchCard idOrSlug={slug} /> : undefined}
 			/>
 		</Screen>
 	);

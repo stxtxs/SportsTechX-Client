@@ -10,7 +10,7 @@ import useSWR from 'swr';
 import { qk } from '@/lib/query-keys';
 import type { CompanyListItem as Company } from '@/types/api';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
-import { Button, Loading, Empty, FilterBar, type FilterDef, Logo, Flag, Pager, ViewToggle, type ViewMode, lockedFiltersNote } from '@/components/atlas';
+import { Button, Loading, Empty, FilterBar, type FilterDef, Logo, Flag, Pager, ViewToggle, type ViewMode, lockedFiltersNote, cx } from '@/components/atlas';
 import { RefreshList, useRecommendedWindow } from '@/components/features/recommended/recommended-window';
 import { apiRequest } from '@/lib/query-client';
 import { hrefOf } from '@/lib/routes';
@@ -53,6 +53,8 @@ interface Recommendation {
 	match_cheque: boolean;
 	/** 0-100 from the server, when it grades the match. */
 	match_score?: number | null;
+	/** Up to three things that matched (6.5). */
+	match_why?: string[];
 }
 const matchPct = (r: Recommendation) =>
 	r.match_score ?? Math.round(([r.match_sector, r.match_geo, r.match_stage, r.match_cheque].filter(Boolean).length / 4) * 100);
@@ -140,6 +142,7 @@ export function MarketCompanies({ companyHref, modeSwitch, recommended = false }
 	const recRows = useMemo(() => rec.data?.data ?? [], [rec.data]);
 	const recIds = useMemo(() => recRows.map((r) => r.id), [recRows]);
 	const scoreById = useMemo(() => new Map(recRows.map((r) => [r.id, matchPct(r)])), [recRows]);
+	const whyById = useMemo(() => new Map(recRows.map((r) => [r.id, r.match_why ?? []])), [recRows]);
 	const recNeedsSetup = (rec.error as { code?: string } | undefined)?.code === 'SCOUT_NOT_SET_UP';
 
 	const params = useMemo(() => {
@@ -309,6 +312,7 @@ export function MarketCompanies({ companyHref, modeSwitch, recommended = false }
 									canSeeRaising={canSeeRaising}
 									fundingSort={{ active: sort === '-total_funding', onToggle: () => { setSort(sort === '-total_funding' ? defaultSort : '-total_funding'); reset(); } }}
 									match={recommended ? scoreById : undefined}
+									matchWhy={recommended ? whyById : undefined}
 									onDismiss={recommended ? (c) => void dismiss(c.id, c.name) : undefined}
 								/>
 								)}
@@ -374,7 +378,7 @@ function CompanyRow({ c, href, onOpen, saved, canSeeRaising }: { c: Company; hre
  * and the actions keep their space even when empty, so switching views never
  * moves a column.
  */
-export function CompanyTable({ rows, hrefFor, onOpen, savedIds, canSeeRaising, fundingSort, match, onDismiss, onRemove, stage }: {
+export function CompanyTable({ rows, hrefFor, onOpen, savedIds, canSeeRaising, fundingSort, match, matchWhy, onDismiss, onRemove, stage }: {
 	rows: Company[];
 	hrefFor: (c: Company) => string | undefined;
 	onOpen?: (c: Company) => void;
@@ -384,6 +388,8 @@ export function CompanyTable({ rows, hrefFor, onOpen, savedIds, canSeeRaising, f
 	fundingSort?: { active: boolean; onToggle: () => void };
 	/** Recommended: match % per company id. */
 	match?: Map<string, number>;
+	/** Recommended: what matched, per company id (shown on hover of the %). */
+	matchWhy?: Map<string, string[]>;
 	/** Recommended: "Not relevant". */
 	onDismiss?: (c: Company) => void;
 	/** A watchlist: remove from this list. */
@@ -455,7 +461,11 @@ export function CompanyTable({ rows, hrefFor, onOpen, savedIds, canSeeRaising, f
 							: DASH}
 					</span>
 					<span className="atlas-table__col" style={{ width: 96, textAlign: 'right', fontWeight: funding === '—' ? 400 : 600, color: funding === '—' ? undefined : 'var(--a-ink)' }}>{funding === '—' ? DASH : funding}</span>
-					<span className="atlas-table__col mkt-match" style={{ width: MATCH_W, textAlign: 'right', fontWeight: 600, color: 'var(--a-ink)' }}>
+					<span
+						className={cx('atlas-table__col mkt-match', !!matchWhy?.get(c.id)?.length && 'has-tip')}
+						data-tip={matchWhy?.get(c.id)?.length ? `Matched: ${matchWhy.get(c.id)!.join(' · ')}` : undefined}
+						style={{ width: MATCH_W, textAlign: 'right', fontWeight: 600, color: 'var(--a-ink)' }}
+					>
 						{match?.has(c.id) ? `${match.get(c.id)}%` : ''}
 					</span>
 					{/* Quiet icon buttons beside the bookmark: Not relevant (Recommended), Remove (a watchlist) (1.4). */}

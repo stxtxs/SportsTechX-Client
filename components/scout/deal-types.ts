@@ -83,6 +83,10 @@ export interface DealRow {
 	is_watched?: boolean;
 	/** The linked company's tag names plus its business model, for matching (Deal Flow 6.3). */
 	tags?: string[];
+	/** Server match against this Scout's Preferences (6.3): % met (null = no preferences), up to three reasons, Avoid. */
+	match_pct?: number | null;
+	match_why?: string[];
+	match_hidden?: boolean;
 }
 
 /** Card and page label: where the raise is from; a featured raise adds the month it was featured (4.2). */

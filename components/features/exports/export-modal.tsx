@@ -2,14 +2,14 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import useSWR from 'swr';
+import useSWR, { type Key } from 'swr';
 import { toast } from 'sonner';
 import { Download, X } from 'lucide-react';
 import { Button, Loading } from '@/components/atlas';
 import { Combobox } from '@/components/atlas/ui/combobox';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useCreditBalance } from '@/hooks/use-credit-balance';
-import { apiRequest } from '@/lib/query-client';
+import { apiRequest, fetcher } from '@/lib/query-client';
 import { refreshCredits } from '@/lib/invalidate';
 import { qk } from '@/lib/query-keys';
 import { isInsufficientCreditsError } from '@/lib/credit-events';
@@ -52,10 +52,7 @@ export function ExportModal({ entity, search, filters, ids, onClose }: {
 	search?: string | null;
 	/** The list's current facet filters, forwarded verbatim. */
 	filters?: Record<string, unknown> | null;
-	/**
-	 * Exactly these rows (a watchlist). The count endpoint can't take ids yet,
-	 * so the set is priced here from its per-row cost; the server still charges.
-	 */
+	/** Exactly these rows (a watchlist); priced by the server like any export. */
 	ids?: string[] | null;
 	onClose: () => void;
 }) {
@@ -84,7 +81,12 @@ export function ExportModal({ entity, search, filters, ids, onClose }: {
 	// filtered table and someone ticking ten boxes should not fire ten of them.
 	const pricedFor = useDebouncedValue(selected.join(','));
 	const count = useSWR<CountResponse>(
-		pricedFor ? qk.exports.count(entity, search ?? null, pricedFor.split(','), filters ?? null) : null,
+		!pricedFor ? null
+			: ids ? ['POST /api/exports/count', entity, pricedFor, ids.join(',')]
+			: qk.exports.count(entity, search ?? null, pricedFor.split(','), filters ?? null),
+		// An id set is counted by POST (the ids would not fit in a URL); the rows that still exist.
+		ids ? () => apiRequest('POST', `/api/exports/${entity}/count`, { ids, columns: pricedFor.split(',') }).then((r) => r.json() as Promise<CountResponse>)
+			: (key: Key) => fetcher<CountResponse>(key) as Promise<CountResponse>,
 	);
 	// True while the debounce is still catching up, so the figure on screen is
 	// never silently stale against the boxes.
@@ -94,7 +96,7 @@ export function ExportModal({ entity, search, filters, ids, onClose }: {
 	// count endpoint prices the full set, so a window is re-priced client-side
 	// from the per-row cost it returns (the server is still the authority).
 	const perRow = count.data?.credits_per_row ?? 0;
-	const matched = ids ? ids.length : (count.data?.matched ?? 0);
+	const matched = count.data?.matched ?? 0;
 	const from = fromRow ? Math.max(1, Math.floor(Number(fromRow))) : null;
 	const to = toRow ? Math.floor(Number(toRow)) : null;
 	const hasRange = from !== null || to !== null;
@@ -104,8 +106,8 @@ export function ExportModal({ entity, search, filters, ids, onClose }: {
 	const rangeInvalid = hasRange && count.data != null
 		&& (rangeRows === 0 || (from !== null && to !== null && to < from));
 
-	const willExportRows = hasRange ? rangeRows : ids ? ids.length : (count.data?.rows ?? 0);
-	const requiredCredits = hasRange || ids ? Math.ceil(willExportRows * perRow) : (count.data?.credits ?? 0);
+	const willExportRows = hasRange ? rangeRows : (count.data?.rows ?? 0);
+	const requiredCredits = hasRange ? Math.ceil(willExportRows * perRow) : (count.data?.credits ?? 0);
 	const insufficient = balance != null && count.data != null && !rangeInvalid
 		&& requiredCredits > balance.total_available;
 

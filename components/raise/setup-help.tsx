@@ -26,7 +26,7 @@ export const SETUP_HELP = {
 			<li><strong>Convertible</strong> — a loan that turns into shares later, usually with interest and a discount.</li>
 		</ul>
 	),
-	valuation: <p>What you believe the company is worth before this investment (the pre-money valuation). Leave it blank if you&apos;d rather let investors price the round.</p>,
+	valuation: <p>What you believe the company is worth, as a number in your round&apos;s currency, and whether that is before the investment (pre-money), after it (post-money) or the cap on a SAFE or note. Leave it blank if you&apos;d rather let investors price the round.</p>,
 	priorCapital: <p>The total raised in earlier rounds — equity, SAFEs, convertible notes and grants — not counting this raise.</p>,
 	revenue: <p>Revenue over the last 12 months. If you sell subscriptions, use ARR: annual recurring revenue, i.e. this month&apos;s recurring revenue × 12.</p>,
 	burn: <p>How much cash the company spends each month, after revenue coming in.</p>,

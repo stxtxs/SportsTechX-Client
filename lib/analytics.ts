@@ -35,6 +35,8 @@ export function initAnalytics(): void {
 	if (initialized) return;
 	const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 	if (!key) return;
+	// A founder's introduction or listing link carries the key to answer it: no analytics or replay there at all.
+	if (/^\/(intro|listing)\//.test(window.location.pathname)) return;
 	initialized = true;
 	// Off the critical path: the SDK loads once the browser is idle.
 	const load = () => {
@@ -55,9 +57,15 @@ export function initAnalytics(): void {
 					// A founder's introduction link carries the key to accept or decline; never send it.
 					before_send: (event) => {
 						if (!event) return event;
-						for (const [k, v] of Object.entries(event.properties ?? {})) {
-							if (typeof v === 'string' && /\/(intro|listing)\//.test(v)) event.properties[k] = v.replace(/\/(intro|listing)\/[^?#\s]+/g, '/$1/[link]');
-						}
+						const scrub = (o: Record<string, unknown> | undefined) => {
+							for (const [k, v] of Object.entries(o ?? {})) {
+								if (typeof v === 'string' && /\/(intro|listing)\//.test(v)) o![k] = v.replace(/\/(intro|listing)\/[^?#\s]+/g, '/$1/[link]');
+								else if (v && typeof v === 'object' && !Array.isArray(v)) scrub(v as Record<string, unknown>);
+							}
+						};
+						scrub(event.properties);
+						scrub(event.$set as Record<string, unknown> | undefined);
+						scrub(event.$set_once as Record<string, unknown> | undefined);
 						return event;
 					},
 				});

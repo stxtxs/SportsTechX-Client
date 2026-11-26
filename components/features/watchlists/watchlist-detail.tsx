@@ -18,6 +18,30 @@ import { stageRank } from './stage-pill';
 import '@/components/features/market/market.css';
 import './watchlists.css';
 
+/**
+ * The live raises saved in a list (6.8), as Deal Flow cards, fetched by id so a list never misses
+ * one beyond the first page. Deal Flow is Scout's: other plans (a lapsed Scout) don't fetch it.
+ * A raise the user can no longer see (closed, test, Boardroom without access) simply drops out.
+ */
+export function useWatchlistRaises(id: string): DealRow[] {
+	const { data: profile } = useUserProfile();
+	const { ids } = useWatchlistRaiseIds(id);
+	const scout = getUserType(profile) === 'scout';
+	const { data } = useSWR<{ data: DealRow[] }>(scout && ids.length ? qk.scout.dealflow({ tab: 'all', limit: DEALFLOW_LIMIT, ids: ids.slice(0, DEALFLOW_LIMIT).join(',') }) : null);
+	return data?.data ?? [];
+}
+
+export function WatchlistRaises({ id }: { id: string }) {
+	const rows = useWatchlistRaises(id);
+	if (rows.length === 0) return null;
+	return (
+		<section style={{ marginBottom: 28 }} aria-label="Raises in this watchlist">
+			<h2 className="scout-df__title" style={{ fontSize: 16, margin: '0 0 12px' }}>Raises</h2>
+			<div className="scout-df__grid">{rows.map((d) => <RaiseCard key={d.id} d={d} />)}</div>
+		</section>
+	);
+}
+
 /** One company watchlist as the master companies table, with remove. The row above it is WatchlistBar. */
 export function WatchlistDetail({ id, backHref, companyHref }: { id: string; backHref: string; companyHref: (idOrSlug: string) => string }) {
 	const { lists, isLoading: listsLoading } = useCompanyWatchlists();
@@ -34,17 +58,8 @@ export function WatchlistDetail({ id, backHref, companyHref }: { id: string; bac
 	const { data: profile } = useUserProfile();
 	const hasStages = getUserType(profile) === 'scout';
 	const [stageFilter, setStageFilter] = useState('');
-	// Raises saved in this list (6.8), shown with the Deal Flow cards. A raise the user can no
-	// longer see (closed, or a test raise) simply drops out.
-	const { ids: raiseIds } = useWatchlistRaiseIds(id);
-	const dealsQ = useSWR<{ data: DealRow[] }>(raiseIds.length ? qk.scout.dealflow({ tab: 'all', limit: DEALFLOW_LIMIT }) : null);
-	const raiseRows = (dealsQ.data?.data ?? []).filter((d) => raiseIds.includes(d.id));
-	const raisesSection = raiseRows.length > 0 && (
-		<section style={{ marginBottom: 28 }} aria-label="Raises in this watchlist">
-			<h2 className="scout-df__title" style={{ fontSize: 16, margin: '0 0 12px' }}>Raises</h2>
-			<div className="scout-df__grid">{raiseRows.map((d) => <RaiseCard key={d.id} d={d} />)}</div>
-		</section>
-	);
+	const raiseRows = useWatchlistRaises(id);
+	const raisesSection = <WatchlistRaises id={id} />;
 	const [sort, setSort] = useState<'name' | 'stage'>('name');
 	const stageById = useMemo(() => new Map(companies.map((c) => [c.id, companyStage(c.stage)])), [companies]);
 	const shown = useMemo(() => {

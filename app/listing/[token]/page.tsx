@@ -4,7 +4,6 @@ import { use, useState } from 'react';
 import useSWR from 'swr';
 import { Button } from '@/components/atlas';
 import '@/components/atlas/styles/tokens.css';
-import { fmtAmount } from '@/lib/format';
 
 /**
  * `/listing/[token]`: a founder confirms a Verified Raise listing SportsTechX started from their
@@ -22,6 +21,13 @@ const fetcher = async (url: string): Promise<Listing> => {
 	if (!r.ok) throw new HttpError(r.status);
 	return (await r.json()) as Listing;
 };
+/** The founder's own figure in their own currency (no conversion: they are confirming what they typed). */
+const money = (v: string | null, cur: string | null) => {
+	if (!v || !Number(v)) return null;
+	try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD', notation: 'compact', maximumFractionDigits: 2 }).format(Number(v)); }
+	catch { return `${v} ${cur ?? ''}`.trim(); }
+};
+const day = (v: string | null) => (v ? new Date(`${v}T00:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) : null);
 const ROUND: Record<string, string> = { pre_seed: 'Pre-seed round', seed: 'Seed round', series_a: 'Series A', series_b_plus: 'Series B or later', bridge: 'Bridge', other: 'Other' };
 const DONE: Record<string, string> = {
 	pending: 'Thanks. SportsTechX is checking the details, usually within 2 working days, and emails you once it is live.',
@@ -52,9 +58,10 @@ export default function ListingConfirmPage({ params }: { params: Promise<{ token
 	const facts: [string, string | null][] = data ? [
 		['Company', data.company_name], ['About', data.company_description], ['HQ', [data.hq_city, data.hq_country].filter(Boolean).join(', ') || null],
 		['Round', data.round_type ? ROUND[data.round_type] ?? data.round_type : null],
-		['Target', data.target_amount ? fmtAmount(data.target_amount, data.currency_code ?? 'USD') : null],
-		['Committed so far', data.committed_amount ? fmtAmount(data.committed_amount, data.currency_code ?? 'USD') : null],
-		['Valuation', data.valuation], ['Target close', data.target_close_date],
+		['Target', money(data.target_amount, data.currency_code)],
+		['Committed so far', money(data.committed_amount, data.currency_code)],
+		['Valuation', /^\s*[0-9.]+\s*$/.test(data.valuation ?? '') ? money(data.valuation, data.currency_code) : (data.valuation || null)],
+		['Target close', day(data.target_close_date)],
 	] : [];
 	return (
 		<main className="atlas" style={{ minHeight: '100dvh', background: 'var(--a-page)', color: 'var(--a-ink)', padding: '48px 16px' }}>

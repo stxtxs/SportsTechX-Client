@@ -3,6 +3,7 @@
 import { use, useState } from 'react';
 import useSWR from 'swr';
 import { Button } from '@/components/atlas';
+import '@/components/atlas/styles/tokens.css';
 
 /**
  * `/intro/[token]`: the page a founder's email opens (Deal Flow 2.3 step 3). Public, no sign-in:
@@ -14,9 +15,10 @@ interface Req {
 	status: string; company_name: string | null; scout_name: string | null; scout_org: string | null;
 	scout_type: string | null; scout_verified: boolean; note: string | null;
 }
+class HttpError extends Error { constructor(readonly status: number) { super(String(status)); } }
 const fetcher = async (url: string): Promise<Req> => {
 	const r = await fetch(url);
-	if (!r.ok) throw new Error(String(r.status));
+	if (!r.ok) throw new HttpError(r.status);
 	return (await r.json()) as Req;
 };
 const CLOSED: Record<string, string> = {
@@ -38,7 +40,9 @@ export default function IntroDecisionPage({ params, searchParams }: { params: Pr
 		setBusy(true); setFailed(null);
 		try {
 			const r = await fetch(`${url}/decision`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ decision }) });
-			if (!r.ok) throw new Error(r.status === 409 ? 'This request has already been answered.' : 'Something went wrong. Please try again.');
+			// Already answered (here, in Raise, or it closed): show where it stands instead of the buttons.
+			if (r.status === 409) { await mutate(); return; }
+			if (!r.ok) throw new Error(r.status === 429 ? 'Too many tries. Please wait a little and try again.' : 'Something went wrong. Please try again.');
 			await mutate();
 		} catch (e) { setFailed((e as Error).message); }
 		finally { setBusy(false); }
@@ -46,13 +50,19 @@ export default function IntroDecisionPage({ params, searchParams }: { params: Pr
 
 	const who = data ? `${data.scout_name ?? 'An investor'}${data.scout_org ? ` from ${data.scout_org}` : ''}` : '';
 	return (
-		<main style={{ minHeight: '100dvh', background: 'var(--a-bg, #f5f5f5)', padding: '48px 16px' }}>
+		<main className="atlas" style={{ minHeight: '100dvh', background: 'var(--a-bg, #f5f5f5)', padding: '48px 16px' }}>
 			<div style={{ maxWidth: 560, margin: '0 auto', background: 'var(--a-card, #fff)', border: '1px solid var(--a-line, #e5e5e5)', borderRadius: 16, padding: 'clamp(20px, 5vw, 32px)', display: 'grid', gap: 16 }}>
 				<div style={{ fontSize: 13, color: 'var(--a-muted, #595959)' }}>Atlas by SportsTechX</div>
-				{error ? (
+				{error && (error as HttpError).status === 404 ? (
 					<>
 						<h1 style={{ fontSize: 24, margin: 0 }}>This link is no longer valid</h1>
 						<p style={{ margin: 0, color: 'var(--a-muted, #595959)' }}>Check the latest email from Atlas, or sign in to Atlas Raise to see your introduction requests in Settings.</p>
+					</>
+				) : error ? (
+					<>
+						<h1 style={{ fontSize: 24, margin: 0 }}>We couldn&rsquo;t load this request</h1>
+						<p style={{ margin: 0, color: 'var(--a-muted, #595959)' }}>Please try again in a moment.</p>
+						<div><Button variant="outline" onClick={() => void mutate()}>Try again</Button></div>
 					</>
 				) : !data ? <p style={{ margin: 0 }}>Loading…</p> : (
 					<>

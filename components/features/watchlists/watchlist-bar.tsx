@@ -77,7 +77,7 @@ export function WatchlistBar({ list, view, onView }: {
 			</div>
 			<div className="atlas-wl-bar">
 				<div className="atlas-wl-bar__id">
-					<ListName list={list} />
+					<ListName name={list.name} onRename={(name) => renameWatchlist(list.id, name)} />
 					<span className="atlas-wl-bar__count">{n} {investors ? `investor${n === 1 ? '' : 's'}` : `compan${n === 1 ? 'y' : 'ies'}`}</span>
 				</div>
 				<div className="atlas-wl-bar__actions">
@@ -133,7 +133,8 @@ function PinIconButton({ id }: { id: string }) {
  * The list's name, renamed in place (remaining 3): click to edit, Enter or
  * clicking away saves, Esc cancels.
  */
-function ListName({ list }: { list: CompanyWatchlist }) {
+/** The list's name; click to rename (Enter or clicking away saves, Esc cancels). */
+export function ListName({ name: current, onRename }: { name: string; onRename: (name: string) => Promise<unknown> }) {
 	const [draft, setDraft] = useState<string | null>(null);
 	// Esc closes the field without the blur that follows saving it.
 	const cancelled = useRef(false);
@@ -141,9 +142,9 @@ function ListName({ list }: { list: CompanyWatchlist }) {
 		const name = draft?.trim() ?? '';
 		setDraft(null);
 		if (cancelled.current) { cancelled.current = false; return; }
-		if (!name || name === list.name) return;
+		if (!name || name === current) return;
 		try {
-			await renameWatchlist(list.id, name);
+			await onRename(name);
 			toast.success(`Renamed to ${name}.`);
 		} catch (e) {
 			toast.error((e as Error).message);
@@ -151,8 +152,8 @@ function ListName({ list }: { list: CompanyWatchlist }) {
 	};
 	if (draft === null) {
 		return (
-			<button type="button" className="atlas-wl-bar__name" title="Click to rename" onClick={() => { cancelled.current = false; setDraft(list.name); }}>
-				{list.name}
+			<button type="button" className="atlas-wl-bar__name" title="Click to rename" onClick={() => { cancelled.current = false; setDraft(current); }}>
+				{current}
 			</button>
 		);
 	}

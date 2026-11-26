@@ -138,7 +138,8 @@
 /* Companies table: the name column has a set width so the status marks sit
    just after the names (and line up); Sector takes the spare width instead. */
 .atlas .mkt-table .atlas-table__name { flex: 0 1 300px; }
-.atlas .mkt-table .mkt-sector { flex: 1 1 200px; min-width: 0; }
+/* Fixed, so switching Recommended / All never reflows the table; long names end in an ellipsis (preview fixes 1.3, 1.6). */
+.atlas .mkt-table .mkt-sector { flex: 0 0 230px; width: 230px; min-width: 0; overflow: hidden; }
 
 /* Instant hover labels for icons (data-tip). Positioned and raised above a
    row's or tile's stretched link, which otherwise took the hover. */
@@ -153,3 +154,16 @@
    own ellipsis, so the cells can let a tooltip out. */
 .atlas .mkt-table .atlas-table__col { overflow: visible; }
 .atlas .mkt-co-meta .mkt-flag { width: auto; }
+
+/* Companies: one count line for All and Recommended, switch beside the count (preview fixes 1.5). */
+.atlas .mkt-countline { padding: 17px 25px 16px; font-size: 13px; color: var(--a-muted); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.atlas .mkt-countline__left { display: inline-flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+/* Row actions: Not relevant (×) beside the bookmark, same quiet style (1.4). */
+.atlas .mkt-actions { display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; }
+.atlas .mkt-dismiss { display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--a-muted); cursor: pointer; position: relative; z-index: 1; }
+.atlas .mkt-dismiss:hover, .atlas .mkt-dismiss:focus-visible { background: color-mix(in srgb, var(--a-ink) 8%, transparent); color: var(--a-ink); outline: none; }
+/* Narrow tables drop Sector and Location in both views at the same width, so
+   Company keeps its room and Recommended / All stay identical (preview fixes 1.7).
+   Measured on the table itself, so a docked Ask Atlas counts too. */
+.atlas .mkt-table { container-type: inline-size; }
+@container (max-width: 900px) { .atlas .mkt-table .atlas-table__col.hide-sm { display: none; } }

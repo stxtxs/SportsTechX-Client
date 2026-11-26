@@ -74,6 +74,8 @@ export interface DealRow {
 	interest_status: string | null;
 	/** This viewer has the deal on watch (server-side since Oct 2026). */
 	is_watched?: boolean;
+	/** Tag names, once the API sends them for matching (Deal Flow 6.3). */
+	tags?: string[];
 }
 
 export const LEAD_LABEL: Record<string, string> = {
@@ -87,11 +89,31 @@ const RELATIONSHIP_LABEL: Record<string, string> = {
 	investing_this_round: 'Investing in this round', existing_investor: 'Existing investor',
 	advisor_or_board: 'Advisor / board', referral: 'Referral',
 };
+/**
+ * The introduction status a scout sees (Deal Flow for launch, 2.3): Requested →
+ * With the founder → Introduced, or Not right now. Mapped from the API's
+ * statuses until the approval flow has its own (received is waiting for
+ * SportsTechX; confirming and shared are with the founder).
+ */
 export const INTEREST_LABEL: Record<string, string> = {
-	received: 'Request received', source_confirmed: 'Confirming with the company',
-	shared: 'Details shared', connected: 'Introduced', declined: 'Not proceeding',
+	received: 'Requested', source_confirmed: 'With the founder',
+	shared: 'With the founder', connected: 'Introduced', declined: 'Not right now',
+	no_response: 'No response',
 };
 
+/**
+ * Round names, one set everywhere: the Preferences ones (Deal Flow 9.2). A
+ * Verified Raise carries the founder's round code (raise_profiles.round_type);
+ * a Circle deal carries a `funding_round_types` name ("Seed Round"), shown in
+ * the same words.
+ */
+const ROUND_LABEL: Record<string, string> = {
+	pre_seed: 'Pre-seed round', seed: 'Seed round', series_a: 'Series A', series_b_plus: 'Series B',
+	late_stage: 'Late-stage venture', bridge: 'Bridge', other: 'Other',
+	'Pre Seed Round': 'Pre-seed round', 'Seed Round': 'Seed round', 'Series A Round': 'Series A',
+	'Series B Round': 'Series B', 'Late Stage Venture': 'Late-stage venture',
+};
+export const roundLabel = (v: string | null) => (v ? ROUND_LABEL[v] ?? v : null);
 export const leadLabel = (v: string | null) => (v ? LEAD_LABEL[v] ?? v : null);
 export const instrumentLabel = (v: string | null) => (v ? INSTRUMENT_LABEL[v] ?? v : null);
 export const relationshipLabel = (v: string | null) => (v ? RELATIONSHIP_LABEL[v] ?? v : null);
@@ -108,6 +130,23 @@ export function money(amount: string | number | null, ccy: string | null): strin
 	const n = Number(amount);
 	if (!Number.isFinite(n) || n <= 0) return null;
 	return fmtAmount(n, ccy || 'EUR');
+}
+
+const VALUATION_BASIS: Record<string, string> = { pre_money: 'pre-money', post_money: 'post-money', cap: 'cap' };
+
+/**
+ * Valuation from the structured fields (amount + basis), in the standard money
+ * format and the user's currency: "€10M pre-money" / "$11.6M pre-money". The
+ * old free-text `valuation` is only a fallback for rows without an amount.
+ */
+export function valuationLabel(d: Pick<DealRow, 'valuation' | 'valuation_amount' | 'valuation_basis' | 'valuation_undisclosed' | 'currency_code'>): string {
+	if (d.valuation_undisclosed) return 'Not disclosed';
+	const amount = money(d.valuation_amount, d.currency_code);
+	if (amount) {
+		const basis = d.valuation_basis ? VALUATION_BASIS[d.valuation_basis] : undefined;
+		return basis ? `${amount} ${basis}` : amount;
+	}
+	return d.valuation?.trim() || 'Not disclosed';
 }
 
 /** `2026-12-01` → `Dec 2026`, matching the designed card copy. */
@@ -136,7 +175,7 @@ export const companyLabel = (d: DealRow) =>
 	d.company_name ?? (d.company_anonymous ? 'Undisclosed company' : 'Company');
 
 export const submitterLabel = (d: DealRow) =>
-	d.submitter_name ?? (d.submitter_anonymous ? 'An anonymous Circle member' : 'A Circle member');
+	d.submitter_name ?? 'a Boardroom member';
 
 /**
  * Will the document endpoints actually hand this viewer a URL?
@@ -192,6 +231,6 @@ export const MY_STATUS: Record<string, string> = {
 	pending: 'Submitted, awaiting review',
 	reviewing: 'Being reviewed',
 	changes_requested: 'Changes requested',
-	live: 'Live in From the Circle',
+	live: 'Live in From Boardroom',
 	closed: 'Closed',
 };

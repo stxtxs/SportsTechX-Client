@@ -356,3 +356,7 @@
 @keyframes atlas-rail-extra-in { from { opacity: 0; } to { opacity: 1; } }
 .atlas-rail-extra { animation: atlas-rail-extra-in 0.15s ease-out 0.2s both; }
 @media (prefers-reduced-motion: reduce) { .atlas-rail-extra { animation: none; } }
+
+/* Pinned watchlists, indented under Watchlists (preview fixes 3.1). */
+.atlas .atlas-nav-group { display: grid; }
+.atlas .atlas-nav-item.atlas-nav-sub { padding-left: 44px; min-height: 30px; font-size: 13px; }

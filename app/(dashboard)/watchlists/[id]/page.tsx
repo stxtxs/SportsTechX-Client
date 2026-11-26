@@ -1,8 +1,9 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { Empty, Loading, Screen, Seg, SectionHeader } from '@/components/atlas';
+import { Empty, Loading, Screen, SectionHeader } from '@/components/atlas';
 import { WatchlistDetail } from '@/components/features/watchlists/watchlist-detail';
+import { WatchlistBar } from '@/components/features/watchlists/watchlist-bar';
 import { WatchlistBoard } from '@/components/scout/watchlist-board';
 import { InvestorBoard } from '@/components/raise/investor-board';
 import { toast } from 'sonner';
@@ -40,11 +41,10 @@ export default function Page() {
 	}
 	return (
 		<Screen>
-			<SectionHeader
-				actions={isScout
-					? <Seg ariaLabel="Watchlist view" value={view} onChange={setView} options={[{ key: 'list', label: 'List' }, { key: 'board', label: 'Board' }]} />
-					: undefined}
-			/>
+			{/* The header and tabs stay as on every Deal Flow tab; this list's own
+			    row sits under them (preview fixes, remaining 1-2). */}
+			<SectionHeader />
+			{list && <WatchlistBar list={list} view={isScout ? view : undefined} onView={isScout ? setView : undefined} />}
 			{board
 				? <WatchlistBoard id={id} />
 				: <WatchlistDetail id={id} backHref={hrefOf('watchlists')} companyHref={companyHref} />}

@@ -113,9 +113,8 @@ export function RaiseHome() {
 	}
 
 	const showRound = !data.needs_setup && !!data.raise;
-	// The Investor Circle is "Coming soon", so its opt-in nudge is held back.
 	// A setup task stops showing once the setup is 80% complete (handover v1 §7).
-	const attention = data.attention.filter((a) => a.id !== 'dealflow' && !(SETUP_CARD_WIZARD[a.id] && setupComplete));
+	const attention = data.attention.filter((a) => !(SETUP_CARD_WIZARD[a.id] && setupComplete));
 
 	return (
 		<div className="raise-home">

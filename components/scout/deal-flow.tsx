@@ -1,10 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import useSWR from 'swr';
 import { toast } from 'sonner';
-import { Button, Empty, Field, Input, Loading, Progress, Select } from '@/components/atlas';
+import { ArrowUpRight } from 'lucide-react';
+import { Button, Empty, Field, FilterBar, Input, Loading, Progress, Seg, Select, cx } from '@/components/atlas';
+import { convert, displayCurrency, subscribeCurrency, type DisplayCurrency } from '@/lib/currency';
+import { matchRaise, type Match } from './raise-match';
+import { useRaiseMatchPrefs } from './use-raise-match';
+import { RaiseBookmark } from './raise-bookmark';
+import { VerifiedBadge } from '@/components/atlas/icons/verified-badge';
 import { DatePicker } from '@/components/atlas/ui/date-picker';
 import { useUrlSync, useUrlReader } from '@/hooks/use-url-state';
 import { apiRequest } from '@/lib/query-client';
@@ -12,7 +18,7 @@ import { refreshPaths } from '@/lib/invalidate';
 import { qk } from '@/lib/query-keys';
 import { hrefOf } from '@/lib/routes';
 import {
-	LEAD_LABEL, MY_STATUS, closeLabel, committedPct, companyLabel, money, submitterLabel,
+	LEAD_LABEL, MY_STATUS, closeLabel, committedPct, companyLabel, money, roundLabel, submitterLabel,
 	type DealRow, type DealTab, type MyDealRow,
 } from './deal-types';
 
@@ -48,12 +54,21 @@ export function useDealFlow(tab: DealTab) {
 
 export function DealFlow({ tab = 'all' }: { tab?: DealTab }) {
 	const { data, isLoading, error } = useDealFlow(tab);
-	// Valuation filter — purely client-side over the already-fetched page (≤50).
-	// Mirrored into the URL so it survives Back from a deal page and is shareable.
+	const matchPrefs = useRaiseMatchPrefs();
+	const currency = useSyncExternalStore(subscribeCurrency, displayCurrency, () => 'USD' as DisplayCurrency);
+
+	// The platform filter bar (6.1) and the Matched / All switch (6.2), kept in
+	// the URL so they survive Back from a raise and can be shared.
 	const url = useUrlReader();
-	const [maxVal, setMaxVal] = useState(() => url.str('maxVal', '', 20).replace(/[^0-9.]/g, ''));
-	const [valCcy, setValCcy] = useState<string>(() => url.oneOf('ccy', ['EUR', 'USD'] as const, 'EUR'));
-	useUrlSync({ maxVal, ccy: valCcy !== 'EUR' ? valCcy : undefined });
+	const [q, setQ] = useState(() => url.str('q', '', 80));
+	const [sector, setSector] = useState(() => url.str('sector', '', 120));
+	const [stage, setStage] = useState(() => url.str('stage', '', 60));
+	const [geo, setGeo] = useState(() => url.str('geo', '', 80));
+	const [size, setSize] = useState(() => url.oneOf('size', ['', 'lt1', '1to5', 'gt5'] as const, ''));
+	const [val, setVal] = useState(() => url.oneOf('val', ['', 'lt10', '10to25', 'gt25', 'none'] as const, ''));
+	const [sort, setSort] = useState(() => url.oneOf('sort', ['match', 'closing', 'newest'] as const, 'match'));
+	const [mode, setMode] = useState(() => url.oneOf('list', ['all', 'matched'] as const, 'all'));
+	useUrlSync({ q: q || undefined, sector: sector || undefined, stage: stage || undefined, geo: geo || undefined, size: size || undefined, val: val || undefined, sort: sort !== 'match' ? sort : undefined, list: mode !== 'all' ? mode : undefined });
 
 	// Every Deal Flow route 403s without a `scout_profiles` row, and most Scout
 	// accounts do not have one — so this is the common path, not an edge case.
@@ -65,85 +80,98 @@ export function DealFlow({ tab = 'all' }: { tab?: DealTab }) {
 	if (needsThesis) {
 		return (
 			<Empty>
-				Set up your investment thesis and we&rsquo;ll show you deal flow that fits it.{' '}
+				Set up your preferences and we&rsquo;ll show you the raises that fit them.{' '}
 				<Link href={hrefOf('interests')} style={{ color: 'var(--a-accent)' }}>Set up your preferences</Link>
 			</Empty>
 		);
 	}
-	if (error) return <Empty>We couldn&rsquo;t load deal flow just now. Please try again.</Empty>;
+	if (error) return <Empty>We couldn&rsquo;t load Deal Flow just now. Please try again.</Empty>;
 
-	// Only constrain deals that have a disclosed amount in the chosen currency;
-	// undisclosed, unpriced or other-currency deals always pass (not comparable).
-	const max = Number(maxVal);
-	const valActive = !!maxVal && Number.isFinite(max) && max > 0;
-	const passesVal = (d: DealRow) => {
-		if (!valActive || !d.valuation_amount || (d.currency_code ?? 'EUR') !== valCcy) return true;
-		return Number(d.valuation_amount) <= max;
-	};
-	const featured = deals.find((d) => d.is_featured && passesVal(d));
-	const verified = deals.filter((d) => d.source === 'verified_raise' && passesVal(d));
-	const circle = deals.filter((d) => d.source === 'circle' && passesVal(d));
+	// This tab's raises. Featured shows every featured raise, in the API's order (4.2).
+	const tabRows = deals.filter((d) => (tab === 'featured' ? d.is_featured : tab === 'verified' ? d.source === 'verified_raise' : tab === 'circle' ? d.source === 'circle' : true));
+	const country = (d: DealRow) => d.company_hq?.split(',').pop()?.trim() ?? '';
+	const inShown = (d: DealRow, n: string | null) => (n ? convert(Number(n), d.currency_code ?? 'EUR', currency) : null);
+	const opts = (vals: (string | null | undefined)[]) => [...new Set(vals.filter((v): v is string => !!v))].sort((a, b) => a.localeCompare(b)).map((v) => [v, v] as [string, string]);
+	const term = q.trim().toLowerCase();
+	const sym = currency === 'USD' ? '$' : '€';
 
-	const showFeatured = tab === 'all' || tab === 'featured';
-	const showVerified = tab === 'all' || tab === 'verified';
-	// The Investor Circle is "Coming soon" (app/(dashboard)/deal-flow/circle):
-	// All leaves it out. Restore `tab === 'all' ||` when it launches.
-	const showCircle = tab === 'circle';
+	const scored = tabRows.map((d) => ({ d, m: matchRaise({ sector: d.sector, company_hq: d.company_hq, round: roundLabel(d.round_type), tags: d.tags }, matchPrefs) }));
+	const shown = scored
+		// Matched: Avoid hides a raise, and so does meeting none of the filled-in preferences (6.2).
+		.filter(({ m }) => mode === 'all' || (!m.hidden && m.pct !== 0))
+		.filter(({ d }) => !term || `${companyLabel(d)} ${d.company_description ?? ''} ${d.sector ?? ''}`.toLowerCase().includes(term))
+		.filter(({ d }) => !sector || d.sector === sector)
+		.filter(({ d }) => !stage || roundLabel(d.round_type) === stage)
+		.filter(({ d }) => !geo || country(d) === geo)
+		.filter(({ d }) => {
+			if (!size) return true;
+			const t = inShown(d, d.target_amount);
+			if (t == null) return false;
+			return size === 'lt1' ? t < 1e6 : size === '1to5' ? t >= 1e6 && t <= 5e6 : t > 5e6;
+		})
+		.filter(({ d }) => {
+			if (!val) return true;
+			const v = inShown(d, d.valuation_amount);
+			if (val === 'none') return v == null;
+			if (v == null) return false;
+			return val === 'lt10' ? v < 10e6 : val === '10to25' ? v >= 10e6 && v <= 25e6 : v > 25e6;
+		});
+	// Best match: match % first, then A to Z (6.5). Closing soonest: target close. Newest: the API's order.
+	const byName = (a: DealRow, b: DealRow) => companyLabel(a).localeCompare(companyLabel(b));
+	if (sort === 'match') shown.sort((a, b) => (b.m.pct ?? -1) - (a.m.pct ?? -1) || byName(a.d, b.d));
+	if (sort === 'closing') shown.sort((a, b) => (a.d.target_close_date ?? '9999').localeCompare(b.d.target_close_date ?? '9999'));
 
-	// Nothing live is not the same as nothing to show: a member may have a draft
-	// or a returned submission, which is the whole point of `MySubmissions`. So
-	// this is a branch inside the tree rather than an early return — an early
-	// return here hid a member's own pending deal on the default tab, which is
-	// precisely when they would come looking for it.
-	const nothingLive = deals.length === 0;
+	const filtersOn = !!(q || sector || stage || geo || size || val);
+	const clear = () => { setQ(''); setSector(''); setStage(''); setGeo(''); setSize(''); setVal(''); };
+	const empty = tab === 'featured'
+		? 'No featured raises right now. SportsTechX features new raises every week.'
+		: tab === 'circle'
+			? 'Nothing shared by Boardroom members yet. If you’re in a round, share it with Boardroom.'
+			: 'No verified raises right now. New ones show up here as soon as SportsTechX verifies them.';
 
 	return (
 		<div className="scout-df">
-			{showCircle && <MySubmissions />}
+			{tab === 'circle' && <MySubmissions />}
 
-			{!nothingLive && (
-				<div className="scout-df__filter">
-					<span className="scout-df__filter-label">Max valuation</span>
-					<div style={{ width: 96 }}><Select value={valCcy} onChange={(e) => setValCcy(e.target.value)} options={[['EUR', 'EUR'], ['USD', 'USD']]} /></div>
-					<div style={{ width: 170 }}><Input type="number" min="0" step={100000} value={maxVal} onChange={(e) => setMaxVal(e.target.value)} placeholder={`e.g. ${valCcy === 'USD' ? '$' : '€'}10000000`} /></div>
-					{valActive && <button type="button" className="scout-df__filter-clear" onClick={() => setMaxVal('')}>Clear</button>}
+			{tab === 'circle' && (
+				<div className="scout-df__head scout-df__head--bar">
+					{/* From Boardroom (7.2): the built Circle section, renamed; same cards as the raise tabs. */}
+					<p className="scout-df__note">Raises shared by Boardroom members. Eligibility checked by SportsTechX; not independently selected or endorsed.</p>
+					<Link href={`${hrefOf('deal-flow-circle')}/share`} className="scout-df__btn">+ Share a raise</Link>
 				</div>
 			)}
 
-			{nothingLive && (tab === 'all' || tab === 'featured') && (
-				<Empty>
-					{tab === 'featured'
-						? 'No featured deal at the moment. Check the Verified Raises tab.'
-						: 'No live opportunities yet. We list a raise here once SportsTechX has checked it.'}
-				</Empty>
+			{tabRows.length > 0 && (
+				<FilterBar
+					search={{ value: q, onChange: setQ, placeholder: 'Search raises' }}
+					groups={[{
+						label: 'Raise',
+						filters: [
+							{ kind: 'select', key: 'sector', label: 'Sector', value: sector, onChange: setSector, options: opts(tabRows.map((d) => d.sector)) },
+							{ kind: 'select', key: 'stage', label: 'Stage', value: stage, onChange: setStage, options: opts(tabRows.map((d) => roundLabel(d.round_type))) },
+							{ kind: 'select', key: 'geo', label: 'Geography', value: geo, onChange: setGeo, options: opts(tabRows.map(country)) },
+							{ kind: 'select', key: 'size', label: 'Target size', value: size, onChange: (v) => setSize(v as typeof size), options: [['lt1', `Under ${sym}1M`], ['1to5', `${sym}1M – ${sym}5M`], ['gt5', `Over ${sym}5M`]] },
+							{ kind: 'select', key: 'val', label: 'Valuation', value: val, onChange: (v) => setVal(v as typeof val), options: [['lt10', `Under ${sym}10M`], ['10to25', `${sym}10M – ${sym}25M`], ['gt25', `Over ${sym}25M`], ['none', 'Not disclosed']] },
+						],
+					}]}
+					sort={{ value: sort, onChange: (v) => setSort(v as typeof sort), options: [['match', 'Best match'], ['closing', 'Closing soonest'], ['newest', 'Newest']] }}
+					canClear={filtersOn}
+					onClear={clear}
+					actions={<Seg<'matched' | 'all'> ariaLabel="Show" value={mode} onChange={setMode} options={[{ key: 'matched', label: 'Matched' }, { key: 'all', label: 'All' }]} />}
+					count={`${shown.length} ${shown.length === 1 ? 'raise' : 'raises'}`}
+				/>
 			)}
 
-			{showFeatured && featured && <FeaturedDeal d={featured} />}
-
-			{showVerified && (tab === 'verified' || verified.length > 0) && (
-				<section className="scout-df__section">
-					<div className="scout-df__head">
-						<h2 className="scout-df__title">Verified Raises</h2>
-						<span className="scout-df__aside">Reviewed and verified by SportsTechX</span>
-					</div>
-					{verified.length === 0
-						? <Empty>No verified raises are live right now.</Empty>
-						: <div className="scout-df__grid">{verified.map((d) => <VerifiedCard key={d.id} d={d} />)}</div>}
-				</section>
-			)}
-
-			{showCircle && (
-				<section className="scout-df__section">
-					<div className="scout-df__head">
-						<h2 className="scout-df__title">From the Circle</h2>
-						<Link href={`${hrefOf('deal-flow-circle')}/share`} className="scout-df__btn">+ Share a deal</Link>
-					</div>
-					<p className="scout-df__note">Opportunities shared by Investor Circle members. Eligibility checked by SportsTechX; not independently selected or endorsed.</p>
-					{circle.length === 0
-						? <Empty>Nothing shared by members yet. If you&rsquo;re in a round, share it with the Circle.</Empty>
-						: <div className="scout-df__grid">{circle.map((d) => <CircleCard key={d.id} d={d} />)}</div>}
-				</section>
-			)}
+			{tabRows.length === 0 ? <Empty>{empty}</Empty>
+				: shown.length === 0 && mode === 'matched' && !filtersOn ? (
+					<Empty>
+						No raises match your preferences right now.{' '}
+						<Button size="sm" variant="outline" onClick={() => setMode('all')}>Show all</Button>{' '}
+						<Button size="sm" href={hrefOf('interests')}>Edit preferences</Button>
+					</Empty>
+				)
+				: shown.length === 0 ? <Empty>No raises match these filters. <button type="button" className="scout-df__filter-clear" onClick={clear}>Clear filters</button></Empty>
+				: <div className="scout-df__grid">{shown.map(({ d, m }) => <RaiseCard key={d.id} d={d} match={m} />)}</div>}
 		</div>
 	);
 }
@@ -181,7 +209,7 @@ function MySubmissions() {
 								{m.company_name ?? 'Untitled draft'}
 							</div>
 							<div className="scout-df-card__round">
-								{m.round_type ?? 'Round'}{target ? ` · ${target} target` : ''}
+								{roundLabel(m.round_type) ?? 'Round'}{target ? ` · ${target} target` : ''}
 							</div>
 							<div className="scout-df-card__by">{MY_STATUS[m.status] ?? m.status}</div>
 							{/* The whole reason this section exists: a returned deal shows as
@@ -283,74 +311,54 @@ function LiveEdit({ m, onSaved }: { m: MyDealRow; onSaved: () => void }) {
 	);
 }
 
-function FeaturedDeal({ d }: { d: DealRow }) {
-	const month = new Date().toLocaleDateString(undefined, { month: 'long' });
-	// HQ is returned even for an anonymous company (a region doesn't identify it);
-	// the design shows only the country.
-	const geography = d.company_hq?.split(', ').pop();
-	// Only render terms we actually have — empty "—" cells read as unfinished.
-	const terms = ([
-		['Round', d.round_type],
-		['Target', money(d.target_amount, d.currency_code)],
-		['Committed', money(d.committed_amount, d.currency_code)],
-		['Valuation', d.valuation],
-		['Sector', d.sector],
-		['Geography', geography],
-	] as [string, string | null | undefined][]).filter((t): t is [string, string] => !!t[1] && t[1] !== '—');
-	const desc = d.company_description?.trim();
-	return (
-		<article className="scout-df-feat">
-			<div className="scout-df-feat__eyebrow">★ Featured deal · {month}</div>
-			<div className="scout-df-feat__body">
-				<div className="scout-df-feat__main">
-					<h2 className="scout-df-feat__name">{companyLabel(d)}</h2>
-					{desc && <p className="scout-df-feat__desc">{desc}</p>}
-					<Link href={dealHref(d.id)} className="scout-df-feat__btn">View opportunity →</Link>
-				</div>
-				{terms.length > 0 && (
-					<div className="scout-df-feat__terms">
-						{terms.map(([k, v]) => <div key={k}><div className="scout-df-feat__k">{k}</div><div className="scout-df-feat__v">{v}</div></div>)}
-					</div>
-				)}
-			</div>
-		</article>
-	);
-}
-
-function VerifiedCard({ d }: { d: DealRow }) {
+/**
+ * One card for Verified and Featured raises (Deal Flow 4.1, 4.3, 4.4): the
+ * name with the verified tick, round and target, a progress bar, committed,
+ * description and target close. A featured raise carries the label and the
+ * solution-colour gradient. The whole card opens the raise through its "Open"
+ * pill, as on Home and Reports. The save bookmark waits on 6.8 (raises in
+ * Watchlists, Backend).
+ */
+export function RaiseCard({ d, match }: { d: DealRow; match?: Match }) {
 	const pct = committedPct(d);
 	const target = money(d.target_amount, d.currency_code);
 	const committed = money(d.committed_amount, d.currency_code);
 	const close = closeLabel(d.target_close_date);
+	const desc = d.company_description?.trim();
 	return (
-		<article className="scout-df-card">
-			<div className="scout-df-card__name">{companyLabel(d)}</div>
-			<div className="scout-df-card__round">
-				{d.round_type ?? 'Round'}{target ? ` · ${target} target` : ''}
+		<article className={cx('scout-raise', d.is_featured && 'is-featured')}>
+			<div className="scout-raise__top">
+				<span className="scout-raise__tag">
+					{d.source === 'circle' ? 'From Boardroom' : d.is_featured ? 'Featured raise' : 'Verified raise'}
+					{match?.pct != null && <span className="scout-raise__pct"> · {match.pct}% match</span>}
+				</span>
+				<span className="atlas-feed-card__actions">
+					<RaiseBookmark d={d} />
+					<Link href={dealHref(d.id)} className="atlas-feed-card__action scout-raise__open" onClick={rememberList}>
+						Open <ArrowUpRight size={12} strokeWidth={1.5} aria-hidden="true" />
+					</Link>
+				</span>
 			</div>
+			<h3 className="scout-raise__name">
+				{companyLabel(d)}
+				{d.source === 'verified_raise' && <span className="scout-raise__tick" title="Verified by SportsTechX"><VerifiedBadge size={16} /></span>}
+			</h3>
+			<div className="scout-raise__round">{roundLabel(d.round_type) ?? 'Round'}{target ? ` · ${target} target` : ''}</div>
 			{/* Only drawn when both figures are known — a 0% bar would read as
 			    "nothing raised" rather than "not disclosed". */}
 			{pct !== null && <div className="scout-df-bar"><Progress pct={pct} /></div>}
-			{committed && <div className="scout-df-card__committed">{committed} committed</div>}
-			<p className="scout-df-card__desc">{d.company_description ?? ''}</p>
-			<div className="scout-df-card__verified"><span aria-hidden="true" />Verified by SportsTechX</div>
-			{close && <div className="scout-df-card__close">Target close: {close}</div>}
-			<Link href={dealHref(d.id)} className="scout-df-card__link">View opportunity →</Link>
+			{committed && <div className="scout-raise__committed">{committed} committed</div>}
+			{desc && <p className="scout-raise__desc">{desc}</p>}
+			{/* Why it matched: up to three pills in the Preferences style (6.5). */}
+			{match && match.why.length > 0 && <div className="scout-tags scout-raise__why">{match.why.map((w) => <span key={w} className="scout-tag">{w}</span>)}</div>}
+			{close && <div className="scout-raise__close">Target close: {close}</div>}
+			{d.source === 'circle' && <div className="scout-raise__close">Shared by {submitterLabel(d)}</div>}
 		</article>
 	);
 }
 
-function CircleCard({ d }: { d: DealRow }) {
-	const target = money(d.target_amount, d.currency_code);
-	return (
-		<article className="scout-df-card scout-df-card--circle">
-			<div className="scout-df-card__name">{companyLabel(d)}</div>
-			<div className="scout-df-card__round">
-				{d.round_type ?? 'Round'}{target ? ` · ${target} target` : ''}
-			</div>
-			<p className="scout-df-card__desc">{d.company_description ?? ''}</p>
-			<div className="scout-df-card__by">Shared by {submitterLabel(d)}</div>
-			<Link href={dealHref(d.id)} className="scout-df-card__link">View opportunity →</Link>
-		</article>
-	);
+/** The list the user opened a raise from, so the raise page's "Back to results" returns there (3.1). */
+function rememberList() {
+	try { sessionStorage.setItem('stx:dealflow:from', window.location.pathname + window.location.search); } catch { /* private mode */ }
 }
+

@@ -176,7 +176,7 @@ export function RecommendedInvestors() {
 	);
 }
 
-export function AllInvestors() {
+export function AllInvestors({ modeSwitch }: { /** "Recommended / All" in the filter bar. */ modeSwitch?: React.ReactNode } = {}) {
 	// Shared by Raise and Scout. Only Raise keeps a pipeline ("watchlist"), so a
 	// Scout gets the same directory with the add action and status column dropped.
 	const { data: profile } = useUserProfile();
@@ -184,11 +184,11 @@ export function AllInvestors() {
 	const canWatchlist = tier === 'raise';
 	const { inPipeline } = useWatchlistAdd(canWatchlist);
 	// Explore sees verified investor profiles only (handover v1 B5; fix list 4.1).
-	return <AllInvestorsTab inPipeline={inPipeline} canWatchlist={canWatchlist} verifiedOnly={tier === 'explore'} />;
+	return <AllInvestorsTab inPipeline={inPipeline} canWatchlist={canWatchlist} verifiedOnly={tier === 'explore'} modeSwitch={modeSwitch} />;
 }
 
 /** The "All investors" tab — search + filters + sort + pagination over /api/investors. */
-function AllInvestorsTab({ inPipeline, canWatchlist, verifiedOnly = false }: { inPipeline: Set<string>; canWatchlist: boolean; verifiedOnly?: boolean }) {
+function AllInvestorsTab({ inPipeline, canWatchlist, verifiedOnly = false, modeSwitch }: { inPipeline: Set<string>; canWatchlist: boolean; verifiedOnly?: boolean; modeSwitch?: React.ReactNode }) {
 	const router = useRouter();
 	// View-state mirrored into the URL (Back/Forward restore, shareable links).
 	const url = useUrlReader();
@@ -289,6 +289,7 @@ function AllInvestorsTab({ inPipeline, canWatchlist, verifiedOnly = false }: { i
 				</div>
 			)}
 			<FilterBar
+				actions={modeSwitch}
 				search={{ value: q, onChange: (v) => { setQ(v); reset(); }, placeholder: 'Search investors by name or website…' }}
 				groups={[
 					{ label: 'Industry & domain', filters: [

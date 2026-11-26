@@ -69,9 +69,16 @@
 }
 
 /* ── Watchlist board ─────────────────────────────────────────────────────── */
-.atlas .scout-board { display: grid; grid-template-columns: repeat(6, minmax(170px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 8px; }
-/* Phone: stack the 6 stage columns instead of a ~1020px sideways scroll. */
-@media (max-width: 720px) { .atlas .scout-board { grid-template-columns: 1fr; overflow-x: visible; } }
+.atlas .scout-board {
+	/* Six columns across a wide page; narrower, they scroll sideways and the
+	   edge with more to show fades (remaining 3). */
+	display: grid; grid-template-columns: repeat(6, minmax(150px, 1fr)); gap: 12px;
+	overflow-x: auto; padding-bottom: 8px; overscroll-behavior-x: contain;
+	--fade: 48px;
+}
+.atlas .scout-board.fade-right { mask-image: linear-gradient(to right, #000 calc(100% - var(--fade)), transparent); }
+.atlas .scout-board.fade-left { mask-image: linear-gradient(to right, transparent, #000 var(--fade)); }
+.atlas .scout-board.fade-left.fade-right { mask-image: linear-gradient(to right, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent); }
 .atlas .scout-board__col { min-height: 220px; padding: 10px; border-radius: var(--a-radius-sm); background: var(--a-inset); transition: box-shadow 0.15s; }
 .atlas .scout-board__col.is-over { box-shadow: inset 0 0 0 1.5px var(--a-ink); }
 .atlas .scout-board__head { display: flex; justify-content: space-between; margin: 2px 2px 10px; font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--a-ink-2); }
@@ -81,7 +88,7 @@
 .atlas .scout-board__id { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .atlas .scout-board__name { font-family: var(--a-font); font-size: 13px; font-weight: 700; color: var(--a-ink); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .atlas .scout-board__name:hover { text-decoration: underline; }
-.atlas .scout-board__meta { margin: 6px 0 8px; font-family: var(--a-body); font-size: 11px; color: var(--a-muted); }
+.atlas .scout-board__meta { margin: 6px 0 0; font-family: var(--a-body); font-size: 11px; color: var(--a-muted); }
 .atlas .scout-board__select {
 	width: 100%; height: 24px; padding: 0 6px; border-radius: var(--a-radius-xs); border: 1px solid var(--a-border); background: var(--a-field); color: var(--a-ink);
 	font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase;
@@ -93,7 +100,7 @@
 .atlas .scout-board__note { margin-top: 14px; }
 
 /* ── Deal Flow (Claude Design "Deal Flow" / "Deal") ──────────────────────── */
-.atlas { --scout-green: #0FB86A; --scout-green-ink: #338B6E; --scout-pending-bg: #FFF6E5; --scout-pending-ink: #8A5A00; --scout-sent-bg: #EAF6EF; --scout-sent-border: #BFE3CD; }
+.atlas { /* Scout teal for every Deal Flow accent (Deal Flow 4.5); was a separate green #0FB86A. */ --scout-green: #1CC3A4; --scout-green-ink: #338B6E; --scout-pending-bg: #FFF6E5; --scout-pending-ink: #8A5A00; --scout-sent-bg: #EAF6EF; --scout-sent-border: #BFE3CD; }
 [data-theme="dark"] .atlas { --scout-green: #2FD38A; --scout-green-ink: #5FD3A2; --scout-pending-bg: rgba(214, 121, 58, 0.16); --scout-pending-ink: #E6B36A; --scout-sent-bg: rgba(15, 184, 106, 0.12); --scout-sent-border: rgba(15, 184, 106, 0.35); }
 
 .atlas .scout-df { font-family: var(--a-body); color: var(--a-ink); }
@@ -114,7 +121,9 @@
 .atlas .scout-df-pill { background: var(--a-field); color: var(--a-ink); box-shadow: inset 0 0 0 1px var(--a-border-strong); }
 .atlas .scout-df-pill--primary { background: var(--a-primary); color: var(--a-primary-ink); box-shadow: none; }
 .atlas .scout-df-pill:disabled { cursor: default; opacity: 0.8; }
-.atlas .scout-df__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.atlas .scout-df__grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+/* Two raise cards per row from 1,024px, one below (Deal Flow 4.6). */
+@media (min-width: 1024px) { .atlas .scout-df__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* Featured deal: black card */
 /* Featured deal — a dark "spotlight" card that matches the page, lifted by a
@@ -170,8 +179,8 @@
 .atlas .scout-df-card__interest strong { font-size: 15px; }
 .atlas .scout-df-card__reachout { margin: 0 0 14px; font-size: 12.5px; line-height: 1.5; color: var(--a-muted); }
 .atlas .scout-df-card__link { font-size: 14px; color: var(--a-ink); text-decoration: underline; text-underline-offset: 3px; }
-@media (max-width: 1000px) { .atlas .scout-df__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .atlas .scout-df-feat__body { flex-direction: column; } .atlas .scout-df-feat__terms { padding-left: 0; border-left: 0; padding-top: 22px; border-top: 1px solid var(--a-card-border); width: 100%; } }
-@media (max-width: 640px) { .atlas .scout-df__grid { grid-template-columns: 1fr; } .atlas .scout-df-feat { padding: 22px 20px; } }
+@media (max-width: 1000px) { .atlas .scout-df-feat__body { flex-direction: column; } .atlas .scout-df-feat__terms { padding-left: 0; border-left: 0; padding-top: 22px; border-top: 1px solid var(--a-card-border); width: 100%; } }
+@media (max-width: 640px) { .atlas .scout-df-feat { padding: 22px 20px; } }
 
 /* Deal page */
 .atlas .scout-dd-head { display: flex; align-items: flex-start; gap: 18px; margin: 18px 0 22px; flex-wrap: wrap; }
@@ -350,3 +359,55 @@
 .atlas .scout-tags--measure { position: absolute; top: 0; left: 0; flex-wrap: nowrap; visibility: hidden; pointer-events: none; height: 0; overflow: hidden; }
 .atlas .scout-tags--measure .scout-tag { flex: none; white-space: nowrap; }
 .atlas .scout-tags--rows > .scout-tag { white-space: nowrap; }
+
+/* Raise card, one for Verified and Featured (Deal Flow 4.1-4.5). Plain at rest;
+   a featured raise and a hovered card get the soft solution-colour gradient
+   (handover §4). The "Open" pill's ::after makes the whole card the link. */
+.atlas .scout-raise {
+	position: relative; display: flex; flex-direction: column; padding: 20px 22px 22px;
+	border-radius: var(--a-radius); background-color: var(--a-surface); border: 1px solid var(--a-card-border);
+	transition: border-color 0.15s, background-image 0.15s;
+}
+.atlas .scout-raise.is-featured, .atlas .scout-raise:hover {
+	background-image: linear-gradient(160deg, transparent 50%, color-mix(in srgb, var(--atlas-product, var(--scout-green)) 14%, transparent) 100%);
+}
+.atlas .scout-raise:hover { border-color: var(--a-border-strong); }
+.atlas .scout-raise:hover .atlas-feed-card__action { background: var(--a-primary); color: var(--a-primary-ink); box-shadow: inset 0 0 0 1px var(--a-primary); }
+.atlas .scout-raise__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.atlas .scout-raise__tag { font-family: var(--a-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: color-mix(in srgb, var(--a-ink) 72%, transparent); }
+.atlas .scout-raise.is-featured .scout-raise__tag { color: var(--atlas-product, var(--scout-green)); }
+.atlas .scout-raise__name { display: flex; align-items: center; gap: 6px; margin: 0 0 4px; font-family: var(--a-font); font-size: 18px; font-weight: 700; color: var(--a-ink); }
+.atlas .scout-raise__tick { display: inline-flex; }
+.atlas .scout-raise__round { margin-bottom: 12px; font-size: 13px; color: var(--a-muted); }
+.atlas .scout-raise__committed { margin-bottom: 12px; font-size: 13px; }
+.atlas .scout-raise__desc { flex: 1; margin: 0 0 14px; font-size: 14px; line-height: 1.5; color: var(--a-muted); }
+.atlas .scout-raise__close { font-size: 12.5px; color: var(--a-faint); }
+/* Progress: Scout teal on light grey (4.5). */
+.atlas .scout-df-bar { background: color-mix(in srgb, var(--a-ink) 8%, transparent); }
+.atlas .scout-df-bar .atlas-progress { height: 100%; margin: 0; background: transparent; border-radius: 3px; }
+.atlas .scout-df-bar .atlas-progress__fill { background: var(--scout-green); border-radius: 3px; }
+
+/* Raise page, after the company page (Deal Flow 5.1-5.3). */
+.atlas .scout-raise-page__label { margin-bottom: 4px; font-family: var(--a-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--atlas-product, var(--scout-green)); }
+.atlas .scout-raise-page__terms { margin-bottom: 18px; }
+.atlas .scout-raise-page__bar { height: 6px; margin-top: 8px; max-width: 220px; }
+
+/* From Boardroom, locked for non-members (Deal Flow 7.1). */
+.atlas .scout-locked { display: grid; justify-items: center; gap: 12px; padding: 48px 20px; border-radius: var(--a-radius); border: 1px dashed var(--a-border-strong); text-align: center; }
+.atlas .scout-locked__icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--a-inset); color: var(--a-muted); }
+.atlas .scout-locked__text { margin: 0; font-size: 14px; color: var(--a-muted); }
+.atlas .scout-df__head--bar { align-items: center; }
+.atlas .scout-df__head--bar .scout-df__note { flex: 1; margin: 0; }
+/* Raise bookmark (6.8): beside Open, above the card-wide link; filled when saved. */
+.atlas .scout-raise__save.is-on { color: var(--atlas-product, var(--scout-green)); }
+
+/* "Move to…" on a board card: the standard dropdown, shown on hover or focus. */
+.atlas .scout-board__move { width: 100%; height: 24px; margin-top: 8px; padding: 0 6px; font-family: var(--a-mono); font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
+.atlas .scout-board__move.atlas-combo { padding: 0 6px; gap: 4px; }
+.atlas .scout-board__move.atlas-combo .atlas-combo__chev { width: 12px; height: 12px; }
+@media (hover: hover) {
+	.atlas .scout-board__card .scout-board__move { opacity: 0; transition: opacity 0.12s; }
+	.atlas .scout-board__card:hover .scout-board__move,
+	.atlas .scout-board__card:focus-within .scout-board__move,
+	.atlas .scout-board__move.atlas-combo--open { opacity: 1; }
+}

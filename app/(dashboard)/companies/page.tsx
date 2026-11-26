@@ -1,11 +1,10 @@
 'use client';
 
-import { Screen, SectionHeader } from '@/components/atlas';
+import { Button, Screen, SectionHeader } from '@/components/atlas';
 import { MarketCompanies } from '@/components/features/market/market-companies';
-import { Recommended } from '@/components/scout/recommended';
 import { ListModeSwitch, useListMode } from '@/components/features/recommended/recommended-window';
 import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
-import { companyHref } from '@/lib/routes';
+import { companyHref, hrefOf } from '@/lib/routes';
 import { useDeepLinkKey } from '@/hooks/use-url-state';
 
 /**
@@ -19,13 +18,16 @@ export default function Page() {
 	const key = useDeepLinkKey(['company', 'list']); // neither the drawer nor the switch changes the list
 	const { data: profile } = useUserProfile();
 	const isScout = getUserType(profile) === 'scout';
-	const [mode, setMode] = useListMode();
+	// Scout opens on Recommended (Deal Flow 6.6); the switch sits in the filter bar (preview fixes 4).
+	const [mode, setMode] = useListMode(isScout ? 'recommended' : 'all');
+	const modeSwitch = isScout ? <ListModeSwitch value={mode} onChange={setMode} /> : undefined;
+	const recommended = isScout && mode === 'recommended';
 	return (
 		<Screen>
-			<SectionHeader actions={isScout ? <ListModeSwitch value={mode} onChange={setMode} /> : undefined} />
-			{isScout && mode === 'recommended'
-				? <Recommended />
-				: <MarketCompanies key={key} companyHref={companyHref} />}
+			{/* "Edit preferences" in the page header on Recommended (preview fixes 1.5). */}
+			<SectionHeader actions={recommended ? <Button size="sm" variant="outline" href={hrefOf('interests')}>Edit preferences</Button> : undefined} />
+			{/* One list, one table; Recommended is a filtered view of it (preview fixes 1.1). */}
+			<MarketCompanies key={`${key}:${mode}`} companyHref={companyHref} modeSwitch={modeSwitch} recommended={recommended} />
 		</Screen>
 	);
 }

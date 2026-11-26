@@ -2,7 +2,7 @@
 
 import { Screen, SectionHeader } from '@/components/atlas';
 import { AllInvestors, RecommendedInvestors } from '@/components/raise/investors';
-import { ListModeSwitch, useListMode } from '@/components/features/recommended/recommended-window';
+import { ListModeSwitch, ModeBar, useListMode } from '@/components/features/recommended/recommended-window';
 import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
 
 /**
@@ -17,8 +17,11 @@ export default function InvestorsPage() {
 	const recommended = isRaise && mode === 'recommended';
 	return (
 		<Screen>
-			<SectionHeader actions={isRaise ? <ListModeSwitch value={mode} onChange={setMode} /> : undefined} />
-			{recommended ? <RecommendedInvestors /> : <AllInvestors />}
+			{/* The switch sits in the filter bar, as on Companies and the raise tabs (preview fixes 4). */}
+			<SectionHeader />
+			{recommended
+				? <><ModeBar><ListModeSwitch value={mode} onChange={setMode} /></ModeBar><RecommendedInvestors /></>
+				: <AllInvestors modeSwitch={isRaise ? <ListModeSwitch value={mode} onChange={setMode} /> : undefined} />}
 		</Screen>
 	);
 }

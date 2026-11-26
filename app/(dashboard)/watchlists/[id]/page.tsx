@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { Empty, Loading, Screen, SectionHeader } from '@/components/atlas';
-import { WatchlistDetail } from '@/components/features/watchlists/watchlist-detail';
+import { WatchlistDetail, WatchlistRaises } from '@/components/features/watchlists/watchlist-detail';
 import { WatchlistBar } from '@/components/features/watchlists/watchlist-bar';
 import { WatchlistBoard } from '@/components/scout/watchlist-board';
 import { InvestorBoard } from '@/components/raise/investor-board';
@@ -46,7 +46,7 @@ export default function Page() {
 			<SectionHeader />
 			{list && <WatchlistBar list={list} view={isScout ? view : undefined} onView={isScout ? setView : undefined} />}
 			{board
-				? <WatchlistBoard id={id} />
+				? <><WatchlistRaises id={id} /><WatchlistBoard id={id} /></>
 				: <WatchlistDetail id={id} backHref={hrefOf('watchlists')} companyHref={companyHref} />}
 		</Screen>
 	);

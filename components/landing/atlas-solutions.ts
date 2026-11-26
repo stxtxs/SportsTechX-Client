@@ -202,7 +202,7 @@ export const SOLUTIONS: Solution[] = [
 				bullets: [
 					'Search sports tech companies by sector, stage and geography',
 					'Get recommendations matched to your investment thesis',
-					'Discover verified raises from the SportsTechX network (coming soon)',
+					'Discover verified raises from the SportsTechX network',
 				],
 			},
 			{
@@ -211,7 +211,7 @@ export const SOLUTIONS: Solution[] = [
 				bullets: [
 					'Review company traction, teams and funding history',
 					'Assess opportunities using market data and funding trends',
-					'Access round details and fundraising documents (coming soon)',
+					'Access round details and fundraising documents',
 				],
 			},
 			{
@@ -220,7 +220,7 @@ export const SOLUTIONS: Solution[] = [
 				bullets: [
 					'Create watchlists of shortlisted companies',
 					'Organise prospects through each pipeline phase',
-					'Request introductions via our network (coming soon)',
+					'Request introductions to founders through SportsTechX',
 				],
 			},
 		],

@@ -178,6 +178,8 @@ export const qk = {
     profile: () => ['/api/scout'] as const,
     home: () => ['/api/scout/home'] as const,
     thesis: () => ['/api/scout/thesis'] as const,
+    /** A company's match against this Scout's Preferences (company page). */
+    companyMatch: (companyId: string) => [`/api/scout/match/companies/${companyId}`] as const,
     recommended: (params: Record<string, unknown> = {}) => ['/api/scout/recommended', params] as const,
     companies: (params: Record<string, unknown> = {}) => ['/api/scout/companies', params] as const,
     signals: (params: Record<string, unknown> = {}) => ['/api/scout/signals', params] as const,

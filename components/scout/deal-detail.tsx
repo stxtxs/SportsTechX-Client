@@ -358,8 +358,8 @@ function Documents({ d }: { d: DealRow }) {
  * company is disclosed: `company_id` is withheld with the name, so an anonymous raise has none.
  */
 function FundingHistory({ companyId }: { companyId: string }) {
-	const { data, isLoading } = useSWR<{ data: Deal[] }>(qk.deals.list({ company_id: companyId, limit: 30, sort: '-announced_date' }));
-	if (isLoading) return null;
+	const { data, isLoading, error } = useSWR<{ data: Deal[] }>(qk.deals.list({ company_id: companyId, limit: 30, sort: '-announced_date' }));
+	if (isLoading || error) return null;
 	const rows = data?.data ?? [];
 	return (
 		<section className="scout-dd-box">

@@ -46,7 +46,8 @@ const editHref = (id: string) => `${hrefOf('deal-flow-circle')}/share?draft=${id
  * page against. 50 live deals is far beyond anything the table holds; if that
  * ever changes this needs real paging rather than a bigger number.
  */
-const LIMIT = 50;
+/** One page of Deal Flow; exported so other views share the same request. */
+export const LIMIT = 50;
 
 export function useDealFlow(tab: DealTab) {
 	return useSWR<{ data: DealRow[] }>(qk.scout.dealflow({ tab, limit: LIMIT }));
@@ -95,7 +96,10 @@ export function DealFlow({ tab = 'all' }: { tab?: DealTab }) {
 	const term = q.trim().toLowerCase();
 	const sym = currency === 'USD' ? '$' : '€';
 
-	const scored = tabRows.map((d) => ({ d, m: matchRaise({ sector: d.sector, company_hq: d.company_hq, round: roundLabel(d.round_type), tags: d.tags }, matchPrefs) }));
+	// The server scores every preference (6.3); the browser match is only the fallback for rows without it (local test raises).
+	const scored = tabRows.map((d) => ({ d, m: d.match_hidden !== undefined
+		? { hidden: d.match_hidden, pct: d.match_pct ?? null, why: d.match_why ?? [] }
+		: matchRaise({ sector: d.sector, company_hq: d.company_hq, round: roundLabel(d.round_type), tags: d.tags }, matchPrefs) }));
 	const shown = scored
 		// Matched: Avoid hides a raise, and so does meeting none of the filled-in preferences (6.2).
 		.filter(({ m }) => mode === 'all' || (!m.hidden && m.pct !== 0))

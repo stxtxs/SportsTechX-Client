@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import { toast } from 'sonner';
-import { Users } from 'lucide-react';
+import { Check, Users } from 'lucide-react';
 import { Badge, Button } from '@/components/atlas';
 import { apiRequest } from '@/lib/query-client';
 import { refreshRaise } from '@/lib/invalidate';
@@ -12,118 +12,156 @@ import { openRaiseSetup } from '@/lib/setup-events';
 import { fmtFullDate } from '@/lib/format';
 
 /**
- * Share your round with the Investor Circle.
+ * List my raise in Verified Raises (Deal Flow section 11), in Raise settings.
  *
- * Raise Home already emits an attention card for this — *"Share your round with
- * the Investor Circle"*, pointing at `/app/settings` — and until now it landed
- * on a page with no such control. The endpoints existed and nothing called them.
- *
- * Opting in **never publishes**. It creates a `pending` listing for review,
- * because "Verified Raises" tells investors the key facts were independently
- * checked, which is only true once a human has checked them. The copy here says
- * so, or founders will expect to appear immediately.
- *
- * One wrinkle worth knowing: the founder-side status enum is only
- * `pending | live | withdrawn`, so when an admin asks for changes the founder
- * still reads `pending`. `review_notes` is the only signal that something is
- * wanted, so it is surfaced whenever it is set.
+ * One status line: Draft · Submitted · Changes requested · Live · Closed, with SportsTechX's note
+ * and the fields it flagged (11.5). To submit, every required field (11.3) must be filled; the
+ * founder confirms the details are accurate and may be shown to Scout users, and chooses whether
+ * the company is named. Submitting never publishes: SportsTechX checks it first.
  */
-interface OptInState {
-	opted_in: boolean;
-	status: 'pending' | 'live' | 'withdrawn' | null;
-	review_notes: string | null;
-	submitted_at: string | null;
+interface State {
 	has_raise: boolean;
+	status: 'draft' | 'pending' | 'reviewing' | 'live' | 'changes_requested' | 'closed' | null;
+	review_notes: string | null;
+	review_fields: string[];
+	missing: string[];
+	submitted_at: string | null;
+	company_anonymous: boolean;
 }
 
-const BODY: React.CSSProperties = { fontSize: 13, lineHeight: 1.6, color: 'var(--a-muted)', margin: 0 };
+/** Keys match the server's required fields (11.3). */
+const REQUIRED: [string, string][] = [
+	['company', 'Company'], ['description', 'One-line description'], ['sector', 'Sector'], ['hq', 'HQ'], ['round', 'Round'],
+	['target', 'Target amount and currency'], ['committed', 'Committed so far'], ['instrument', 'Instrument'],
+	['close_date', 'Target close date'], ['lead', 'Lead status'], ['deck', 'Pitch deck'], ['contact', 'Contact person'],
+];
+const label = (k: string) => REQUIRED.find(([key]) => key === k)?.[1] ?? k;
 
+const STATUS: Record<string, { text: string; tone: 'neutral' | 'ok' | 'warn' | 'danger' }> = {
+	draft: { text: 'Draft', tone: 'neutral' },
+	pending: { text: 'Submitted', tone: 'neutral' },
+	reviewing: { text: 'Submitted', tone: 'neutral' },
+	changes_requested: { text: 'Changes requested', tone: 'warn' },
+	live: { text: 'Live in Verified Raises', tone: 'ok' },
+	closed: { text: 'Closed', tone: 'neutral' },
+};
+
+const BODY: React.CSSProperties = { fontSize: 13, lineHeight: 1.6, color: 'var(--a-muted)', margin: 0 };
 const LINK: React.CSSProperties = {
 	background: 'none', border: 'none', padding: 0, cursor: 'pointer',
 	font: 'inherit', color: 'var(--a-ink)', textDecoration: 'underline', textUnderlineOffset: 3,
 };
 
 export function DealflowOptIn() {
-	const { data, isLoading, mutate } = useSWR<OptInState>(qk.raise.dealflow());
+	const { data, isLoading, mutate } = useSWR<State>(qk.raise.dealflow());
 	const [busy, setBusy] = useState(false);
-
-	const act = async (method: 'POST' | 'DELETE', okMsg: string) => {
-		setBusy(true);
-		try {
-			const res = await apiRequest(method, '/api/raise/dealflow/opt-in');
-			if (!res.ok) throw new Error(String(res.status));
-			toast.success(okMsg);
-			void mutate();
-			void refreshRaise(); // Raise home's "share your round" card reads this too
-		} catch {
-			toast.error('That did not go through. Please try again.');
-		} finally { setBusy(false); }
-	};
+	const [confirmed, setConfirmed] = useState(false);
+	const [anonymous, setAnonymous] = useState<boolean | null>(null);
 
 	if (isLoading || !data) return <p style={BODY}>Loading…</p>;
-
-	// Not having a raise yet is an ordinary state, not an error — the server
-	// answers has_raise:false rather than 404 so this can say the useful thing.
 	if (!data.has_raise) {
 		return (
 			<p style={BODY}>
-				Set up your raise first and you can share it with the Investor Circle from here.{' '}
-				{/* `--a-accent` was the colour here and is defined nowhere, so this
-				    link rendered in the inherited body colour. */}
+				Set up your raise first, then you can list it in Verified Raises from here.{' '}
 				<button type="button" onClick={() => openRaiseSetup()} style={LINK}>Set up your raise</button>
 			</p>
 		);
 	}
 
-	const live = data.status === 'live';
-	const pending = data.status === 'pending';
+	const status = data.status;
+	const inReview = status === 'pending' || status === 'reviewing';
+	const live = status === 'live';
+	const canSubmit = !inReview && !live;
+	const hideName = anonymous ?? data.company_anonymous;
+
+	const submit = async () => {
+		setBusy(true);
+		try {
+			await apiRequest('POST', '/api/raise/dealflow/opt-in', { confirm: true, company_anonymous: hideName });
+			toast.success('Submitted. SportsTechX checks it within 2 working days.');
+			setConfirmed(false);
+			await mutate(); void refreshRaise();
+		} catch (e) { toast.error((e as Error).message || 'That did not go through. Please try again.'); }
+		finally { setBusy(false); }
+	};
+	const withdraw = async () => {
+		setBusy(true);
+		try {
+			await apiRequest('DELETE', '/api/raise/dealflow/opt-in');
+			toast.success('Taken out of Verified Raises.');
+			await mutate(); void refreshRaise();
+		} catch { toast.error('That did not go through. Please try again.'); }
+		finally { setBusy(false); }
+	};
 
 	return (
 		<div style={{ display: 'grid', gap: 12 }}>
 			<div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
 				<Users size={14} aria-hidden="true" style={{ color: 'var(--a-muted)' }} />
-				{live && <Badge tone="ok">Live with the Investor Circle</Badge>}
-				{pending && <Badge tone="neutral">Submitted for review</Badge>}
-				{!live && !pending && <Badge tone="neutral">Not shared</Badge>}
+				{status ? <Badge tone={STATUS[status]?.tone ?? 'neutral'}>{STATUS[status]?.text ?? status}</Badge> : <Badge tone="neutral">Not listed</Badge>}
+				{data.submitted_at && (inReview || live) && <span style={{ fontSize: 12, color: 'var(--a-muted)' }}>Submitted {fmtFullDate(new Date(data.submitted_at))}</span>}
 			</div>
 
 			<p style={BODY}>
-				{live
-					? 'Investors in the Circle can see your round and request an introduction. We pass on their interest to you — your contact details are never released without us asking you first.'
-					: pending
-						? 'The SportsTechX team is checking the key facts before investors see it. That check is what "Verified Raise" means, so it never goes live automatically.'
-						: 'Share your round with SportsTechX’s investor network. We review it first — it is an eligibility check that the round is real, not an endorsement — and then Circle members can ask for an introduction.'}
+				{live ? 'Scout investors can see your raise and ask for an introduction. Introductions run through SportsTechX; your contact details are never shared without your OK. Committed amount, lead status and target close date can change freely; other changes go back to review.'
+					: inReview ? 'SportsTechX is checking the details before investors see it, usually within 2 working days. That check is what "Verified" means, so it never goes live automatically.'
+					: status === 'changes_requested' ? 'SportsTechX needs a few changes before your raise can go live. Update your raise, then submit it again.'
+					: status === 'closed' ? 'Your raise is not listed. You can submit it again whenever it is current.'
+					: 'Show your round to the investors in Atlas Verified Raises. SportsTechX checks it first: an eligibility check that the round is real, not an endorsement.'}
 			</p>
 
-			{/* An admin asking for changes shows as `pending` to the founder, so the
-			    note is the only thing that explains what is wanted. */}
-			{data.review_notes && (
-				<div style={{ padding: 10, border: '1px solid var(--a-border)', borderRadius: 8, background: 'var(--a-surface-2, transparent)' }}>
-					<div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--a-faint)', marginBottom: 4 }}>
-						Note from the review team
-					</div>
+			{data.review_notes && (status === 'changes_requested' || status === 'closed') && (
+				<div style={{ padding: 10, border: '1px solid var(--a-border)', borderRadius: 8, background: 'var(--a-surface-2)' }}>
+					<div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--a-muted)', marginBottom: 4 }}>Note from SportsTechX</div>
 					<div style={{ fontSize: 13, color: 'var(--a-ink)' }}>{data.review_notes}</div>
 				</div>
 			)}
 
+			{canSubmit && (
+				<>
+					{/* Required to go live (11.3): ticked when filled, flagged when SportsTechX asked for a change. */}
+					<ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: '4px 16px' }}>
+						{REQUIRED.map(([k, l]) => {
+							const missing = data.missing.includes(k);
+							const flagged = data.review_fields.includes(k);
+							return (
+								<li key={k} style={{ fontSize: 13, display: 'flex', gap: 6, alignItems: 'center', color: missing || flagged ? 'var(--a-ink)' : 'var(--a-muted)' }}>
+									<span aria-hidden="true" style={{ width: 14, display: 'inline-flex' }}>{missing ? '○' : <Check size={13} />}</span>
+									{l}{missing ? ' (missing)' : flagged ? ' (check this)' : ''}
+								</li>
+							);
+						})}
+					</ul>
+					{data.missing.length > 0 && (
+						<p style={BODY}>
+							Add {data.missing.map(label).join(', ')} to submit.{' '}
+							<button type="button" onClick={() => openRaiseSetup()} style={LINK}>Edit your raise</button>
+						</p>
+					)}
+					<div style={{ display: 'grid', gap: 6 }}>
+						<label style={{ fontSize: 13, display: 'flex', gap: 8, alignItems: 'center', color: 'var(--a-ink)' }}>
+							<input type="radio" name="vr-name" checked={!hideName} onChange={() => setAnonymous(false)} /> Show the company name to investors
+						</label>
+						<label style={{ fontSize: 13, display: 'flex', gap: 8, alignItems: 'center', color: 'var(--a-ink)' }}>
+							<input type="radio" name="vr-name" checked={hideName} onChange={() => setAnonymous(true)} /> Keep it undisclosed until I accept an introduction
+						</label>
+					</div>
+					<label style={{ fontSize: 13, display: 'flex', gap: 8, alignItems: 'flex-start', color: 'var(--a-ink)' }}>
+						<input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} style={{ marginTop: 3 }} />
+						The details are accurate, and SportsTechX may show them to Scout users.
+					</label>
+				</>
+			)}
+
 			<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-				{live || pending ? (
-					<Button variant="outline" disabled={busy} onClick={() => void act('DELETE', 'Withdrawn from the Investor Circle')}>
-						{busy ? 'Working…' : 'Withdraw'}
+				{canSubmit ? (
+					<Button disabled={busy || !confirmed || data.missing.length > 0} onClick={() => void submit()}>
+						{busy ? 'Working…' : status === 'changes_requested' || status === 'closed' ? 'Submit again' : 'List my raise in Verified Raises'}
 					</Button>
 				) : (
-					<Button disabled={busy} onClick={() => void act('POST', 'Sent for review')}>
-						{busy ? 'Working…' : 'Share my round'}
-					</Button>
+					<Button variant="outline" disabled={busy} onClick={() => void withdraw()}>{busy ? 'Working…' : 'Withdraw'}</Button>
 				)}
 			</div>
-
-			{(live || pending) && (
-				<p style={{ ...BODY, fontSize: 12, color: 'var(--a-faint)' }}>
-					Withdrawing takes the listing down straight away.
-					{data.submitted_at && ` Shared on ${fmtFullDate(new Date(data.submitted_at))}.`}
-				</p>
-			)}
 		</div>
 	);
 }

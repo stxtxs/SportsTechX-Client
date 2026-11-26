@@ -208,7 +208,7 @@ export function RaiseSetup({ onClose, edit = false }: { onClose: () => void; edi
 	// build instead of 400-ing the step's auto-save.
 	const stepFields = useMemo<(keyof RaiseUpsert)[][]>(() => [
 		['company_id', 'company_name', 'company_website', 'hq_country', 'hq_city', 'company_description', 'company_sector_id', 'company_category', 'company_stage', 'company_stage_other', 'revenue_status'],
-		['fundraising_process', 'round_type', 'round_type_other', 'target_amount', 'committed_amount', 'currency_code', 'target_close_date', 'lead_investor_status', 'structure', 'valuation'],
+		['fundraising_process', 'round_type', 'round_type_other', 'target_amount', 'committed_amount', 'currency_code', 'target_close_date', 'lead_investor_status', 'structure', 'valuation', 'valuation_basis'],
 		['prior_capital_raised', 'last_round_date', 'annual_revenue', 'revenue_growth_pct', 'paying_customers', 'monthly_burn', 'runway_months'],
 		['pitch_deck_status', 'financial_model_status', 'data_room_status', 'has_target_list'],
 	], []);
@@ -375,7 +375,10 @@ export function RaiseSetup({ onClose, edit = false }: { onClose: () => void; edi
 							<Field label="Lead investor?" info={H.lead}><Select placeholder="Select…" value={s(form.lead_investor_status)} onChange={(e) => set('lead_investor_status', e.target.value)} options={[['yes', 'Yes'], ['no', 'No'], ['in_discussion', 'In discussion']]} /></Field>
 							<Field label="Structure" info={H.structure}><Select placeholder="Select…" value={s(form.structure)} onChange={(e) => set('structure', e.target.value)} options={[['equity', 'Equity'], ['safe', 'SAFE'], ['convertible', 'Convertible'], ['undecided', 'Undecided'], ['other', 'Other']]} /></Field>
 						</Grid>
-						<Field label="Target valuation (optional)" info={H.valuation}><Input type="number" min={0} inputMode="numeric" placeholder="e.g. 5000000" value={s(form.valuation)} onChange={(e) => set('valuation', e.target.value)} /></Field>
+						<Grid>
+							<Field label="Target valuation (optional)" info={H.valuation}><Input type="number" min={0} inputMode="numeric" placeholder="e.g. 5000000" value={s(form.valuation)} onChange={(e) => { set('valuation', e.target.value); if (e.target.value && !form.valuation_basis) set('valuation_basis', 'pre_money'); }} /></Field>
+							<Field label="Valuation is"><Select placeholder="Select…" value={s(form.valuation_basis)} onChange={(e) => set('valuation_basis', e.target.value)} options={[['pre_money', 'Pre-money'], ['post_money', 'Post-money'], ['cap', 'Cap (SAFE or note)']]} /></Field>
+						</Grid>
 					</>}
 
 					{step === 2 && <>

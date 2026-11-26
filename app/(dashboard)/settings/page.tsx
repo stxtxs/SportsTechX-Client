@@ -126,7 +126,7 @@ export default function RaiseSettingsPage() {
 				)}
 
 				{/* Operational — not part of the setup wizard, so they stay as live controls. */}
-				<Section title="Investor Circle">
+				<Section title="Verified Raises">
 					<DealflowOptIn />
 				</Section>
 

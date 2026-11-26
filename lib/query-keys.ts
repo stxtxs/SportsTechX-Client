@@ -109,6 +109,9 @@ export const qk = {
     containing: (companyId: string) => [`/api/user-watchlists/containing/${companyId}`] as const,
     /** Every company id on any of the user's company watchlists (one call). */
     companyIds: () => ['/api/user-watchlists/company-ids'] as const,
+    /** Watchlists holding a Deal Flow raise, and the raises in one list (6.8). */
+    containingRaise: (dealId: string) => [`/api/user-watchlists/containing-raise/${dealId}`] as const,
+    raises: (id: string) => [`/api/user-watchlists/${id}/raises`] as const,
     /** Pinned lists + Raise's main Investor Watchlist name and view. */
     settings: () => ['/api/watchlist-settings'] as const,
   },
@@ -175,6 +178,8 @@ export const qk = {
     profile: () => ['/api/scout'] as const,
     home: () => ['/api/scout/home'] as const,
     thesis: () => ['/api/scout/thesis'] as const,
+    /** A company's match against this Scout's Preferences (company page). */
+    companyMatch: (companyId: string) => [`/api/scout/match/companies/${companyId}`] as const,
     recommended: (params: Record<string, unknown> = {}) => ['/api/scout/recommended', params] as const,
     companies: (params: Record<string, unknown> = {}) => ['/api/scout/companies', params] as const,
     signals: (params: Record<string, unknown> = {}) => ['/api/scout/signals', params] as const,

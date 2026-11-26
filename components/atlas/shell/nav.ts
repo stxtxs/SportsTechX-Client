@@ -19,6 +19,8 @@ export interface ShellNavItem {
 	locked?: boolean;
 	/** Active when the page is open without this item's query (the page's default tab). */
 	isDefault?: boolean;
+	/** Indented links under the item: the user's pinned watchlists under Watchlists (preview fixes 3.1). */
+	children?: { name: string; path: string }[];
 }
 export interface ShellNavSection { title: string; items: ShellNavItem[] }
 export type ShellNavEntry = ShellNavItem | ShellNavSection;

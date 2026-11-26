@@ -1,18 +1,24 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 import { toast } from 'sonner';
-import { X } from 'lucide-react';
-import { Empty, Loading, Logo, cx } from '@/components/atlas';
+import { ArrowUpLeft, Globe, X } from 'lucide-react';
+import { Action, Empty, Loading, Logo, Progress, cx } from '@/components/atlas';
+import { VerifiedBadge } from '@/components/atlas/icons/verified-badge';
+import { SectorPath } from '@/components/features/company/company-profile';
+import '@/components/features/company/company-profile.css';
+import { useBackOr } from '@/hooks/use-back';
+import { RaiseBookmark } from './raise-bookmark';
 import { clearLegacy, readLegacy } from '@/hooks/legacy-local';
 import { apiRequest } from '@/lib/query-client';
 import { qk } from '@/lib/query-keys';
 import { hrefOf } from '@/lib/routes';
 import {
-	INTEREST_LABEL, canOpenDocs, closeLabel, companyLabel, instrumentLabel, leadLabel, money,
-	relationshipLabel, submitterLabel, type DealRow,
+	INTEREST_LABEL, canOpenDocs, closeLabel, committedPct, companyLabel, instrumentLabel, leadLabel, money, roundLabel,
+	relationshipLabel, submitterLabel, valuationLabel, type DealRow,
 } from './deal-types';
 
 /**
@@ -37,22 +43,27 @@ import {
  */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** The five designed panels. Only the first has a column behind it today. */
-const SECTIONS: [heading: string, blank: string][] = [
-	['Company', 'No description provided yet.'],
-	['Traction', 'Revenue, customers and growth are not published for this deal yet.'],
-	['Market', 'Market position and competitors are not published for this deal yet.'],
-	['Team', 'Founder and team detail is not published for this deal yet.'],
-	['Round / Use of funds', 'Use of funds is not published for this deal yet.'],
-];
-
 export function DealDetail({ id }: { id: string }) {
 	// A malformed id reaches Postgres as a bad uuid and surfaces as a 500 — there
 	// is no ParseUUIDPipe on the route — so refuse it here instead of asking.
 	const valid = UUID.test(id);
 	const { data: d, error, isLoading, mutate } = useSWR<DealRow>(valid ? qk.scout.deal(id) : null);
 
-	const [watchBusy, setWatchBusy] = useState(false);
+	// Sector path (Sector › Sub-sector › Sub-sub sector), as on the company page (5.4).
+	const sectors = useSWR<SectorRef[] | { data: SectorRef[] }>(qk.reference.sectors(), { dedupingInterval: 60 * 60_000 });
+	// "Back to results" returns to the tab the raise was opened from, with its
+	// filters and scroll (the browser's back, when the user came from there);
+	// opened from a link, it goes to that tab if known, else Verified Raises (3.1).
+	const backOr = useBackOr();
+	const router = useRouter();
+	const backHref = hrefOf('deal-flow-verified');
+	const back = (e: React.MouseEvent) => {
+		backOr(e);
+		if (e.defaultPrevented) return;
+		let from: string | null = null;
+		try { from = sessionStorage.getItem('stx:dealflow:from'); } catch { /* private mode */ }
+		if (from) { e.preventDefault(); router.push(from); }
+	};
 	const [open, setOpen] = useState(false);
 	const [note, setNote] = useState('');
 	const [busy, setBusy] = useState(false);
@@ -89,47 +100,43 @@ export function DealDetail({ id }: { id: string }) {
 	// The server returns one uniform 404 for "gone", "never existed" and "not
 	// live" so that nothing is distinguishable by its error. Say one thing.
 	if (!valid || error || !d) {
-		return <Empty>This opportunity isn&rsquo;t available. <Link href={hrefOf('deal-flow')}>Back to Deal Flow</Link></Empty>;
+		return <Empty>This raise isn&rsquo;t available. <Link href={backHref} onClick={back}>Back to results</Link></Empty>;
 	}
 
 	const isCircle = d.source === 'circle';
-	const isWatched = !!d.is_watched;
-	const label = d.is_featured ? 'Featured deal' : isCircle ? 'From the Circle' : 'Verified raise';
+	const label = isCircle ? 'From Boardroom' : d.is_featured ? 'Featured raise' : 'Verified raise';
 	const name = companyLabel(d);
+	const pct = committedPct(d);
+	// Website only when the company is disclosed: an anonymous raise sends no website.
+	const website = d.company_website ? (/^https?:/i.test(d.company_website) ? d.company_website : `https://${d.company_website}`) : null;
+	const sectorList = Array.isArray(sectors.data) ? sectors.data : (sectors.data?.data ?? []);
+	const path = sectorPath(sectorList, d.sector);
 
+	// Terms in one panel, label and value as on the company page (5.3); the
+	// progress bar sits under Target and Committed.
 	const terms: [string, string][] = [
-		['Round', d.round_type ?? '—'],
+		['Round', roundLabel(d.round_type) ?? '—'],
 		['Target', money(d.target_amount, d.currency_code) ?? '—'],
 		['Committed', money(d.committed_amount, d.currency_code) ?? '—'],
-		['Valuation', d.valuation ?? 'Not disclosed'],
+		['Valuation', valuationLabel(d)],
 		['Instrument', instrumentLabel(d.instrument) ?? '—'],
 		['Target close', closeLabel(d.target_close_date) ?? '—'],
 		// The lead investor's name is withheld with the company name, so fall back
 		// to the status, which is never redacted.
 		['Lead', d.lead_investor ?? leadLabel(d.lead_status) ?? '—'],
 	];
-
-	const toggleWatch = async () => {
-		setWatchBusy(true);
-		try {
-			const res = await apiRequest(isWatched ? 'DELETE' : 'PUT', `/api/scout/dealflow/${d.id}/watch`);
-			if (!res.ok) throw new Error(String(res.status));
-			await mutate({ ...d, is_watched: !isWatched }, { revalidate: false });
-		} catch {
-			toast.error("Couldn't update your watch. Please try again.");
-		} finally { setWatchBusy(false); }
-	};
+	const summary = d.member_perspective?.trim();
+	const description = d.company_description?.trim();
 
 	const requestIntro = async () => {
 		setBusy(true);
 		try {
 			const res = await apiRequest('POST', `/api/scout/dealflow/${d.id}/interest`, {
 				kind: 'introduction',
-				// The modal always collected this and then dropped it on the floor.
 				note: note.trim() || null,
 			});
 			if (!res.ok) throw new Error(String(res.status));
-			toast.success('Request sent');
+			toast.success('Introduction requested.');
 			setOpen(false); setNote('');
 			void mutate();
 		} catch {
@@ -138,28 +145,28 @@ export function DealDetail({ id }: { id: string }) {
 	};
 
 	return (
-		<div className="scout-df">
-			<Link href={hrefOf(isCircle ? 'deal-flow-circle' : 'deal-flow')} className="scout-df-card__link">
-				← {isCircle ? 'From the Circle' : 'Deal Flow'}
-			</Link>
-			<header className="scout-dd-head">
-				{/* `company_website` is null for an anonymous deal, so the logo falls
-				    back to initials rather than fetching a favicon that would name it. */}
-				<Logo co={{ name, website: d.company_website, custom_logo_url: null }} size={80} radius={9} />
-				<div className="scout-dd-head__id">
-					<div className="scout-dd-head__label">{label}</div>
-					<h1 className="scout-dd-head__name">{name}</h1>
-					<div className="scout-dd-head__meta">
-						{[d.company_hq, d.sector].filter(Boolean).join(' · ') || '—'}
+		<article className="atlas-co scout-raise-page">
+			<header className="atlas-co__head">
+				<div className="atlas-co__id">
+					{/* `company_website` is null for an anonymous raise, so the logo falls
+					    back to initials rather than fetching a favicon that would name it. */}
+					<Logo co={{ name, website: d.company_website, custom_logo_url: null }} size={72} radius={10} />
+					<div>
+						<div className="scout-raise-page__label">{label}</div>
+						<h1 className="atlas-co__name">
+							{name}
+							{!isCircle && <span style={{ marginLeft: 6, display: 'inline-flex', verticalAlign: 'middle' }} title="Verified by SportsTechX"><VerifiedBadge size={20} /></span>}
+						</h1>
+						{website && (
+							<div className="atlas-co__socials">
+								<a href={website} target="_blank" rel="noopener noreferrer" className="atlas-co__social" aria-label="Website" title="Website"><Globe size={15} aria-hidden="true" /></a>
+							</div>
+						)}
 					</div>
 				</div>
-				<div className="scout-dd-head__actions">
-					<button
-						type="button" className="scout-df-pill" aria-pressed={isWatched} disabled={watchBusy}
-						onClick={toggleWatch}
-					>
-						{isWatched ? 'Watching ✓' : 'Watch'}
-					</button>
+				{/* Save · Request introduction (primary) · Back to results, in the company page's row (5.2). */}
+				<div className="atlas-co__actions">
+					<RaiseBookmark d={d} variant="action" />
 					<button
 						type="button"
 						className={cx('scout-df-pill', !d.interest_status && 'scout-df-pill--primary')}
@@ -168,61 +175,67 @@ export function DealDetail({ id }: { id: string }) {
 					>
 						{d.interest_status ? INTEREST_LABEL[d.interest_status] ?? 'Requested' : 'Request introduction'}
 					</button>
+					<Action icon={<ArrowUpLeft />} href={backHref} onClick={back}>Back to results</Action>
 				</div>
 			</header>
 
 			{d.interest_status && (
-				<div className="scout-dd-sent">
-					{d.disclosed
-						? 'SportsTechX has shared this opportunity with you in full.'
-						: 'Request sent. SportsTechX will confirm with the company before sharing anything further, usually within two working days.'}
-				</div>
+				<div className="scout-dd-sent">{statusLine(d.interest_status, d.disclosed)}</div>
 			)}
 
-			<div className="scout-dd-terms">
+			<section className="atlas-card atlas-co__facts scout-raise-page__terms" aria-label="Terms of the raise">
 				{terms.map(([k, v]) => (
-					<div key={k} className="scout-dd-term"><div className="scout-dd-term__k">{k}</div><div className="scout-dd-term__v">{v}</div></div>
+					<div key={k}>
+						<div className="atlas-co__fact-k">{k}</div>
+						<div className="atlas-co__fact-v">{v}</div>
+						{k === 'Committed' && pct !== null && <div className="scout-df-bar scout-raise-page__bar"><Progress pct={pct} /></div>}
+					</div>
 				))}
-			</div>
+				<div className="atlas-co__fact--wide">
+					<div className="atlas-co__fact-k">Sector</div>
+					<div className="atlas-co__fact-v">
+						<SectorPath path={path} fallback={d.sector} listHref={(f) => `${hrefOf('companies')}?${new URLSearchParams(f as Record<string, string>).toString()}`} />
+					</div>
+				</div>
+				{d.company_hq && (
+					<div>
+						<div className="atlas-co__fact-k">Headquarters</div>
+						<div className="atlas-co__fact-v">{d.company_hq}</div>
+					</div>
+				)}
+			</section>
 
+			{/* Only sections with content show (5.6). */}
 			<div className="scout-dd-grid">
 				<div className="scout-dd-col">
-					<section className="scout-dd-box scout-dd-box--summary">
-						<h2 className="scout-dd-box__h">
-							{isCircle ? `Shared by ${submitterLabel(d)}` : 'SportsTechX summary'}
-						</h2>
-						<p className="scout-dd-box__lead">
-							{d.member_perspective ?? 'No summary provided yet.'}
-						</p>
-						{/* Returned even for an anonymous submitter — it is their view of
-						    the deal, not their identity. */}
-						{isCircle && d.member_relationship && (
-							<p className="scout-dd-box__fine">
-								Their relationship: {relationshipLabel(d.member_relationship)}
-								{d.member_commitment ? ` · committing ${money(d.member_commitment, d.currency_code)}` : ''}
-							</p>
-						)}
-					</section>
-					{SECTIONS.map(([heading, blank], i) => (
-						<section key={heading} className="scout-dd-box">
-							<h2 className="scout-dd-box__h">{heading}</h2>
-							<p className="scout-dd-box__text">
-								{i === 0 ? d.company_description ?? blank : blank}
-							</p>
+					{summary && (
+						<section className="scout-dd-box scout-dd-box--summary">
+							<h2 className="scout-dd-box__h">{isCircle ? `Shared by ${submitterLabel(d)}` : 'SportsTechX summary'}</h2>
+							<p className="scout-dd-box__lead">{summary}</p>
+							{/* Returned even for an anonymous submitter — it is their view of
+							    the raise, not their identity. */}
+							{isCircle && d.member_relationship && (
+								<p className="scout-dd-box__fine">
+									Their relationship: {relationshipLabel(d.member_relationship)}
+									{d.member_commitment ? ` · committing ${money(d.member_commitment, d.currency_code)}` : ''}
+								</p>
+							)}
 						</section>
-					))}
+					)}
+					{description && (
+						<section className="scout-dd-box">
+							<h2 className="scout-dd-box__h">Company</h2>
+							<p className="scout-dd-box__text">{description}</p>
+						</section>
+					)}
 				</div>
 				<div className="scout-dd-col">
 					<Documents d={d} />
-					<section className="scout-dd-box">
-						<h2 className="scout-dd-box__h">Funding history</h2>
-						<p className="scout-dd-box__text">Prior rounds are not published for this deal.</p>
-					</section>
-					{/* Only when the deal is linked to an Atlas company AND the company is
+					{/* Only when the raise is linked to an Atlas company AND the company is
 					    not being withheld — `company_id` is redacted alongside the name. */}
 					{d.company_id && (
 						<Link href={`${hrefOf('companies')}/${d.company_id}`} className="scout-df-card__link">
-							View full company profile →
+							View company profile →
 						</Link>
 					)}
 				</div>
@@ -232,27 +245,47 @@ export function DealDetail({ id }: { id: string }) {
 				<div className="scout-modal" role="presentation" onClick={() => setOpen(false)}>
 					<div className="scout-dd-modal" role="dialog" aria-modal="true" aria-labelledby="intro-title" onClick={(e) => e.stopPropagation()}>
 						<div className="scout-dd-modal__head">
-							<h2 id="intro-title" className="scout-dd-modal__title">Request introduction to {name}</h2>
+							<h2 id="intro-title" className="scout-dd-modal__title">Request an introduction to {name}?</h2>
 							<button type="button" className="scout-dd-modal__x" aria-label="Close" onClick={() => setOpen(false)}><X size={14} /></button>
 						</div>
-						<p className="scout-dd-modal__sub">SportsTechX will confirm with the company before sharing your details or theirs, usually within two working days.</p>
+						{/* The approved flow (2.3): SportsTechX reviews, then asks the founder. */}
+						<p className="scout-dd-modal__sub">SportsTechX reviews your request, then asks the founder. If they accept, Atlas introduces you by email.</p>
 						<label className="scout-dd-modal__field">
-							<span>Anything you&rsquo;d like us to include?<em> · Optional</em></span>
-							<textarea autoFocus value={note} onChange={(e) => setNote(e.target.value)} placeholder="We’re interested in learning more about..." />
+							<span>A note for the founder<em> · Optional</em></span>
+							<textarea autoFocus value={note} onChange={(e) => setNote(e.target.value)} placeholder="Why you're interested in this raise" />
 						</label>
 						<div className="scout-dd-modal__actions">
-							<button type="button" className="scout-df-pill" onClick={() => setOpen(false)}>Cancel</button>
 							<button type="button" className="scout-df-pill scout-df-pill--primary" disabled={busy} onClick={() => void requestIntro()}>
-								{busy ? 'Sending…' : 'Send request'}
+								{busy ? 'Sending…' : 'Request introduction'}
 							</button>
+							<button type="button" className="scout-df-pill" onClick={() => setOpen(false)}>Cancel</button>
 						</div>
 					</div>
 				</div>
 			)}
-		</div>
+		</article>
 	);
 }
 
+/** One line under the header saying where the introduction stands (2.3). */
+function statusLine(status: string, disclosed: boolean): string {
+	if (disclosed || status === 'connected') return 'Introduced. Atlas has introduced you to the founder by email.';
+	if (status === 'declined') return 'Not right now. The founder isn\u2019t taking this introduction forward.';
+	if (status === 'source_confirmed' || status === 'shared') return 'With the founder. SportsTechX has passed your request on.';
+	return 'Requested. SportsTechX is reviewing your request before asking the founder.';
+}
+
+interface SectorRef { id: string; name: string; slug: string; parent_id?: string | null }
+
+/** The sector chain for a raise's sector name, top first; empty when it isn't in the taxonomy. */
+function sectorPath(list: SectorRef[], name: string | null): SectorRef[] {
+	if (!name) return [];
+	const byId = new Map(list.map((x) => [x.id, x]));
+	let cur = list.find((x) => x.name?.toLowerCase() === name.toLowerCase()) ?? null;
+	const chain: SectorRef[] = [];
+	while (cur) { chain.unshift(cur); cur = cur.parent_id ? byId.get(cur.parent_id) ?? null : null; }
+	return chain;
+}
 
 /**
  * The real documents panel.

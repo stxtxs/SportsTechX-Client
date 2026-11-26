@@ -34,3 +34,58 @@
 .atlas .atlas-wl-bookmark:hover { color: var(--a-ink); background: color-mix(in srgb, var(--a-ink) 6%, transparent); }
 .atlas .atlas-wl-bookmark.on { color: var(--a-ink); }
 .atlas .atlas-wl-bookmark:focus-visible { outline: 2px solid var(--a-ink); outline-offset: 1px; }
+.atlas .atlas-wl-nodelete { display: inline-flex; cursor: not-allowed; }
+
+/* Watchlists as content cards (preview fixes 2.1-2.2). */
+.atlas .atlas-wl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+.atlas .atlas-wl-card { min-height: 150px; }
+.atlas .atlas-wl-card__meta { margin: 6px 0 0; font-size: 13px; color: var(--a-muted); }
+.atlas .atlas-wl-card__logos { display: flex; gap: 6px; margin-top: 14px; }
+.atlas .atlas-feed-card__pin.is-on { color: var(--atlas-product, var(--a-ink)); }
+.atlas .atlas-wl-more { position: relative; z-index: 2; }
+.atlas .atlas-wl-more__pop {
+	position: absolute; right: 0; top: calc(100% + 6px); min-width: 180px; padding: 6px; display: grid; gap: 2px;
+	border-radius: var(--a-radius-sm); background: var(--a-page); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18), inset 0 0 0 1px var(--a-border);
+}
+.atlas .atlas-wl-more__item { display: grid; gap: 2px; padding: 8px 10px; border: 0; border-radius: 6px; background: transparent; text-align: left; font-family: var(--a-body); font-size: 13px; color: var(--a-ink); cursor: pointer; }
+.atlas .atlas-wl-more__item:hover:not(:disabled) { background: var(--a-inset); }
+.atlas .atlas-wl-more__item:disabled { color: var(--a-muted); cursor: not-allowed; }
+.atlas .atlas-wl-more__item.is-danger { color: var(--a-danger); }
+.atlas .atlas-wl-more__note { font-size: 11px; color: var(--a-faint); }
+
+/* The row under the tabs: on the Watchlists page and inside a list (remaining 1-2). */
+.atlas .atlas-wl-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 0 0 20px; min-height: 36px; }
+.atlas .atlas-wl-bar__id { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.atlas .atlas-wl-bar__actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.atlas .atlas-wl-bar__count { font-size: 13px; color: var(--a-muted); white-space: nowrap; }
+.atlas .atlas-wl-bar__name {
+	min-width: 0; max-width: 42ch; padding: 2px 6px; margin: 0 -6px; border: 1px solid transparent; border-radius: 6px;
+	background: transparent; font-family: var(--a-font); font-size: 26px; font-weight: 700; color: var(--a-ink);
+	overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: text; text-align: left;
+}
+.atlas .atlas-wl-bar__name:hover { border-color: var(--a-border); }
+.atlas .atlas-wl-bar__name--edit { border-color: var(--a-border-strong); background: var(--a-page); outline: none; }
+
+/* Inside a list: back link above the title row (remaining 1-2). */
+.atlas .atlas-wl-top { display: grid; gap: 10px; margin-bottom: 20px; }
+.atlas .atlas-wl-top__back { justify-self: end; }
+.atlas .atlas-wl-top .atlas-wl-bar { width: 100%; margin: 0; }
+.atlas .atlas-wl-icon.is-pinned { color: var(--scout-green, var(--atlas-product, var(--a-ink))); }
+.atlas .atlas-wl-icon[aria-disabled="true"] { cursor: not-allowed; }
+.atlas .atlas-wl-icon[aria-disabled="true"] svg { opacity: 0.4; }
+/* Teal focus rings on every control in the row, as on .atlas-btn. */
+.atlas .atlas-wl-bar :is(button, a, input):focus-visible {
+	outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--scout-green, var(--atlas-product, var(--a-ink))) 45%, transparent);
+}
+.atlas .atlas-wl-bar .atlas-view-toggle { overflow: visible; }
+.atlas .atlas-wl-bar .atlas-view-toggle__btn:first-child { border-radius: var(--a-radius) 0 0 var(--a-radius); }
+.atlas .atlas-wl-bar .atlas-view-toggle__btn:last-child { border-radius: 0 var(--a-radius) var(--a-radius) 0; }
+/* The group border adds 2px; keep the group at the row's 34px. */
+.atlas .atlas-wl-bar .atlas-view-toggle__btn { height: 32px; }
+
+/* Stage pill (2.13): the Badge look, clickable. Overrides the field look the
+   dropdown trigger brings with it. */
+.atlas .atlas-stage-pill.atlas-combo { height: auto; width: auto; max-width: 100%; padding: 3px 7px 2px 9px; gap: 4px; border-width: 1px; border-style: solid; cursor: pointer; position: relative; z-index: 1; }
+.atlas .atlas-stage-pill .atlas-combo__label { color: inherit; }
+.atlas .atlas-stage-pill .atlas-combo__chev { width: 11px; height: 11px; color: currentColor; opacity: 0.7; }
+.atlas .atlas-stage-pill:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--scout-green, var(--atlas-product, var(--a-ink))) 45%, transparent); }

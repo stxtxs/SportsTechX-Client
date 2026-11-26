@@ -1,8 +1,10 @@
 'use client';
 
-import { DealFlowSoon } from '@/components/scout/deal-flow-soon';
+import { useParams } from 'next/navigation';
+import { Screen } from '@/components/atlas';
+import { DealDetail } from '@/components/scout/deal-detail';
 
-/** Deal Flow → one opportunity — "Coming soon" while Deal Flow is held back (see DealFlowSoon). */
-export default function Page() {
-	return <DealFlowSoon header={false} />;
+/** Deal Flow → one opportunity. */
+export default function ScoutDealPage() {
+	return <Screen><DealDetail id={String(useParams().id)} /></Screen>;
 }

@@ -45,7 +45,7 @@ import { openClaim } from '@/lib/claim-events';
 const STEPS = [
 	{ name: 'Company', title: 'About the company', sub: 'The company raising and what it does.' },
 	{ name: 'Round', title: 'Round details', sub: 'Terms as currently agreed with the company.' },
-	{ name: 'Your involvement', title: 'Your involvement and materials', sub: 'Helps Circle members understand how you are connected to the deal.' },
+	{ name: 'Your involvement', title: 'Your involvement and materials', sub: 'Helps Boardroom members understand how you are connected to the raise.' },
 	{ name: 'Review', title: 'Review and submit', sub: 'Check the details before sending for an eligibility check.' },
 ];
 
@@ -107,7 +107,7 @@ export function ShareDeal({ resumeId }: { resumeId?: string }) {
 					investment profile. Get verified and we&rsquo;ll open this up.
 				</p>
 				<div className="scout-intro__actions">
-					<Button href={hrefOf('deal-flow-circle')} variant="outline">Back to From the Circle</Button>
+					<Button href={hrefOf('deal-flow-circle')} variant="outline">Back to From Boardroom</Button>
 					<Button onClick={() => openClaim(null, 'investor')}>Get verified</Button>
 				</div>
 			</Card>
@@ -158,9 +158,9 @@ export function ShareDeal({ resumeId }: { resumeId?: string }) {
 		<Card className="scout-section scout-done">
 			<span className="scout-tag scout-tag--ok"><Check size={11} /> Submitted for eligibility check</span>
 			<h2 className="atlas-h2">{d.company || 'Your deal'} has been submitted.</h2>
-			<p className="scout-body">SportsTechX will review eligibility, usually within two working days. We&rsquo;ll email you once it&rsquo;s live in From the Circle, or if we need anything else.</p>
+			<p className="scout-body">SportsTechX will review eligibility, usually within two working days. We&rsquo;ll email you once it&rsquo;s live in From Boardroom, or if we need anything else.</p>
 			<div className="scout-intro__actions">
-				<Button href={hrefOf('deal-flow-circle')} variant="outline">Back to From the Circle</Button>
+				<Button href={hrefOf('deal-flow-circle')} variant="outline">Back to From Boardroom</Button>
 				<Button onClick={() => {
 					setTyped(BLANK); setTouched(true); setStep(0); setDone(false); setDraftId(null);
 					// Drop `?draft=` too, or the next submission would try to PATCH the
@@ -174,13 +174,13 @@ export function ShareDeal({ resumeId }: { resumeId?: string }) {
 	const s = STEPS[step];
 	return (
 		<>
-			<Action icon={<ArrowUpLeft />} href={hrefOf('deal-flow-circle')}>From the Circle</Action>
+			<Action icon={<ArrowUpLeft />} href={hrefOf('deal-flow-circle')}>From Boardroom</Action>
 			<div className="scout-subhead scout-subhead--page">
 				<div>
-					<h1 className="atlas-h1">{resumeId ? 'Edit your submission' : 'Share a deal with the Circle'}</h1>
+					<h1 className="atlas-h1">{resumeId ? 'Edit your submission' : 'Share a raise with Boardroom'}</h1>
 					<p className="scout-muted">{resumeId
 						? 'Make the changes the review team asked for, then send it back for another look.'
-						: 'Share an opportunity with Investor Circle members. SportsTechX checks eligibility before it’s published.'}</p>
+						: 'Share a raise with Boardroom members. SportsTechX checks eligibility before it’s published.'}</p>
 				</div>
 			</div>
 			<Steps names={STEPS.map((x) => x.name)} step={step} onPick={(i) => i < step && setStep(i)} />
@@ -238,7 +238,7 @@ export function ShareDeal({ resumeId }: { resumeId?: string }) {
 				)}
 				{step === 2 && (
 					<>
-						<Field label="Note for Circle members"><Textarea rows={3} {...txt('notes')} placeholder="What do you like about the company? Anything investors should know? What are they looking for?" /></Field>
+						<Field label="Note for Boardroom members"><Textarea rows={3} {...txt('notes')} placeholder="What do you like about the company? Anything investors should know? What are they looking for?" /></Field>
 						{/* Single-select: the column holds one relationship. */}
 						<Block label="Your relationship to the deal"><ChipSet options={['Investing in this round', 'Existing investor', 'Advisor / board', 'Referral only']} value={d.relation} onToggle={(o) => patch({ relation: o })} /></Block>
 						<div className="scout-form-grid">
@@ -278,7 +278,7 @@ export function ShareDeal({ resumeId }: { resumeId?: string }) {
 								{rows.map(([k, v]) => <div key={k} className="scout-review__row"><span>{k}</span><span className={v ? undefined : 'scout-muted'}>{v || '—'}</span></div>)}
 							</div>
 						))}
-						<p className="scout-muted">Deals shared by Circle members are checked for eligibility by SportsTechX but are not independently selected or endorsed. By submitting you confirm the information is accurate and the founder has agreed to it being shared.</p>
+						<p className="scout-muted">Raises shared by Boardroom members are checked for eligibility by SportsTechX but are not independently selected or endorsed. By submitting you confirm the information is accurate and the founder has agreed to it being shared.</p>
 					</div>
 				)}
 				{err && <p className="scout-error" role="alert">{err}</p>}

@@ -10,7 +10,7 @@
  */
 import assert from 'node:assert/strict';
 import {
-	canOpenDocs, closeLabel, committedPct, companyLabel, money, submitterLabel, type DealRow,
+	canOpenDocs, closeLabel, committedPct, companyLabel, money, roundLabel, submitterLabel, type DealRow,
 } from './deal-types.ts';
 
 let failures = 0;
@@ -50,7 +50,7 @@ check(canOpenDocs(row({ materials_access: 'on_request', disclosed: true })),
 check(companyLabel(row({ company_name: null, company_anonymous: true })) === 'Undisclosed company',
 	'a withheld company name reads as undisclosed');
 check(companyLabel(base) === 'Acme', 'a named company reads as itself');
-check(submitterLabel(row({ submitter_name: null, submitter_anonymous: true })) === 'An anonymous Circle member',
+check(submitterLabel(row({ submitter_name: null, submitter_anonymous: true })) === 'a Boardroom member',
 	'a withheld submitter reads as anonymous');
 // The two flags are independent: an anonymous submitter may share a named company.
 check(companyLabel(row({ submitter_anonymous: true, submitter_name: null })) === 'Acme',
@@ -67,6 +67,9 @@ check(money('abc', 'EUR') === null, 'a non-numeric string does not render as NaN
 check(/^[$€]\d+\.\d{2}M$/.test(money('8000000', null) ?? ''), 'a missing currency still formats');
 check(closeLabel('2026-12-01')?.includes('2026') === true, 'a date renders as month + year');
 check(closeLabel(null) === null, 'no close date renders nothing');
+check(roundLabel('pre_seed') === 'Pre-seed round' && roundLabel('series_b_plus') === 'Series B', 'a Verified Raise round code reads as the Preferences words');
+check(roundLabel('Seed Round') === 'Seed round', 'a Circle round name reads as the Preferences words');
+check(roundLabel('Seed') === 'Seed' && roundLabel(null) === null, 'a Circle round name passes through; none stays none');
 
 console.log(failures === 0 ? '\nPASS' : `\nFAIL — ${failures} check(s)`);
 process.exitCode = failures === 0 ? 0 : 1;

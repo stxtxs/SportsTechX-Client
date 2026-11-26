@@ -23,7 +23,9 @@ import { Walkthrough } from '@/components/features/benchmark/walkthrough';
 import '@/components/raise/raise.css';
 import '@/components/explore/explore.css';
 import '@/components/scout/scout.css';
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { isSection, type ShellNavEntry, type ShellNavItem } from '@/components/atlas/shell/nav';
+import { useWatchlistPins, type PinnedWatchlist } from '@/components/features/watchlists/use-watchlist-pins';
 import { displayCurrency, setDisplayCurrency, subscribeCurrency } from '@/lib/currency';
 
 /**
@@ -55,7 +57,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 	const currency = useSyncExternalStore(subscribeCurrency, displayCurrency, () => 'USD');
 	const pathname = usePathname() ?? '';
 
-	const { ready, tier, nav, homePath, accountPath } = useNav();
+	const { ready, tier, nav: baseNav, homePath, accountPath } = useNav();
+	// Pinned watchlists sit under Watchlists in the panel (preview fixes 3.1).
+	const { pins } = useWatchlistPins();
+	const nav = useMemo(() => withPinnedWatchlists(baseNav, pins), [baseNav, pins]);
 	// Server pushes (claim verified, plan changed, notifications) → fresh screens.
 	useRealtime(ready);
 	// Hold the loading screen until the tier is known. `getUserType(undefined)`
@@ -116,4 +121,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 			    account never passes through again. */}
 		</>
 	);
+}
+
+/** The nav with the user's pinned watchlists as children of the Watchlists item. */
+function withPinnedWatchlists(nav: ShellNavEntry[], pins: PinnedWatchlist[]): ShellNavEntry[] {
+	if (!pins.length) return nav;
+	const wl = hrefOf('watchlists');
+	const add = (i: ShellNavItem): ShellNavItem => (i.path === wl ? { ...i, children: pins.map((p) => ({ name: p.name, path: p.href })) } : i);
+	return nav.map((e) => (isSection(e) ? { ...e, items: e.items.map(add) } : add(e)));
 }

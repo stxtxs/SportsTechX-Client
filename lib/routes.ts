@@ -66,6 +66,12 @@ export interface RouteDef {
 	name: PerTier<string>;
 	/** A Figma icon name from components/atlas/icons/figma-icons.tsx. */
 	icon: string;
+	/**
+	 * Boardroom members only (Deal Flow 7.1): listed for everyone, locked for
+	 * non-members. There is no member flag on the account yet (Backend), so
+	 * only admins see it unlocked for now.
+	 */
+	boardroomOnly?: boolean;
 	/** Built to the design, no backend yet — shows a "Not connected" pill. */
 	placeholder?: PerTier<boolean>;
 	/** Greyed in the sidebar with a SOON pill, not a link; never offered by chat
@@ -171,8 +177,6 @@ export const ROUTES: RouteDef[] = [
 		// The Deck Screener is live now: Scout runs the same engine in investor
 		// mode (snapshot, thesis fit, red flags, diligence questions).
 		path: '/deck', tier: ['raise', 'scout'],
-		// Scout's Deck Screener shows "Soon" in Deal Flow until it ships (handover v1 §2).
-		soon: { scout: true },
 	},
 	// Preferences: every solution's personal settings (was Explore-only "Interests").
 	// Reached from the Account tabs, not the panel.
@@ -201,12 +205,11 @@ export const ROUTES: RouteDef[] = [
 	{ id: 'guide', icon: 'nav-onboarding', name: 'Fundraising Guide', path: '/resources', tier: 'raise' },
 
 	// ── Scout ───────────────────────────────────────────────────────────────
-	// Deal Flow is "Coming soon" (components/scout/deal-flow-soon.tsx): drop
-	// `soon: true` from these four when it launches.
-	{ id: 'deal-flow', icon: 'nav-dealflow', name: 'All', path: '/deal-flow', tier: 'scout', soon: true },
-	{ id: 'deal-flow-featured', icon: 'nav-recommended', name: 'Featured Raises', path: '/deal-flow/featured', tier: 'scout', soon: true },
-	{ id: 'deal-flow-verified', icon: 'nav-dealflow', name: 'Verified Raises', path: '/deal-flow/verified', tier: 'scout', soon: true },
-	{ id: 'deal-flow-circle', icon: 'nav-circle', name: 'From the Circle', path: '/deal-flow/circle', tier: 'scout', soon: true },
+	{ id: 'deal-flow', icon: 'nav-dealflow', name: 'All', path: '/deal-flow', tier: 'scout' },
+	{ id: 'deal-flow-featured', icon: 'nav-recommended', name: 'Featured Raises', path: '/deal-flow/featured', tier: 'scout' },
+	{ id: 'deal-flow-verified', icon: 'nav-dealflow', name: 'Verified Raises', path: '/deal-flow/verified', tier: 'scout' },
+	// Locked for everyone but Boardroom members (Deal Flow 7.1); see `boardroomOnly`.
+	{ id: 'deal-flow-circle', icon: 'nav-circle', name: 'From Boardroom', path: '/deal-flow/circle', tier: 'scout', boardroomOnly: true },
 ];
 
 export const ROUTE_BY_ID = new Map(ROUTES.map((r) => [r.id, r]));
@@ -256,7 +259,7 @@ export const NAV_LAYOUT: Record<Tier, NavGroup[]> = {
 	],
 	scout: [
 		{ title: null, items: ['home', 'chat'] },
-		{ title: 'Deal Flow', items: ['companies', 'watchlists', 'deal-flow-verified', 'deal-flow-featured', 'deck'] },
+		{ title: 'Deal Flow', items: ['companies', 'watchlists', 'deal-flow-verified', 'deal-flow-featured', 'deal-flow-circle', 'deck'] },
 		{ title: 'Discover', items: ['investors', 'programs'] },
 		{ title: 'Market', items: ['analytics', 'roundup', 'recently-funded', 'ma'] },
 		{ title: 'Resources', items: ['framework', 'reports', 'newsletter', 'events'] },

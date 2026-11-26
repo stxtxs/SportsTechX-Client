@@ -13,6 +13,8 @@ export interface CompanyWatchlist {
 	id: string; name: string; description: string | null; color: string | null;
 	/** Item count — companies, or (investor lists) pipeline investors. */
 	company_count?: number; view_mode?: 'list' | 'board';
+	/** Deal Flow raises saved in this company list (6.8). */
+	raise_count?: number;
 	/** Raise investor lists live alongside company lists; absent = companies. */
 	kind?: 'companies' | 'investors';
 }
@@ -82,6 +84,38 @@ async function setMembership(watchlistId: string, companyId: string, on: boolean
 }
 
 export const addToWatchlist = (watchlistId: string, companyId: string) => setMembership(watchlistId, companyId, true);
+
+/** Ids of the watchlists holding this Deal Flow raise (6.8). */
+export function useWatchlistsContainingRaise(dealId: string | null | undefined) {
+	const { data, isLoading } = useSWR<{ data: string[] }>(dealId ? qk.userWatchlists.containingRaise(dealId) : null);
+	return { ids: asList<string>(data), isLoading };
+}
+
+/** The raise ids saved in one list, newest first. */
+export function useWatchlistRaiseIds(id: string | null | undefined) {
+	const { data, isLoading } = useSWR<{ data: string[] }>(id ? qk.userWatchlists.raises(id) : null);
+	return { ids: asList<string>(data), isLoading };
+}
+
+/** Save / unsave a raise in one list. Optimistic like companies; then lists, counts and the cards' saved state refresh. */
+async function setRaiseMembership(watchlistId: string, dealId: string, on: boolean) {
+	await globalMutate(qk.userWatchlists.containingRaise(dealId), (d?: { data: string[] }) => {
+		const ids = asList<string>(d).filter((x) => x !== watchlistId);
+		return { data: on ? [...ids, watchlistId] : ids };
+	}, { revalidate: false });
+	try {
+		await apiRequest(on ? 'POST' : 'DELETE', `/api/user-watchlists/${watchlistId}/raises/${dealId}`);
+	} catch (e) {
+		await refreshWatchlists();
+		throw e;
+	} finally {
+		void refreshPaths('/api/scout/dealflow');
+	}
+	await refreshWatchlists();
+}
+
+export const addRaiseToWatchlist = (watchlistId: string, dealId: string) => setRaiseMembership(watchlistId, dealId, true);
+export const removeRaiseFromWatchlist = (watchlistId: string, dealId: string) => setRaiseMembership(watchlistId, dealId, false);
 export const removeFromWatchlist = (watchlistId: string, companyId: string) => setMembership(watchlistId, companyId, false);
 
 export async function createWatchlist(name: string, kind: 'companies' | 'investors' = 'companies'): Promise<CompanyWatchlist> {

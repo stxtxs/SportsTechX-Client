@@ -216,7 +216,7 @@ export function ExportModal({ entity, search, filters, ids, onClose }: {
 					</div>
 					<div className="export-modal__actions">
 						<Combobox className="atlas-select export-modal__format" value={format} onChange={(v) => setFormat(v as 'csv' | 'xlsx')} ariaLabel="Format" options={[['csv', 'CSV'], ['xlsx', 'Excel']]} />
-						<Button disabled={downloading || repricing || selected.length === 0 || rangeInvalid || insufficient} onClick={() => void download()}>
+						<Button disabled={downloading || repricing || selected.length === 0 || rangeInvalid || insufficient || (count.data != null && willExportRows === 0)} onClick={() => void download()}>
 							<Download size={13} /> {downloading ? 'Preparing…' : 'Download'}
 						</Button>
 					</div>

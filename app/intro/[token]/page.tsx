@@ -50,27 +50,27 @@ export default function IntroDecisionPage({ params, searchParams }: { params: Pr
 
 	const who = data ? `${data.scout_name ?? 'An investor'}${data.scout_org ? ` from ${data.scout_org}` : ''}` : '';
 	return (
-		<main className="atlas" style={{ minHeight: '100dvh', background: 'var(--a-bg, #f5f5f5)', padding: '48px 16px' }}>
-			<div style={{ maxWidth: 560, margin: '0 auto', background: 'var(--a-card, #fff)', border: '1px solid var(--a-line, #e5e5e5)', borderRadius: 16, padding: 'clamp(20px, 5vw, 32px)', display: 'grid', gap: 16 }}>
-				<div style={{ fontSize: 13, color: 'var(--a-muted, #595959)' }}>Atlas by SportsTechX</div>
+		<main className="atlas" style={{ minHeight: '100dvh', background: 'var(--a-page)', color: 'var(--a-ink)', padding: '48px 16px' }}>
+			<div style={{ maxWidth: 560, margin: '0 auto', background: 'var(--a-surface)', border: '1px solid var(--a-card-border)', borderRadius: 16, padding: 'clamp(20px, 5vw, 32px)', display: 'grid', gap: 16 }}>
+				<div style={{ fontSize: 13, color: 'var(--a-muted)' }}>Atlas by SportsTechX</div>
 				{error && (error as HttpError).status === 404 ? (
 					<>
 						<h1 style={{ fontSize: 24, margin: 0 }}>This link is no longer valid</h1>
-						<p style={{ margin: 0, color: 'var(--a-muted, #595959)' }}>Check the latest email from Atlas, or sign in to Atlas Raise to see your introduction requests in Settings.</p>
+						<p style={{ margin: 0, color: 'var(--a-muted)' }}>Check the latest email from Atlas, or sign in to Atlas Raise to see your introduction requests in Settings.</p>
 					</>
 				) : error ? (
 					<>
 						<h1 style={{ fontSize: 24, margin: 0 }}>We couldn&rsquo;t load this request</h1>
-						<p style={{ margin: 0, color: 'var(--a-muted, #595959)' }}>Please try again in a moment.</p>
+						<p style={{ margin: 0, color: 'var(--a-muted)' }}>Please try again in a moment.</p>
 						<div><Button variant="outline" onClick={() => void mutate()}>Try again</Button></div>
 					</>
 				) : !data ? <p style={{ margin: 0 }}>Loading…</p> : (
 					<>
 						<h1 style={{ fontSize: 24, margin: 0 }}>{who} would like an introduction{data.company_name ? ` to ${data.company_name}` : ''}</h1>
-						<p style={{ margin: 0, color: 'var(--a-muted, #595959)' }}>
+						<p style={{ margin: 0, color: 'var(--a-muted)' }}>
 							{[data.scout_type, data.scout_verified ? 'Verified by SportsTechX' : 'Not yet verified by SportsTechX'].filter(Boolean).join(' · ')}
 						</p>
-						{data.note && <blockquote style={{ margin: 0, padding: '12px 14px', borderLeft: '3px solid var(--a-navy, #1C4C78)', background: 'var(--a-bg, #f5f5f5)' }}>{data.note}</blockquote>}
+						{data.note && <blockquote style={{ margin: 0, padding: '12px 14px', borderLeft: '3px solid var(--a-navy)', background: 'var(--a-inset)' }}>{data.note}</blockquote>}
 						{data.status !== 'shared' ? (
 							<p style={{ margin: 0, fontWeight: 600 }}>{CLOSED[data.status] ?? 'This request has already been answered.'}</p>
 						) : choice ? (
@@ -96,7 +96,7 @@ export default function IntroDecisionPage({ params, searchParams }: { params: Pr
 								</div>
 							</>
 						)}
-						{failed && <p role="alert" style={{ margin: 0, color: 'var(--a-danger, #c33)' }}>{failed}</p>}
+						{failed && <p role="alert" style={{ margin: 0, color: 'var(--a-danger)' }}>{failed}</p>}
 					</>
 				)}
 			</div>

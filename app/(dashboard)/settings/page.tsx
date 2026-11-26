@@ -12,6 +12,7 @@ import { Screen, Card, Button, Loading, Badge } from '@/components/atlas';
 import { Modal } from '@/components/atlas/patterns/modal';
 import { AccountTabs, CompletionBadge } from '@/components/features/account/account-tabs';
 import { DealflowOptIn } from '@/components/raise/dealflow-opt-in';
+import { RaiseIntroRequests } from '@/components/raise/raise-intro-requests';
 import { raisePct } from '@/lib/profile-completion';
 import { fmtAmount, fmtFullDate } from '@/lib/format';
 
@@ -127,6 +128,11 @@ export default function RaiseSettingsPage() {
 				{/* Operational — not part of the setup wizard, so they stay as live controls. */}
 				<Section title="Investor Circle">
 					<DealflowOptIn />
+				</Section>
+
+				{/* Deal Flow 2.3: investors who asked to meet you, after SportsTechX approved the request. */}
+				<Section title="Introduction requests">
+					<RaiseIntroRequests />
 				</Section>
 
 				{!needsSetup && (

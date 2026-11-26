@@ -274,7 +274,8 @@ export function DealDetail({ id }: { id: string }) {
 /** One line under the header saying where the introduction stands (2.3). */
 function statusLine(status: string, disclosed: boolean): string {
 	if (disclosed || status === 'connected') return 'Introduced. Atlas has introduced you to the founder by email.';
-	if (status === 'declined') return 'Not right now. The founder isn\u2019t taking this introduction forward.';
+	if (status === 'declined') return 'Not right now. This introduction won\u2019t go ahead this time.';
+	if (status === 'no_response') return 'No response. The founder didn\u2019t answer within 7 working days, so the request has closed.';
 	if (status === 'source_confirmed' || status === 'shared') return 'With the founder. SportsTechX has passed your request on.';
 	return 'Requested. SportsTechX is reviewing your request before asking the founder.';
 }

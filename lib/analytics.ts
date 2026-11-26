@@ -56,7 +56,7 @@ export function initAnalytics(): void {
 					before_send: (event) => {
 						if (!event) return event;
 						for (const [k, v] of Object.entries(event.properties ?? {})) {
-							if (typeof v === 'string' && v.includes('/intro/')) event.properties[k] = v.replace(/\/intro\/[^?#\s]+/g, '/intro/[link]');
+							if (typeof v === 'string' && /\/(intro|listing)\//.test(v)) event.properties[k] = v.replace(/\/(intro|listing)\/[^?#\s]+/g, '/$1/[link]');
 						}
 						return event;
 					},

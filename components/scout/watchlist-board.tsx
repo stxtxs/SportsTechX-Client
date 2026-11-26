@@ -1,16 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { mutate } from 'swr';
-import { toast } from 'sonner';
+import { useCallback, useEffect, useState } from 'react';
 import { Empty, Loading, Logo, cx } from '@/components/atlas';
 import { Combobox } from '@/components/atlas/ui/combobox';
 import { useWatchlistCompanies } from '@/components/features/watchlists/use-company-watchlists';
-import { apiRequest } from '@/lib/query-client';
-import { refreshPaths } from '@/lib/invalidate';
-import { qk } from '@/lib/query-keys';
 import { BOARD_STAGES, type BoardStage } from './sample-data';
+import { moveCompanyStage } from './watchlist-stages';
 import { companyHref, hrefOf } from '@/lib/routes';
 
 const STAGE_TO_API: Record<BoardStage, string> = {
@@ -25,32 +21,17 @@ export function WatchlistBoard({ id }: { id: string }) {
 	const { companies, isLoading } = useWatchlistCompanies(id);
 	const [dragging, setDragging] = useState<string | null>(null);
 	const [over, setOver] = useState<BoardStage | null>(null);
+	const { setEl: boardRef, update: onBoardScroll, fadeLeft, fadeRight } = useEdgeFade();
 	const stageOf = (c: { id: string; stage?: string | null }): BoardStage =>
 		(c.stage ? API_TO_STAGE[c.stage] : null) ?? 'Identified';
-	// A refused move (e.g. 403 SCOUT_NOT_SET_UP) throws; it used to be an
-	// unhandled rejection that snapped the card back with no word why.
-	// Optimistic: the card lands in its new column at once (it used to snap back
-	// until the round trip finished); the refetch after puts the truth back on a
-	// failure. Moving to or from "Passed" changes Scout's recommendations too.
-	const move = async (cid: string, s: BoardStage) => {
-		const key = qk.userWatchlists.companies(id);
-		void mutate(key, (d?: { data: Array<{ id: string; stage?: string | null }> }) =>
-			d && { ...d, data: d.data.map((c) => (c.id === cid ? { ...c, stage: STAGE_TO_API[s] } : c)) }, { revalidate: false });
-		try {
-			const res = await apiRequest('PATCH', `/api/scout/watchlists/${id}/companies/${cid}/stage`, { stage: STAGE_TO_API[s] });
-			if (!res.ok) throw new Error(String(res.status));
-		} catch {
-			toast.error("Couldn't move that company. Please try again.");
-		}
-		void mutate(key);
-		void refreshPaths('/api/scout/recommended');
-	};
+	// Same save as the Stage pill in List view (watchlist-stages).
+	const move = (cid: string, s: BoardStage) => moveCompanyStage(id, cid, STAGE_TO_API[s]);
 
 	if (isLoading) return <Loading />;
 	return (
 		<>
 			{companies.length === 0 ? <Empty>No companies yet. <a href={hrefOf('companies')} style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>Browse companies</a> and use &quot;Add to watchlist&quot;.</Empty> : (
-				<div className="scout-board">
+				<div ref={boardRef} onScroll={onBoardScroll} className={cx('scout-board', fadeLeft && 'fade-left', fadeRight && 'fade-right')}>
 					{BOARD_STAGES.map((s) => {
 						const cards = companies.filter((c) => stageOf(c) === s);
 						return (
@@ -70,7 +51,8 @@ export function WatchlistBoard({ id }: { id: string }) {
 											<Link href={companyHref(c.slug ?? c.id)} className="scout-board__name">{c.name}</Link>
 										</div>
 										<div className="scout-board__meta">{[c.primary_sector, c.hq_country].filter(Boolean).join(' · ')}</div>
-										<Combobox className="scout-board__select" ariaLabel={`Stage for ${c.name}`} value={stageOf(c)} onChange={(v) => void move(c.id, v as BoardStage)} options={BOARD_STAGES.map((x) => [x, x] as [string, string])} />
+										{/* No stage dropdown on the card: drag it, or "Move to…" on hover (remaining 3). */}
+										<Combobox className="scout-board__move" ariaLabel={`Move ${c.name} to another stage`} placeholder="Move to…" value="" onChange={(v) => void move(c.id, v as BoardStage)} options={BOARD_STAGES.filter((x) => x !== s).map((x) => [x, x] as [string, string])} />
 									</article>
 								))}
 							</section>
@@ -81,4 +63,27 @@ export function WatchlistBoard({ id }: { id: string }) {
 			<p className="scout-muted scout-board__note">Drag companies between stages. Passed companies stay on record and are excluded from future recommendations.</p>
 		</>
 	);
+}
+
+/**
+ * Whether a sideways-scrolling row has more to show on either side, so the
+ * edge can fade (remaining 3). Re-measured on scroll and on resize.
+ */
+function useEdgeFade() {
+	// A callback ref (element in state), so nothing reads a ref during render.
+	const [el, setEl] = useState<HTMLDivElement | null>(null);
+	const [edges, setEdges] = useState({ left: false, right: false });
+	const update = useCallback(() => {
+		if (!el) return;
+		const left = el.scrollLeft > 1;
+		const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+		setEdges((e) => (e.left === left && e.right === right ? e : { left, right }));
+	}, [el]);
+	useEffect(() => {
+		if (!el) return;
+		const ro = new ResizeObserver(update);
+		ro.observe(el);
+		return () => ro.disconnect();
+	}, [el, update]);
+	return { setEl, update, fadeLeft: edges.left, fadeRight: edges.right };
 }

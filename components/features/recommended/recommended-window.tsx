@@ -25,13 +25,14 @@ const read = (k: string) => { try { return Number(localStorage.getItem(k) ?? '0'
 const write = (k: string, v: number) => { try { localStorage.setItem(k, String(v)); } catch { /* not persisted */ } listeners.forEach((l) => l()); };
 const subscribe = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
 
-export function useRecommendedWindow<T extends { id: string; name: string }>(items: T[], saved: Set<string>, key: string) {
+export function useRecommendedWindow<T extends { id: string; name: string }>(items: T[], saved: Set<string>, key: string, keepOrder = false) {
 	const storageKey = `stx:rec-offset:${key}`;
 	const offset = useSyncExternalStore(subscribe, () => read(storageKey), () => 0);
-	const queue = useMemo(
-		() => items.filter((i) => !saved.has(i.id)).sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' })),
-		[items, saved],
-	);
+	// A to Z by default; `keepOrder` keeps the caller's order (Best match, a chosen sort).
+	const queue = useMemo(() => {
+		const q = items.filter((i) => !saved.has(i.id));
+		return keepOrder ? q : q.sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
+	}, [items, saved, keepOrder]);
 	const start = queue.length ? offset % queue.length : 0;
 	const page = queue.length <= REC_PAGE ? queue : [...queue, ...queue].slice(start, start + REC_PAGE);
 	return {
@@ -64,15 +65,20 @@ export function RefreshList({ onRefresh, disabled }: { onRefresh: () => void; di
 
 export type ListMode = 'recommended' | 'all';
 
-/** "Recommended / All" on the parent list page, kept in the URL (`?list=recommended`). */
-export function useListMode(): [ListMode, (m: ListMode) => void] {
+/**
+ * "Recommended / All" on the parent list page, kept in the URL (`?list=`).
+ * `fallback` is what the page opens on with no `?list`: Recommended on Scout's
+ * Companies (Deal Flow 6.6), All elsewhere. Only the other value is written.
+ */
+export function useListMode(fallback: ListMode = 'all'): [ListMode, (m: ListMode) => void] {
 	const params = useSearchParams();
 	const router = useRouter();
 	const pathname = usePathname();
-	const mode: ListMode = params.get('list') === 'recommended' ? 'recommended' : 'all';
+	const raw = params.get('list');
+	const mode: ListMode = raw === 'recommended' || raw === 'all' ? raw : fallback;
 	const set = (m: ListMode) => {
 		const next = new URLSearchParams(params.toString());
-		if (m === 'recommended') next.set('list', 'recommended'); else next.delete('list');
+		if (m === fallback) next.delete('list'); else next.set('list', m);
 		const qs = next.toString();
 		router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
 	};
@@ -81,4 +87,9 @@ export function useListMode(): [ListMode, (m: ListMode) => void] {
 
 export function ListModeSwitch({ value, onChange }: { value: ListMode; onChange: (m: ListMode) => void }) {
 	return <Seg<ListMode> ariaLabel="Show" value={value} onChange={onChange} options={[{ key: 'recommended', label: 'Recommended' }, { key: 'all', label: 'All' }]} />;
+}
+
+/** A recommended list has no filters, so its switch sits in a bar of its own, where the filter bar would be. */
+export function ModeBar({ children }: { children: React.ReactNode }) {
+	return <div className="atlas-fbar atlas-fbar--mode">{children}</div>;
 }

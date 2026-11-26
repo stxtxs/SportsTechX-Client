@@ -64,7 +64,7 @@ export const fmtDate = (d?: string | null) => fmtMonth(d, '—');
  * the companies list filtered down to it — the deeper two only on plans with
  * advanced filters, since the list ignores them otherwise.
  */
-function SectorPath({ path, fallback, listHref }: {
+export function SectorPath({ path, fallback, listHref }: {
 	path: SectorRef[];
 	fallback?: string | null;
 	listHref: (filter: { sector?: string; sub?: string; subsub?: string }) => string;

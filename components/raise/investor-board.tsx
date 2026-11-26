@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import { useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
 import { toast } from 'sonner';
@@ -10,9 +10,10 @@ import type { PipelineActivity as Activity, PipelineStage, PipelineUpdate } from
 import { apiRequest } from '@/lib/query-client';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { hrefOf } from '@/lib/routes';
-import { Button, Empty, Eyebrow, Field, Flag, Input, Loading, Logo, SectionHeader, Select, Textarea } from '@/components/atlas';
+import { Button, Empty, Eyebrow, Field, Flag, Input, Loading, Logo, SectionHeader, Seg, Select, Textarea } from '@/components/atlas';
 import { DatePicker } from '@/components/atlas/ui/date-picker';
-import { isInvestorList, useCompanyWatchlists } from '@/components/features/watchlists/use-company-watchlists';
+import { isInvestorList, setWatchlistView, useCompanyWatchlists } from '@/components/features/watchlists/use-company-watchlists';
+import { InvestorList } from './investor-list';
 import { refreshPipeline } from './save-investor-to-watchlist';
 import './investor-board.css';
 import { fmtAmount, fmtFullDate } from '@/lib/format';
@@ -56,6 +57,7 @@ export function InvestorBoard({ listId }: { listId: 'main' | string }) {
 	const [open, setOpen] = useState<Pipe | null>(null);
 	const [adding, setAdding] = useState(false);
 	const [dragOver, setDragOver] = useState<string | null>(null);
+	const [view, setView] = useInvestorView(listId);
 	const params = { list: listId, ...(filter ? { filter } : {}) };
 	const { data, isLoading, mutate } = useSWR<{ data: Pipe[] }>(qk.raise.pipeline(params));
 	const rows = data?.data ?? [];
@@ -96,7 +98,11 @@ export function InvestorBoard({ listId }: { listId: 'main' | string }) {
 							<button key={f} aria-pressed={filter === f} className={filter === f ? 'atlas-btn atlas-btn--primary' : 'atlas-btn atlas-btn--outline'} onClick={() => setFilter(f)}>{l}</button>
 						))}
 					</div>
-					<span style={{ fontSize: 13, color: 'var(--a-muted)' }}>{rows.length} investor{rows.length === 1 ? '' : 's'} in this watchlist</span>
+					<div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+						<span style={{ fontSize: 13, color: 'var(--a-muted)' }}>{rows.length} investor{rows.length === 1 ? '' : 's'} in this watchlist</span>
+						{/* List (the table, with a Stage column) or Board; remembered per list (2.13). */}
+						<Seg ariaLabel="Watchlist view" value={view} onChange={setView} options={[{ key: 'list', label: 'List' }, { key: 'board', label: 'Board' }]} />
+					</div>
 				</div>
 			</div>
 
@@ -106,6 +112,14 @@ export function InvestorBoard({ listId }: { listId: 'main' | string }) {
 						Your Investor Watchlist is empty. Add investors and track each one from Target to Closed.{' '}
 						<Button size="sm" href={hrefOf('investors')}>Find investors</Button>
 					</Empty>
+				</div>
+			) : view === 'list' ? (
+				<div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: `0 ${PAD_X} 20px` }}>
+					<InvestorList
+						rows={rows.map((p) => ({ id: p.id, name: nameOf(p), stage: p.stage, website: p.investor_website, logo: p.investor_logo_url, contact: p.contact_name, potential: p.potential_amount, next: p.next_step }))}
+						onStage={(id, stage) => void moveCard(id, stage)}
+						onOpen={(id) => setOpen(rows.find((r) => r.id === id) ?? null)}
+					/>
 				</div>
 			) : (
 				<div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: `0 ${PAD_X} 20px` }}>
@@ -284,4 +298,31 @@ function Drawer({ title, onClose, children }: { title: string; onClose: () => vo
 			</div>
 		</div>
 	);
+}
+
+type InvestorView = 'list' | 'board';
+const MAIN_VIEW_KEY = 'atlas:raise-main-watchlist-view';
+const mainViewListeners = new Set<() => void>();
+const subscribeMainView = (l: () => void) => { mainViewListeners.add(l); return () => { mainViewListeners.delete(l); }; };
+function readMainView(): InvestorView {
+	try { return window.localStorage.getItem(MAIN_VIEW_KEY) === 'board' ? 'board' : 'list'; } catch { return 'list'; }
+}
+function writeMainView(v: InvestorView) {
+	try { window.localStorage.setItem(MAIN_VIEW_KEY, v); } catch { /* private window: not remembered */ }
+	mainViewListeners.forEach((l) => l());
+}
+
+/**
+ * List or Board for an investor watchlist, List first. A named list keeps its
+ * choice on the server like company lists (`view_mode`); the main Investor
+ * Watchlist has no row of its own, so this browser remembers it.
+ */
+function useInvestorView(listId: string): [InvestorView, (v: InvestorView) => void] {
+	const { lists } = useCompanyWatchlists();
+	const named = listId !== 'main' ? lists.find((l) => l.id === listId) : undefined;
+	// Read through useSyncExternalStore so the server render (List) never
+	// disagrees with the first client render.
+	const mainView = useSyncExternalStore(subscribeMainView, readMainView, () => 'list' as InvestorView);
+	if (listId === 'main') return [mainView, writeMainView];
+	return [named?.view_mode ?? 'list', (v) => void setWatchlistView(listId, v).then((ok) => { if (!ok) toast.error("Couldn't save the view. Please try again."); })];
 }

@@ -48,7 +48,7 @@ const EXPECTED: Record<Tier, Shape> = {
 	scout: {
 		top: ['Home', 'Ask Atlas'],
 		sections: [
-			['Deal Flow', ['Companies', 'Watchlists', 'Verified Raises', 'Featured Raises', 'Deck Screener']],
+			['Deal Flow', ['Companies', 'Watchlists', 'Verified Raises', 'Featured Raises', 'From Boardroom', 'Deck Screener']],
 			['Discover', ['Investors', 'Programs']],
 			['Market', ['Analytics', 'Monthly Roundup', 'Recently Funded', 'M&A']],
 			['Resources', ['Framework', 'Reports', 'Newsletter', 'Events']],
@@ -104,8 +104,8 @@ for (const tier of ['explore', 'raise', 'scout'] as Tier[]) {
 	check(ex.filter((i) => i.locked).map((i) => i.name).join(',') === 'Investors,Recently Funded,M&A' || ex.filter((i) => i.locked).map((i) => i.name).join(',') === 'Recently Funded,M&A',
 		`[explore] locked: ${ex.filter((i) => i.locked).map((i) => i.name).join(', ')}`);
 	const sc = flat('scout');
-	check(sc.filter((i) => i.soon).map((i) => i.name).join(',') === 'Verified Raises,Featured Raises,Deck Screener',
-		`[scout] soon: ${sc.filter((i) => i.soon).map((i) => i.name).join(', ')}`);
+	// Deal Flow and the Deck Screener are live: nothing in Scout is "Soon" any more.
+	check(!sc.some((i) => i.soon), `[scout] nothing soon (got: ${sc.filter((i) => i.soon).map((i) => i.name).join(', ')})`);
 	check(!flat('raise').some((i) => i.soon || i.locked), '[raise] nothing locked or soon');
 }
 
@@ -273,12 +273,11 @@ check(access('scout', 'raise', false) === 'hidden', 'raise user is not shown Sco
 	check(access(ROUTE_BY_ID.get('recently-funded')!.tier, 'explore', false) === 'upsell'
 		&& !navigable('recently-funded', 'explore'),
 		'navigable: an upsell route is listed in nav but not offered as a chip');
-	// Deck Screener shows "Soon" on Scout until it is confirmed live end to end
-	// (handover v1 §2, §8); Raise's Pitch Deck stays offerable.
-	check(!navigable('deck', 'scout') && navigable('deck', 'raise'),
-		'navigable: Deck Screener is not offered to Scout while "Soon"');
-	check(!navigable('deal-flow', 'scout') && !navigable('deal-flow-circle', 'scout'),
-		'navigable: Deal Flow is not offered while it is "Coming soon" (soon: true)');
+	// The Deck Screener and Deal Flow are live for Scout; founders never get Deal Flow.
+	check(navigable('deck', 'scout') && navigable('deck', 'raise'),
+		'navigable: Deck Screener is offered to Scout, Pitch Deck to Raise');
+	check(navigable('deal-flow', 'scout') && navigable('deal-flow-circle', 'scout') && !navigable('deal-flow', 'raise'),
+		'navigable: Deal Flow is offered to Scout only');
 	check(!navigable('no-such-route', 'scout'), 'navigable: an unknown route id is dropped');
 }
 

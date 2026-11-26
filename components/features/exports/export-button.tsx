@@ -18,12 +18,16 @@ import { ExportModal } from './export-modal';
  */
 const OMIT = new Set(['page', 'limit', 'sort', 'q']);
 
-export function ExportButton({ entity, search, params }: {
+export function ExportButton({ entity, search, params, ids, size = 'sm' }: {
 	entity: string;
 	/** The list's live (debounced) search term. */
 	search?: string | null;
 	/** The list's SWR params — filters are taken from here. */
 	params: Record<string, unknown>;
+	/** Export exactly these rows (a watchlist) instead of the filtered table. */
+	ids?: string[];
+	/** Full height beside other full-height controls (a watchlist's row). */
+	size?: 'sm' | 'md';
 }) {
 	const [open, setOpen] = useState(false);
 	const filters = useMemo(
@@ -32,9 +36,9 @@ export function ExportButton({ entity, search, params }: {
 	);
 	return (
 		<>
-			<Button size="sm" variant="outline" onClick={() => setOpen(true)}><Download size={13} /><span className="atlas-btn__label">Export</span></Button>
+			<Button size={size === 'sm' ? 'sm' : undefined} variant="outline" onClick={() => setOpen(true)}><Download size={13} /><span className="atlas-btn__label">Export</span></Button>
 			{open && (
-				<ExportModal entity={entity} search={search?.trim() || null} filters={filters} onClose={() => setOpen(false)} />
+				<ExportModal entity={entity} search={search?.trim() || null} filters={filters} ids={ids} onClose={() => setOpen(false)} />
 			)}
 		</>
 	);

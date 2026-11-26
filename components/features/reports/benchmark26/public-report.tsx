@@ -26,6 +26,13 @@ import { DARK as NAV_DARK, LIGHT as NAV_LIGHT } from "../ftabr26/lib/report-them
 import { LandingFooter } from "@/components/landing/landing-footer";
 import "@/components/landing/landing.css";
 import "./public-report.css";
+import { PartnerFeature } from "./partner-feature";
+import { GP_BULLHOUND_DEFAULT, type PartnerFeatureContent } from "./gp-bullhound-content";
+
+/* The GP Bullhound partner feature sits straight after this part ("03 Going out
+   to find deals"), before "04 What this means for investors". It is not a part of
+   its own, so section numbers and the header links are unchanged. */
+const PARTNER_AFTER = "outbound-and-tools";
 
 type NavSection = { id: string; n: string; title: string };
 // The PDF is private: ReportNav fetches a signed link per download (signed-in readers only).
@@ -80,6 +87,8 @@ export interface PublicReportData {
   };
   /** Page order of the blocks (the admin's Page order). */
   partOrder: string[];
+  /** Optional override for the GP Bullhound partner feature (defaults in gp-bullhound-content.ts). */
+  gpBullhound?: PartnerFeatureContent;
   /** The page's own words and settings around the document: heading accents, header link
    *  labels, chart labels, the contributors image, the PDF file name, the contact email. */
   ui: ReportUi;
@@ -558,7 +567,12 @@ export default function PublicReport({ data, slug }: { data: PublicReportData; s
       />
 
       <main className="wrap">
-        {order.map((id) => <Fragment key={id}>{PARTS[id]}</Fragment>)}
+        {order.map((id) => (
+          <Fragment key={id}>
+            {PARTS[id]}
+            {id === PARTNER_AFTER && <PartnerFeature id="partner-gp-bullhound" content={data.gpBullhound ?? GP_BULLHOUND_DEFAULT} />}
+          </Fragment>
+        ))}
       </main>
 
       {/* The benchmark viewer's footer, part for part: a card with the call to

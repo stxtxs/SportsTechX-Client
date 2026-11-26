@@ -17,6 +17,7 @@ import {
 	type CompanyWatchlist,
 } from './use-company-watchlists';
 import { INVESTOR_WATCHLIST_ID, useWatchlistPins } from './use-watchlist-pins';
+import { useWatchlistSettings } from './use-watchlist-settings';
 import './watchlists.css';
 
 const count = (n: number, noun: 'investor' | 'company' | 'raise') =>
@@ -43,6 +44,7 @@ export function WatchlistsOverview({ watchlistHref }: { watchlistHref: (id: stri
 	// Investor lists only mean something on Raise (see use-nav).
 	const lists = isRaise ? all : all.filter((l) => !isInvestorList(l));
 	const pins = useWatchlistPins();
+	const { investorListName } = useWatchlistSettings();
 	if (isLoading) return <Loading />;
 	if (lists.length === 0 && !isRaise && savedRaises === 0) {
 		return (
@@ -64,7 +66,7 @@ export function WatchlistsOverview({ watchlistHref }: { watchlistHref: (id: stri
 			<div className="atlas-wl-grid">
 				{isRaise && (
 					<ListCard
-						title="Investor Watchlist" href={hrefOf('pipeline')} meta={`${count(mainCount, 'investor')} · Board from Target to Closed`}
+						title={investorListName} href={hrefOf('pipeline')} meta={`${count(mainCount, 'investor')} · Board from Target to Closed`}
 						pinned={pins.isPinned(INVESTOR_WATCHLIST_ID)} onPin={() => void pins.toggle(INVESTOR_WATCHLIST_ID)}
 					/>
 				)}

@@ -11,13 +11,13 @@ import { qk } from '@/lib/query-keys';
 import { apiRequest } from '@/lib/query-client';
 import { refreshPipeline } from '@/lib/invalidate';
 import { createWatchlist, isInvestorList, useCompanyWatchlists } from '@/components/features/watchlists/use-company-watchlists';
+import { useWatchlistSettings } from '@/components/features/watchlists/use-watchlist-settings';
 import '@/components/features/watchlists/watchlists.css';
 
 /** Every Raise pipeline view (any list / filter, activity), the list counts and
  *  the Raise home cards change together — see lib/invalidate. */
 export { refreshPipeline };
 
-const MAIN = 'Investor Watchlist';
 interface PipeRef { id: string; investor_id: string | null; watchlist_id: string | null }
 
 /**
@@ -87,6 +87,7 @@ export function SaveInvestorToWatchlist({ investorId, investorName, align = 'sta
 	const row = (data?.data ?? []).find((r) => r.investor_id === investorId) ?? null;
 	const { lists, isLoading } = useCompanyWatchlists();
 	const investorLists = lists.filter(isInvestorList);
+	const { investorListName: MAIN } = useWatchlistSettings();
 	const current = row ? (row.watchlist_id ?? 'main') : null;
 	const currentName = current === 'main' ? MAIN : investorLists.find((l) => l.id === current)?.name ?? 'a watchlist';
 

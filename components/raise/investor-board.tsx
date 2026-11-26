@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useSyncExternalStore } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
 import { toast } from 'sonner';
@@ -12,7 +12,9 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { hrefOf } from '@/lib/routes';
 import { Button, Empty, Eyebrow, Field, Flag, Input, Loading, Logo, SectionHeader, Seg, Select, Textarea } from '@/components/atlas';
 import { DatePicker } from '@/components/atlas/ui/date-picker';
-import { isInvestorList, setWatchlistView, useCompanyWatchlists } from '@/components/features/watchlists/use-company-watchlists';
+import { isInvestorList, renameWatchlist, setWatchlistView, useCompanyWatchlists } from '@/components/features/watchlists/use-company-watchlists';
+import { updateInvestorWatchlist, useWatchlistSettings } from '@/components/features/watchlists/use-watchlist-settings';
+import { ListName } from '@/components/features/watchlists/watchlist-bar';
 import { InvestorList } from './investor-list';
 import { refreshPipeline } from './save-investor-to-watchlist';
 import './investor-board.css';
@@ -58,6 +60,7 @@ export function InvestorBoard({ listId }: { listId: 'main' | string }) {
 	const [adding, setAdding] = useState(false);
 	const [dragOver, setDragOver] = useState<string | null>(null);
 	const [view, setView] = useInvestorView(listId);
+	const name = useInvestorListName(listId);
 	const params = { list: listId, ...(filter ? { filter } : {}) };
 	const { data, isLoading, mutate } = useSWR<{ data: Pipe[] }>(qk.raise.pipeline(params));
 	const rows = data?.data ?? [];
@@ -92,6 +95,7 @@ export function InvestorBoard({ listId }: { listId: 'main' | string }) {
 				<SectionHeader
 					actions={<Button onClick={() => setAdding(true)}><Plus size={13} /> Add investor</Button>}
 				/>
+				{name && <div className="atlas-wl-bar__id" style={{ marginBottom: 14 }}><ListName name={name.value} onRename={name.rename} /></div>}
 				<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
 					<div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
 						{FILTERS.map(([f, l]) => (
@@ -172,7 +176,8 @@ function DetailPanel({ row, onClose, onSaved }: { row: Pipe; onClose: () => void
 	const { data: act } = useSWR<{ data: Activity[] }>(qk.raise.pipelineActivity(row.id));
 	const set = (k: keyof Pipe, v: unknown) => setF((x) => ({ ...x, [k]: v }));
 	const { lists } = useCompanyWatchlists();
-	const listOptions: [string, string][] = [['', 'Investor Watchlist'], ...lists.filter(isInvestorList).map((l) => [l.id, l.name] as [string, string])];
+	const { investorListName } = useWatchlistSettings();
+	const listOptions: [string, string][] = [['', investorListName], ...lists.filter(isInvestorList).map((l) => [l.id, l.name] as [string, string])];
 
 	const save = async (patch: PipelineUpdate) => {
 		setBusy(true);
@@ -301,28 +306,32 @@ function Drawer({ title, onClose, children }: { title: string; onClose: () => vo
 }
 
 type InvestorView = 'list' | 'board';
-const MAIN_VIEW_KEY = 'atlas:raise-main-watchlist-view';
-const mainViewListeners = new Set<() => void>();
-const subscribeMainView = (l: () => void) => { mainViewListeners.add(l); return () => { mainViewListeners.delete(l); }; };
-function readMainView(): InvestorView {
-	try { return window.localStorage.getItem(MAIN_VIEW_KEY) === 'board' ? 'board' : 'list'; } catch { return 'list'; }
-}
-function writeMainView(v: InvestorView) {
-	try { window.localStorage.setItem(MAIN_VIEW_KEY, v); } catch { /* private window: not remembered */ }
-	mainViewListeners.forEach((l) => l());
-}
 
 /**
- * List or Board for an investor watchlist, List first. A named list keeps its
- * choice on the server like company lists (`view_mode`); the main Investor
- * Watchlist has no row of its own, so this browser remembers it.
+ * List or Board for an investor watchlist, List first, kept on the account: a
+ * named list in its `view_mode`, the main Investor Watchlist (no list row of
+ * its own) in the watchlist settings.
  */
 function useInvestorView(listId: string): [InvestorView, (v: InvestorView) => void] {
 	const { lists } = useCompanyWatchlists();
-	const named = listId !== 'main' ? lists.find((l) => l.id === listId) : undefined;
-	// Read through useSyncExternalStore so the server render (List) never
-	// disagrees with the first client render.
-	const mainView = useSyncExternalStore(subscribeMainView, readMainView, () => 'list' as InvestorView);
-	if (listId === 'main') return [mainView, writeMainView];
-	return [named?.view_mode ?? 'list', (v) => void setWatchlistView(listId, v).then((ok) => { if (!ok) toast.error("Couldn't save the view. Please try again."); })];
+	const { settings } = useWatchlistSettings();
+	const failed = (ok: boolean) => { if (!ok) toast.error("Couldn't save the view. Please try again."); };
+	if (listId === 'main') return [settings?.investor_watchlist.view_mode ?? 'list', (v) => void updateInvestorWatchlist({ view_mode: v }).then(failed)];
+	const named = lists.find((l) => l.id === listId);
+	return [named?.view_mode ?? 'list', (v) => void setWatchlistView(listId, v).then(failed)];
+}
+
+/** This list's name and how to rename it (8.1: the main list's name is stored too). */
+function useInvestorListName(listId: string): { value: string; rename: (name: string) => Promise<unknown> } | null {
+	const { lists } = useCompanyWatchlists();
+	const { settings } = useWatchlistSettings();
+	if (listId === 'main') {
+		if (!settings) return null;
+		return {
+			value: settings.investor_watchlist.name,
+			rename: async (name) => { if (!(await updateInvestorWatchlist({ name }))) throw new Error("Couldn't rename the watchlist. Please try again."); },
+		};
+	}
+	const named = lists.find((l) => l.id === listId);
+	return named ? { value: named.name, rename: (name) => renameWatchlist(listId, name) } : null;
 }

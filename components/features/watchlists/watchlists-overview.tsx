@@ -9,7 +9,6 @@ import { Button, Empty, Input, Loading, Logo, Seg, cx } from '@/components/atlas
 import { Modal } from '@/components/atlas/patterns/modal';
 import { qk } from '@/lib/query-keys';
 import { fmtFullDate } from '@/lib/format';
-import { SAVED_RAISES_HREF } from '@/components/scout/raise-bookmark';
 import { hrefOf } from '@/lib/routes';
 import { getUserType, useUserProfile } from '@/hooks/use-user-profile';
 import {
@@ -38,15 +37,12 @@ export function WatchlistsOverview({ watchlistHref }: { watchlistHref: (id: stri
 	// a named list, tracked on the stage board at /pipeline (handover v1 B9).
 	const pipe = useSWR<{ data: Array<{ watchlist_id: string | null }> }>(isRaise ? qk.raise.pipeline() : null);
 	const mainCount = (pipe.data?.data ?? []).filter((r) => !r.watchlist_id).length;
-	// Raises saved from Deal Flow (Scout), listed with the company lists (6.8).
-	const raises = useSWR<{ data: Array<{ is_watched?: boolean }> }>(tier === 'scout' ? qk.scout.dealflow({ tab: 'all', limit: 50 }) : null);
-	const savedRaises = (raises.data?.data ?? []).filter((r) => r.is_watched).length;
 	// Investor lists only mean something on Raise (see use-nav).
 	const lists = isRaise ? all : all.filter((l) => !isInvestorList(l));
 	const pins = useWatchlistPins();
 	const { investorListName } = useWatchlistSettings();
 	if (isLoading) return <Loading />;
-	if (lists.length === 0 && !isRaise && savedRaises === 0) {
+	if (lists.length === 0 && !isRaise) {
 		return (
 			<Empty>
 				No watchlists yet. Save a company or an investor and it shows up here.{' '}
@@ -55,7 +51,7 @@ export function WatchlistsOverview({ watchlistHref }: { watchlistHref: (id: stri
 		);
 	}
 
-	const total = lists.length + (isRaise ? 1 : 0) + (tier === 'scout' && savedRaises > 0 ? 1 : 0);
+	const total = lists.length + (isRaise ? 1 : 0);
 	return (
 		<>
 			{/* Page actions sit under the tabs, so the header never moves (remaining 1). */}
@@ -69,9 +65,6 @@ export function WatchlistsOverview({ watchlistHref }: { watchlistHref: (id: stri
 						title={investorListName} href={hrefOf('pipeline')} meta={`${count(mainCount, 'investor')} · Board from Target to Closed`}
 						pinned={pins.isPinned(INVESTOR_WATCHLIST_ID)} onPin={() => void pins.toggle(INVESTOR_WATCHLIST_ID)}
 					/>
-				)}
-				{tier === 'scout' && savedRaises > 0 && (
-					<ListCard title="Saved raises" href={SAVED_RAISES_HREF} meta={`${count(savedRaises, 'raise')} from Deal Flow`} />
 				)}
 				{lists.map((l) => (
 					<ListCard
@@ -128,7 +121,7 @@ function ListMeta({ list }: { list: CompanyWatchlist }) {
 		.filter((d): d is string => !!d).sort().pop();
 	return (
 		<>
-			<p className="atlas-wl-card__meta">{count(n, investors ? 'investor' : 'company')}{updated ? ` · Updated ${fmtFullDate(updated)}` : ''}</p>
+			<p className="atlas-wl-card__meta">{count(n, investors ? 'investor' : 'company')}{list.raise_count ? ` · ${count(list.raise_count, 'raise')}` : ''}{updated ? ` · Updated ${fmtFullDate(updated)}` : ''}</p>
 			{companies.length > 0 && (
 				<div className="atlas-wl-card__logos" aria-hidden="true">
 					{companies.slice(0, 5).map((c) => <Logo key={c.id} co={{ name: c.name, website: c.website, custom_logo_url: c.custom_logo_url }} size={26} radius={6} />)}

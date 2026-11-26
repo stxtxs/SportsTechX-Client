@@ -330,6 +330,7 @@ export interface RaiseUpsert {
 	currency_code?: string | null;
 	target_close_date?: string | null;
 	valuation?: string | null;
+	valuation_basis?: 'pre_money' | 'post_money' | 'cap' | null;
 	structure?: 'equity' | 'safe' | 'convertible' | 'undecided' | 'other' | null;
 	lead_investor_status?: 'yes' | 'no' | 'in_discussion' | null;
 	prior_capital_raised?: number | string | null;

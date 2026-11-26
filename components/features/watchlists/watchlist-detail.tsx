@@ -5,7 +5,9 @@ import { toast } from 'sonner';
 import { useMemo, useState } from 'react';
 import { Empty, FilterBar, Loading } from '@/components/atlas';
 import { hrefOf } from '@/lib/routes';
-import { useCompanyWatchlists, useWatchlistCompanies, removeFromWatchlist, useSavedCompanyIds } from './use-company-watchlists';
+import { useCompanyWatchlists, useWatchlistCompanies, removeFromWatchlist, useSavedCompanyIds, useWatchlistRaiseIds } from './use-company-watchlists';
+import { LIMIT as DEALFLOW_LIMIT, RaiseCard } from '@/components/scout/deal-flow';
+import type { DealRow } from '@/components/scout/deal-types';
 import useSWR from 'swr';
 import { qk } from '@/lib/query-keys';
 import type { CompanyListItem as Company } from '@/types/api';
@@ -32,6 +34,17 @@ export function WatchlistDetail({ id, backHref, companyHref }: { id: string; bac
 	const { data: profile } = useUserProfile();
 	const hasStages = getUserType(profile) === 'scout';
 	const [stageFilter, setStageFilter] = useState('');
+	// Raises saved in this list (6.8), shown with the Deal Flow cards. A raise the user can no
+	// longer see (closed, or a test raise) simply drops out.
+	const { ids: raiseIds } = useWatchlistRaiseIds(id);
+	const dealsQ = useSWR<{ data: DealRow[] }>(raiseIds.length ? qk.scout.dealflow({ tab: 'all', limit: DEALFLOW_LIMIT }) : null);
+	const raiseRows = (dealsQ.data?.data ?? []).filter((d) => raiseIds.includes(d.id));
+	const raisesSection = raiseRows.length > 0 && (
+		<section style={{ marginBottom: 28 }} aria-label="Raises in this watchlist">
+			<h2 className="scout-df__title" style={{ fontSize: 16, margin: '0 0 12px' }}>Raises</h2>
+			<div className="scout-df__grid">{raiseRows.map((d) => <RaiseCard key={d.id} d={d} />)}</div>
+		</section>
+	);
 	const [sort, setSort] = useState<'name' | 'stage'>('name');
 	const stageById = useMemo(() => new Map(companies.map((c) => [c.id, companyStage(c.stage)])), [companies]);
 	const shown = useMemo(() => {
@@ -50,6 +63,7 @@ export function WatchlistDetail({ id, backHref, companyHref }: { id: string; bac
 
 	if (isLoading) return <Loading />;
 	if (companies.length === 0) {
+		if (raiseRows.length > 0) return <>{raisesSection}</>;
 		return <Empty>No companies yet. <Link href={hrefOf('companies')} style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>Browse companies</Link> and use &quot;Add to watchlist&quot;.</Empty>;
 	}
 	// The master companies table, as on Companies (preview fixes 2.5).
@@ -68,9 +82,10 @@ export function WatchlistDetail({ id, backHref, companyHref }: { id: string; bac
 			} : undefined}
 		/>
 	);
-	if (!hasStages) return table;
+	if (!hasStages) return <>{raisesSection}{table}</>;
 	return (
 		<>
+			{raisesSection}
 			<FilterBar
 				groups={[{ label: 'Watchlist', filters: [{
 					kind: 'select', key: 'stage', label: 'Stage', value: stageFilter, onChange: setStageFilter,

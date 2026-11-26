@@ -5,20 +5,25 @@ import { toast } from 'sonner';
 import { Bookmark, Check, Loader2, Plus, Search } from 'lucide-react';
 import { cx, useDismiss } from '@/components/atlas';
 import { useKeepInViewport } from '@/components/atlas/ui/use-keep-in-viewport';
-import { useCompanyWatchlists, useWatchlistsContaining, addToWatchlist, removeFromWatchlist, createWatchlist, isInvestorList } from './use-company-watchlists';
+import {
+	useCompanyWatchlists, useWatchlistsContaining, addToWatchlist, removeFromWatchlist, createWatchlist, isInvestorList,
+	useWatchlistsContainingRaise, addRaiseToWatchlist, removeRaiseFromWatchlist,
+} from './use-company-watchlists';
 import './watchlists.css';
 
 /**
- * "Add to watchlist" for a company: an action pill that opens the black menu —
+ * "Add to watchlist" for a company, or a Deal Flow raise (`raiseId`, 6.8): an action pill that opens the black menu —
  * search, the user's watchlists as toggles (✓ = company is in it), and
  * "+ New watchlist" with a name field (creates the list and adds the company).
  */
 /** The default company list's name, on every solution (handover v1 §3). */
 export const DEFAULT_COMPANY_LIST = 'Startup Watchlist';
 
-export function SaveToWatchlist({ companyId, companyName, compact, saved }: {
+export function SaveToWatchlist({ companyId, companyName, compact, saved, raiseId }: {
 	companyId: string;
 	companyName: string;
+	/** Save this Deal Flow raise instead of a company (companyId is then ignored). */
+	raiseId?: string;
 	/** Icon-only bookmark (company lists and tiles); same menu. */
 	compact?: boolean;
 	/** Compact: whether it's in any watchlist, from a page-wide lookup
@@ -40,7 +45,12 @@ export function SaveToWatchlist({ companyId, companyName, compact, saved }: {
 	const { lists: all, isLoading } = useCompanyWatchlists();
 	const lists = all.filter((l) => !isInvestorList(l));
 	// Compact rows fetch their own membership only once the menu is open.
-	const { ids } = useWatchlistsContaining(!compact || open ? companyId : null);
+	const want = !compact || open;
+	const companyMembership = useWatchlistsContaining(!raiseId && want ? companyId : null);
+	const raiseMembership = useWatchlistsContainingRaise(raiseId && want ? raiseId : null);
+	const ids = raiseId ? raiseMembership.ids : companyMembership.ids;
+	const add = (w: string) => (raiseId ? addRaiseToWatchlist(w, raiseId) : addToWatchlist(w, companyId));
+	const remove = (w: string) => (raiseId ? removeRaiseFromWatchlist(w, raiseId) : removeFromWatchlist(w, companyId));
 	// Only lists that still exist count (a just-deleted one may linger in `ids`).
 	const inCount = ids.filter((id) => lists.some((l) => l.id === id)).length;
 	const isSaved = compact && !open ? !!saved : inCount > 0;
@@ -50,8 +60,8 @@ export function SaveToWatchlist({ companyId, companyName, compact, saved }: {
 	const toggle = async (id: string, name: string) => {
 		setBusy(id);
 		try {
-			if (ids.includes(id)) { await removeFromWatchlist(id, companyId); toast.success(`Removed from ${name}.`); }
-			else { await addToWatchlist(id, companyId); toast.success(`Added to ${name}.`); }
+			if (ids.includes(id)) { await remove(id); toast.success(`Removed from ${name}.`); }
+			else { await add(id); toast.success(`Added to ${name}.`); }
 		} catch (e) { toast.error((e as Error).message); }
 		finally { setBusy(null); }
 	};
@@ -61,7 +71,7 @@ export function SaveToWatchlist({ companyId, companyName, compact, saved }: {
 		setBusy('new');
 		try {
 			const w = await createWatchlist(name);
-			await addToWatchlist(w.id, companyId);
+			await add(w.id);
 			toast.success(`Added to ${name}.`);
 			setCreating(false); setNewName('');
 		} catch (e) { toast.error((e as Error).message); }

@@ -48,6 +48,7 @@ export const PUBLIC_PATHS = [
   '/solutions', // public pricing page (app/solutions; /plans redirects here) — viewable signed in or out
   '/report-preview', // admin editor's report preview frame — renders only content the admin panel posts in
   '/w', // /w/[token] — public read-only shared watchlist pages
+  '/listing', // /listing/[token] — a founder confirms a Verified Raise listing SportsTechX started
   '/intro', // /intro/[token] — a founder accepts or declines a Deal Flow introduction from the email link
 ] as const;
 

@@ -109,6 +109,8 @@ export const qk = {
     containing: (companyId: string) => [`/api/user-watchlists/containing/${companyId}`] as const,
     /** Every company id on any of the user's company watchlists (one call). */
     companyIds: () => ['/api/user-watchlists/company-ids'] as const,
+    /** Pinned lists + Raise's main Investor Watchlist name and view. */
+    settings: () => ['/api/watchlist-settings'] as const,
   },
   publicWatchlists: {
     byToken: (token: string) => [`/api/public/watchlists/${token}`] as const,

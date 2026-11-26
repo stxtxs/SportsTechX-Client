@@ -48,6 +48,8 @@ export function useWatchlistPins() {
 	const isPinned = useCallback((id: string) => pins.some((p) => p.id === id), [pins]);
 
 	const toggle = useCallback(async (id: string) => {
+		// The save replaces the whole set; before the pins have loaded it would wipe the others.
+		if (!settings) { toast("Your watchlists are still loading. Try again in a moment."); return; }
 		const current = pins.map((p) => p.id);
 		const pinning = !current.includes(id);
 		if (pinning && current.length >= MAX_PINNED_WATCHLISTS) {
@@ -56,7 +58,7 @@ export function useWatchlistPins() {
 		}
 		const next = pinning ? [...current, id] : current.filter((x) => x !== id);
 		if (!(await setWatchlistPins(next))) toast.error("Couldn't update your pinned watchlists. Try again.");
-	}, [pins]);
+	}, [pins, settings]);
 
 	return { pins, isPinned, toggle };
 }

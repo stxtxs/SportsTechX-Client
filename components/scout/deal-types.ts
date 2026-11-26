@@ -1,4 +1,4 @@
-import { fmtAmount } from '../../lib/format.ts';
+import { fmtAmount, fmtMonth } from '../../lib/format.ts';
 
 /**
  * The shape the Deal Flow API actually returns, plus the three pieces of logic
@@ -27,6 +27,13 @@ export interface DealRow {
 	source: 'circle' | 'verified_raise';
 	status: string;
 	is_featured: boolean;
+	/** Admin order on the Featured tab (1 first) and when the raise was featured (4.2). */
+	featured_order?: number | null;
+	featured_at?: string | null;
+	/** Test raise (2.2): only admins ever receive one. */
+	is_test?: boolean;
+	/** The linked company's business model (also in `tags`, as "B2B"). */
+	business_model?: string | null;
 
 	/** null when `company_anonymous` and this viewer has not been disclosed to. */
 	company_name: string | null;
@@ -74,8 +81,15 @@ export interface DealRow {
 	interest_status: string | null;
 	/** This viewer has the deal on watch (server-side since Oct 2026). */
 	is_watched?: boolean;
-	/** Tag names, once the API sends them for matching (Deal Flow 6.3). */
+	/** The linked company's tag names plus its business model, for matching (Deal Flow 6.3). */
 	tags?: string[];
+}
+
+/** Card and page label: where the raise is from; a featured raise adds the month it was featured (4.2). */
+export function raiseLabel(d: Pick<DealRow, 'source' | 'is_featured' | 'featured_at' | 'is_test'>): string {
+	const base = d.source === 'circle' ? 'From Boardroom' : d.is_featured ? 'Featured raise' : 'Verified raise';
+	const month = d.source !== 'circle' && d.is_featured && d.featured_at ? ` · ${fmtMonth(d.featured_at, '')}` : '';
+	return `${d.is_test ? 'Test · ' : ''}${base}${month}`;
 }
 
 export const LEAD_LABEL: Record<string, string> = {

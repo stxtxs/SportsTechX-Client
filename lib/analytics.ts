@@ -52,6 +52,14 @@ export function initAnalytics(): void {
 					// Replay is for signed-in users only: started in identify().
 					disable_session_recording: true,
 					session_recording: { maskAllInputs: true },
+					// A founder's introduction link carries the key to accept or decline; never send it.
+					before_send: (event) => {
+						if (!event) return event;
+						for (const [k, v] of Object.entries(event.properties ?? {})) {
+							if (typeof v === 'string' && v.includes('/intro/')) event.properties[k] = v.replace(/\/intro\/[^?#\s]+/g, '/intro/[link]');
+						}
+						return event;
+					},
 				});
 				ph = p;
 				queue.splice(0).forEach((fn) => fn(p));

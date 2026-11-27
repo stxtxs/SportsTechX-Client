@@ -14,6 +14,9 @@ import "./gstvcr26.css";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import "@/components/landing/landing.css";
 import { BRAND } from './brand';
+import { PartnerFeature } from "../benchmark26/partner-feature";
+import { GP_BULLHOUND_DEFAULT } from "../benchmark26/gp-bullhound-content";
+import "./gstvcr26-partner.css";
 import { INNOVATOR_RESPONSES_DEFAULT, watchInnovators_DEFAULT, watchPeak_DEFAULT, PEAK_SWC_FINALISTS_DEFAULT, GROUNDBREAKERS_ORGS_DEFAULT, PEAK_PARTNERS_TIER1_DEFAULT, PEAK_PARTNERS_TIER2_DEFAULT, PEAK_PARTNERS_TIER3_DEFAULT, watchStxRecommends_DEFAULT, FEATURED_ARTICLES_DEFAULT, NAV_DEFAULT, HERO_DEFAULT, TRENDS_HEADER_DEFAULT, PEAK_COPY_DEFAULT, INNOVATORS_HEADER_DEFAULT, STARTUPS_HEADER_DEFAULT, NGSC_DEFAULT, DATA_HEADER_DEFAULT, CLOSING_DEFAULT, ECOMAP_DEFAULT, UNICORNS_HEADER_DEFAULT, GSTVCR26_PART_ORDER, GSTVCR26_HIDDEN_PARTS } from './content-defaults';
 import { TREND_DEEP_DIVES_DEFAULT, type TrendDeepDive } from './trend-content';
 import { TrendDeepDiveBody } from './trend-deep-dive';
@@ -2315,8 +2318,16 @@ export default function ReportGSTVCR26({ content, preview = false }: {
       </div>
 
     </>),
+    gpBullhound: (<>
+      {/* ── GP BULLHOUND PARTNER FEATURE (same component and copy as the VC Benchmark report) ── */}
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "0 16px" : "0 40px" }}>
+        <div className="stx-report gstvcr26-partner">
+          <PartnerFeature id="partner-gp-bullhound" content={ov?.gpBullhound ?? GP_BULLHOUND_DEFAULT} />
+        </div>
+      </div>
+    </>),
     data: (<>
-      <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.ngsc}55,transparent)`, margin: isMobile ? "24px 0" : "40px 0" }} />
+      <div style={{ height: 1, background: `linear-gradient(to right,transparent,${BRAND.pink}55,transparent)`, margin: isMobile ? "24px 0" : "40px 0" }} />
 
       {/* ── FACTS & FIGURES: FUNDING + M&A TABS ─────────────────────────── */}
       <div id="dealflow" style={{ background: t.bg, padding: isMobile ? "48px 0" : "88px 0" }}>
@@ -2722,11 +2733,6 @@ export default function ReportGSTVCR26({ content, preview = false }: {
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "rgba(190,208,227,0.45)", letterSpacing: 2, textTransform: "uppercase" }}>{HERO.presentedBy}</span>
                 <img src="/landing/atlas-wordmark-white.svg" alt="SportsTechX" style={{ height: 33, opacity: 0.9 }} />
-              </div>
-              <div style={{ width: 1, alignSelf: "stretch", background: "rgba(190,208,227,0.2)" }} />
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "rgba(190,208,227,0.45)", letterSpacing: 2, textTransform: "uppercase" }}>{HERO.poweredBy}</span>
-                <img src={isThisReport ? "/peak-logo-nav.webp" : "/peak-logo.jpeg"} alt="PEAK" style={{ height: isThisReport ? 28 : 36, borderRadius: 6, opacity: 0.9 }} />
               </div>
             </div>
           </div>

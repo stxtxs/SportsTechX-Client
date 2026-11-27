@@ -540,9 +540,9 @@ export const UNICORNS_HEADER_DEFAULT = {
  */
 /** The reorderable page parts between the hero and the closing quote, in page order. */
 /** Innovators and Startups to Watch are not part of the VC report (Nov 2026). */
-export const GSTVCR26_PART_ORDER = ['trends', 'peak', 'ecomap', 'unicorns', 'ngsc', 'data'];
+export const GSTVCR26_PART_ORDER = ['trends', 'ecomap', 'unicorns', 'gpBullhound', 'data'];
 /** Parts never rendered, even if a saved partOrder still lists them. */
-export const GSTVCR26_HIDDEN_PARTS: readonly string[] = ['innovators', 'startups'];
+export const GSTVCR26_HIDDEN_PARTS: readonly string[] = ['innovators', 'startups', 'peak', 'ngsc'];
 
 export const GSTVCR26_DEFAULTS: Record<string, unknown> = {
   partOrder: GSTVCR26_PART_ORDER,

@@ -1,0 +1,14 @@
+/* GSTVCR26 · hosts the VC Benchmark's GP Bullhound partner feature
+   (benchmark26/partner-feature.tsx + .css) unchanged. That stylesheet reads
+   the benchmark's type and radius tokens from .stx-report, so they are set
+   here on the wrapper only; the benchmark's full public-report.css is not
+   loaded on this page. */
+@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Oswald:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap");
+
+.stx-report.gstvcr26-partner {
+  --head: "Oswald", system-ui, sans-serif;
+  --body: "Barlow", system-ui, sans-serif;
+  --mono: "Space Mono", ui-monospace, monospace;
+  --r-card: 8px;
+  font-family: var(--body);
+}

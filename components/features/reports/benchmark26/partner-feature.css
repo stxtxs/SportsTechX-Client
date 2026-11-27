@@ -61,17 +61,27 @@
 .stx-report .bmp-person strong { display: block; font-family: var(--head); font-weight: 600; font-size: 18px; color: var(--bmp-ink); }
 .stx-report .bmp-person span { display: block; margin-top: 3px; font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--bmp-accent); }
 
+/* Tablet and phone: one column, header stacked (logo · headline · visit, as the
+   Football Tech partner panels do), and every image at its own 3:2 shape so
+   nothing is squeezed into a fixed-height box. */
 @media (max-width: 820px) {
-  .stx-report .bm-partner { padding: 26px 20px; }
-  .stx-report .bmp-header { grid-template-columns: minmax(0, 1fr) auto; gap: 14px; }
-  .stx-report .bmp-title { grid-column: 1 / -1; grid-row: 2; border-left: 0; padding-left: 0; }
-  .stx-report .bmp-story-row, .stx-report .bmp-bottom { grid-template-columns: 1fr; gap: 22px; }
-  .stx-report .bmp-mosaic { height: 420px; }
+  .stx-report .bm-partner { padding: 26px 20px; margin-top: 44px; }
+  .stx-report .bm-partner .bmp-header { grid-template-columns: minmax(0, 1fr); gap: 14px; margin-bottom: 22px; }
+  .stx-report .bm-partner .bmp-logo { height: auto; width: 100%; max-width: 200px; }
+  .stx-report .bm-partner .bmp-title { border-left: 0; padding-left: 0; }
+  .stx-report .bm-partner .bmp-actions { order: 3; }
+  .stx-report .bm-partner .bmp-story-row,
+  .stx-report .bm-partner .bmp-bottom { grid-template-columns: 1fr; gap: 22px; }
+  .stx-report .bm-partner .bmp-mosaic { height: auto; grid-template-columns: 1fr; grid-template-rows: none; gap: 10px; }
+  .stx-report .bm-partner .bmp-mosaic .bmp-figure--lead { grid-column: auto; }
+  .stx-report .bm-partner .bmp-figure { aspect-ratio: 3 / 2; }
 }
 @media (max-width: 640px) {
-  .stx-report .bmp-headline { font-size: 21px; }
-  .stx-report .bmp-visit { padding: 7px 12px; font-size: 9.5px; }
-  .stx-report .bmp-mosaic { height: 340px; }
+  .stx-report .bm-partner .bmp-headline { font-size: 22px; }
+  .stx-report .bm-partner .bmp-intro { font-size: 15px; }
+  .stx-report .bm-partner .bmp-body,
+  .stx-report .bm-partner .bmp-achievements p { font-size: 13.5px; }
+  .stx-report .bm-partner .bmp-person img { width: 56px; height: 56px; }
 }
 @media print {
   .stx-report .bm-partner { break-before: page; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
